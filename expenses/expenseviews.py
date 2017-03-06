@@ -1,5 +1,6 @@
 from django.http import Http404, JsonResponse
-from expenses import models
+from expenses.models import Expense
+from django.forms.models import model_to_dict
 
 
 def expense(request, expense_id):
@@ -8,12 +9,12 @@ def expense(request, expense_id):
         expense_id = int(expense_id)
     except ValueError:
         raise Http404()
-    exp = models.Expense.objects.get(id=expense_id)
+    exp = Expense.objects.get(id=expense_id)
 
-    return JsonResponse({'expense': list(exp)}, status=200, safe=False)
+    return JsonResponse({'expense': model_to_dict(exp)}, status=200, safe=False)
 
 
 def expenses(request):
     if request.method != 'GET':
         raise Http404()
-    return JsonResponse({'expenses': list(models.Expense.objects.all().values())})
+    return JsonResponse({'expenses': list(Expense.objects.all().values())})
