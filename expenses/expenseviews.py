@@ -16,4 +16,4 @@ def expense(request, expense_id):
 def expenses(request):
     if request.method != 'GET':
         raise Http404()
-    return JsonResponse({'expenses': list(models.Expense.objects.all())})
+    return JsonResponse({'expenses': list(models.Expense.objects.all().values())})
