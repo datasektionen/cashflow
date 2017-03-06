@@ -1,7 +1,7 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 from expenses.expenseviews import expense, expenses
 
 urlpatterns = [
-    url(r'^expense/(\d+)/$',expense),
-    url(r'^expense/$',expenses),
+    url(r'^expense/(?P<expense_id>\d+)/$', expense),
+    url(r'^expense/$', expenses),
 ]
