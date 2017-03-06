@@ -11,6 +11,18 @@ class Committee(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_overview_dict(self):
+        return {
+            'committee_id': self.id,
+            'committee_name':self.name,
+            'cost_centres': [cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all().values()]
+        }
+
+    def to_dict(self):
+        return {
+            'committee_id': self.id,
+            'committee_name': self.name,
+        }
 
 class CostCentre(models.Model):
     committee = models.ForeignKey(Committee)
@@ -21,6 +33,21 @@ class CostCentre(models.Model):
 
     def __unicode__(self):
         return self.committee.__unicode__() + " -> " + self.name
+
+    def get_overview_dict(self):
+        return {
+            'cost_centre_id': self.id,
+            'cost_centre_name': self.name,
+            'budget_lines': [budget_line.get_overview_dict() for budget_line in
+                             BudgetLine.objects.filter(cost_centre=self.id).all().values()]
+        }
+
+    def to_dict(self):
+        return {
+            'cost_centre_id': self.id,
+            'cost_centre_name': self.name,
+            'committee': self.committee.to_dict()
+        }
 
 
 class BudgetLine(models.Model):
@@ -33,7 +60,20 @@ class BudgetLine(models.Model):
     def __unicode__(self):
         return self.cost_centre.__unicode__() + " -> " + self.name
 
+    def get_overview_dict(self):
+        return {
+            'budget_line_id': self.id,
+            'budget_line_name': self.name
+        }
 
+    def to_dict(self):
+        return {
+            'budget_line_id': self.id,
+            'budget_line_name': self.name,
+            'cost_centre': self.cost_centre.to_dict()
+        }
+
+# represents a bank account owned by the organisation
 class BankAccount(models.Model):
     name = models.TextField()
 
@@ -46,6 +86,8 @@ class BankAccount(models.Model):
 
 class Person(models.Model):
     user = models.OneToOneField(AuthUser)
+
+    # represents a bank account owned by the user
     bank_account = models.CharField(max_length=10, blank=True)
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
