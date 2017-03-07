@@ -15,7 +15,7 @@ class Committee(models.Model):
         return {
             'committee_id': self.id,
             'committee_name':self.name,
-            'cost_centres': [cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all().values()]
+            'cost_centres': [cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all()]
         }
 
     def to_dict(self):
@@ -39,7 +39,7 @@ class CostCentre(models.Model):
             'cost_centre_id': self.id,
             'cost_centre_name': self.name,
             'budget_lines': [budget_line.get_overview_dict() for budget_line in
-                             BudgetLine.objects.filter(cost_centre=self.id).all().values()]
+                             BudgetLine.objects.filter(cost_centre=self.id).all()]
         }
 
     def to_dict(self):
