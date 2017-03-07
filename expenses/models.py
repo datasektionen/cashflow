@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User as AuthUser
+from django.forms.models import model_to_dict
 
 
 class Committee(models.Model):
@@ -83,6 +84,9 @@ class BankAccount(models.Model):
     def __unicode__(self):
         return self.name
 
+    def to_dict(self):
+        return model_to_dict(self)
+
 
 class Person(models.Model):
     user = models.OneToOneField(AuthUser)
@@ -99,6 +103,19 @@ class Person(models.Model):
     def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name
 
+    def to_dict(self):
+        person_dict = model_to_dict(self)
+        person_dict['username'] = self.user.username
+        person_dict['first_name'] = self.user.first_name
+        person_dict['last_name'] = self.user.last_name
+
+        if self.default_account is not None:
+            person_dict['default_account'] = self.default_account.to_dict()
+
+        del person_dict['user']
+        del person_dict['id']
+
+        return person_dict
 
 class Payment(models.Model):
     date = models.DateField()

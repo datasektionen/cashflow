@@ -69,10 +69,25 @@ Retrieves all expenses current user is elegible to view
 Method: `GET`<br>
 URL: `/api/user/<`username`>/`
 
-Get a user by its `kthid`/`username`,
+Get a user by its `kthid`/`username`
 
 **Response:**
-
+```
+{
+   "user":{
+      "username":"foba",
+      "bank_name":"Swedbank",
+      "first_name":"Foo",
+      "last_name":"Bar",
+      "sorting_number":"2322-1",
+      "default_account":{
+         "id":1,
+         "name":"DKM"
+      },
+      "bank_account":"2131231231"
+   }
+}
+```
 
 ### Get budget
 Method: `GET`<br>
