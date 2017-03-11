@@ -25,6 +25,7 @@ class Committee(models.Model):
             'committee_name': self.name,
         }
 
+
 class CostCentre(models.Model):
     committee = models.ForeignKey(Committee)
     name = models.TextField()
@@ -74,6 +75,7 @@ class BudgetLine(models.Model):
             'cost_centre': self.cost_centre.to_dict()
         }
 
+
 # represents a bank account owned by the organisation
 class BankAccount(models.Model):
     name = models.TextField()
@@ -111,11 +113,14 @@ class Person(models.Model):
 
         if self.default_account is not None:
             person_dict['default_account'] = self.default_account.to_dict()
+        else:
+            person_dict['default_account'] = None
 
         del person_dict['user']
         del person_dict['id']
 
         return person_dict
+
 
 class Payment(models.Model):
     date = models.DateField()
@@ -128,6 +133,11 @@ class Payment(models.Model):
 
     def __unicode__(self):
         return str(self.amount) + " kr on " + self.date + " transfered by " + self.payer.__unicode__()
+
+    def to_dict(self):
+        payment = model_to_dict(self)
+        payment['payer_username'] = self.payer.user.username
+        return payment
 
 
 class Expense(models.Model):
@@ -142,6 +152,14 @@ class Expense(models.Model):
 
     def __unicode__(self):
         return self.description
+
+    def to_dict(self):
+        exp = model_to_dict(self)
+        exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self) ]
+        exp['owner_username'] = self.owner.user.first_name
+        exp['owner_first_name'] = self.owner.user.first_name
+        exp['owner_last_name'] = self.owner.user.last_name
+        return exp
 
 
 class File(models.Model):
@@ -168,7 +186,17 @@ class ExpensePart(models.Model):
     def __unicode__(self):
         return self.expense.__unicode__() + " (" + self.budget_line.__unicode__() + ": " + str(self.amount) + " kr)"
 
+    def to_dict(self):
+        expPart = model_to_dict(self)
+        del expPart['expense']
+        expPart['budget_line'] = self.budget_line.to_dict()
 
+        if self.attested_by is not None:
+            expPart['attested_by_username'] = self.attested_by.user.username
+            expPart['attested_by_first_name'] = self.attested_by.user.first_name
+            expPart['attested_by_last_name'] = self.attested_by.user.last_name
+
+        return expPart
 
 
 class Comment(models.Model):
@@ -182,3 +210,10 @@ class Comment(models.Model):
 
     def __unicode__(self):
         return self.author.__unicode__() + " - " + self.date + ": " + self.comment
+
+    def to_dict(self):
+        comment = model_to_dict(self)
+        comment['author_username'] = self.author.user.username
+        comment['author_first_name'] = self.author.user.first_name
+        comment['author_last_name'] = self.author.user.last_name
+        return comment
