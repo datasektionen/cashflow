@@ -63,7 +63,54 @@ URL: `/api/expense/`
 
 Retrieves all expenses current user is elegible to view
 
+### Get all unattested expenses
 
+Method: `GET`<br>
+URL: `/api/attest/`
+
+
+
+### Attest expense
+Method: `POST`<br>
+URL: `/api/attest/`
+
+Attest all the specified reciepts
+
+**Request:**
+list:
+```
+[1,22,23,12]
+```
+
+**Response:**
+```
+{
+  'success': true
+```
+
+### Get current user
+Method: `GET`<br>
+URL: `/api/user/`
+
+Get the currently logged in
+
+**Response:**
+```
+{
+   "user":{
+      "username":"foba",
+      "bank_name":"Swedbank",
+      "first_name":"Foo",
+      "last_name":"Bar",
+      "sorting_number":"2322-1",
+      "default_account":{
+         "id":1,
+         "name":"DKM"
+      },
+      "bank_account":"2131231231"
+   }
+}
+```
 
 ### Get user
 Method: `GET`<br>

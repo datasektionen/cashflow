@@ -13,3 +13,9 @@ def user_by_username(request, username):
         raise Http404()
     user = User.objects.get(username=username)
     return JsonResponse({'user': Person.objects.get(user=user).to_dict()})
+
+
+def current_user(request):
+    if request.method != 'GET':
+        raise Http404()
+    return JsonResponse({'user': Person.objects.get(user=request.user).to_dict()})

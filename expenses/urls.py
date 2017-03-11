@@ -1,10 +1,13 @@
 from django.conf.urls import url
-from expenses.expenseviews import expense, expenses
-from expenses.misc_views import budget, user_by_username
+from expenses import expenseviews
+from expenses import misc_views
 
 urlpatterns = [
-    url(r'^expense/(?P<expense_id>\d+)/$', expense),
-    url(r'^expense/$', expenses),
-    url(r'^budget/$',budget),
-    url(r'^user/(.*)/', user_by_username)
+    url(r'^expense/(?P<expense_id>\d+)/$', expenseviews.expense),
+    url(r'^expense/$', expenseviews.expenses),
+    url(r'^budget/$', misc_views.budget),
+    url(r'^user/(.*)/$', misc_views.user_by_username),
+    url(r'^user/(.*)/expenses/$', misc_views.user_by_username),
+    url(r'^user/$', misc_views.current_user)
 ]
+
