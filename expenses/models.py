@@ -156,7 +156,7 @@ class Expense(models.Model):
     def to_dict(self):
         exp = model_to_dict(self)
         exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self) ]
-        exp['owner_username'] = self.owner.user.first_name
+        exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         return exp
