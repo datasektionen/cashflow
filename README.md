@@ -6,6 +6,14 @@
 Method: `PUT`<br>
 URL: `/api/expense/new/`
 
+**Request:**
+json:
+```
+{
+
+}
+```
+
 ### Updating expense
 Method: `PUT`<br>
 URL: `/api/expense/<id>/`
@@ -23,32 +31,32 @@ Get a `expense` by its `id`, also retrieves `expense_parts` and `budget_lines` a
 ```
 {
    "expense":{
-      "reimbursement":1,
-      "description": "Mat vid arbetsmöte",
-      "parts": [
-         {
-            "budget_line":{
-               "budget_line_name":"MUTA",
-               "budget_line_id":1,
-               "cost_centre":{
-                  "cost_centre_name":"Allmänt",
-                  "cost_centre_id":1,
-                  "committee":{
-                     "committee_name":"D-rektoratet",
-                     "committee_id":1
-                  }
-               }
-            },
-            "attest_date":"2017-03-06",
-            "amount":100,
-            "attested_by":1,
-            "attested_by_username":"foba"
-            "expense":1,
-            "id":3
-         }
-      ],
+      "owner_first_name":"John",
+      "reimbursement":null,
+      "description":"Foo",
+      "owner_last_name":"Doe",
       "expense_date":"2017-03-05",
       "verification":"E231",
+      "expense_parts":[
+         {
+            "budget_line":{
+               "budget_line_name":"mat",
+               "cost_centre":{
+                  "cost_centre_name":"dwrek",
+                  "committee":{
+                     "committee_name":"Drek",
+                     "committee_id":1
+                  },
+                  "cost_centre_id":2
+               },
+               "budget_line_id":3
+            },
+            "attest_date":"2017-03-06",
+            "amount":12,
+            "attested_by":"foba",
+            "id":5
+         }
+      ],
       "owner":2,
       "id":1,
       "owner_username":"johdo"
@@ -63,12 +71,38 @@ URL: `/api/expense/`
 
 Retrieves all expenses current user is elegible to view
 
+**Responese:**
+```
+{
+    "expenses": [<List of expenses>]
+}
+```
+
+### Getting all expenses belonging to user
+Method: `GET`<br>
+URL: `/api/user/<username>/expenses/`
+
+Retrieves all expenses belonging to the user with the specified `kthid`/`username`.
+
+**Responese:**
+```
+{
+    "expenses": [<List of expenses>]
+}
+```
+
+
 ### Get all unattested expenses
 
 Method: `GET`<br>
 URL: `/api/attest/`
 
+Retrieves all the expenses that the current user can attest that haven't been attested yet.
 
+**Responese:**
+```
+{"expenses": [<List of expenses>]
+```
 
 ### Attest expense
 Method: `POST`<br>
@@ -86,6 +120,7 @@ list:
 ```
 {
   'success': true
+}
 ```
 
 ### Get current user
@@ -114,7 +149,7 @@ Get the currently logged in
 
 ### Get user
 Method: `GET`<br>
-URL: `/api/user/<`username`>/`
+URL: `/api/user/<username>/`
 
 Get a user by its `kthid`/`username`
 
@@ -156,6 +191,10 @@ URL: `/api/budget/`
                   {
                      "budget_line_name":"MUTA",
                      "budget_line_id":1
+                  },
+                  {
+                     "budget_line_name":"Representation",
+                     "budget_line_id":2
                   }
                ]
             }
