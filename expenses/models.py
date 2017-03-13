@@ -208,10 +208,11 @@ class Comment(models.Model):
     content = models.TextField()
 
     def __str__(self):
-        return self.author.__str__() + " - " + str(self.date) + ": " + self.comment
+        return self.author.__str__() + " - " + str(self.date) + ": " + self.content
 
     def __unicode__(self):
-        return self.author.__unicode__() + " - " + str(self.date) + ": " + self.comment
+        return self.author.__unicode__() + " - " +\
+               str(self.date) + ": " + self.content
 
     def to_dict(self):
         comment = model_to_dict(self)
