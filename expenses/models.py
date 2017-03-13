@@ -123,6 +123,15 @@ class Person(models.Model):
 
         return person_dict
 
+    def user_dict(self):
+        return {
+            'id': self.user.id,
+            'username': self.user.username,
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
+            'email': self.user.email
+        }
+
 
 class Payment(models.Model):
     date = models.DateField()
@@ -139,7 +148,9 @@ class Payment(models.Model):
 
     def to_dict(self):
         payment = model_to_dict(self)
-        payment['payer_username'] = self.payer.user.username
+        payment['payer'] = self.payer.user_dict()
+        payment['receiver'] = self.receiver.user_dict()
+        payment['account'] = self.account.to_dict()
         return payment
 
 
