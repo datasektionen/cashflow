@@ -60,6 +60,12 @@ def expense(request, expense_id):
                 parts_to_save.append(exp_part)
         for part in parts_to_save:
             part.save()
+    elif request.method == "DELETE":
+        if request.user is exp.owner.user or has_permission("admin",request.user):
+            exp.delete()
+            return HttpResponse()
+        else:
+            return HttpResponseForbidden()
     else:
         return HttpResponse(status=501, content= request.method  + " is not a valid method to access resource!")
 

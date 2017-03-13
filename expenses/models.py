@@ -174,7 +174,7 @@ class File(models.Model):
 
 
 class ExpensePart(models.Model):
-    expense = models.ForeignKey(Expense)
+    expense = models.ForeignKey(Expense,on_delete=models.CASCADE)
     budget_line = models.ForeignKey(BudgetLine)
     amount = models.IntegerField()
     attested_by = models.ForeignKey(Person, blank=True, null=True)
