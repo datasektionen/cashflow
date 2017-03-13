@@ -1,20 +1,17 @@
 
 ### Node, React, etc ###
-static/node_modules
+node_modules
 # dependencies
 
-# testing
-static/coverage
-
 # production
-static/build
+build
 
 # misc
-static/.DS_Store
-static/.env
-static/npm-debug.log*
-static/yarn-debug.log*
-static/yarn-error.log*
+.DS_Store
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 
 # Created by https://www.gitignore.io/api/django,pycharm,python,vim
