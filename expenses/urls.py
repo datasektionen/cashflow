@@ -1,15 +1,8 @@
-from django.conf.urls import url
+from rest_framework.routers import DefaultRouter
 
-from expenses.views import misc, attest, pay, expense
+from expenses.views.expense import ExpenseView
 
-urlpatterns = [
-    #url(r'^expense/(?P<expense_id>\d+)/$', expense.expense),
-    #url(r'^expense/new/$', expense.new_expense),
-    url(r'^expense/$', expense.ExpenseView.as_view()),
-    url(r'^budget/$', misc.budget),
-    #url(r'^user/(.*)/expenses/$', expense.expenses_for_person),
-    url(r'^user/(.*)/$', misc.user_by_username),
-    url(r'^user/$', misc.current_user),
-    url(r'^attest/$', attest.attest),
-    url(r'^pay/$', pay.pay)
-]
+router = DefaultRouter()
+router.register('expense', ExpenseView, base_name='Expense')
+
+urlpatterns = router.urls
