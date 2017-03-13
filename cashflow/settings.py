@@ -17,6 +17,7 @@ from django.conf.global_settings import AUTHENTICATION_BACKENDS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# noinspection PyRedeclaration
 AUTHENTICATION_BACKENDS = ['cashflow.dauth.DAuth']
 
 # Quick-start development settings - unsuitable for production
@@ -60,7 +61,7 @@ ROOT_URLCONF = 'cashflow.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['public'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
