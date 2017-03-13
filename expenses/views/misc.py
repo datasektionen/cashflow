@@ -12,7 +12,7 @@ def budget(request):
 
 
 def user_by_username(request, username):
-    if not (request.user.username == username or has_permission("pay",request.user)):
+    if not (request.user.username == username or has_permission("pay", request.user)):
         return HttpResponseForbidden()
 
     if request.method != 'GET':
