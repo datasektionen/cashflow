@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
+from cashflow.dauth import has_permission
 from expenses.models import Expense
 
 
@@ -31,3 +32,19 @@ class ExpenseViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(exp.to_dict())
 
+    """
+    Remove expense based on ID.
+    """
+    def destroy(self, request, pk, **kwargs):
+        try:
+            exp = Expense.objects.get(id=int(pk))
+        except ValueError as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if request.user is exp.owner.user or has_permission("admin", request.user):
+            exp.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
