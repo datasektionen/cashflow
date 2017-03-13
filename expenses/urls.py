@@ -1,15 +1,15 @@
 from django.conf.urls import url
-from expenses import expenseviews, misc_views, attestviews, payviews
+
+from expenses.views import misc, attest, pay, expense
 
 urlpatterns = [
-    url(r'^expense/(?P<expense_id>\d+)/$', expenseviews.expense),
-    url(r'^expense/new/$',expenseviews.new_expense),
-    url(r'^expense/$', expenseviews.expenses),
-    url(r'^budget/$', misc_views.budget),
-    url(r'^user/(.*)/expenses/$', expenseviews.expenses_for_person),
-    url(r'^user/(.*)/$', misc_views.user_by_username),
-    url(r'^user/$', misc_views.current_user),
-    url(r'^attest/$',attestviews.attest),
-    url(r'^pay/$',payviews.pay)
+    url(r'^expense/(?P<expense_id>\d+)/$', expense.expense),
+    url(r'^expense/new/$', expense.new_expense),
+    url(r'^expense/$', expense.expenses),
+    url(r'^budget/$', misc.budget),
+    url(r'^user/(.*)/expenses/$', expense.expenses_for_person),
+    url(r'^user/(.*)/$', misc.user_by_username),
+    url(r'^user/$', misc.current_user),
+    url(r'^attest/$', attest.attest),
+    url(r'^pay/$', pay.pay)
 ]
-
