@@ -126,7 +126,8 @@ class Person(models.Model):
 
 class Payment(models.Model):
     date = models.DateField()
-    payer = models.ForeignKey(Person)
+    payer = models.ForeignKey(Person, related_name='payer')
+    receiver = models.ForeignKey(Person, related_name='receiver')
     amount = models.IntegerField()
     account = models.ForeignKey(BankAccount)
 
