@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 from expenses.models import Expense, Payment
 
 
-# noinspection PyUnusedLocal
+# noinspection PyUnusedLocal,PyMethodMayBeStatic
 class PaymentViewSet(GenericViewSet):
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
