@@ -25,7 +25,7 @@ class ExpenseViewSet(GenericViewSet):
     """
     def retrieve(self, request, pk, **kwargs):
         try:
-            exp = Expense.objects.get(id=int(pk))
+            exp = Expense.objects.get(id=int(pk), owner__user=request.user)
         except ValueError as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist as e:
