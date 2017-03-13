@@ -9,5 +9,4 @@ def bookkeeping(request):
         return HttpResponse(status=501, content="Feature has not been implemented yet :(")
         # TODO: Implement, should assign a journal number to a expense
     else:
-        return HttpResponse(status=501, content= request.method  + " is not a valid method to access resource!")
-
+        return HttpResponse(status=501, content=request.method + " is not a valid method to access resource!")
