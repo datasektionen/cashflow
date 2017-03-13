@@ -14,11 +14,13 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from expenses.views import misc
 
 from expenses import index
 
 urlpatterns = [
     url(r'^', index.index),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^api/', include("expenses.urls"))
+    url(r'^api/login/(\w+)/$', misc.login),
+    url(r'^api/', include("expenses.urls")),
 ]

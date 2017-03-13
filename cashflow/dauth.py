@@ -26,8 +26,9 @@ class DAuth(object):
                 user.save()
                 p = Person(user=user)
                 p.save()
-
-            user.permissions = requests.get('https://pls.datasektionen.se/api/user/' + user.username + '/cashflow/').json()
+            user.permissions = requests.get(
+                'http://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
+            ).json()
             return user
 
     @staticmethod
@@ -36,3 +37,11 @@ class DAuth(object):
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+
+
+def has_permission(permission, user):
+    permission_response = requests.get(
+        'http://pls.datasektionen.se/api/user/' + user.username + '/cashflow/' + permission + '/'
+    )
+
+    return permission_response.json()

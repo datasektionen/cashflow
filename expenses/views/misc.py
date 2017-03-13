@@ -1,3 +1,4 @@
+from django.contrib import auth
 from django.http import Http404, JsonResponse, HttpResponseForbidden
 from expenses.models import Committee, Person
 from django.contrib.auth.models import User
@@ -28,3 +29,13 @@ def current_user(request):
     if request.method != 'GET':
         raise Http404()
     return JsonResponse({'user': Person.objects.get(user=request.user).to_dict()})
+
+
+def login(request, token):
+    if request.method != 'GET':
+        raise Http404()
+    user = auth.authenticate(token=token)
+    if user is not None:
+        auth.login(request, user)
+        return JsonResponse({'login': Person.objects.get(user=user).to_dict()})
+    return JsonResponse({'login': 'fail'})
