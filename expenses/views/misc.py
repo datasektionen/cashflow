@@ -1,5 +1,7 @@
 from django.contrib import auth
 from django.http import Http404, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponseRedirect
+
 from expenses.models import Committee, Person
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -37,5 +39,12 @@ def login(request, token):
     user = auth.authenticate(token=token)
     if user is not None:
         auth.login(request, user)
-        return JsonResponse({'login': Person.objects.get(user=user).to_dict()})
-    return JsonResponse({'login': 'fail'})
+        return HttpResponseRedirect(redirect_to="http://127.0.0.1:8000/")
+    return JsonResponse({'status': 'failed'})
+
+
+def logout(request):
+    if request.method != 'GET':
+        raise Http404()
+    auth.logout(request)
+    return HttpResponseRedirect(redirect_to="http://127.0.0.1:8000/")

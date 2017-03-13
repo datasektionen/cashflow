@@ -7,6 +7,9 @@
     <title>Cashflow</title>
   </head>
   <body>
-    <div id="root"></div>
+    You are {{ user.username }} <- Empty if you're not logged in
+    <div id="root"><a href="https://login2.datasektionen.se/login?callback=http://127.0.0.1:8000/api/login/"> Click here to log in! </a></div>
+    <a href="http://127.0.0.1:8000/api/logout/">Press here to log out!</a>
+
   </body>
 </html>
