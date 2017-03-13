@@ -15,8 +15,10 @@ class Committee(models.Model):
     def get_overview_dict(self):
         return {
             'committee_id': self.id,
-            'committee_name':self.name,
-            'cost_centres': [cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all()]
+            'committee_name': self.name,
+            'cost_centres': [
+                cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all()
+                ]
         }
 
     def to_dict(self):
@@ -129,10 +131,10 @@ class Payment(models.Model):
     account = models.ForeignKey(BankAccount)
 
     def __str__(self):
-        return str(self.amount) + " kr on " + self.date + " transfered by " + self.payer.__str__()
+        return str(self.amount) + " kr on " + str(self.date) + " transferred by " + self.payer.__str__()
 
     def __unicode__(self):
-        return str(self.amount) + " kr on " + self.date + " transfered by " + self.payer.__unicode__()
+        return str(self.amount) + " kr on " + str(self.date) + " transferred by " + self.payer.__unicode__()
 
     def to_dict(self):
         payment = model_to_dict(self)
@@ -155,7 +157,7 @@ class Expense(models.Model):
 
     def to_dict(self):
         exp = model_to_dict(self)
-        exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self) ]
+        exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self)]
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
@@ -174,7 +176,7 @@ class File(models.Model):
 
 
 class ExpensePart(models.Model):
-    expense = models.ForeignKey(Expense,on_delete=models.CASCADE)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
     budget_line = models.ForeignKey(BudgetLine)
     amount = models.IntegerField()
     attested_by = models.ForeignKey(Person, blank=True, null=True)
@@ -187,16 +189,16 @@ class ExpensePart(models.Model):
         return self.expense.__unicode__() + " (" + self.budget_line.__unicode__() + ": " + str(self.amount) + " kr)"
 
     def to_dict(self):
-        expPart = model_to_dict(self)
-        del expPart['expense']
-        expPart['budget_line'] = self.budget_line.to_dict()
+        exp_part = model_to_dict(self)
+        del exp_part['expense']
+        exp_part['budget_line'] = self.budget_line.to_dict()
 
         if self.attested_by is not None:
-            expPart['attested_by_username'] = self.attested_by.user.username
-            expPart['attested_by_first_name'] = self.attested_by.user.first_name
-            expPart['attested_by_last_name'] = self.attested_by.user.last_name
+            exp_part['attested_by_username'] = self.attested_by.user.username
+            exp_part['attested_by_first_name'] = self.attested_by.user.first_name
+            exp_part['attested_by_last_name'] = self.attested_by.user.last_name
 
-        return expPart
+        return exp_part
 
 
 class Comment(models.Model):
@@ -206,10 +208,10 @@ class Comment(models.Model):
     content = models.TextField()
 
     def __str__(self):
-        return self.author.__str__() + " - " + self.date + ": " + self.comment
+        return self.author.__str__() + " - " + str(self.date) + ": " + self.comment
 
     def __unicode__(self):
-        return self.author.__unicode__() + " - " + self.date + ": " + self.comment
+        return self.author.__unicode__() + " - " + str(self.date) + ": " + self.comment
 
     def to_dict(self):
         comment = model_to_dict(self)
