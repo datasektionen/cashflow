@@ -7,6 +7,14 @@ from cashflow.dauth import has_permission
 import json
 
 
+def new_expense(request):
+    if request.method == 'PUT':
+        return HttpResponse(status=501, content="Feature has not been implemented yet :(")
+        # TODO: Implement
+    else:
+        return HttpResponse(status=501, content= request.method  + " is not a valid method to access resource!")
+
+
 def expense(request, expense_id):
     try:
         expense_id = int(expense_id)
