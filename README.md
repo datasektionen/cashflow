@@ -104,7 +104,7 @@ Retrieves all the expenses that the current user can attest that haven't been at
 {"expenses": [<List of expenses>]
 ```
 
-### Attest expense
+### Attest expenses
 Method: `POST`<br>
 URL: `/api/attest/`
 

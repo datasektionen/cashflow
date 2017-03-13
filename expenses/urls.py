@@ -1,6 +1,5 @@
 from django.conf.urls import url
-from expenses import expenseviews
-from expenses import misc_views
+from expenses import expenseviews, misc_views, attestviews
 
 urlpatterns = [
     url(r'^expense/(?P<expense_id>\d+)/$', expenseviews.expense),
@@ -9,6 +8,6 @@ urlpatterns = [
     url(r'^user/(.*)/expenses/$', expenseviews.expenses_for_person),
     url(r'^user/(.*)/$', misc_views.user_by_username),
     url(r'^user/$', misc_views.current_user),
-    url(r'^attest/$',expenseviews.attest)
+    url(r'^attest/$',attestviews.attest)
 ]
 

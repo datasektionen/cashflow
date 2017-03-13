@@ -1,5 +1,5 @@
 from django.http import Http404, JsonResponse, HttpResponseBadRequest, HttpResponse, HttpResponseForbidden
-from expenses.models import Expense, ExpensePart
+from expenses.models import Expense, ExpensePart, Person
 from datetime import date
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,7 +18,7 @@ def expense(request, expense_id):
     except ObjectDoesNotExist:
         raise Http404()
 
-    if not (exp.owner.user is request.user or may_attest_expense(exp,request.user)):
+    if not (exp.owner.user is request.user or may_edit_expense(exp,request.user)):
         return HttpResponseForbidden()
 
     if request.method == 'GET':
@@ -32,6 +32,7 @@ def expense(request, expense_id):
 
         arg_dict = json.loads(request.PUT['json'])
 
+        # Update provided fields
         if 'expense_date' in arg_dict:
             exp.expense_date = date(arg_dict['expense_date'])
         if 'description' in arg_dict:
@@ -82,26 +83,8 @@ def expenses_for_person(request, username):
         return HttpResponse(status=501, content= request.method  + " is not a valid method to access resource!")
 
 
-def attest(request):
-    if request.method == 'GET':
-        expenses__to_attest = []
-
-        # Add all expenses that the user may attest
-        for expense in Expense.objects.filter(expensepart__attested_by__isnull=True).distinct():
-            if may_attest_expense(expense,request.user):
-                expenses__to_attest.append(expense.to_dict())
-
-        return JsonResponse({
-            'Expenses': expenses__to_attest
-            })
-    elif request.method == 'POST':
-        return JsonResponse({'error':'Not defined'})
-    else:
-        return HttpResponse(status=501, content= request.method  + " is not a valid method to access resource!")
-
-
 # Helper method
-def may_attest_expense(exp,user):
+def may_edit_expense(exp,user):
     if has_permission("attest-*",user):
         return True
 
