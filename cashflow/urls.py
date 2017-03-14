@@ -23,5 +23,5 @@ urlpatterns = [
     url(r'^api/login/(.+)$', misc.login),
     url(r'^api/logout/$', misc.logout),
     url(r'^api/', include("expenses.urls")),
-    url(r'^', index.index),
+    url(r'^$', index.index),
 ]
