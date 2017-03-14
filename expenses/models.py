@@ -100,7 +100,6 @@ class Person(models.Model):
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
     default_account = models.ForeignKey(BankAccount, blank=True, null=True)
-    permissions = []
 
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name

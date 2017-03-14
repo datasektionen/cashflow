@@ -2,6 +2,7 @@ import json
 from datetime import date
 
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import serializers
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -13,7 +14,7 @@ from expenses.models import Comment
 from expenses.views.expense import may_view_expense
 
 
-# noinspection PyMethodMayBeStatic
+# noinspection PyMethodMayBeStatic,PyUnusedLocal
 class CommentViewSet(GenericViewSet):
     """
     retrieve:
@@ -30,12 +31,9 @@ class CommentViewSet(GenericViewSet):
     """
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.BaseSerializer
 
-    # noinspection PyUnusedLocal
-    def list(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def retrieve(self, request, pk):
+    def retrieve(self, request, pk, **kwargs):
         try:
             c = Comment.objects.get(id=int(pk))
         except ValueError:
@@ -44,10 +42,10 @@ class CommentViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if may_view_expense(c.expense, request):
-            return Response(c.to_dict(), status=status.HTTP_200_OK)
+            return Response({'comment': c.to_dict()})
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def create(self, request):
+    def create(self, request, **kwargs):
         try:
             json_args = json.loads(request.POST['json'])
 
@@ -61,9 +59,9 @@ class CommentViewSet(GenericViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         c.save()
-        return Response(c.to_dict(), status=status.HTTP_201_CREATED)
+        return Response({'comment': c.to_dict()}, status=status.HTTP_201_CREATED)
 
-    def partial_update(self, request, pk):
+    def partial_update(self, request, pk, **kwargs):
         try:
             c = Comment.objects.get(id=int(pk))
         except ValueError:
@@ -76,13 +74,14 @@ class CommentViewSet(GenericViewSet):
 
         try:
             json_args = json.loads(request.POST['json'])
-
-            c.content = json_args['content']
+            if 'content' in json_args:
+                c.content = json_args['content']
             c.save()
+            return Response({'comment': c.to_dict()})
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk):
+    def destroy(self, request, pk, **kwargs):
         try:
             c = Comment.objects.get(id=int(pk))
         except ValueError:
