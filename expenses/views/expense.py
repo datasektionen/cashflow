@@ -1,4 +1,3 @@
-import requests
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -45,10 +44,7 @@ class ExpenseViewSet(GenericViewSet):
         except ObjectDoesNotExist as e:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        json = requests.get('https://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/').json()
-        request.user.permissions = json
-
-        if request.user is exp.owner.user or "admin" in request.user.permissions:
+        if request.user is exp.owner.user or has_permission("admin", request):
             exp.delete()
             return Response(status=status.HTTP_200_OK)
         else:
