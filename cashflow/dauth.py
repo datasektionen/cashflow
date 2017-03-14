@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from expenses.models import Person
+from datetime import datetime
 
 
 class DAuth(object):
@@ -37,8 +38,13 @@ class DAuth(object):
 
 
 def has_permission(permission, request):
-    if 'permissions' not in request.session:
+    if 'permissions' not in request.session or \
+                    'permission-timestamp' not in request.session or \
+                    (datetime.now() - request.session['permission-timestamp']).minute >= 5:
+        # Fetch permissions from pls and store timestamp
+        request.session['permission-timestamp'] = datetime.now()
         request.session['permissions'] = requests.get(
                 'http://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/'
             ).json()
+
     return permission in request.session['permissions']
