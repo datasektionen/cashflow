@@ -1,11 +1,20 @@
-from django.contrib import auth
-from django.http import Http404, JsonResponse, HttpResponseForbidden
-from django.http import HttpResponseRedirect
+import json
 
-from expenses.models import Committee, Person
+from django.contrib import auth
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404, JsonResponse
+from django.http import HttpResponseRedirect
+from rest_framework import serializers
+from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import list_route
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
+
 from cashflow.dauth import has_permission
+from expenses.models import Committee, Person
 
 
 def budget(request):
@@ -14,23 +23,74 @@ def budget(request):
     return JsonResponse({'committees': [committee.get_overview_dict() for committee in Committee.objects.all()]})
 
 
-def user_by_username(request, username):
-    if not (request.user.username == username or has_permission("pay", request.user)):
-        return HttpResponseForbidden()
+# noinspection PyMethodMayBeStatic,PyUnusedLocal
+class UserViewSet(GenericViewSet):
+    """
+    retrieve:
+    Returns a json representation of the user with the specified username
 
-    if request.method != 'GET':
-        raise Http404()
-    try:
-        user = User.objects.get(username=username)
-    except ObjectDoesNotExist:
-        raise Http404()
-    return JsonResponse({'user': Person.objects.get(user=user).to_dict()})
+    partial-update:
+    Update the user with the specified id with the bank information and settings from a json-object
 
+    destroy:
+    Delete the comment with the provided id
+    """
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.BaseSerializer
+    lookup_field = 'username'
+    lookup_value_regex = '[0-9a-z]+'
 
-def current_user(request):
-    if request.method != 'GET':
-        raise Http404()
-    return JsonResponse({'user': Person.objects.get(user=request.user).to_dict()})
+    # noinspection PyUnusedLocal
+    def list(self, request, **kwargs):
+        return Response({'users': User.objects.all().values('username')})
+
+    def retrieve(self, request, username, **kwargs):
+        print "Username: " + username
+        try:
+            person = Person.objects.get(user__username=username)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if person.user is request.user or has_permission("pay", request):
+            return Response({'user': person.to_dict()})
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    @list_route()
+    def current(self, request, **kwargs):
+        return Response({'user': Person.objects.get(user=request.user).to_dict()})
+
+    def partial_update(self, request, username, **kwargs):
+        try:
+            person = Person.objects.get(user__username=username)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if person.user is not request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            json_args = json.loads(request.POST['json'])
+
+            if 'bank_account' in json_args:
+                person.bank_account = json_args['bank_account']
+
+            if 'sorting_number' in json_args:
+                person.sorting_number = json_args['sorting_number']
+            if 'bank_name' in json_args:
+                person.bank_name = json_args['bank_name']
+            if 'default_account' in json_args:
+                person.default_account_id = json_args['default_account']
+
+            person.save()
+            return Response({'user': person.to_dict()})
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 def login(request, token):
