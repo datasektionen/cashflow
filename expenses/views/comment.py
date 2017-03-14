@@ -73,7 +73,7 @@ class CommentViewSet(GenericViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         try:
-            json_args = json.loads(request.POST['json'])
+            json_args = json.loads(request.PATCH['json'])
             if 'content' in json_args:
                 c.content = json_args['content']
             c.save()

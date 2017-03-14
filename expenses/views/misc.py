@@ -75,7 +75,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         try:
-            json_args = json.loads(request.POST['json'])
+            json_args = json.loads(request.PATCH['json'])
 
             if 'bank_account' in json_args:
                 person.bank_account = json_args['bank_account']
