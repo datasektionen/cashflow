@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from expenses.views.comment import CommentViewSet
 from expenses.views.expense import ExpenseViewSet
-from expenses.views.misc import UserViewSet, budget, login, logout
+from expenses.views.misc import budget, login, logout
+from expenses.views.user import UserViewSet
 from expenses.views.pay import PaymentViewSet
 
 router = DefaultRouter()
