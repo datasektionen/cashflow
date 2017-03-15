@@ -1,12 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Router, Route, hashHistory, IndexRoute } from 'react-router';
+import { HashRouter, Route } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import {green500, green700, green100} from "material-ui/styles/colors";
 import injectTapEventPlugin from 'react-tap-event-plugin';
+
+import Expenses from './Expenses';
+import Expense from './Expenses';
 
 // Needed for onTouchTap
 // http://stackoverflow.com/a/34015469/988941
@@ -27,13 +30,12 @@ const Bootstrap = () => (
 );
 
 ReactDOM.render(
-    <Router history={hashHistory}>
-        <Route path="/" component={<Bootstrap />}>
-            <IndexRoute component={<Dashboard />} />
-            <Route path="expenses" component={<Expenses />}>
-                <Route path=":id" component={<Expense />} />
+    <HashRouter>
+        <Route exact path="/" component={Bootstrap}>
+            <Route path="/expenses" component={Expenses}>
+                <Route path="/expenses/:id" component={Expense} />
             </Route>
         </Route>
-    </Router>,
+    </HashRouter>,
     document.getElementById('root')
 );

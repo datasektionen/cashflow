@@ -1,10 +1,12 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
 import Subheader from 'material-ui/Subheader';
-import Dashboard from 'material-ui/svg-icons/action/dashboard';
-import { green700 } from "material-ui/styles/colors";
+import DashboardIcon from 'material-ui/svg-icons/action/dashboard';
+import { green700 } from 'material-ui/styles/colors';
+
+import Dashboard from './Dashboard';
 
 class App extends Component {
     constructor(props) {
@@ -30,7 +32,7 @@ class App extends Component {
                 <Drawer open={this.state.drawerOpen}>
                     <AppBar title="Cashfl0w" style={{background: green700}} iconStyleLeft={{display: "none"}} />
                     <Subheader>Cashfl0w</Subheader>
-                    <MenuItem leftIcon={<Dashboard />} primaryText="Dashboard" />
+                    <MenuItem leftIcon={<DashboardIcon />} primaryText="Dashboard" />
                     <dashboard />
                     <Subheader>Inköp</Subheader>
                     <MenuItem primaryText="Mina inköp" />
@@ -41,7 +43,7 @@ class App extends Component {
 
                 <div style={contentStyle} className="content">
                     <AppBar title={"Cashfl0w"} onLeftIconButtonTouchTap={this.toggleDrawer} />
-                    {this.props.children}
+                    {this.props.children || <Dashboard />}
                 </div>
             </div>
         );
