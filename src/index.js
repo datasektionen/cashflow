@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Router, Route, hashHistory, IndexRoute } from 'react-router';
 import App from './App';
 import './index.css';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -12,20 +13,27 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
 
 const muiTheme = getMuiTheme({
-  palette: {
-    primary1Color: green500,
-    primary2Color: green700,
-    primary3Color: green100,
-  },
+    palette: {
+        primary1Color: green500,
+        primary2Color: green700,
+        primary3Color: green100,
+    },
 });
 
 const Bootstrap = () => (
-  <MuiThemeProvider muiTheme={muiTheme}>
-    <App />
-  </MuiThemeProvider>
+    <MuiThemeProvider muiTheme={muiTheme}>
+        <App />
+    </MuiThemeProvider>
 );
 
 ReactDOM.render(
-  <Bootstrap />,
-  document.getElementById('root')
+    <Router history={hashHistory}>
+        <Route path="/" component={<Bootstrap />}>
+            <IndexRoute component={<Dashboard />} />
+            <Route path="expenses" component={<Expenses />}>
+                <Route path=":id" component={<Expense />} />
+            </Route>
+        </Route>
+    </Router>,
+    document.getElementById('root')
 );
