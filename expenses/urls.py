@@ -15,7 +15,7 @@ router.register('payment', PaymentViewSet, base_name='Payment')
 router.register('comment', CommentViewSet, base_name='Comment')
 router.register('user', UserViewSet, base_name='User')
 router.register('attest', AttestViewSet, base_name='Attest')
-router.register('accounting',AccountingViewSet,AccountingViewSet)
+router.register('accounting', AccountingViewSet, base_name='Accounting')
 urlpatterns = router.urls
 
 urlpatterns.append(url(r'^budget/$', budget))

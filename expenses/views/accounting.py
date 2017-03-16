@@ -34,7 +34,7 @@ class AccountingViewSet(GenericViewSet):
         try:
             exp = Expense.objects.get(id=int(json_arg['expense']))
 
-            if may_account(exp,request):
+            if may_account(exp, request):
                 exp.verification = json_arg['verification_number']
                 exp.save()
                 return Response({'status': 'Success!'})
@@ -47,7 +47,7 @@ class AccountingViewSet(GenericViewSet):
 
 
 # Helper function
-def may_account(exp,request):
+def may_account(exp, request):
     if has_permission("accounting-*", request):
         return True
     for part in exp.expensepart_set.all():
