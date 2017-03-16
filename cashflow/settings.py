@@ -31,6 +31,13 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 
 ALLOWED_HOSTS = ['*']
 
+# CORS configuration
+CORS_ORIGIN_ALLOW_ALL = False
+
+CORS_ORIGIN_WHITELIST = (
+    'localhost:8000'
+)
+
 # Application definition
 
 INSTALLED_APPS = (
@@ -44,9 +51,11 @@ INSTALLED_APPS = (
     'expenses',
     'rest_framework',
     'storages',
+    'corsheaders'
 )
 
 MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
