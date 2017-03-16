@@ -1,6 +1,8 @@
+# coding=utf-8
 import json
+from datetime import datetime
 
-from datetime import date
+from channels import Group
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -21,7 +23,9 @@ class ExpenseViewSet(GenericViewSet):
     """
     List all expenses the current user can access
     """
+
     def list(self, request, **kwargs):
+        Group("attest-.").send({'hello': 'Oy!'})
         return Response({'expenses': [exp.to_dict() for exp in Expense.objects.filter(owner__user=request.user)]})
 
     def create(self, request, **kwargs):
@@ -32,7 +36,7 @@ class ExpenseViewSet(GenericViewSet):
             exp = Expense(
                 owner=request.user,
                 description=json_args['description'],
-                expense_date=date(json_args['expense_date'])
+                expense_date=datetime.strptime(json_args['expense_date'], "%Y-%m-%d").date()
             )
 
             for part in json_args['expense_parts']:
@@ -45,9 +49,17 @@ class ExpenseViewSet(GenericViewSet):
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         exp.save()
+        exp_dict = {'expense', exp.to_dict()}
         for p in parts_to_be_saved:
+            Group("attest-" +
+                  p.budget_line.cost_centre.committee.name
+                  .replace(u'å', 'a')
+                  .replace(u'ä', 'a')
+                  .replace(u'ö', 'o')) \
+                .send(exp_dict)
             p.save()
-        return Response({'expense', exp.to_dict()})
+        Group("attest-.").send(exp_dict)
+        return Response(exp_dict)
 
     def partial_update(self, request, pk, **kwargs):
         parts_to_be_saved = []
@@ -65,7 +77,7 @@ class ExpenseViewSet(GenericViewSet):
             if 'description' in json_args:
                 exp.description = json_args['description']
             if 'expense_date' in json_args:
-                exp.expense_date = date(json_args['expense_date'])
+                exp.expense_date = datetime.strptime(json_args['expense_date'], "%Y-%m-%d").date()
 
             if 'expense_parts' in json_args:
                 for part in json_args['expense_parts']:
@@ -83,7 +95,7 @@ class ExpenseViewSet(GenericViewSet):
                             p.amount = part['amount']
                     else:
                         p = ExpensePart(
-                            expense=e,
+                            expense=exp,
                             budget_line_id=part['budget_line_id'],
                             amount=part['amount']
                         )
@@ -98,6 +110,7 @@ class ExpenseViewSet(GenericViewSet):
     """
     Retrieve a single expense with parts and file information
     """
+
     def retrieve(self, request, pk, **kwargs):
         try:
             exp = Expense.objects.get(id=int(pk), owner__user=request.user)
@@ -110,6 +123,7 @@ class ExpenseViewSet(GenericViewSet):
     """
     Remove expense based on ID.
     """
+
     def destroy(self, request, pk, **kwargs):
         try:
             exp = Expense.objects.get(id=int(pk))

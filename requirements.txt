@@ -3,3 +3,5 @@ django == 1.10.6
 psycopg2 == 2.7.1
 djangorestframework == 3.6.2
 requests == 2.13.0
+channels
+asgi_redis

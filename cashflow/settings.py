@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +43,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'expenses',
     'rest_framework',
-    'storages'
+    'storages',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -88,6 +89,16 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+        "ROUTING": "expenses.routing.channel_routing",
+    },
 }
 
 # noinspection PyRedeclaration

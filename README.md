@@ -28,6 +28,7 @@ The following environment variables are required to run the project:
 | S3_SECRET_ACCESS_KEY  | Amazon AWS IAM secret access key      | ---                           |
 | S3_USE_SIGV4          | If Frankfurt, set to False            | True                          |
 | S3_HOST               | Login2 API key for KTH authentication | s3.eu-central-1.amazonaws.com |
+| REDIS_URL             | Url to a asgi-redis server            | redis://localhost:6379        |
 
 When running the project, you have two options for the frontend.
 Django is configured to look for index.html and the static files in the `build`
