@@ -24,12 +24,13 @@ class Expenses extends Component {
 }
 
 Expenses.propTypes = {
-    expenses: PropTypes.array.isRequired
+    expenses: PropTypes.array.isRequired,
+    actions: PropTypes.object.isRequired
 };
 
 function mapStateToProps (state) {
     return {
-        expenses: state.expenses
+        expenses: state.expensesReducer
     }
 }
 
