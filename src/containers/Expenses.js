@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
-import ExpensesActions from '../actions/ExpensesActions';
+import * as ExpensesActions from '../actions/ExpensesActions';
 import { connect } from "react-redux";
 
 class Expenses extends Component {
@@ -10,7 +10,11 @@ class Expenses extends Component {
             <div>
                 <h1>Expenses</h1>
 
+                <a onClick={actions.loadExpenses}>Fetch expenses</a>
 
+                <ul>
+                    {expenses.map(e => <li>e</li>)}
+                </ul>
 
                 <hr />
                 {children}
