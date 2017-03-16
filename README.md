@@ -13,16 +13,21 @@ npm install
 
 The following environment variables are required to run the project:
 
-| Variable   | Description                           | Default   |
-|------------|---------------------------------------|-----------|
-| DB_HOST    | PostgreSQL server hostname            | localhost |
-| DB_NAME    | PostgreSQL database                   | cashflow  |
-| DB_USER    | PostgreSQL username                   | postgres  |
-| DB_PASS    | PostgreSQL password                   | postgres  |
-| DB_PORT    | PostgreSQL port                       | 5432      |
-| DEBUG      | Django debug mode                     | False     |
-| SECRET_KEY | Django encryption key                 | ---       |
-| LOGIN2_KEY | Login2 API key for KTH authentication | ---       |
+| Variable              | Description                           | Default                       |
+|-----------------------|---------------------------------------|-------------------------------|
+| DB_HOST               | PostgreSQL server hostname            | localhost                     |
+| DB_NAME               | PostgreSQL database                   | cashflow                      |
+| DB_USER               | PostgreSQL username                   | postgres                      |
+| DB_PASS               | PostgreSQL password                   | postgres                      |
+| DB_PORT               | PostgreSQL port                       | 5432                          |
+| DEBUG                 | Django debug mode                     | False                         |
+| SECRET_KEY            | Django encryption key                 | ---                           |
+| LOGIN2_KEY            | Login2 API key for KTH authentication | ---                           |
+| S3_BUCKET_NAME        | Amazon AWS s3 bucket name             | ---                           |
+| S3_ACCESS_KEY_ID      | Amazon AWS IAM access key id          | ---                           |
+| S3_SECRET_ACCESS_KEY  | Amazon AWS IAM secret access key      | ---                           |
+| S3_USE_SIGV4          | If Frankfurt, set to False            | True                          |
+| S3_HOST               | Login2 API key for KTH authentication | s3.eu-central-1.amazonaws.com |
 
 When running the project, you have two options for the frontend.
 Django is configured to look for index.html and the static files in the `build`
