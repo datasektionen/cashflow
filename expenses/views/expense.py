@@ -64,6 +64,21 @@ class ExpenseViewSet(GenericViewSet):
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+    @detail_route()
+    def files(self, request, pk, **kwargs):
+        try:
+            exp = Expense.objects.get(id=int(pk))
+        except ValueError as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if may_view_expense(exp, request):
+            # noinspection PyShadowingBuiltins
+            return Response({'files': [file.to_dict() for file in exp.file_set.all()]})
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
 
 def may_view_expense(exp, request):
     # Helper method

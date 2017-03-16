@@ -186,6 +186,12 @@ class File(models.Model):
     def __unicode__(self):
         return self.file.url
 
+    def to_dict(self):
+        return {
+            'url': self.url,
+            'id': self.id
+        }
+
 
 class ExpensePart(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)

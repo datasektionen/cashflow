@@ -118,9 +118,9 @@ AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')
 AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'xxxxxxxxxxxxxxxxxxxx')
 AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
 
+AWS_S3_HOST = os.getenv('S3_HOST', 's3.eu-central-1.amazonaws.com')
 AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
 
 MEDIAFILES_LOCATION = 'media'
 MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
-DEFAULT_FILE_STORAGE = 'expenses.' \
-                       'custom_storages.MediaStorage'
+DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
