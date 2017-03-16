@@ -42,7 +42,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'expenses',
-    'rest_framework'
+    'rest_framework',
+    'storages'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -91,6 +92,7 @@ DATABASES = {
     }
 }
 
+# noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60*60*24*2  # Sessions expire after 2 days
 
 # Internationalization
@@ -106,10 +108,21 @@ USE_L10N = True
 
 USE_TZ = True
 
-AUTH_API_KEY = os.getenv('LOGIN2_KEY', 'key-012345678910111213141516171819"')
+AUTH_API_KEY = os.getenv('LOGIN2_KEY', 'key-012345678910111213141516171819')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 STATICFILES_DIRS = ['build/static/']
 STATIC_ROOT = 'build/'
 STATIC_URL = '/static/'
+
+AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')
+AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'xxxxxxxxxxxxxxxxxxxx')
+AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY','yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+
+AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
+
+MEDIAFILES_LOCATION = 'media'
+MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
+DEFAULT_FILE_STORAGE = 'expenses.' \
+                       'custom_storages.MediaStorage'

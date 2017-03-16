@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User as AuthUser
+from django.db import models
 from django.forms.models import model_to_dict
 
 
@@ -178,13 +178,13 @@ class Expense(models.Model):
 
 class File(models.Model):
     belonging_to = models.ForeignKey(Expense)
-    file_path = models.FilePathField()
+    file = models.FileField()
 
     def __str__(self):
-        return self.file_path
+        return self.file.url
 
     def __unicode__(self):
-        return self.file_path
+        return self.file.url
 
 
 class ExpensePart(models.Model):
