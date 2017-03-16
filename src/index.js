@@ -23,8 +23,6 @@ const store = configureStore();
 // http://stackoverflow.com/a/34015469/988941
 injectTapEventPlugin();
 
-store.dispatch(loadExpenses());
-
 const muiTheme = getMuiTheme({
     palette: {
         primary1Color: green500,

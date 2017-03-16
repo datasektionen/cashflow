@@ -10,12 +10,12 @@ class Dashboard extends Component {
             <Container fluid={true}>
                 <Row>
                     <Col md="8">
-                        <Paper zDepth={2}>
+                        <Paper zDepth={1}>
                             <h2>Welcome to the Dashboard!</h2>
                         </Paper>
                     </Col>
                     <Col md="4">
-                        <Paper zDepth={2} style={{height: "80vh"}}>
+                        <Paper zDepth={1} style={{height: "80vh"}}>
                             <h2>möp</h2>
                         </Paper>
                     </Col>

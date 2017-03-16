@@ -4,6 +4,11 @@ import * as ExpensesActions from '../actions/ExpensesActions';
 import { connect } from "react-redux";
 
 class Expenses extends Component {
+
+    componentWillMount () {
+        this.props.actions.loadExpenses();
+    }
+
     render () {
         const { expenses, actions, children } = this.props;
         return (
@@ -13,7 +18,7 @@ class Expenses extends Component {
                 <a onClick={actions.loadExpenses}>Fetch expenses</a>
 
                 <ul>
-                    {expenses.map(e => <li>e</li>)}
+                    {expenses.map(e => <li>{JSON.stringify(e)}</li>)}
                 </ul>
 
                 <hr />

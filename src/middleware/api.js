@@ -16,6 +16,7 @@ export default store => next => action => {
 
     dispatch({ type: sendingType });
     superAgent[method](path)
+        .withCredentials()
         .query(query)
         .end((err, res) => {
             if (err) {

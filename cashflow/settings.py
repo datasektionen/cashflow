@@ -32,11 +32,8 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 ALLOWED_HOSTS = ['*']
 
 # CORS configuration
-CORS_ORIGIN_ALLOW_ALL = False
-
-CORS_ORIGIN_WHITELIST = (
-    'localhost:8000'
-)
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
