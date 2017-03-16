@@ -1,3 +1,6 @@
+import json
+
+from datetime import date
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -7,7 +10,7 @@ from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
-from expenses.models import Expense
+from expenses.models import Expense, ExpensePart
 
 
 # noinspection PyUnusedLocal,PyMethodMayBeStatic
@@ -20,6 +23,77 @@ class ExpenseViewSet(GenericViewSet):
     """
     def list(self, request, **kwargs):
         return Response({'expenses': [exp.to_dict() for exp in Expense.objects.filter(owner__user=request.user)]})
+
+    def create(self, request, **kwargs):
+        parts_to_be_saved = []
+        try:
+            json_args = json.loads(request.POST['json'])
+
+            exp = Expense(
+                owner=request.user,
+                description=json_args['description'],
+                expense_date=date(json_args['expense_date'])
+            )
+
+            for part in json_args['expense_parts']:
+                p = ExpensePart(
+                    expense=exp,
+                    budget_line_id=part['budget_line_id'],
+                    amount=part['amount']
+                )
+                parts_to_be_saved.append(p)
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        exp.save()
+        for p in parts_to_be_saved:
+            p.save()
+        return Response({'expense', exp.to_dict()})
+
+    def partial_update(self, request, pk, **kwargs):
+        parts_to_be_saved = []
+
+        try:
+            exp = Expense.objects.get(id=int(pk), owner__user=request.user)
+        except ValueError as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            json_args = json.loads(request.POST['json'])
+
+            if 'description' in json_args:
+                exp.description = json_args['description']
+            if 'expense_date' in json_args:
+                exp.expense_date = date(json_args['expense_date'])
+
+            if 'expense_parts' in json_args:
+                for part in json_args['expense_parts']:
+                    if 'id' in part:
+                        try:
+                            p = ExpensePart.objects.get(id=part['id'], owner__user=request.user)
+                        except ValueError as e:
+                            return Response(status=status.HTTP_400_BAD_REQUEST)
+                        except ObjectDoesNotExist as e:
+                            return Response(status=status.HTTP_404_NOT_FOUND)
+
+                        if 'budget_line_id' in part:
+                            p.budget_line_id = part['budget_line_id']
+                        if 'amount' in part:
+                            p.amount = part['amount']
+                    else:
+                        p = ExpensePart(
+                            expense=e,
+                            budget_line_id=part['budget_line_id'],
+                            amount=part['amount']
+                        )
+                    parts_to_be_saved.append(p)
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        exp.save()
+        for p in parts_to_be_saved:
+            p.save()
+        return Response({'expense', exp.to_dict()})
 
     """
     Retrieve a single expense with parts and file information
