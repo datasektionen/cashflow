@@ -1,16 +1,21 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Router, Route, hashHistory, IndexRoute } from 'react-router'
-import App from './App';
+import { Router, Route, hashHistory, IndexRoute } from 'react-router';
+import { Provider } from 'react-redux';
+
 import './index.css';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import {green500, green700, green100} from "material-ui/styles/colors";
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
-import Dashboard from './Dashboard';
-import Expenses from './Expenses';
-import Expense from './Expense';
+import App from './App';
+import Dashboard from './containers/Dashboard';
+import Expenses from './containers/Expenses';
+import Expense from './containers/Expense';
+
+import configureStore from './store/configureStore';
+const store = configureStore();
 
 // Needed for onTouchTap
 // http://stackoverflow.com/a/34015469/988941
@@ -28,20 +33,22 @@ class Bootstrap extends Component {
     render () {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
-                <App children={this.props.children} />
+                <App {...this.props} />
             </MuiThemeProvider>
         )
     }
 }
 
 ReactDOM.render(
-    <Router history={hashHistory}>
-        <Route path="/" component={Bootstrap}>
-            <IndexRoute component={Dashboard} />
-            <Route path="expenses" component={Expenses}>
-                <Route path=":id" component={Expense} />
+    <Provider store={store}>
+        <Router history={hashHistory}>
+            <Route path="/" component={Bootstrap}>
+                <IndexRoute component={Dashboard} />
+                <Route path="expenses" component={Expenses}>
+                    <Route path=":id" component={Expense} />
+                </Route>
             </Route>
-        </Route>
-    </Router>,
+        </Router>
+    </Provider>,
     document.getElementById('root')
 );

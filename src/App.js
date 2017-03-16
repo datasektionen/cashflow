@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Drawer from 'material-ui/Drawer';
 import AppBar from 'material-ui/AppBar';
 
-import Nav from './Nav';
+import Nav from './containers/Nav';
 
 class App extends Component {
     constructor(props) {
