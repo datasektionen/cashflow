@@ -2,57 +2,58 @@ import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import * as ExpenseActions from '../actions/ExpenseActions';
 import { connect } from "react-redux";
-import Container from 'muicss/lib/react/container';
-import Row from 'muicss/lib/react/row';
-import Col from 'muicss/lib/react/col';
 
 import { Table, TableHeader, TableHeaderColumn, TableBody, TableRow, TableRowColumn } from 'material-ui/Table';
 import Dialog from 'material-ui/Dialog';
+import Subheader from 'material-ui/Subheader';
+import FlatButton from 'material-ui/FlatButton';
 import {grey500} from "material-ui/styles/colors";
 
 class Expense extends Component {
 
+    state = {
+        open: true
+    };
+
     componentWillMount () {
         this.props.actions.loadExpense(this.props.params.id);
+        this.props.actions.loadExpenseComments(this.props.params.id);
     }
 
+    handleClose = () => {
+        this.setState({ open: false });
+        this.context.router.push("/expenses");
+    };
+
     render () {
-        const { expense } = this.props;
+        const expense = this.props.expense.data;
+        const comments = this.props.expense.comments;
+        const title = expense.description + " (" + expense.expense_date + ")";
+        const actions = [
+            <FlatButton
+                label="Stäng"
+                primary={true}
+                onTouchTap={this.handleClose}
+            />
+        ];
+
         return (
-            <Dialog open={true} modal={true} autoScrollBodyContent={true} title={expense.description}>
-                <Container fluid={true}>
-                    <Row>
-                        <Col sm="6">
-                            <strong>Beskrivning</strong>
-                        </Col>
-                        <Col sm="6">
-                            {expense.description}
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col sm="6">
-                            <strong>Datum</strong>
-                        </Col>
-                        <Col sm="6">
-                            {expense.expense_date}
-                        </Col>
-                    </Row>
-                </Container>
-                <h4>Delar</h4>
+            <Dialog open={this.state.open} modal={true} autoScrollBodyContent={true} title={title} actions={actions}>
+                <Subheader>Kvittodelar</Subheader>
 
                 <Table selectable={false}>
-                        <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
-                            <TableRow selectable={false}>
-                                <TableHeaderColumn>Nämnd</TableHeaderColumn>
-                                <TableHeaderColumn>Budgetpost</TableHeaderColumn>
-                                <TableHeaderColumn>Kostnadsställe</TableHeaderColumn>
-                                <TableHeaderColumn>Belopp</TableHeaderColumn>
-                                <TableHeaderColumn>Attestdatum</TableHeaderColumn>
-                                <TableHeaderColumn>Attesterat av</TableHeaderColumn>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody showRowHover={true} displayRowCheckbox={false}>
-                            {!expense.expense_parts ? false : expense.expense_parts.map(row => (
+                    <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                        <TableRow selectable={false}>
+                            <TableHeaderColumn>Nämnd</TableHeaderColumn>
+                            <TableHeaderColumn>Budgetpost</TableHeaderColumn>
+                            <TableHeaderColumn>Kostnadsställe</TableHeaderColumn>
+                            <TableHeaderColumn>Belopp</TableHeaderColumn>
+                            <TableHeaderColumn>Attestdatum</TableHeaderColumn>
+                            <TableHeaderColumn>Attesterat av</TableHeaderColumn>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody showRowHover={true} displayRowCheckbox={false}>
+                        {!expense.expense_parts ? false : expense.expense_parts.map(row => (
                                 <TableRow key={row.id}>
                                     <TableRowColumn>{row.budget_line.cost_centre.committee.committee_name}</TableRowColumn>
                                     <TableRowColumn>{row.budget_line.cost_centre.cost_centre_name}</TableRowColumn>
@@ -72,10 +73,29 @@ class Expense extends Component {
                                     </TableRowColumn>
                                 </TableRow>
                             ))}
-                        </TableBody>
-                    </Table>
+                    </TableBody>
+                </Table>
 
-                {JSON.stringify(this.props.expense)}
+                <Subheader>Kommentarer</Subheader>
+
+                <Table selectable={false}>
+                    <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                        <TableRow selectable={false}>
+                            <TableHeaderColumn>Datum</TableHeaderColumn>
+                            <TableHeaderColumn>Kommentar</TableHeaderColumn>
+                            <TableHeaderColumn>Författare</TableHeaderColumn>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody showRowHover={true} displayRowCheckbox={false}>
+                        {!comments ? false : comments.map(row => (
+                                <TableRow key={row.id}>
+                                    <TableRowColumn>{row.date}</TableRowColumn>
+                                    <TableRowColumn>{row.content}</TableRowColumn>
+                                    <TableRowColumn>{row.author_first_name} {row.author_last_name}</TableRowColumn>
+                                </TableRow>
+                            ))}
+                    </TableBody>
+                </Table>
             </Dialog>
         );
     }
@@ -84,6 +104,10 @@ class Expense extends Component {
 Expense.propTypes = {
     expense: PropTypes.object.isRequired,
     actions: PropTypes.object.isRequired
+};
+
+Expense.contextTypes = {
+    router: PropTypes.object.isRequired
 };
 
 function mapStateToProps (state) {

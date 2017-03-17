@@ -4,9 +4,15 @@ import initialState from './initialState';
 export default function expenseReducer(state = initialState.expense, action) {
     switch (action.type) {
         case types.LOAD_EXPENSE_SUCCESS:
-            return action.response;
+            return {
+                data: action.response,
+                comments: state.comments
+            };
         case types.LOAD_EXPENSE_COMMENTS_SUCCESS:
-            return action.response.comments;
+            return {
+                data: state.data,
+                comments: action.response.comments
+            };
         default:
             return state;
     }

@@ -1,4 +1,7 @@
 export default {
     expenses: [],
-    expense: {}
+    expense: {
+        data: {},
+        comments: []
+    }
 }

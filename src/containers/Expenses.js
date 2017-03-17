@@ -42,7 +42,7 @@ class Expenses extends Component {
                         </TableHeader>
                         <TableBody showRowHover={true}>
                             {expenses.map(row => (
-                                <TableRow key={row.id}>
+                                <TableRow key={row.id} selected={false}>
                                     <TableRowColumn>{row.description}</TableRowColumn>
                                     <TableRowColumn>{row.expense_date}</TableRowColumn>
                                     <TableRowColumn>{row.expense_parts.length} delar</TableRowColumn>
