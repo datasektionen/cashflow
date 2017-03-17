@@ -67,7 +67,7 @@ class Expense extends Component {
                                     </TableRowColumn>
                                     <TableRowColumn>
                                         {row.attested_by
-                                            ? <span>{row.attested_by}</span>
+                                            ? <span>{row.attested_by_first_name} {row.attested_by_last_name}</span>
                                             : <em style={{color: grey500}}>Ej attesterad</em>
                                         }
                                     </TableRowColumn>
