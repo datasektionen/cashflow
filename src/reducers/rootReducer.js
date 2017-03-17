@@ -4,9 +4,9 @@ import expenseReducer from './expenseReducer';
 import appReducer from './appReducer';
 
 const rootReducer = combineReducers({
-    appReducer,
-    expensesReducer,
-    expenseReducer
+    app: appReducer,
+    expenses: expensesReducer,
+    expense: expenseReducer
 });
 
 export default rootReducer;

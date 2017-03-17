@@ -112,7 +112,7 @@ Expense.contextTypes = {
 
 function mapStateToProps (state) {
     return {
-        expense: state.expenseReducer
+        expense: state.expense
     }
 }
 

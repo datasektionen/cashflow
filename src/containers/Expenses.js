@@ -11,6 +11,7 @@ class Expenses extends Component {
 
     componentWillMount () {
         this.props.actions.loadExpenses();
+        this.props.actions.setTitle("Mina inköp");
         this.handleClick = this.handleClick.bind(this);
     }
 
@@ -29,8 +30,6 @@ class Expenses extends Component {
         return (
             <Paper zDepth={1}>
                 <div style={{padding: "5px 20px"}}>
-                    <h1 style={{fontWeight: "normal"}}>Mina inköp</h1>
-
                     <Table fixedHeader={true} fixedFooter={true} selectable={true} onRowSelection={this.handleClick}>
                         <TableHeader>
                             <TableRow>
@@ -75,7 +74,7 @@ Expenses.contextTypes = {
 
 function mapStateToProps (state) {
     return {
-        expenses: state.expensesReducer
+        expenses: state.expenses
     }
 }
 
