@@ -101,7 +101,7 @@ class UserViewSet(GenericViewSet):
 
         # Update affected fields
         try:
-            json_args = json.loads(request.PATCH['json'])
+            json_args = request.data
 
             if 'bank_account' in json_args:
                 person.bank_account = json_args['bank_account']

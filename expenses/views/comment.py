@@ -103,7 +103,7 @@ class CommentViewSet(GenericViewSet):
 
         # Modify its contents
         try:
-            json_args = json.loads(request.PATCH['json'])
+            json_args = request.data
             if 'content' in json_args:
                 c.content = json_args['content']
             c.save()
