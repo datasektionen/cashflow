@@ -15,8 +15,6 @@
     Python version: 3.5
 """
 
-import json
-
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
@@ -28,7 +26,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
-from expenses.models import Person
+from expenses.models import Person, Payment
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
@@ -101,7 +99,7 @@ class UserViewSet(GenericViewSet):
 
         # Update affected fields
         try:
-            json_args = json.loads(request.PATCH['json'])
+            json_args = request.data
 
             if 'bank_account' in json_args:
                 person.bank_account = json_args['bank_account']
@@ -116,3 +114,11 @@ class UserViewSet(GenericViewSet):
             return Response({'user': person.to_dict()})
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def payments(self, request, username, **kwargs):
+        if request.user.username is username or has_permission("admin", request):
+            return Response({
+                'payments': [payment.to_dict() for payment in Payment.objects.filter(receiver__user__username=username)]
+            })
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
