@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from cashflow.dauth import has_permission
 from expenses.models import Expense, Payment
 
 
@@ -16,9 +17,12 @@ class PaymentViewSet(GenericViewSet):
     permission_classes = (IsAuthenticated,)
 
     def list(self, request, **kwargs):
-        return Response({
-            'payments': [payment.to_dict() for payment in Payment.objects.filter(receiver__user=request.user)]
-        })
+        if has_permission("admin", request):
+            return Response({
+                'payments': [payment.to_dict() for payment in Payment.objects.all()]
+            })
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
     def retrieve(self, request, pk, **kwargs):
         try:
