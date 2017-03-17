@@ -14,8 +14,6 @@ import Dashboard from './containers/Dashboard';
 import Expenses from './containers/Expenses';
 import Expense from './containers/Expense';
 
-import { loadExpenses } from './actions/ExpensesActions';
-
 import configureStore from './store/configureStore';
 const store = configureStore();
 
