@@ -12,7 +12,7 @@ from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
-from expenses.models import Expense, ExpensePart
+from expenses.models import Expense, ExpensePart, Person
 
 
 # noinspection PyUnusedLocal,PyMethodMayBeStatic
@@ -34,7 +34,7 @@ class ExpenseViewSet(GenericViewSet):
             json_args = json.loads(request.POST['json'])
 
             exp = Expense(
-                owner=request.user,
+                owner=Person.objects.get(user=request.user),
                 description=json_args['description'],
                 expense_date=datetime.strptime(json_args['expense_date'], "%Y-%m-%d").date()
             )
@@ -49,7 +49,11 @@ class ExpenseViewSet(GenericViewSet):
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         exp.save()
-        exp_dict = {'expense', exp.to_dict()}
+        for p in parts_to_be_saved:
+            p.expense = exp
+            p.save()
+
+        exp_dict = {'expense': exp.to_dict()}
         for p in parts_to_be_saved:
             Group("attest-" +
                   p.budget_line.cost_centre.committee.name
@@ -57,7 +61,6 @@ class ExpenseViewSet(GenericViewSet):
                   .replace(u'ä', 'a')
                   .replace(u'ö', 'o')) \
                 .send(exp_dict)
-            p.save()
         Group("attest-.").send(exp_dict)
         return Response(exp_dict)
 
