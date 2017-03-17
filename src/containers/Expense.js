@@ -1,15 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+import Dialog from 'material-ui/Dialog';
 
 class Expense extends Component {
-    constructor (props) {
-        super(props);
-    }
-
     render () {
         return (
-            <div>
-                <h2>This is an expense</h2>
-            </div>
+            <Dialog open={true}>
+
+            </Dialog>
         );
     }
 }
