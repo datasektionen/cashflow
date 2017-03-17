@@ -40,7 +40,7 @@ class App extends Component {
                 </Drawer>
 
                 <div style={contentStyle} className="content">
-                    <AppBar title={"Cashfl0w"} onLeftIconButtonTouchTap={this.toggleDrawer} iconElementRight={right} />
+                    <AppBar title={this.props.title} onLeftIconButtonTouchTap={this.toggleDrawer} iconElementRight={right} />
                     <div style={{margin: 20}}>
                         {this.props.children}
                     </div>
@@ -56,14 +56,20 @@ App.propTypes = {
     actions: PropTypes.object.isRequired
 };
 
+App.contextTypes = {
+    store: PropTypes.object.isRequired
+};
+
 function mapStateToProps (state) {
     return {
-        user: state.appReducer
+        user: state.app.user,
+        title: state.app.title
     }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
+        dispatch: dispatch,
         actions: bindActionCreators(AppActions, dispatch)
     }
 }

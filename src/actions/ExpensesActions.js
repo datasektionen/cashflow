@@ -13,3 +13,10 @@ export function loadExpenses () {
         }
     }
 }
+
+export function setTitle (title) {
+    return {
+        type: types.SET_APP_TITLE,
+        title: title
+    }
+}

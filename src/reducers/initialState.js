@@ -1,8 +1,11 @@
 export default {
-    user: {},
+    app: {
+        user: {},
+        title: "Cashfl0w"
+    },
     expenses: [],
     expense: {
         data: {},
         comments: []
-    }
+    },
 }
