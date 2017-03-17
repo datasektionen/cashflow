@@ -1,18 +1,22 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+import { bindActionCreators } from "redux";
+import { Link } from 'react-router';
+import { connect } from "react-redux";
+import * as AppActions from './actions/AppActions';
+
 import Drawer from 'material-ui/Drawer';
 import AppBar from 'material-ui/AppBar';
-import { Link } from 'react-router';
-
-import Nav from './containers/Nav';
-
 import Person from 'material-ui/svg-icons/social/person';
 import FlatButton from 'material-ui/FlatButton';
+
+import Nav from './containers/Nav';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = { drawerOpen: true };
         this.toggleDrawer = this.toggleDrawer.bind(this);
+        props.actions.loadUser();
     }
 
     toggleDrawer() {
@@ -27,7 +31,7 @@ class App extends Component {
         if (this.state.drawerOpen)
             contentStyle.marginLeft = 256;
 
-        const right = <FlatButton icon={<Person />} label="Britt-Marie" containerElement={<Link to="/profile" />} />;
+        const right = <FlatButton icon={<Person />} label={this.props.user.first_name} containerElement={<Link to="/profile" />} />;
 
         return (
             <div className="App">
@@ -46,4 +50,25 @@ class App extends Component {
     }
 }
 
-export default App;
+
+App.propTypes = {
+    user: PropTypes.object.isRequired,
+    actions: PropTypes.object.isRequired
+};
+
+function mapStateToProps (state) {
+    return {
+        user: state.appReducer
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        actions: bindActionCreators(AppActions, dispatch)
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(App);

@@ -1,6 +1,16 @@
+// App Actions
+
+export const LOAD_USER = 'LOAD_USER';
+export const LOAD_USER_SUCCESS = 'LOAD_USER_SUCCESS';
+export const LOAD_USER_FAIL = 'LOAD_USER_FAIL';
+
+// Expenses Actions
+
 export const LOAD_EXPENSES = 'LOAD_EXPENSES';
 export const LOAD_EXPENSES_SUCCESS = 'LOAD_EXPENSES_SUCCESS';
 export const LOAD_EXPENSES_FAIL = 'LOAD_EXPENSES_FAIL';
+
+// Expense Actions
 
 export const LOAD_EXPENSE = 'LOAD_EXPENSE';
 export const LOAD_EXPENSE_SUCCESS = 'LOAD_EXPENSE_SUCCESS';
