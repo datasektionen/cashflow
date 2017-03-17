@@ -27,7 +27,7 @@ class Nav extends Component {
                         <Link to="/expenses" />
                     } />
                     <MenuItem leftIcon={<AddCircle />} primaryText="Lägg till inköp" containerElement={
-                        <Link to="/expenses/new" />
+                        <Link to="/new_expense" />
                     } />
                     <Subheader>Profil</Subheader>
                     <MenuItem leftIcon={<Person />} primaryText="Redigera min profil" containerElement={

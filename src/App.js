@@ -1,8 +1,12 @@
 import React, { Component } from 'react';
 import Drawer from 'material-ui/Drawer';
 import AppBar from 'material-ui/AppBar';
+import { Link } from 'react-router';
 
 import Nav from './containers/Nav';
+
+import Person from 'material-ui/svg-icons/social/person';
+import FlatButton from 'material-ui/FlatButton';
 
 class App extends Component {
     constructor(props) {
@@ -23,6 +27,8 @@ class App extends Component {
         if (this.state.drawerOpen)
             contentStyle.marginLeft = 256;
 
+        const right = <FlatButton icon={<Person />} label="Britt-Marie" containerElement={<Link to="/profile" />} />;
+
         return (
             <div className="App">
                 <Drawer open={this.state.drawerOpen}>
@@ -30,7 +36,7 @@ class App extends Component {
                 </Drawer>
 
                 <div style={contentStyle} className="content">
-                    <AppBar title={"Cashfl0w"} onLeftIconButtonTouchTap={this.toggleDrawer} />
+                    <AppBar title={"Cashfl0w"} onLeftIconButtonTouchTap={this.toggleDrawer} iconElementRight={right} />
                     <div style={{margin: 20}}>
                         {this.props.children}
                     </div>
