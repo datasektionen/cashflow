@@ -169,6 +169,12 @@ class Expense(models.Model):
     def __unicode__(self):
         return self.description
 
+    def compute_total(self):
+        total = 0
+        for part in self.expensepart_set.all():
+            total += part.amount
+        return total
+
     def to_dict(self):
         exp = model_to_dict(self)
         exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self)]
