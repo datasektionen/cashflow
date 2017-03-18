@@ -1,8 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import Paper from 'material-ui/Paper';
-import Container from 'muicss/lib/react/container';
-import Row from 'muicss/lib/react/row';
-import Col from 'muicss/lib/react/col';
 import { SET_APP_TITLE } from '../actions/actionTypes';
 import { connect } from "react-redux";
 

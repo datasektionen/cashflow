@@ -9,5 +9,7 @@ export default {
         comments: []
     },
     newExpense: {},
-    profile: {}
+    profile: {
+        default_account: {}
+    }
 }
