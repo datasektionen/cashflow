@@ -8,4 +8,6 @@ export default {
         data: {},
         comments: []
     },
+    newExpense: {},
+    profile: {}
 }
