@@ -24,10 +24,9 @@ class Profile extends Component {
     render () {
         // const { profile } = this.props;
         const profile = this.props.profile;
+        const textFieldChange = this.props.actions.textFieldChange;
         const style = {
-            marginLeft: 20,
-            marginRight: 20,
-            width: "90%"
+            marginLeft: 20
         };
         const containerStyle = {
             marginBottom: 1
@@ -46,6 +45,7 @@ class Profile extends Component {
                                     floatingLabelText="Förnamn"
                                     floatingLabelFixed={true}
                                     underlineShow={false}
+                                    fullWidth={true}
                                     disabled={true}
                                     value={profile.first_name}
                                 />
@@ -56,6 +56,8 @@ class Profile extends Component {
                                     floatingLabelText="Efternamn"
                                     floatingLabelFixed={true}
                                     underlineShow={false}
+                                    disabled={true}
+                                    fullWidth={true}
                                     value={profile.last_name}
                                 />
                             </Col>
@@ -71,6 +73,7 @@ class Profile extends Component {
                                     floatingLabelFixed={true}
                                     underlineShow={false}
                                     disabled={true}
+                                    fullWidth={true}
                                     value={profile.username + "@kth.se"}
                                 />
                             </Col>
@@ -80,6 +83,8 @@ class Profile extends Component {
                                     floatingLabelText="Förvalt bankkonto"
                                     floatingLabelFixed={true}
                                     underlineShow={false}
+                                    disabled={true}
+                                    fullWidth={true}
                                     value={profile.default_account.name}
                                 />
                             </Col>
@@ -89,22 +94,46 @@ class Profile extends Component {
 
                 <Subheader>Bankuppgifter</Subheader>
 
-                <TextField
-                    style={style}
-                    hintText="Cerisa Banken"
-                    defaultValue={profile.bank_name}
-                    floatingLabelText="Bank"
-                />
-                <TextField
-                    hintText={1234}
-                    defaultValue={profile.sorting_number}
-                    floatingLabelText="Clearingnummer"
-                    onChange={(e, n) => console.log(e, n)}
-                />
-                <TextField
-                    defaultValue="Default Value"
-                    floatingLabelText="Bankkonto"
-                />
+                <Paper zDepth={1}>
+                    <TextField
+                        style={style}
+                        fullWidth={true}
+                        hintText="Cerisa Banken"
+                        value={profile.bank_name}
+                        floatingLabelText="Bank"
+                        underlineShow={false}
+                        onChange={(e, n) => textFieldChange('bank_name', n)}
+                    />
+                    <Divider />
+                    <Container fluid={true} style={containerStyle}>
+                        <Row>
+                            <Col md="6">
+                                <TextField
+                                    style={style}
+                                    floatingLabelText="Clearingnummer"
+                                    floatingLabelFixed={true}
+                                    underlineShow={false}
+                                    hintText={1234}
+                                    type="number"
+                                    fullWidth={true}
+                                    value={profile.sorting_number}
+                                    onChange={(e, n) => textFieldChange('sorting_number', n)}
+                                />
+                            </Col>
+                            <Col md="6">
+                                <TextField
+                                    style={style}
+                                    floatingLabelText="Bankkontonummer"
+                                    value={profile.bank_account}
+                                    floatingLabelFixed={true}
+                                    fullWidth={true}
+                                    underlineShow={false}
+                                    onChange={(e, n) => textFieldChange('bank_account', n)}
+                                />
+                            </Col>
+                        </Row>
+                    </Container>
+                </Paper>
             </div>
         );
     }
