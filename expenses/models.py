@@ -1,8 +1,11 @@
+import requests
 from channels import Group
 from django.contrib.auth.models import User as AuthUser
 from django.db import models
-from django.db.models.signals import post_init
+from django.db.models.signals import post_init, post_save
 from django.forms.models import model_to_dict
+
+from cashflow.settings import FCM_API_KEY
 
 
 class Committee(models.Model):
@@ -102,6 +105,7 @@ class Person(models.Model):
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
     default_account = models.ForeignKey(BankAccount, blank=True, null=True)
+    firebase_instance_id = models.TextField()
 
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name
@@ -225,6 +229,28 @@ class ExpensePart(models.Model):
             exp_part['attested_by_last_name'] = self.attested_by.user.last_name
 
         return exp_part
+
+
+# noinspection PyUnusedLocal
+def send_notification(sender, instance, **kwargs):
+    if isinstance(instance, ExpensePart):
+        exp = instance.expense
+    else:
+        exp = instance
+    if exp.owner.firebase_instance_id is not "":
+        req = requests.post('https://fcm.googleapis.com/fcm/send', json={
+            "notification": {
+                "title": "Uppdaterat kvitto",
+                "body": "Ditt kvitto \"" + str(exp.description) + "\" har uppdaterats"
+            },
+            "to": exp.owner.firebase_instance_id
+        }, headers={
+            "Authorization": "key=" + FCM_API_KEY,
+            "Content-type": "application/json"
+        })
+
+post_save.connect(send_notification, sender=ExpensePart)
+post_save.connect(send_notification, sender=Expense)
 
 
 class Comment(models.Model):
