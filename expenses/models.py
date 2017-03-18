@@ -181,6 +181,7 @@ class Expense(models.Model):
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
+        exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
 
 
