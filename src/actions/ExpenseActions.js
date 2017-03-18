@@ -19,7 +19,7 @@ export function loadExpenseComments (id) {
         type: CALL_API,
         [CALL_API]: {
             method: 'get',
-            path: '/expense/' + id + '/comments',
+            path: '/expense/' + id + '/comments/',
             sendingType: types.LOAD_EXPENSE_COMMENTS,
             successType: types.LOAD_EXPENSE_COMMENTS_SUCCESS,
             failureType: types.LOAD_EXPENSE_COMMENTS_FAIL

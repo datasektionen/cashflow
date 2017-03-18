@@ -42,12 +42,12 @@ class Expenses extends Component {
                         <TableBody showRowHover={true}>
                             {expenses.map(row => (
                                 <TableRow key={row.id} selected={false}>
-                                    <TableRowColumn>{row.description}</TableRowColumn>
+                                    <TableRowColumn><strong>{row.description}</strong></TableRowColumn>
                                     <TableRowColumn>{row.expense_date}</TableRowColumn>
                                     <TableRowColumn>{row.expense_parts.length} delar</TableRowColumn>
                                     <TableRowColumn>
                                         {row.reimbursement
-                                            ? <div>ja</div>
+                                            ? <em>{row.reimbursement.amount} SEK ({row.reimbursement.date})</em>
                                             : <em style={{color: grey500}}>Ej utförd</em>
                                         }
                                     </TableRowColumn>

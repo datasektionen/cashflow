@@ -29,6 +29,7 @@ class Expense extends Component {
         const expense = this.props.expense.data;
         const comments = this.props.expense.comments;
         const title = expense.description + " (" + expense.expense_date + ")";
+        const reimbursement = expense.reimbursement;
         const actions = [
             <FlatButton
                 label="Stäng"
@@ -52,7 +53,7 @@ class Expense extends Component {
                             <TableHeaderColumn>Attesterat av</TableHeaderColumn>
                         </TableRow>
                     </TableHeader>
-                    <TableBody showRowHover={true} displayRowCheckbox={false}>
+                    <TableBody displayRowCheckbox={false} stripedRows={true}>
                         {!expense.expense_parts ? false : expense.expense_parts.map(row => (
                                 <TableRow key={row.id}>
                                     <TableRowColumn>{row.budget_line.cost_centre.committee.committee_name}</TableRowColumn>
@@ -81,19 +82,46 @@ class Expense extends Component {
                 <Table selectable={false}>
                     <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
                         <TableRow selectable={false}>
-                            <TableHeaderColumn>Datum</TableHeaderColumn>
                             <TableHeaderColumn>Kommentar</TableHeaderColumn>
                             <TableHeaderColumn>Författare</TableHeaderColumn>
                         </TableRow>
                     </TableHeader>
-                    <TableBody showRowHover={true} displayRowCheckbox={false}>
-                        {!comments ? false : comments.map(row => (
+                    <TableBody displayRowCheckbox={false}>
+                        {!comments
+                            ? <TableRow>
+                                <TableRowColumn style={{color: grey500}}><br />Inga kommentarer<br /><br /></TableRowColumn>
+                            </TableRow>
+                            : comments.map(row => (
                                 <TableRow key={row.id}>
-                                    <TableRowColumn>{row.date}</TableRowColumn>
                                     <TableRowColumn>{row.content}</TableRowColumn>
-                                    <TableRowColumn>{row.author_first_name} {row.author_last_name}</TableRowColumn>
+                                    <TableRowColumn>{row.author_first_name} {row.author_last_name} ({row.date})</TableRowColumn>
                                 </TableRow>
                             ))}
+                    </TableBody>
+                </Table>
+
+                <Subheader>Återbetalning</Subheader>
+
+                <Table selectable={false}>
+                    <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                        <TableRow selectable={false}>
+                            <TableHeaderColumn>Datum</TableHeaderColumn>
+                            <TableHeaderColumn>Mottagare</TableHeaderColumn>
+                            <TableHeaderColumn>Belopp</TableHeaderColumn>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody displayRowCheckbox={false}>
+                        {!reimbursement
+                            ? <TableRow>
+                                <TableRowColumn style={{color: grey500}}><br />Inga kommentarer<br /><br /></TableRowColumn>
+                            </TableRow>
+                            : <TableRow>
+                                <TableRowColumn>{reimbursement.date}</TableRowColumn>
+                                <TableRowColumn>
+                                    {reimbursement.receiver.first_name} {reimbursement.receiver.last_name}
+                                </TableRowColumn>
+                                <TableRowColumn>{reimbursement.amount} SEK</TableRowColumn>
+                            </TableRow>}
                     </TableBody>
                 </Table>
             </Dialog>

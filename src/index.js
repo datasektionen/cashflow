@@ -13,6 +13,7 @@ import App from './App';
 import Dashboard from './containers/Dashboard';
 import Expenses from './containers/Expenses';
 import Expense from './containers/Expense';
+import Profile from './containers/Profile';
 
 import configureStore from './store/configureStore';
 const store = configureStore();
@@ -47,6 +48,7 @@ ReactDOM.render(
                 <Route path="expenses" component={Expenses}>
                     <Route path=":id" component={Expense} />
                 </Route>
+                <Route path="profile" component={Profile} />
             </Route>
         </Router>
     </Provider>,
