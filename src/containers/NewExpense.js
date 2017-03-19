@@ -6,15 +6,11 @@ import { connect } from "react-redux";
 import Paper from 'material-ui/Paper';
 import { Table, TableHeader, TableHeaderColumn, TableBody, TableRow, TableRowColumn } from 'material-ui/Table';
 import DatePicker from 'material-ui/DatePicker';
-import {grey500} from "material-ui/styles/colors";
 import Subheader from "material-ui/Subheader";
 import TextField from "material-ui/TextField";
-import Divider from "material-ui/Divider";
 import RaisedButton from 'material-ui/RaisedButton';
 import MenuItem from 'material-ui/MenuItem';
-import DropDownMenu from 'material-ui/DropDownMenu';
 import SelectField from 'material-ui/SelectField';
-import { Toolbar, ToolbarGroup, ToolbarTitle, ToolbarSeparator } from 'material-ui/Toolbar';
 
 import Col from "muicss/lib/react/col";
 import Row from "muicss/lib/react/row";
@@ -31,12 +27,17 @@ class NewExpense extends Component {
     render () {
         const { actions, newExpense } = this.props;
         const { data, parts, committees, costCentres } = newExpense;
-        const textFieldChange = this.props.actions.textFieldChange;
+        const { textFieldChange, loadCostCentres, constructPart } = this.props.actions;
         const style = {
             marginLeft: 20
         };
         const containerStyle = {
             marginBottom: 1
+        };
+
+        const committeeChange = (id) => {
+            textFieldChange('committee', id);
+            loadCostCentres(id);
         };
 
         return (
@@ -55,6 +56,7 @@ class NewExpense extends Component {
                                     fullWidth={true}
                                     hintText="Middag teambuildingevent"
                                     value={data.description}
+                                    onChange={(n, d) => textFieldChange('description', d)}
                                 />
                             </Col>
                             <Col md="6">
@@ -84,11 +86,11 @@ class NewExpense extends Component {
                             </TableRow>
                         </TableHeader>
                         <TableBody displayRowCheckbox={false} stripedRows={true}>
-                            {!parts ? false : parts.map(row => (
-                                    <TableRow key={row.id}>
-                                        <TableRowColumn>{row.budget_line.cost_centre.committee.committee_name}</TableRowColumn>
-                                        <TableRowColumn>{row.budget_line.cost_centre.cost_centre_name}</TableRowColumn>
-                                        <TableRowColumn>{row.budget_line.budget_line_name}</TableRowColumn>
+                            {!parts ? false : parts.map((row, index) => (
+                                    <TableRow key={index}>
+                                        <TableRowColumn>{row.committee_name}</TableRowColumn>
+                                        <TableRowColumn>{row.cost_centre_name}</TableRowColumn>
+                                        <TableRowColumn>{row.budget_line_name}</TableRowColumn>
                                         <TableRowColumn><em>{row.amount} SEK</em></TableRowColumn>
                                     </TableRow>
                                 ))}
@@ -99,38 +101,64 @@ class NewExpense extends Component {
                 <Container fluid={true} style={style}>
                     <Row>
                         <Col md="2">
-                            <SelectField floatingLabelText="Nämnd" value={2} fullWidth={true}>
+                            <SelectField
+                                floatingLabelText="Nämnd"
+                                fullWidth={true}
+                                value={data.committee}
+                                onChange={(e, k, v) => committeeChange(v)}>
                                 {committees.map(committee =>
-                                    <MenuItem value={committee.committee_id} primaryText={committee.committee_name} />)}
+                                    <MenuItem
+                                        key={committee.committee_id}
+                                        value={committee.committee_id}
+                                        primaryText={committee.committee_name} />)}
                             </SelectField>
                         </Col>
                         <Col md="3">
-                            <SelectField floatingLabelText="Budgetpost" value={2} fullWidth={true}>
-                                <MenuItem value={1} primaryText="All Broadcasts" />
-                                <MenuItem value={2} primaryText="All Voice" />
-                                <MenuItem value={3} primaryText="All Text" />
-                                <MenuItem value={4} primaryText="Complete Voice" />
-                                <MenuItem value={5} primaryText="Complete Text" />
-                                <MenuItem value={6} primaryText="Active Voice" />
-                                <MenuItem value={7} primaryText="Active Text" />
+                            <SelectField
+                                disabled={!data.committee}
+                                floatingLabelText="Budgetpost"
+                                onChange={(e, k, v) => textFieldChange('cost_centre', v)}
+                                value={data.cost_centre}
+                                fullWidth={true}>
+                                {costCentres.map(cost_centre =>
+                                    <MenuItem
+                                        key={cost_centre.cost_centre_id}
+                                        value={cost_centre.cost_centre_id}
+                                        primaryText={cost_centre.cost_centre_name} />)}
                             </SelectField>
                         </Col>
                         <Col md="3">
-                            <SelectField floatingLabelText="Kostnadsställe" value={2} fullWidth={true}>
-                                <MenuItem value={1} primaryText="All Broadcasts" />
-                                <MenuItem value={2} primaryText="All Voice" />
-                                <MenuItem value={3} primaryText="All Text" />
-                                <MenuItem value={4} primaryText="Complete Voice" />
-                                <MenuItem value={5} primaryText="Complete Text" />
-                                <MenuItem value={6} primaryText="Active Voice" />
-                                <MenuItem value={7} primaryText="Active Text" />
+                            <SelectField
+                                disabled={!data.cost_centre}
+                                floatingLabelText="Kostnadsställe"
+                                onChange={(e, k, v) => textFieldChange('budget_line', v)}
+                                value={data.budget_line}
+                                fullWidth={true}>
+                                {data.cost_centre
+                                    ? costCentres
+                                        .filter(cc => cc.cost_centre_id === data.cost_centre)[0]
+                                        .budget_lines
+                                        .map(bl =>
+                                            <MenuItem key={bl.budget_line_id} value={bl.budget_line_id} primaryText={bl.budget_line_name} />
+                                    ) : false
+                                }
                             </SelectField>
                         </Col>
                         <Col md="2">
-                            <TextField floatingLabelText="Belopp" type="number" fullWidth={true} />
+                            <TextField
+                                floatingLabelText="Belopp"
+                                type="number"
+                                value={data.amount}
+                                onChange={(e, v) => textFieldChange('amount', v)}
+                                fullWidth={true} />
                         </Col>
                         <Col md="2">
-                            <RaisedButton style={{marginTop: 25}} label="Lägg till" disabled={true} />
+                            <RaisedButton
+                                style={{marginTop: 25}}
+                                label="Lägg till"
+                                disabled={!(data.committee && data.cost_centre && data.budget_line && data.amount)}
+                                onTouchTap={() => constructPart(data, committees, costCentres)}
+                            />
                         </Col>
                     </Row>
                 </Container>

@@ -14,7 +14,7 @@ export function loadCommittees () {
     }
 }
 
-export function loadCostCentre (committeeId) {
+export function loadCostCentres (committeeId) {
     return {
         type: CALL_API,
         [CALL_API]: {
@@ -23,6 +23,24 @@ export function loadCostCentre (committeeId) {
             sendingType: types.LOAD_COST_CENTRES,
             successType: types.LOAD_COST_CENTRES_SUCCESS,
             failureType: types.LOAD_COST_CENTRES_FAIL
+        }
+    }
+}
+
+export function constructPart (data, committees, costCentres) {
+    const { committee, cost_centre, budget_line } = data;
+    const committeeObj = committees.filter(c => c.committee_id === committee)[0];
+    const costCentreObj = costCentres.filter(cc => cc.cost_centre_id === cost_centre)[0];
+    const budgetLineObj = costCentreObj.budget_lines.filter(bl => bl.budget_line_id === budget_line)[0];
+
+    return {
+        type: types.ADD_EXPENSE_PART,
+        part: {
+            amount: data.amount,
+            budget_line_id: budget_line,
+            budget_line_name: budgetLineObj.budget_line_name,
+            committee_name: committeeObj.committee_name,
+            cost_centre_name: costCentreObj.cost_centre_name
         }
     }
 }

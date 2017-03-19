@@ -13,6 +13,21 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 committees: state.committees,
                 costCentres: state.costCentres
             };
+
+        case types.ADD_EXPENSE_PART:
+            const expandedParts = [].concat(state.parts, action.part);
+
+            return {
+                data: {
+                    description: state.data.description,
+                    date: state.data.date,
+                    amount: 0
+                },
+                parts: expandedParts,
+                committees: state.committees,
+                costCentres: state.costCentres
+            };
+
         case types.LOAD_COST_CENTRES_SUCCESS:
             return {
                 data: state.data,
@@ -20,6 +35,7 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 committees: state.committees,
                 costCentres: action.response.cost_centres
             };
+
         case types.LOAD_COMMITTEES_SUCCESS:
             return {
                 data: state.data,
