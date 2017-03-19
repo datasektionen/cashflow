@@ -31,11 +31,11 @@ class Dashboard extends Component {
                     <div style={{padding: "5px 20px"}}>
                         <p>
                             För att du ska kunna få återbetalning på utlägg krävs två saker:
-                            <ul>
-                                <li>att du har kvar och laddar upp de kvitton som det rör sig om</li>
-                                <li>att du har fyllt i ett svenskt bankkontonummer under "Min profil"</li>
-                            </ul>
                         </p>
+                        <ul>
+                            <li>att du har kvar och laddar upp de kvitton som det rör sig om</li>
+                            <li>att du har fyllt i ett svenskt bankkontonummer under "Min profil"</li>
+                        </ul>
                         <p>
                             Du kan ansöka om återbetalning för ett helt kvitto, eller delar av ett kvitto,
                             från en eller flera budgetposter eller kostnadsställen tillhörande någon av
