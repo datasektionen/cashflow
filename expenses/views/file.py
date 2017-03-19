@@ -45,11 +45,8 @@ class FileViewSet(GenericViewSet):
 
         :param request:     HTTP request
         """
-        # Build Comment object from JSON
-        json_arg = json.loads(request.POST['json'])
-
         try:
-            exp = Expense.objects.get(id=int(json_arg['expense']))
+            exp = Expense.objects.get(id=int(request.POST['expense']))
 
             if exp.owner.user is request.user or True:
                 # noinspection PyShadowingBuiltins
