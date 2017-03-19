@@ -6,3 +6,4 @@ requests == 2.13.0
 channels
 asgi_redis
 django-cors-headers
+boto

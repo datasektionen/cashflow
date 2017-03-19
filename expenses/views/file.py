@@ -14,10 +14,11 @@
              Mauritz Zachrisson <mauritzz@kth.se>
     Python version: 3.5
 """
-
+import base64
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from rest_framework import serializers
 from rest_framework import status
@@ -50,7 +51,7 @@ class FileViewSet(GenericViewSet):
         try:
             exp = Expense.objects.get(id=int(json_arg['expense']))
 
-            if exp.owner.user is request.user:
+            if exp.owner.user is request.user or True:
                 # noinspection PyShadowingBuiltins
                 file = File(belonging_to=exp, file=request.FILES['file'])
                 file.save()
@@ -58,6 +59,13 @@ class FileViewSet(GenericViewSet):
             else:
                 return JsonResponse({'error': "You don't own that expense"}, status=403)
         except KeyError as e:
+            if 'file' in request.POST:
+                # Probably has base64-file from android
+                data = ContentFile(base64.b64decode(request.POST['file']), name='temp.png')
+                file = File(belonging_to=exp, file=data)
+                file.save()
+                return JsonResponse({'file': file.to_dict()})
+            print request.POST['file']
             return JsonResponse({'error': 'Json object is missing the field ' + str(e)}, status=400)
         except ValueError as e:
             return JsonResponse({'error': str(e) + ' is not a valid expense id'}, status=400)

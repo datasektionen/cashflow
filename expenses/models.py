@@ -202,7 +202,7 @@ class File(models.Model):
 
     def to_dict(self):
         return {
-            'url': self.url,
+            'url': self.file.url,
             'id': self.id
         }
 
