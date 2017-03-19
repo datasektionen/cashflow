@@ -11,7 +11,8 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 data: newState,
                 parts: state.parts,
                 committees: state.committees,
-                costCentres: state.costCentres
+                costCentres: state.costCentres,
+                step: state.step
             };
 
         case types.ADD_EXPENSE_PART:
@@ -25,7 +26,8 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 },
                 parts: expandedParts,
                 committees: state.committees,
-                costCentres: state.costCentres
+                costCentres: state.costCentres,
+                step: state.step
             };
 
         case types.LOAD_COST_CENTRES_SUCCESS:
@@ -33,7 +35,8 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 data: state.data,
                 parts: state.parts,
                 committees: state.committees,
-                costCentres: action.response.cost_centres
+                costCentres: action.response.cost_centres,
+                step: state.step
             };
 
         case types.LOAD_COMMITTEES_SUCCESS:
@@ -41,8 +44,28 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 data: state.data,
                 parts: state.parts,
                 committees: action.response.committees,
-                costCentres: state.costCentres
+                costCentres: state.costCentres,
+                step: state.step
             };
+
+        case types.RESET_EXPENSE_STEP:
+            return {
+                data: state.data,
+                parts: state.parts,
+                committees: state.committees,
+                costCentres: state.costCentres,
+                step: 0
+            };
+
+        case types.NEW_EXPENSE_SUBMIT_SUCCESS:
+            return {
+                data: state.data,
+                parts: state.parts,
+                committees: state.committees,
+                costCentres: state.costCentres,
+                step: 1
+            };
+
         default:
             return state;
     }

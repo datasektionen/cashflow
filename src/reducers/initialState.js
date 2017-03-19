@@ -12,7 +12,8 @@ export default {
         data: {},
         parts: [],
         committees: [],
-        costCentres: []
+        costCentres: [],
+        step: 0
     },
     profile: {
         default_account: {}
