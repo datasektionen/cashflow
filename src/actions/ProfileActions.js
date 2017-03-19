@@ -21,3 +21,19 @@ export function textFieldChange (element, newValue) {
         newValue: newValue
     }
 }
+
+export function submitProfile (profile) {
+    delete profile.default_account;
+
+    return {
+        type: CALL_API,
+        [CALL_API]: {
+            method: 'patch',
+            path: '/user/' + profile.username + '/',
+            send: profile,
+            sendingType: types.PROFILE_SUBMIT,
+            successType: types.PROFILE_SUBMIT_SUCCESS,
+            failureType: types.PROFILE_SUBMIT_FAIL
+        }
+    }
+}

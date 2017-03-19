@@ -10,14 +10,14 @@ export default store => next => action => {
         return next(action);
     }
     let request = action[CALL_API];
-    let { method, path, query, failureType, successType, sendingType } = request;
+    let { method, path, send, failureType, successType, sendingType } = request;
     let { dispatch } = store;
     path = "http://127.0.0.1:8000/api" + path;
 
     dispatch({ type: sendingType });
     superAgent[method](path)
         .withCredentials()
-        .query(query)
+        .send(send)
         .end((err, res) => {
             if (err) {
                 dispatch({

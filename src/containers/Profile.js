@@ -9,6 +9,7 @@ import Subheader from "material-ui/Subheader";
 import Paper from "material-ui/Paper";
 import TextField from "material-ui/TextField";
 import Divider from "material-ui/Divider";
+import RaisedButton from 'material-ui/RaisedButton';
 
 import Col from "muicss/lib/react/col";
 import Row from "muicss/lib/react/row";
@@ -22,8 +23,7 @@ class Profile extends Component {
     }
 
     render () {
-        // const { profile } = this.props;
-        const profile = this.props.profile;
+        const { profile, actions } = this.props;
         const textFieldChange = this.props.actions.textFieldChange;
         const style = {
             marginLeft: 20
@@ -129,11 +129,17 @@ class Profile extends Component {
                                     fullWidth={true}
                                     underlineShow={false}
                                     onChange={(e, n) => textFieldChange('bank_account', n)}
+                                    maxLength={10}
                                 />
                             </Col>
                         </Row>
                     </Container>
                 </Paper>
+
+                <div style={{marginTop: 20}}>
+                    <RaisedButton label="Spara uppgifter" primary={true} onTouchTap={() => actions.submitProfile(profile)} />
+                </div>
+
             </div>
         );
     }
