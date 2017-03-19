@@ -164,7 +164,11 @@ class NewExpense extends Component {
                 </Container>
 
                 <div style={{marginTop: 20}}>
-                    <RaisedButton label="Spara uppgifter" primary={true} onTouchTap={() => actions.submitProfile(newExpense)} />
+                    <RaisedButton
+                        label="Spara uppgifter"
+                        primary={true}
+                        disabled={!(data.description && data.date && parts.length > 0)}
+                        onTouchTap={() => actions.submitNewExpense(newExpense)} />
                 </div>
 
             </div>

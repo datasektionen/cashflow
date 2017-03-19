@@ -55,12 +55,22 @@ export function textFieldChange (element, newValue) {
 }
 
 export function submitNewExpense (newExpense) {
+    const parts = newExpense.parts.map(p => ({
+        budget_line_id: p.budget_line_id,
+        amount: p.amount
+    }));
+    const payload = {
+        description: newExpense.data.description,
+        expense_date: newExpense.data.date,
+        expense_parts: parts
+    };
+
     return {
         type: CALL_API,
         [CALL_API]: {
-            method: 'put',
+            method: 'post',
             path: '/expense/',
-            send: newExpense,
+            send: payload,
             sendingType: types.NEW_EXPENSE_SUBMIT,
             successType: types.NEW_EXPENSE_SUBMIT_SUCCESS,
             failureType: types.NEW_EXPENSE_SUBMIT_FAIL
