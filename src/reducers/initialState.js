@@ -9,7 +9,10 @@ export default {
         comments: []
     },
     newExpense: {
-        parts: []
+        data: {},
+        parts: [],
+        committees: [],
+        costCentres: []
     },
     profile: {
         default_account: {}

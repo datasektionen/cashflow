@@ -25,10 +25,12 @@ class NewExpense extends Component {
 
     componentWillMount () {
         this.props.setTitle("Lägg till inköp");
+        this.props.actions.loadCommittees();
     }
 
     render () {
-        const { newExpense, actions } = this.props;
+        const { actions, newExpense } = this.props;
+        const { data, parts, committees, costCentres } = newExpense;
         const textFieldChange = this.props.actions.textFieldChange;
         const style = {
             marginLeft: 20
@@ -51,8 +53,8 @@ class NewExpense extends Component {
                                     floatingLabelFixed={true}
                                     underlineShow={false}
                                     fullWidth={true}
-                                    disabled={true}
-                                    value={newExpense.description}
+                                    hintText="Middag teambuildingevent"
+                                    value={data.description}
                                 />
                             </Col>
                             <Col md="6">
@@ -61,7 +63,7 @@ class NewExpense extends Component {
                                     floatingLabelText="Datum"
                                     floatingLabelFixed={true}
                                     underlineShow={false}
-                                    value={newExpense.date}
+                                    value={data.date}
                                     onChange={(n, d) => textFieldChange('date', d)}
                                 />
                             </Col>
@@ -82,7 +84,7 @@ class NewExpense extends Component {
                             </TableRow>
                         </TableHeader>
                         <TableBody displayRowCheckbox={false} stripedRows={true}>
-                            {!newExpense.expense_parts ? false : newExpense.expense_parts.map(row => (
+                            {!parts ? false : parts.map(row => (
                                     <TableRow key={row.id}>
                                         <TableRowColumn>{row.budget_line.cost_centre.committee.committee_name}</TableRowColumn>
                                         <TableRowColumn>{row.budget_line.cost_centre.cost_centre_name}</TableRowColumn>
@@ -98,13 +100,8 @@ class NewExpense extends Component {
                     <Row>
                         <Col md="2">
                             <SelectField floatingLabelText="Nämnd" value={2} fullWidth={true}>
-                                <MenuItem value={1} primaryText="All Broadcasts" />
-                                <MenuItem value={2} primaryText="All Voice" />
-                                <MenuItem value={3} primaryText="All Text" />
-                                <MenuItem value={4} primaryText="Complete Voice" />
-                                <MenuItem value={5} primaryText="Complete Text" />
-                                <MenuItem value={6} primaryText="Active Voice" />
-                                <MenuItem value={7} primaryText="Active Text" />
+                                {committees.map(committee =>
+                                    <MenuItem value={committee.committee_id} primaryText={committee.committee_name} />)}
                             </SelectField>
                         </Col>
                         <Col md="3">
