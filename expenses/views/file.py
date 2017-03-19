@@ -32,7 +32,7 @@ from expenses.models import Expense, File
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
 class FileViewSet(GenericViewSet):
     """
-    Performs actions on comments
+    Performs actions on files
     """
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -40,7 +40,7 @@ class FileViewSet(GenericViewSet):
 
     def create(self, request, **kwargs):
         """
-        Create a new comment from a JSON ID with the Expense ID and the content of the comment
+        Create a new file
 
         :param request:     HTTP request
         """
@@ -64,12 +64,12 @@ class FileViewSet(GenericViewSet):
 
     def destroy(self, request, pk, **kwargs):
         """
-        Delete the comment with the provided ID
+        Delete the file with the provided ID
 
         :param request:     HTTP request
         :param pk:          Comment ID to delete
         """
-        # Retrieve comment
+        # Retrieve file
         try:
             f = File.objects.get(pk=int(pk))
         except ValueError:
