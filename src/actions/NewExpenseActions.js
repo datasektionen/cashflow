@@ -77,3 +77,23 @@ export function submitNewExpense (newExpense) {
         }
     }
 }
+
+export function setTitle (title) {
+    return { type: types.SET_APP_TITLE, title: title }
+}
+
+export function startUpload () {
+    return { type: types.EXPENSE_UPLOAD }
+}
+
+export function failUpload (err) {
+    return { type: types.EXPENSE_UPLOAD_FAIL, response: err }
+}
+
+export function successUpload (res) {
+    return { type: types.EXPENSE_UPLOAD_SUCCESS, response: res.body }
+}
+
+export function resetForm (res) {
+    return { type: types.RESET_NEW_EXPENSE }
+}

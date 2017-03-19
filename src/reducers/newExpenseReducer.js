@@ -48,22 +48,28 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
                 step: state.step
             };
 
-        case types.RESET_EXPENSE_STEP:
-            return {
-                data: state.data,
-                parts: state.parts,
-                committees: state.committees,
-                costCentres: state.costCentres,
-                step: 0
-            };
+        case types.RESET_NEW_EXPENSE:
+            return Object.assign({}, initialState.newExpense);
 
         case types.NEW_EXPENSE_SUBMIT_SUCCESS:
+            const data = Object.assign({}, state.data);
+            data.expense_id = action.response.expense_id;
+
             return {
-                data: state.data,
+                data: data,
                 parts: state.parts,
                 committees: state.committees,
                 costCentres: state.costCentres,
                 step: 1
+            };
+
+        case types.EXPENSE_UPLOAD_SUCCESS:
+            return {
+                data: state.data,
+                parts: state.parts,
+                committees: state.committees,
+                costCentres: state.costCentres,
+                step: 2
             };
 
         default:

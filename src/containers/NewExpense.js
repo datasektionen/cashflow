@@ -1,27 +1,34 @@
-import React, { Component, PropTypes } from 'react';
-import { bindActionCreators } from 'redux';
-import * as NewExpenseActions from '../actions/NewExpenseActions';
-import { connect } from "react-redux";
+import React, {Component, PropTypes} from "react";
+import {bindActionCreators} from "redux";
+import * as NewExpenseActions from "../actions/NewExpenseActions";
+import {connect} from "react-redux";
+import request from 'superagent';
 
-import Paper from 'material-ui/Paper';
-import { Table, TableHeader, TableHeaderColumn, TableBody, TableRow, TableRowColumn } from 'material-ui/Table';
-import DatePicker from 'material-ui/DatePicker';
+import Paper from "material-ui/Paper";
+import {Table, TableHeader, TableHeaderColumn, TableBody, TableRow, TableRowColumn} from "material-ui/Table";
+import DatePicker from "material-ui/DatePicker";
 import Subheader from "material-ui/Subheader";
 import TextField from "material-ui/TextField";
-import RaisedButton from 'material-ui/RaisedButton';
-import MenuItem from 'material-ui/MenuItem';
-import SelectField from 'material-ui/SelectField';
-import { Stepper, Step, StepLabel, StepContent } from 'material-ui/Stepper/';
+import RaisedButton from "material-ui/RaisedButton";
+import MenuItem from "material-ui/MenuItem";
+import SelectField from "material-ui/SelectField";
+import {Stepper, Step, StepLabel, StepContent} from "material-ui/Stepper/";
 
 import Col from "muicss/lib/react/col";
 import Row from "muicss/lib/react/row";
 import Container from "muicss/lib/react/container";
-import { SET_APP_TITLE } from "../actions/actionTypes";
+import Dropzone from 'react-dropzone';
+import {grey500, grey600} from "material-ui/styles/colors";
 
 class NewExpense extends Component {
 
+    constructor (props) {
+        super(props);
+        this.onDrop = this.onDrop.bind(this);
+    }
+
     componentWillMount () {
-        this.props.setTitle("Lägg till inköp");
+        this.props.actions.setTitle("Lägg till inköp");
         this.props.actions.loadCommittees();
     }
 
@@ -44,7 +51,7 @@ class NewExpense extends Component {
         return (
             <div>
 
-                <Stepper activeStep={step} orientation="vertical">
+                <Stepper activeStep={2} orientation="vertical">
                     <Step>
                         <StepLabel>Inköpsinformation</StepLabel>
                         <StepContent>
@@ -172,7 +179,7 @@ class NewExpense extends Component {
                                 </Row>
                             </Container>
 
-                            <div style={{marginTop: 20}}>
+                            <div style={{marginTop: 20, marginBottom: 10}}>
                                 <RaisedButton
                                     label="Spara uppgifter"
                                     primary={true}
@@ -185,13 +192,71 @@ class NewExpense extends Component {
                     <Step>
                         <StepLabel>Ladda upp kvitto</StepLabel>
                         <StepContent>
-                            plopp
+                            <Subheader>Riktlinjer</Subheader>
+
+                            <Paper zDepth={1}>
+                                <div style={{padding: "5px 20px"}}>
+                                    <p>
+                                        Kvitton som laddas upp får vara i bildformat (JPEG, PNG, GIF) eller PDF-format.
+                                        <em> Endast av säljaren utfärdade kvitton anses vara riktiga kvitton.</em> Bankutdrag eller
+                                        köpbekräftelser (markerade med "ej kvitto") är inte giltiga kvitton och går inte att
+                                        få återbetalda. Köpesumman ska framgå tydligt.
+                                    </p>
+                                    <p>
+                                        Om endast delar av ditt kvitto ska ersättas av sektionen ska du i tidigare steg
+                                        ha fyllt i endast det belopp som du vill ha ersättning för. <em>Stryk över kvittorader
+                                        som inte ska ersättas av sektionen utan som är personliga utgifter.</em>
+                                    </p>
+                                </div>
+                            </Paper>
+
+                            <Subheader>Kvittofil</Subheader>
+
+                            Expense {data.expense_id}
+
+                            <Dropzone onDrop={this.onDrop} multiple={false} style={{marginBottom: 10}}>
+                                <Paper zDepth={1}>
+                                   <div style={{padding: 30, textAlign: "center"}}>
+                                       <em style={{color: grey500}}>Släpp en fil här, eller klicka för att välja</em>
+                                   </div>
+                                </Paper>
+                            </Dropzone>
+
+                        </StepContent>
+                    </Step>
+                    <Step>
+                        <StepLabel>Klart!</StepLabel>
+                        <StepContent>
+                            <p>
+                                Ditt inköp har sparats och kommer att behandlas av ansvarig funktionär inom kort.
+                            </p>
+                            <p style={{color: grey600}}>
+                                Laddar du ofta upp kvitton? Kontakta Kassören eller Systemansvarig för att få tillgång
+                                till Cashflows Android-app, där du kan lägga till inköp och få push-notifieringar
+                                så fort din begäran uppdaterats!
+                            </p>
+                            <RaisedButton
+                                    label="Lägg till ett nytt inköp"
+                                    primary={true}
+                                    style={{marginBottom: 10}}
+                                    onTouchTap={actions.resetForm} />
                         </StepContent>
                     </Step>
                 </Stepper>
 
             </div>
         );
+    }
+
+    onDrop (files) {
+        const req = request.post('/api/file/');
+        const file = files[0];
+        const { startUpload, failUpload, successUpload } = this.props.actions;
+        startUpload();
+
+        req.send("expense=" + this.props.data.expense_id);
+        req.attach(file.name, file);
+        req.end((err, res) => err ? failUpload(err) : successUpload(res));
     }
 }
 
@@ -208,7 +273,6 @@ function mapStateToProps (state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        setTitle: (title) => dispatch({ type: SET_APP_TITLE, title: title }),
         actions: bindActionCreators(NewExpenseActions, dispatch)
     }
 }
