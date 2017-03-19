@@ -6,7 +6,7 @@ from expenses.views.attest import AttestViewSet
 from expenses.views.comment import CommentViewSet
 from expenses.views.expense import ExpenseViewSet
 from expenses.views.file import FileViewSet
-from expenses.views.misc import budget, login, logout, set_firebase_instance_id
+from expenses.views.misc import budget, login, logout, set_firebase_instance_id, committees, cost_centres
 from expenses.views.pay import PaymentViewSet
 from expenses.views.user import UserViewSet
 
@@ -24,3 +24,5 @@ urlpatterns.append(url(r'^budget/$', budget))
 urlpatterns.append(url(r'^login/(.*)/$', login))
 urlpatterns.append(url(r'^logout/$', logout))
 urlpatterns.append(url(r'^firebase_instance_id/$', set_firebase_instance_id))
+urlpatterns.append(url(r'^committees/$', committees))
+urlpatterns.append(url(r'^cost_centre/(\d+)$', cost_centres))

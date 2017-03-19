@@ -4,9 +4,8 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
 
-from expenses.models import Committee, Person
+from expenses.models import Committee, Person, CostCentre
 
 
 def budget(request):
@@ -44,3 +43,13 @@ def set_firebase_instance_id(request):
         return HttpResponseBadRequest("Your POST-request didn't contain firebase_instance_id")
     person.save()
     return HttpResponse("Success!")
+
+
+def committees(request):
+    return JsonResponse({'committees': [committee.to_dict() for committee in Committee.objects.all()]})
+
+
+def cost_centres(request, c_id):
+    return JsonResponse({
+        'cost_centres': [cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=c_id)]
+    })
