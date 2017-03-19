@@ -9,7 +9,8 @@ const rootReducer = combineReducers({
     app: appReducer,
     expenses: expensesReducer,
     expense: expenseReducer,
-    profile: profileReducer
+    profile: profileReducer,
+    newExpense: newExpenseReducer
 });
 
 export default rootReducer;

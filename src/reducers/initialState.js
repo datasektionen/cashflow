@@ -8,7 +8,9 @@ export default {
         data: {},
         comments: []
     },
-    newExpense: {},
+    newExpense: {
+        parts: []
+    },
     profile: {
         default_account: {}
     }
