@@ -49,7 +49,9 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
             };
 
         case types.RESET_NEW_EXPENSE:
-            return Object.assign({}, initialState.newExpense);
+            const reset = Object.assign({}, initialState.newExpense);
+            reset.committees = state.committees;
+            return reset;
 
         case types.NEW_EXPENSE_SUBMIT_SUCCESS:
             const data = Object.assign({}, state.data);

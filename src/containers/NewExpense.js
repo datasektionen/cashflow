@@ -212,8 +212,6 @@ class NewExpense extends Component {
 
                             <Subheader>Kvittofil</Subheader>
 
-                            Expense {data.expense_id}
-
                             <Dropzone onDrop={this.onDrop} multiple={false} style={{marginBottom: 10}}>
                                 <Paper zDepth={1}>
                                    <div style={{padding: 30, textAlign: "center"}}>
