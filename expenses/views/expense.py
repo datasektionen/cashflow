@@ -12,12 +12,13 @@ from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
+from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Expense, ExpensePart, Person
 
 
 # noinspection PyUnusedLocal,PyMethodMayBeStatic
 class ExpenseViewSet(GenericViewSet):
-    authentication_classes = (SessionAuthentication,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     """

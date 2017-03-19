@@ -19,13 +19,13 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
+from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Person, Payment
 
 
@@ -34,7 +34,7 @@ class UserViewSet(GenericViewSet):
     """
     Performs operations on Persons (user objects)
     """
-    authentication_classes = (SessionAuthentication,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.BaseSerializer
     lookup_field = 'username'
@@ -64,7 +64,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check permissions
-        if person.user is request.user or has_permission("pay", request):
+        if person.user.username == request.user.username or has_permission("pay", request):
             return Response({'user': person.to_dict()})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -94,7 +94,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check permissions
-        if person.user is not request.user:
+        if person.user.username != request.user.username:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         # Update affected fields
