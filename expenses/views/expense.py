@@ -37,12 +37,12 @@ class ExpenseViewSet(GenericViewSet):
     def create(self, request, **kwargs):
         parts_to_be_saved = []
         try:
-            json_args = json.loads(request.POST['json'])
+            json_args = request.data
 
             exp = Expense(
                 owner=Person.objects.get(user=request.user),
                 description=json_args['description'],
-                expense_date=datetime.strptime(json_args['expense_date'], "%Y-%m-%d").date()
+                expense_date=datetime.strptime(json_args['expense_date'][:10], "%Y-%m-%d").date()
             )
 
             for part in json_args['expense_parts']:
@@ -68,7 +68,7 @@ class ExpenseViewSet(GenericViewSet):
                   .replace(u'ö', 'o')) \
                 .send(exp_dict)
         Group("attest-.").send(exp_dict)
-        return Response(exp_dict)
+        return Response(exp_dict, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, **kwargs):
         parts_to_be_saved = []
