@@ -27,6 +27,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Expense, File
 
 
@@ -35,7 +36,7 @@ class FileViewSet(GenericViewSet):
     """
     Performs actions on files
     """
-    authentication_classes = (SessionAuthentication,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.BaseSerializer
 

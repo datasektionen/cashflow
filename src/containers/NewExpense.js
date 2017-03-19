@@ -51,7 +51,7 @@ class NewExpense extends Component {
         return (
             <div>
 
-                <Stepper activeStep={2} orientation="vertical">
+                <Stepper activeStep={step} orientation="vertical">
                     <Step>
                         <StepLabel>Inköpsinformation</StepLabel>
                         <StepContent>
@@ -249,14 +249,15 @@ class NewExpense extends Component {
     }
 
     onDrop (files) {
-        const req = request.post('/api/file/');
         const file = files[0];
         const { startUpload, failUpload, successUpload } = this.props.actions;
         startUpload();
 
-        req.send("expense=" + this.props.data.expense_id);
-        req.attach(file.name, file);
-        req.end((err, res) => err ? failUpload(err) : successUpload(res));
+        request.post('http://127.0.0.1:8000/api/file/')
+            .field("expense", + this.props.newExpense.data.expense_id)
+            .attach('file', file)
+            .withCredentials()
+            .end((err, res) => err ? failUpload(err) : successUpload(res));
     }
 }
 

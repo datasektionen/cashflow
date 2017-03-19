@@ -53,7 +53,7 @@ export default function newExpenseReducer(state = initialState.newExpense, actio
 
         case types.NEW_EXPENSE_SUBMIT_SUCCESS:
             const data = Object.assign({}, state.data);
-            data.expense_id = action.response.expense_id;
+            data.expense_id = action.response.expense.id;
 
             return {
                 data: data,
