@@ -8,6 +8,7 @@ import Drawer from 'material-ui/Drawer';
 import AppBar from 'material-ui/AppBar';
 import Person from 'material-ui/svg-icons/social/person';
 import FlatButton from 'material-ui/FlatButton';
+import Snackbar from 'material-ui/Snackbar';
 
 import Nav from './containers/Nav';
 
@@ -45,6 +46,8 @@ class App extends Component {
                         {this.props.children}
                     </div>
                 </div>
+
+                <Snackbar message={this.props.message} open={this.props.snack} />
             </div>
         );
     }
@@ -63,7 +66,9 @@ App.contextTypes = {
 function mapStateToProps (state) {
     return {
         user: state.app.user,
-        title: state.app.title
+        title: state.app.title,
+        message: state.app.message,
+        snack: state.app.snack
     }
 }
 

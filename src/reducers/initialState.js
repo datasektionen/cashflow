@@ -1,12 +1,15 @@
 export default {
     app: {
         user: {},
-        title: "Cashfl0w"
+        title: "Cashfl0w",
+        message: "",
+        snack: false
     },
     expenses: [],
     expense: {
         data: {},
-        comments: []
+        comments: [],
+        files: []
     },
     newExpense: {
         data: {},
