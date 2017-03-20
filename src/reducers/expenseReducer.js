@@ -6,13 +6,24 @@ export default function expenseReducer(state = initialState.expense, action) {
         case types.LOAD_EXPENSE_SUCCESS:
             return {
                 data: action.response,
-                comments: state.comments
+                comments: state.comments,
+                files: state.files
             };
+
         case types.LOAD_EXPENSE_COMMENTS_SUCCESS:
             return {
                 data: state.data,
-                comments: action.response.comments
+                comments: action.response.comments,
+                files: state.files
             };
+
+        case types.LOAD_EXPENSE_FILES_SUCCESS:
+            return {
+                data: state.data,
+                comments: state.comments,
+                files: action.response.files
+            };
+
         default:
             return state;
     }

@@ -26,3 +26,16 @@ export function loadExpenseComments (id) {
         }
     }
 }
+
+export function loadExpenseFiles (id) {
+    return {
+        type: CALL_API,
+        [CALL_API]: {
+            method: 'get',
+            path: '/expense/' + id + '/files/',
+            sendingType: types.LOAD_EXPENSE_FILES,
+            successType: types.LOAD_EXPENSE_FILES_SUCCESS,
+            failureType: types.LOAD_EXPENSE_FILES_FAIL
+        }
+    }
+}

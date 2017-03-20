@@ -7,7 +7,9 @@ import { Table, TableHeader, TableHeaderColumn, TableBody, TableRow, TableRowCol
 import Dialog from 'material-ui/Dialog';
 import Subheader from 'material-ui/Subheader';
 import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
 import {grey500} from "material-ui/styles/colors";
+import Receipt from 'material-ui/svg-icons/action/receipt';
 
 class Expense extends Component {
 
@@ -18,6 +20,7 @@ class Expense extends Component {
     componentWillMount () {
         this.props.actions.loadExpense(this.props.params.id);
         this.props.actions.loadExpenseComments(this.props.params.id);
+        this.props.actions.loadExpenseFiles(this.props.params.id);
     }
 
     handleClose = () => {
@@ -28,6 +31,7 @@ class Expense extends Component {
     render () {
         const expense = this.props.expense.data;
         const comments = this.props.expense.comments;
+        const files = this.props.expense.files;
         const title = expense.description + " (" + expense.expense_date + ")";
         const reimbursement = expense.reimbursement;
         const actions = [
@@ -124,6 +128,20 @@ class Expense extends Component {
                             </TableRow>}
                     </TableBody>
                 </Table>
+
+                <Subheader>Kvittofiler</Subheader>
+
+                {files.length === 0
+                    ? <FlatButton disabled={true} label="Inga kvittofiler" />
+                    : files.map((f, i) =>
+                        <RaisedButton
+                            key={f.id}
+                            href={f.url}
+                            target="_blank"
+                            primary={true}
+                            icon={<Receipt />}
+                            label={"Ladda ner kvittofil #" + (i + 1)} />
+                    )}
             </Dialog>
         );
     }
