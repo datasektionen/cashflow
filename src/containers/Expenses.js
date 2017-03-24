@@ -16,13 +16,15 @@ class Expenses extends Component {
     }
 
     handleClick (arr) {
-        if (arr.length === 0) {
-            this.context.router.push("/expenses/");
-            return;
-        }
+        if (!this.props.children) {
+            if (arr.length === 0) {
+                this.context.router.push("/expenses/");
+                return;
+            }
 
-        const row = this.props.expenses[arr[0]];
-        this.context.router.push("/expenses/" + row.id);
+            const row = this.props.expenses[arr[0]];
+            this.context.router.push("/expenses/" + row.id);
+        }
     }
 
     render () {

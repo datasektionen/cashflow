@@ -13,10 +13,6 @@ import Receipt from 'material-ui/svg-icons/action/receipt';
 
 class Expense extends Component {
 
-    state = {
-        open: true
-    };
-
     componentWillMount () {
         this.props.actions.loadExpense(this.props.params.id);
         this.props.actions.loadExpenseComments(this.props.params.id);
@@ -24,7 +20,6 @@ class Expense extends Component {
     }
 
     handleClose = () => {
-        this.setState({ open: false });
         this.context.router.push("/expenses");
     };
 
@@ -43,7 +38,7 @@ class Expense extends Component {
         ];
 
         return (
-            <Dialog open={this.state.open} modal={true} autoScrollBodyContent={true} title={title} actions={actions}>
+            <Dialog open={true} modal={true} autoScrollBodyContent={true} title={title} actions={actions}>
                 <Subheader>Kvittodelar</Subheader>
 
                 <Table selectable={false}>
