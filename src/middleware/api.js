@@ -12,7 +12,7 @@ export default store => next => action => {
     let request = action[CALL_API];
     let { method, path, send, failureType, successType, sendingType } = request;
     let { dispatch } = store;
-    path = "http://127.0.0.1:8000/api" + path;
+    path = "http://85.229.242.121:8000/api" + path;
 
     dispatch({ type: sendingType });
     superAgent[method](path)

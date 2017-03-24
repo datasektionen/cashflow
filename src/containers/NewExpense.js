@@ -251,7 +251,7 @@ class NewExpense extends Component {
         const { startUpload, failUpload, successUpload } = this.props.actions;
         startUpload();
 
-        request.post('http://127.0.0.1:8000/api/file/')
+        request.post('http://85.229.242.121:8000/api/file/')
             .field("expense", + this.props.newExpense.data.expense_id)
             .attach('file', file)
             .withCredentials()
