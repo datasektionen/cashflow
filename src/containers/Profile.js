@@ -85,7 +85,7 @@ class Profile extends Component {
                                     underlineShow={false}
                                     disabled={true}
                                     fullWidth={true}
-                                    value={profile.default_account.name}
+                                    value={profile.default_account ? profile.default_account.name : "Inget förvalt konto"}
                                 />
                             </Col>
                         </Row>

@@ -86,7 +86,7 @@ class Expense extends Component {
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>
-                        {!comments
+                        {(!comments || comments.length === 0)
                             ? <TableRow>
                                 <TableRowColumn style={{color: grey500}}><br />Inga kommentarer<br /><br /></TableRowColumn>
                             </TableRow>
@@ -112,7 +112,7 @@ class Expense extends Component {
                     <TableBody displayRowCheckbox={false}>
                         {!reimbursement
                             ? <TableRow>
-                                <TableRowColumn style={{color: grey500}}><br />Inga kommentarer<br /><br /></TableRowColumn>
+                                <TableRowColumn style={{color: grey500}}><br />Ingen återbetalning<br /><br /></TableRowColumn>
                             </TableRow>
                             : <TableRow>
                                 <TableRowColumn>{reimbursement.date}</TableRowColumn>
