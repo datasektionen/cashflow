@@ -1,9 +1,10 @@
 import requests
 from channels import Group
-from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_init, post_save
 from django.forms.models import model_to_dict
+from django.dispatch import receiver
 
 from cashflow.settings import FCM_API_KEY
 
@@ -97,8 +98,8 @@ class BankAccount(models.Model):
         return model_to_dict(self)
 
 
-class Person(models.Model):
-    user = models.OneToOneField(AuthUser)
+class Profile(models.Model):
+    user = models.OneToOneField(User)
 
     # represents a bank account owned by the user
     bank_account = models.CharField(max_length=10, blank=True)
@@ -139,10 +140,22 @@ class Person(models.Model):
         }
 
 
+# Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+
 class Payment(models.Model):
     date = models.DateField()
-    payer = models.ForeignKey(Person, related_name='payer')
-    receiver = models.ForeignKey(Person, related_name='receiver')
+    payer = models.ForeignKey(Profile, related_name='payer')
+    receiver = models.ForeignKey(Profile, related_name='receiver')
     amount = models.IntegerField()
     account = models.ForeignKey(BankAccount)
 
@@ -162,7 +175,7 @@ class Payment(models.Model):
 
 class Expense(models.Model):
     expense_date = models.DateField()
-    owner = models.ForeignKey(Person)
+    owner = models.ForeignKey(Profile)
     description = models.TextField()
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
     verification = models.CharField(max_length=7, blank=True)
@@ -211,7 +224,7 @@ class ExpensePart(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
     budget_line = models.ForeignKey(BudgetLine)
     amount = models.IntegerField()
-    attested_by = models.ForeignKey(Person, blank=True, null=True)
+    attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
@@ -258,7 +271,7 @@ post_save.connect(send_notification, sender=Expense)
 class Comment(models.Model):
     expense = models.ForeignKey(Expense)
     date = models.DateField()
-    author = models.ForeignKey(Person)
+    author = models.ForeignKey(Profile)
     content = models.TextField()
 
     def __str__(self):

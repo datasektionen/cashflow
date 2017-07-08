@@ -1,7 +1,7 @@
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
-from expenses.models import Person
+from expenses.models import Profile
 
 
 class DAuth(object):
@@ -24,7 +24,7 @@ class DAuth(object):
                     email=data["emails"]
                 )
                 user.save()
-                p = Person(user=user)
+                p = Profile(user=user)
                 p.save()
             return user
 
