@@ -28,7 +28,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
 from expenses.models import Comment
-from expenses.views.expense import may_view_expense
+from expenses.api_views.expense import may_view_expense
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal

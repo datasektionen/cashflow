@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
-from expenses.models import Expense, ExpensePart, Person
+from expenses.models import Expense, ExpensePart, Profile
 
 
 # noinspection PyUnusedLocal,PyMethodMayBeStatic
@@ -40,7 +40,7 @@ class ExpenseViewSet(GenericViewSet):
             json_args = request.data
 
             exp = Expense(
-                owner=Person.objects.get(user=request.user),
+                owner=Profile.objects.get(user=request.user),
                 description=json_args['description'],
                 expense_date=datetime.strptime(json_args['expense_date'][:10], "%Y-%m-%d").date()
             )

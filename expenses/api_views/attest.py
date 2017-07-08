@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
-from expenses.models import Expense, ExpensePart, Person
+from expenses.models import Expense, ExpensePart, Profile
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
@@ -48,7 +48,7 @@ class AttestViewSet(GenericViewSet):
                     has_permission("attest-" + part.budget_line.cost_centre.committee.name, request):
 
                 if part.attested_by is None:
-                    part.attested_by = Person.objects.get(user=request.user)
+                    part.attested_by = Profile.objects.get(user=request.user)
                     part.attest_date = date.today()
                     expense_parts_to_be_saved.append(part)
             else:

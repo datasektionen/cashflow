@@ -19,6 +19,6 @@ from expenses import index
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^api/', include("expenses.urls")),
+    url(r'^', include("expenses.urls")),
     url(r'^$', index.index),
 ]

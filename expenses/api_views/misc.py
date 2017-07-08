@@ -5,7 +5,7 @@ from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 
-from expenses.models import Committee, Person, CostCentre
+from expenses.models import Committee, Profile, CostCentre
 
 
 def budget(request):
@@ -36,7 +36,7 @@ def set_firebase_instance_id(request):
         raise Http404()
     if not request.user.is_authenticated:
         return HttpResponseForbidden()
-    person = Person.objects.get(user=request.user)
+    person = Profile.objects.get(user=request.user)
     try:
         person.firebase_instance_id = request.POST['firebase_token']
     except KeyError:

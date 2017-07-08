@@ -26,7 +26,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
-from expenses.models import Person, Payment
+from expenses.models import Profile, Payment
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
@@ -57,7 +57,7 @@ class UserViewSet(GenericViewSet):
         """
         # Retrieve user
         try:
-            person = Person.objects.get(user__username=username)
+            person = Profile.objects.get(user__username=username)
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
@@ -76,7 +76,7 @@ class UserViewSet(GenericViewSet):
 
         :param request:     HTTP request
         """
-        return Response({'user': Person.objects.get(user=request.user).to_dict()})
+        return Response({'user': Profile.objects.get(user=request.user).to_dict()})
 
     def partial_update(self, request, username, **kwargs):
         """
@@ -87,7 +87,7 @@ class UserViewSet(GenericViewSet):
         """
         # Retrieve user
         try:
-            person = Person.objects.get(user__username=username)
+            person = Profile.objects.get(user__username=username)
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:

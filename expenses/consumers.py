@@ -3,7 +3,7 @@ from channels import Group
 from channels.sessions import channel_session
 
 from expenses.models import Expense
-from expenses.views.expense import may_view_expense
+from expenses.api_views.expense import may_view_expense
 
 
 @channel_session

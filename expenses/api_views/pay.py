@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from cashflow.dauth import has_permission
-from expenses.models import Expense, Payment, Person
+from expenses.models import Expense, Payment, Profile
 
 
 # noinspection PyUnusedLocal,PyMethodMayBeStatic
@@ -37,7 +37,7 @@ class PaymentViewSet(GenericViewSet):
 
                 payment = Payment(
                     date=date.today(),
-                    payer=Person.objects.get(user=request.user),
+                    payer=Profile.objects.get(user=request.user),
                     receiver=Expense.objects.get(id=json_args['expense_ids'][0]).owner,
                     account_id=json_args['account_id'],
                     sum=total
