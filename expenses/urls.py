@@ -1,29 +1,40 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
-from expenses.api_views.accounting import AccountingViewSet
-from expenses.api_views.attest import AttestViewSet
-from expenses.api_views.comment import CommentViewSet
-from expenses.api_views.expense import ExpenseViewSet
-from expenses.api_views.file import FileViewSet
-from expenses.api_views.misc import budget, login, logout, set_firebase_instance_id, committees, cost_centres
-from expenses.api_views.pay import PaymentViewSet
-from expenses.api_views.user import UserViewSet
+import expenses.api_views.accounting as accounting_api
+import expenses.api_views.attest as attest_api
+import expenses.api_views.comment as comment_api
+import expenses.api_views.expense as expense_api
+import expenses.api_views.file as file_api
+import expenses.api_views.misc as misc_api
+import expenses.api_views.pay as pay_api
+import expenses.api_views.user as user_api
+
+import expenses.human_views.user as user_views
+import expenses.human_views.general as general_views
 
 router = DefaultRouter()
-router.register('api/expense', ExpenseViewSet, base_name='Expense')
-router.register('api/payment', PaymentViewSet, base_name='Payment')
-router.register('api/comment', CommentViewSet, base_name='Comment')
-router.register('api/user', UserViewSet, base_name='User')
-router.register('api/attest', AttestViewSet, base_name='Attest')
-router.register('api/accounting', AccountingViewSet, base_name='Accounting')
-router.register('api/file', FileViewSet, base_name='File')
-urlpatterns = router.urls
+router.register('expense',  expense_api.ExpenseViewSet, base_name='Expense')
+router.register('payment', pay_api.PaymentViewSet, base_name='Payment')
+router.register('comment', comment_api.CommentViewSet, base_name='Comment')
+router.register('user', user_api.UserViewSet, base_name='User')
+router.register('attest', attest_api.AttestViewSet, base_name='Attest')
+router.register('accounting', accounting_api.AccountingViewSet, base_name='Accounting')
+router.register('file', file_api.FileViewSet, base_name='File')
+api_urlpatterns = router.urls
 
-urlpatterns.append(url(r'^api/budget/$', budget))
-urlpatterns.append(url(r'^api/firebase_instance_id/$', set_firebase_instance_id))
-urlpatterns.append(url(r'^api/committees/$', committees))
-urlpatterns.append(url(r'^api/cost_centre/(\d+)/$', cost_centres))
+api_urlpatterns.append(url(r'^budget/$', misc_api.budget))
+api_urlpatterns.append(url(r'^firebase_instance_id/$', misc_api.set_firebase_instance_id))
+api_urlpatterns.append(url(r'^committees/$', misc_api.committees))
+api_urlpatterns.append(url(r'^cost_centre/(\d+)/$', misc_api.cost_centres))
+api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-login'))
+api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
-urlpatterns.append(url(r'^login/(.*)/$', login))
-urlpatterns.append(url(r'^logout/$', logout))
+
+urlpatterns = [
+    url(r'^$', general_views.index, name='expenses-index'),
+    url(r'^user/(.+)/$', user_views.user, name='expenses-user'),
+    url(r'^login/$', general_views.login),
+    url(r'^api/', include(api_urlpatterns)),
+]
+

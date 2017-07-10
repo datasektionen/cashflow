@@ -1,0 +1,31 @@
+{% extends "main.html" %}
+
+{% block full_content %}
+    <div class="col-ms-6 col-lg-6">
+    <!-- TODO -->
+    Icke behandlade kvitton <br>
+
+    Attesterade kvitton<br>
+
+    Utbetalningar<br>
+    </div>
+
+    <div class="col-ms-6 col-lg-6">
+        <div class="panel panel-info">
+            <div class="panel-heading clearfix">
+                <div class="panel-title pull-left">{{ showuser.get_full_name }}</div>
+                <button class="btn btn-default pull-right"> <span class="glyphicon glyphicon-pencil"></span> </button>
+            </div>
+            <div class="panel-body">
+                <img class="center-block" style="width:50%" src="https://zfinger.datasektionen.se/user/{{ showuser.username }}/image">
+            </div>
+            <ul class="list-group">
+                <li class="list-group-item"> Kth-id: {{ showuser.username }}</li>
+                <li class="list-group-item"> Bank: {{ showuser.profile.bank_name|default:"Saknas"}}</li>
+                <li class="list-group-item"> Clearingnummer: {{ showuser.profile.sorting_number|default:"Saknas"}}</li>
+                <li class="list-group-item"> Kontonummer: {{ showuser.profile.bank_account|default:"Saknas"}}</li>
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}

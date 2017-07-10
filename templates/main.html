@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#e83d84" />
+    <title> Ca2h.fl0w - Datasektionens ekonomisystem </title>
+    <link rel="stylesheet" href="//aurora.datasektionen.se/" type="text/css" />
+    <link rel="stylesheet" href="//datasektionen.se/static/css/compiled.css">
+    <script type="text/javascript">
+        window.methone_conf = {
+            system_name: "ca2h.fl0w",
+            color_scheme: "money-green",
+
+        {% block methone_conf %}
+            login_text: "Logga in",
+            login_href: "/login/",
+            links: [
+                { str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" },
+            ]
+        {% endblock %}
+        }
+    </script>
+</head>
+<body>
+<div id="methone-container-replace"></div>
+<div id="application" class="money-green">
+
+
+	<header>
+		<div class="header-inner">
+			<div class="row">
+				<div class="header-left col-md-2">
+
+				</div>
+				<div class="col-md-8">
+					<h2>Ca2h.fl0w</h2>
+				</div>
+				<div class="header-right col-md-2"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</header>
+	<div id="content">
+
+			<div class="row">
+                {% block full_content %}
+
+                {% endblock %}
+			</div>
+
+		<div class="clear"></div>
+<div id="footer" class="row">
+    <div class="col-sm-12 col-md-12" id="contact">
+        <p>&nbsp;</p>
+        <p>
+            <strong>Utvecklat av</strong>
+        </p>
+        <p>
+            Alexander Viklund <br>
+            viklu@kth.se
+        </p>
+
+    </div>
+    <div class="clear"></div>
+</div>
+	</div>
+
+
+</div>
+
+
+<script src="/static/js/app.min.js"></script>
+<script src="//methone.datasektionen.se/bar.js"></script>
+</body>
+</html>
