@@ -106,7 +106,7 @@ class Profile(models.Model):
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
     default_account = models.ForeignKey(BankAccount, blank=True, null=True)
-    firebase_instance_id = models.TextField()
+    firebase_instance_id = models.TextField(blank=True)
 
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name
