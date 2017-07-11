@@ -1,0 +1,12 @@
+{% extends "main.html" %}
+
+{% block methone-links %}
+    {% if user.is_authenticated %}
+        {str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" }
+    {% endif %}
+
+{% endblock %}
+
+{% block full_content %}
+    Välkommen till Cashflow 2.0 datasektionens helt nya utläggshanteringssystem.
+{% endblock %}
