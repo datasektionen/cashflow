@@ -61,6 +61,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'cashflow.dauth.AuthRequiredMiddleware',
 )
 
 ROOT_URLCONF = 'cashflow.urls'

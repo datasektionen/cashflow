@@ -12,12 +12,15 @@
         window.methone_conf = {
             system_name: "ca2h.fl0w",
             color_scheme: "money-green",
-
         {% block methone_conf %}
+            {% if user.is_authenticated %}
+                login_text: "Logga ut",
+                login_href: "/logout/",
+            {% else %}
             login_text: "Logga in",
             login_href: "/login/",
+            {% endif %}
             links: [
-                { str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" },
             ]
         {% endblock %}
         }

@@ -15,10 +15,11 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from expenses import index
+from .authviews import login, logout
 
 urlpatterns = [
+    url(r'^login/$', login, name='login'),
+    url(r'^logout/', logout, name='logout'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include("expenses.urls")),
-    url(r'^$', index.index),
 ]

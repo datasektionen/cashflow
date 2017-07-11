@@ -1,6 +1,10 @@
+import re
+
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+
 from expenses.models import Profile
 
 
@@ -44,3 +48,18 @@ def has_permission(permission, request):
             ).json()
 
     return permission in request.session['permissions']
+
+
+class AuthRequiredMiddleware(object):
+    # noinspection PyMethodMayBeStatic
+    def process_request(self, request):
+        path = request.META['PATH_INFO']
+        whitelist = ['^/$', '^/login/$', '^/api/.*$']
+
+        for regex in whitelist:
+            pattern = re.compile(regex)
+            if pattern.match(path):
+                return None
+        if not request.user.is_authenticated():
+            return HttpResponseRedirect("/")
+        return None
