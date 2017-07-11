@@ -14,7 +14,9 @@
         <div class="panel panel-info">
             <div class="panel-heading clearfix">
                 <div class="panel-title pull-left">{{ showuser.get_full_name }}</div>
-                <button class="btn btn-default pull-right"> <span class="glyphicon glyphicon-pencil"></span> </button>
+                <a class="btn btn-default pull-right" href="edit">
+                    <span class="glyphicon glyphicon-pencil"></span>
+                </a>
             </div>
             <div class="panel-body">
                 <img class="center-block" style="width:50%" src="https://zfinger.datasektionen.se/user/{{ showuser.username }}/image">

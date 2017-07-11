@@ -48,7 +48,8 @@ INSTALLED_APPS = (
     'expenses',
     'rest_framework',
     'storages',
-    'corsheaders'
+    'corsheaders',
+    'widget_tweaks',
 )
 
 MIDDLEWARE_CLASSES = (

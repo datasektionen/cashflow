@@ -7,3 +7,4 @@ channels
 asgi_redis
 django-cors-headers
 boto
+django-widget-tweaks

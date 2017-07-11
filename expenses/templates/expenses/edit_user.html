@@ -1,0 +1,49 @@
+{% extends "main.html" %}
+{% load widget_tweaks %}
+
+{% block full_content %}
+    <div class="col-sm-6 col-sm-offset-3">
+        <p> Skriv in dina kontouppgifter för att kunna få tillbaka dina utlägg. </p>
+        <p> Observera att vi inte hämtar dina uppgifter varje gång vi betalar ett utlägg, då de lagras hos banken.
+            Säg till om du ändrar dina uppgifter och behöver få pengarna att hamna rätt. </p>
+        <form method="POST" action="" class="form-horizontal">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group">
+                {{ form.sorting_number.errors }}
+                <label for="{{ form.sorting_number.id_for_label }}" class="col-sm-4 control-label">
+                    Clearingnummer:
+                </label>
+                <div class="col-sm-8">
+                    {{ form.sorting_number|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                {{ form.bank_account.errors }}
+                <label for="{{ form.bank_account.id_for_label }}" class="col-sm-4 control-label">
+                    Bankkonto:
+                </label>
+                <div class="col-sm-8">
+                    {{ form.bank_account|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                {{ form.bank_name.errors }}
+                <label for="{{ form.bank_name.id_for_label }}" class="col-sm-4 control-label">
+                    Banknamn:
+                </label>
+                <div class="col-sm-8">
+                    {{ form.bank_name|add_class:"form-control" }}
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-10 col-sm-2">
+                    <button type="submit" class="btn btn-default">Uppdatera min profil</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+
+{% endblock %}

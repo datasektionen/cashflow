@@ -3,8 +3,8 @@ from channels import Group
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_init, post_save
-from django.forms.models import model_to_dict
 from django.dispatch import receiver
+from django.forms.models import model_to_dict
 
 from cashflow.settings import FCM_API_KEY
 
@@ -102,7 +102,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User)
 
     # represents a bank account owned by the user
-    bank_account = models.CharField(max_length=10, blank=True)
+    bank_account = models.CharField(max_length=13, blank=True)
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
     default_account = models.ForeignKey(BankAccount, blank=True, null=True)
