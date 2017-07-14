@@ -1,5 +1,6 @@
 import json
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 
@@ -40,3 +41,15 @@ def new_expense(request):
         return HttpResponseRedirect("")
     else:
         raise Http404()
+
+
+def get_expense(request, pk):
+    try:
+        pk = int(pk)
+        expense = models.Expense.objects.get(id=pk)
+
+        return render(request, 'expenses/expense.html', {
+            'expense': expense
+        })
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")

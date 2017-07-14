@@ -40,6 +40,12 @@ class DAuth(object):
             return None
 
 
+def get_permissions(user):
+    return requests.get(
+        'http://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
+    ).json()
+
+
 def has_permission(permission, request):
     if 'permissions' not in request.session:
         # Fetch permissions from pls and store timestamp

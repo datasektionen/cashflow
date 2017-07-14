@@ -1,3 +1,5 @@
+import re
+
 import requests
 from channels import Group
 from django.contrib.auth.models import User
@@ -151,6 +153,14 @@ class Profile(models.Model):
             'email': self.user.email
         }
 
+    def may_attest(self):
+        may_attest = []
+        from cashflow import dauth
+        for permission in dauth.get_permissions(self.user):
+            if permission.startswith("attest-"):
+                may_attest.append(permission[len("attest-"):])
+        return may_attest
+
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
 @receiver(post_save, sender=User)
@@ -198,7 +208,7 @@ class Expense(models.Model):
     def __unicode__(self):
         return self.description
 
-    def compute_total(self):
+    def total_amount(self):
         total = 0
         for part in self.expensepart_set.all():
             total += part.amount
@@ -230,6 +240,10 @@ class File(models.Model):
             'url': self.file.url,
             'id': self.id
         }
+
+    def is_image(self):
+        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)")  # TODO: Find better solution
+        return file_regex.match(self.file.name)
 
 
 class ExpensePart(models.Model):

@@ -1,0 +1,116 @@
+{% extends "expenses/main.html" %}
+
+{% block full_content %}
+    <!-- TODO: Do something about this-->
+    <style>
+        .thumbnail {
+            padding: 0px;
+        }
+
+        .panel {
+            position: relative;
+        }
+
+        .panel > .panel-heading:after, .panel > .panel-heading:before {
+            position: absolute;
+            top: 11px;
+            left: -16px;
+            right: 100%;
+            width: 0;
+            height: 0;
+            display: block;
+            content: " ";
+            border-color: transparent;
+            border-style: solid solid outset;
+            pointer-events: none;
+        }
+
+        .panel > .panel-heading:after {
+            border-width: 7px;
+            border-right-color: #f7f7f7;
+            margin-top: 1px;
+            margin-left: 2px;
+        }
+
+        .panel > .panel-heading:before {
+            border-right-color: #ddd;
+            border-width: 8px;
+        }
+    </style>
+
+    <h1>{{ expense.description|capfirst }}</h1>
+    <div class="col-sm-6 col-lg-6">
+        <ul class="list-group">
+            <li class="list-group-item"><b>Köpt av:</b>
+                <u><a class="" href="{% url 'expenses-user' expense.owner.user.username %}">
+                    {{ expense.owner.user.username }}
+                </a></u>
+            </li>
+            <li class="list-group-item"><b>Inköpsdatum:</b> {{ expense.expense_date|date:"Y-m-d" }}</li>
+            <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
+            <li class="list-group-item"><b>Återbetalning:</b> <!-- TODO --> </li>
+            <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
+        </ul>
+        <h2>Kvittodelar</h2>
+        {% for expense_part in expense.expensepart_set.all %}
+            <ul class="list-group">
+                <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.budget_line.cost_centre.committee.name }}</li>
+                <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.budget_line.cost_centre.name }}</li>
+                <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line.name }}</li>
+                <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount }} kr.</li>
+                {% if expense_part.attested_by %}
+                    <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.get_full_name }}
+                        <!-- TODO: link--></li>
+                    <li class="list-group-item"><b>Attesterat den:</b> {{ expense_part.attest_date }}</li>
+                {% else %}
+                    <li class="list-group-item"><b class="align-left">Kvittodel ej attesterad</b>
+                        {% if expense_part.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
+                            <a href="attest" class="pull-right">Attestera</a> <!-- TODO: Fix link -->
+                        {% endif %}
+                    </li>
+                {% endif %}
+
+            </ul>
+        {% endfor %}
+    </div>
+    <div class="col-sm-6 col-lg-6">
+        {% for file in expense.file_set.all %}
+            {% if  file.is_image %}
+                <img class="center-block" style="width: 50%;" src="{{ file.file.url }}">
+            {% else %}
+                <a href="{{ file.file.url }}">{{ file.file.name }}</a>
+
+            {% endif %}
+
+        {% endfor %}
+    </div>
+    <div class="col-sm-12 col-lg-8 col-lg-offset-2">
+        <h2>Kommentarer</h2>
+
+
+
+        {% for comment in expense.comment_set.all %}
+            <div class="col-sm-12">
+                <div class="hidden-xs col-sm-2">
+                    <div class="thumbnail" style="border:none">
+                        <img class="img-responsive user-photo"
+                             src="https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image">
+                    </div><!-- /thumbnail -->
+                </div>
+                <div class="col-sm-10">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="padding-bottom: 30px">
+                            <div>
+                                <b class="pull-left">{{ comment.author.user.get_full_name }}</b>
+                                <span class="text-muted pull-right">{{ comment.date|date:"Y-m-d" }}</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

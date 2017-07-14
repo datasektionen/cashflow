@@ -2,6 +2,7 @@
 
 {% block methone-links %}
     {% if user.is_authenticated %}
+        {str: "Nytt utlägg", href: "{% url 'expenses-expense-new' %}" },
         {str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" }
     {% endif %}
 
