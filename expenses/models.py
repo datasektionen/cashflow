@@ -9,6 +9,18 @@ from django.forms.models import model_to_dict
 from cashflow.settings import FCM_API_KEY
 
 
+def get_budget_json():
+    budget = {}
+    for committee in Committee.objects.all().order_by('name'):
+        budget[str(committee.name)] = {}
+        for cost_centre in CostCentre.objects.filter(committee=committee).order_by('name'):
+            budget[str(committee.name)][str(cost_centre.name)] = []
+            for budget_line in BudgetLine.objects.filter(cost_centre=cost_centre).order_by('name'):
+                budget[str(committee.name)][str(cost_centre.name)].append(str(budget_line.name))
+    j = str(budget)
+    return j
+
+
 class Committee(models.Model):
     name = models.TextField()
 
@@ -24,7 +36,7 @@ class Committee(models.Model):
             'committee_name': self.name,
             'cost_centres': [
                 cost_centre.get_overview_dict() for cost_centre in CostCentre.objects.filter(committee=self.id).all()
-                ]
+            ]
         }
 
     def to_dict(self):
@@ -223,7 +235,7 @@ class File(models.Model):
 class ExpensePart(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
     budget_line = models.ForeignKey(BudgetLine)
-    amount = models.IntegerField()
+    amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
 
@@ -264,6 +276,7 @@ def send_notification(sender, instance, **kwargs):
             "Content-type": "application/json"
         })
 
+
 post_save.connect(send_notification, sender=ExpensePart)
 post_save.connect(send_notification, sender=Expense)
 
@@ -278,7 +291,7 @@ class Comment(models.Model):
         return self.author.__str__() + " - " + str(self.date) + ": " + self.content
 
     def __unicode__(self):
-        return self.author.__unicode__() + " - " +\
+        return self.author.__unicode__() + " - " + \
                str(self.date) + ": " + self.content
 
     def to_dict(self):
@@ -292,5 +305,6 @@ class Comment(models.Model):
 # noinspection PyUnusedLocal
 def comment_created(sender, instance, **kwargs):
     Group('cashflow-expense-' + str(instance.expense.id)).send({'comment': instance.to_dict()})
+
 
 post_init.connect(comment_created, sender=Comment)

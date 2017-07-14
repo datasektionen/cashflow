@@ -1,0 +1,163 @@
+{% extends "expenses/main.html" %}
+{% load widget_tweaks %}
+
+{% block full_content %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        //noinspection JSAnnotator
+        const budget = {% autoescape off %}{{ budget_json }}{% endautoescape %};
+        let number_of_parts = 1;
+
+        function enable_cost_centre(caller) {
+            const part = $(caller).closest('#expense_part');
+            const committee_select = part.find('.committee_select');
+            const cost_centre_select = part.find('.cost_centre_select');
+            cost_centre_select.empty(); // Remove all (old) child elements
+            $.each(budget[committee_select.val()], (cost_centre) => {
+                cost_centre_select.append($("<option></option>")
+                    .attr("value", cost_centre)
+                    .text(cost_centre))
+            });
+            cost_centre_select.prop('disabled', false);
+            enable_budget_line(caller);
+        }
+
+        function enable_budget_line(caller) {
+            const part = $(caller).closest('#expense_part');
+            const committee_select = part.find('.committee_select');
+            const cost_centre_select = part.find('.cost_centre_select');
+            const budget_line_select = part.find('.budget_line_select');
+
+            budget_line_select.empty(); // Remove all (old) child elements
+            $.each(budget[committee_select.val()][cost_centre_select.val()], (_, budget_line) => {
+                budget_line_select.append($("<option></option>")
+                    .attr("value", budget_line)
+                    .text(budget_line))
+            });
+            budget_line_select.prop('disabled', false);
+        }
+
+        function add_part() {
+            number_of_parts += 1;
+            const new_part = $('#expense_part').clone();
+            new_part.find('.committee_select').val(new_part.find('.committee_select option:first').val());
+            new_part.find('.committee_select')
+                .attr("name", 'expense_part-' + number_of_parts + '-committee');
+            new_part.find('.cost_centre_select')
+                .empty()
+                .attr("name", 'expense_part-' + number_of_parts + '-cost_centre');
+            new_part.find('.budget_line_select')
+                .empty()
+                .attr("name", 'expense_part-' + number_of_parts + '-budget_line');
+            new_part.find('.amount')
+                .val('')
+                .attr("name", 'expense_part-' + number_of_parts + '-amount');
+            $('#expense_parts').append(new_part);
+            parts_indices = JSON.parse($('#indices').val());
+            parts_indices.push(number_of_parts);
+            $('#indices').val(JSON.stringify(parts_indices));
+        }
+
+        function remove_part(caller) {
+            if ($('#expense_parts > *').length > 1) {
+                const name = $(caller).closest('#expense_part').find('.committee_select').attr('name');
+                const match = /expense_part-(\d+)-committee/.exec(name);
+
+                const parts_indices = JSON.parse($('#indices').val());
+                const index = parts_indices.indexOf(parseInt(match[1]));
+                parts_indices.splice(index, 1);
+                $('#indices').val(JSON.stringify(parts_indices));
+                caller.closest('#expense_part').remove();
+            }
+        }
+
+    </script>
+    <div class="col-sm-8 col-sm-offset-2">
+        <h1>Nytt kvitto</h1>
+        <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="expense-description" class="col-sm-4 control-label">
+                    Beskrivning:
+                </label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" name="expense-description"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="files" class="col-sm-4 control-label">
+                    Bild/pdf av kvittot:
+                </label>
+                <div class="col-sm-8">
+                    <input type="file" name="files">
+                </div>
+                <br><br>
+            </div>
+
+            <div class="form-group">
+                <label for="expense-date" class="col-sm-4 control-label">
+                    Transaktionsdatum:
+                </label>
+                <div class="col-sm-8">
+                    <input class="form-control" type="date" name="expense-date"/>
+                </div>
+            </div>
+
+            <h2>Kvittodelar</h2>
+            <input type="text" id="indices" name="expense_part_indices" value="[1]" hidden>
+            <div id="expense_parts">
+                <div class="well" id="expense_part">
+                    <div class="form-group">
+                        <label for="expense_part-committee" class="col-sm-4 control-label">
+                            Nämnd:
+                        </label>
+                        <div class="col-sm-8">
+                            <select class="form-control committee_select" name="expense_part-1-committee"
+                                    onchange="enable_cost_centre(this)">
+                                {% for committee in committees %}
+                                    <option value="{{ committee }}">{{ committee }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense_part-cost_centre" class="col-sm-4 control-label">
+                            Sekundärt resultatställe:
+                        </label>
+                        <div class="col-sm-8">
+                            <select class="form-control cost_centre_select" name="expense_part-1-cost_centre"
+                                    onchange="enable_budget_line(this)" disabled>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense_part-budget_line" class="col-sm-4 control-label">
+                            Budgetpost:
+                        </label>
+                        <div class="col-sm-8">
+                            <select class="form-control budget_line_select" name="expense_part-1-budget_line" disabled>
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense_part-amount" class="col-sm-4 control-label">
+                            Summa:
+                        </label>
+                        <div class="col-sm-8">
+                            <input type="number" step="0.01" class="form-control amount" name="expense_part-1-amount">
+                        </div>
+                    </div>
+                    <button type="button" class="small align-left" onclick="remove_part(this)">
+                        Ta bort kvittodelen
+                    </button>
+                    <button type="button" class="small align-right" onclick="add_part()">
+                        Lägg till en till kvittodel
+                    </button>
+                </div>
+            </div>
+            <input type="submit">
+        </form>
+    </div>
+{% endblock %}

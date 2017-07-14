@@ -9,6 +9,7 @@ import expenses.api_views.file as file_api
 import expenses.api_views.misc as misc_api
 import expenses.api_views.pay as pay_api
 import expenses.api_views.user as user_api
+import expenses.human_views.expense as expense_views
 import expenses.human_views.general as general_views
 import expenses.human_views.user as user_views
 
@@ -32,8 +33,9 @@ api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
     url(r'^$', general_views.index, name='expenses-index'),
-    url(r'^user/(\w+)/$', user_views.get_user, name='expenses-user'),
-    url(r'^user/(\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
+    url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
+    url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
+    url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^api/', include(api_urlpatterns)),
 ]
 
