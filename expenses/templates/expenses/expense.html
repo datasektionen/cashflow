@@ -48,12 +48,17 @@
             </li>
             <li class="list-group-item"><b>Inköpsdatum:</b> {{ expense.expense_date|date:"Y-m-d" }}</li>
             <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
-            <li class="list-group-item"><b>Återbetalning:</b> <!-- TODO --> </li>
+            <li class="list-group-item"><b>Återbetalning:</b> Ej återbetald <!-- TODO --> </li>
             <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
         </ul>
         <h2>Kvittodelar</h2>
         {% for expense_part in expense.expensepart_set.all %}
             <ul class="list-group">
+                {% if user.username == expense.owner.user.username %}
+                    <a class="btn btn-default" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
+                        <span class="glyphicon glyphicon-pencil"></span> Redigera kvittodel
+                    </a>
+                {% endif %}
                 <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.budget_line.cost_centre.committee.name }}</li>
                 <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.budget_line.cost_centre.name }}</li>
                 <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line.name }}</li>
@@ -76,7 +81,7 @@
     <div class="col-sm-6 col-lg-6">
         {% for file in expense.file_set.all %}
             {% if  file.is_image %}
-                <img class="center-block" style="width: 50%;" src="{{ file.file.url }}">
+                <img class="center-block" style="width: 70%;" src="{{ file.file.url }}">
             {% else %}
                 <a href="{{ file.file.url }}">{{ file.file.name }}</a>
 

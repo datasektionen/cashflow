@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
+    url(r'^expense_part/(?P<pk>\d+)/edit/$', expense_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^api/', include(api_urlpatterns)),
 ]
 
