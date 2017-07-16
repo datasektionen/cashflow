@@ -64,13 +64,17 @@
                 <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line.name }}</li>
                 <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount }} kr.</li>
                 {% if expense_part.attested_by %}
-                    <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.get_full_name }}
-                        <!-- TODO: link--></li>
+                    <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.user.get_full_name }}
+                    </li>
                     <li class="list-group-item"><b>Attesterat den:</b> {{ expense_part.attest_date }}</li>
                 {% else %}
                     <li class="list-group-item"><b class="align-left">Kvittodel ej attesterad</b>
                         {% if expense_part.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
-                            <a href="attest" class="pull-right">Attestera</a> <!-- TODO: Fix link -->
+                            <form method="POST" class="pull-right"
+                                  action="{% url 'expenses-expense_part-attest' expense_part.id %}">
+                                {% csrf_token %}
+                                <button class="btn-primary btn-xs" type="submit">Attestera</button>
+                            </form>
                         {% endif %}
                     </li>
                 {% endif %}

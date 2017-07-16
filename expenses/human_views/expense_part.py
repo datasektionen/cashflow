@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden, HttpResponseRedirect, Http404
 from django.shortcuts import render
@@ -32,6 +34,27 @@ def edit_expense_part(request, pk):
 
             expense_part.attested_by = None
             expense_part.attest_date = None
+
+            expense_part.save()
+            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+        else:
+            raise Http404()
+
+    except ObjectDoesNotExist:
+        raise Http404("Kvittodelen finns inte")
+
+
+def attest_expense_part(request, pk):
+    try:
+        expense_part = models.ExpensePart.objects.get(pk=int(pk))
+
+        if request.method == 'POST':
+
+            if request.user.username != expense_part.expense.owner.user.username:
+                return HttpResponseForbidden("Du får inte attestera ditt egna kvitto!")
+
+            expense_part.attested_by = request.user.profile
+            expense_part.attest_date = date.today()
 
             expense_part.save()
             return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
