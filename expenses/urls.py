@@ -10,6 +10,7 @@ import expenses.api_views.misc as misc_api
 import expenses.api_views.pay as pay_api
 import expenses.api_views.user as user_api
 import expenses.human_views.expense as expense_views
+import expenses.human_views.expense_part as expensepart_views
 import expenses.human_views.general as general_views
 import expenses.human_views.user as user_views
 
@@ -38,7 +39,7 @@ urlpatterns = [
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
     url(r'^expense/(?P<expense_pk>\d+)/comment/$', expense_views.new_comment, name='expenses-expense-comment-new'),
-    url(r'^expense_part/(?P<pk>\d+)/edit/$', expense_views.edit_expense_part, name='expenses-expense_part-edit'),
+    url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^api/', include(api_urlpatterns)),
 ]
 

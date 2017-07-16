@@ -117,7 +117,7 @@
                 </div>
             </div>
         {% endfor %}
-        <form method="POST" action="comment/">
+        <form method="POST" action="{% url 'expenses-expense-comment-new' expense.id %}">
             {% csrf_token %}
             <div class="col-sm-10 col-sm-offset-1">
                 <label for="content">Ny kommentar</label> <br>
