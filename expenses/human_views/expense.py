@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
@@ -45,6 +46,7 @@ def new_expense(request):
 
 
 def get_expense(request, pk):
+    # TODO: Only let certain users view expense
     try:
         pk = int(pk)
         expense = models.Expense.objects.get(id=pk)
@@ -90,3 +92,17 @@ def edit_expense_part(request, pk):
 
     except ObjectDoesNotExist:
         raise Http404("Kvittodelen finns inte")
+
+
+def new_comment(request, expense_pk):
+    if request.method == 'POST':
+        comment = models.Comment(
+            expense_id=int(expense_pk),
+            date=datetime.now(),
+            author=request.user.profile,
+            content=request.POST['content']
+        )
+        comment.save()
+        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
+    else:
+        raise Http404()
