@@ -24,8 +24,9 @@ def new_expense(request):
             description=request.POST['expense-description'])
         expense.save()
 
-        file = models.File(belonging_to=expense, file=request.FILES['files'])
-        file.save()
+        for uploaded_file in request.FILES.getlist('files'):
+            file = models.File(belonging_to=expense, file=uploaded_file)
+            file.save()
 
         expense_part_indices = json.loads(request.POST['expense_part_indices'])
         for i in expense_part_indices:
@@ -40,7 +41,7 @@ def new_expense(request):
             )
             expense_part.save()
 
-            return HttpResponseRedirect(reverse('expenses-expense', [expense.id]))
+            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
     else:
         raise Http404()
 
