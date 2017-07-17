@@ -42,18 +42,22 @@
             const new_part = $('#expense_part').clone();
             new_part.find('.committee_select').val(new_part.find('.committee_select option:first').val());
             new_part.find('.committee_select')
-                .attr("name", 'expense_part-' + number_of_parts + '-committee');
+                .attr("name", 'expense_part-' + number_of_parts + '-committee')
+                .attr("required", true);
             new_part.find('.cost_centre_select')
                 .empty()
-                .attr("name", 'expense_part-' + number_of_parts + '-cost_centre');
+                .attr("name", 'expense_part-' + number_of_parts + '-cost_centre')
+                .attr("required", true);
             new_part.find('.budget_line_select')
                 .empty()
-                .attr("name", 'expense_part-' + number_of_parts + '-budget_line');
+                .attr("name", 'expense_part-' + number_of_parts + '-budget_line')
+                .attr("required", true);
             new_part.find('.amount')
                 .val('')
-                .attr("name", 'expense_part-' + number_of_parts + '-amount');
+                .attr("name", 'expense_part-' + number_of_parts + '-amount')
+                .attr("required", true);
             $('#expense_parts').append(new_part);
-            parts_indices = JSON.parse($('#indices').val());
+            var parts_indices = JSON.parse($('#indices').val());
             parts_indices.push(number_of_parts);
             $('#indices').val(JSON.stringify(parts_indices));
         }
@@ -81,7 +85,7 @@
                     Beskrivning:
                 </label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control" name="expense-description"/>
+                    <input type="text" class="form-control" name="expense-description" required/>
                 </div>
             </div>
 
@@ -90,7 +94,7 @@
                     Bild/pdf av kvittot:
                 </label>
                 <div class="col-sm-8">
-                    <input type="file" name="files" multiple>
+                    <input type="file" name="files" multiple required>
                 </div>
                 <br><br>
             </div>
@@ -100,7 +104,7 @@
                     Transaktionsdatum:
                 </label>
                 <div class="col-sm-8">
-                    <input class="form-control" type="date" name="expense-date"/>
+                    <input class="form-control" type="date" name="expense-date" required/>
                 </div>
             </div>
 
@@ -114,7 +118,7 @@
                         </label>
                         <div class="col-sm-8">
                             <select class="form-control committee_select" name="expense_part-1-committee"
-                                    onchange="enable_cost_centre(this)">
+                                    onchange="enable_cost_centre(this)" required>
                                 {% for committee in committees %}
                                     <option value="{{ committee }}">{{ committee }}</option>
                                 {% endfor %}
@@ -127,7 +131,7 @@
                         </label>
                         <div class="col-sm-8">
                             <select class="form-control cost_centre_select" name="expense_part-1-cost_centre"
-                                    onchange="enable_budget_line(this)" disabled>
+                                    onchange="enable_budget_line(this)" disabled required>
                             </select>
                         </div>
                     </div>
@@ -136,7 +140,8 @@
                             Budgetpost:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control budget_line_select" name="expense_part-1-budget_line" disabled>
+                            <select class="form-control budget_line_select" name="expense_part-1-budget_line" disabled
+                                    required>
 
                             </select>
                         </div>
@@ -146,7 +151,8 @@
                             Summa:
                         </label>
                         <div class="col-sm-8">
-                            <input type="number" step="0.01" class="form-control amount" name="expense_part-1-amount">
+                            <input type="number" step="0.01" class="form-control amount" name="expense_part-1-amount"
+                                   required>
                         </div>
                     </div>
                     <button type="button" class="small align-left" onclick="remove_part(this)">

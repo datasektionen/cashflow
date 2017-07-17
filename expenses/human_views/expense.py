@@ -41,7 +41,7 @@ def new_expense(request):
             )
             expense_part.save()
 
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
+        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
     else:
         raise Http404()
 
