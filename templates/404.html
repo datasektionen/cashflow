@@ -1,0 +1,13 @@
+{% extends 'main.html' %}
+
+{% block full_content %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            audio = new Audio('http://www.orangefreesounds.com/wp-content/uploads/2014/08/Wilhelm-Scream-ringtone.mp3')
+            audio.play()
+        })
+    </script>
+    <h1>404: Sidan du letar efter finns inte</h1>
+    <p>{{ exception }}</p>
+{% endblock %}
