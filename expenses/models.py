@@ -196,6 +196,7 @@ class Payment(models.Model):
 
 
 class Expense(models.Model):
+    created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
     owner = models.ForeignKey(Profile)
     description = models.TextField()
