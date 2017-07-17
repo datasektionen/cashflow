@@ -50,7 +50,7 @@ def attest_expense_part(request, pk):
 
         if request.method == 'POST':
 
-            if request.user.username != expense_part.expense.owner.user.username:
+            if request.user.username == expense_part.expense.owner.user.username:
                 return HttpResponseForbidden("Du får inte attestera ditt egna kvitto!")
 
             expense_part.attested_by = request.user.profile
