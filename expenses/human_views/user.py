@@ -9,14 +9,31 @@ from expenses.forms import UserForm
 
 
 def get_user(request, username):
-    # TODO: Add permissions
     try:
         user = models.User.objects.get_by_natural_key(username)
         if not may_view_user(request, user):
             return HttpResponseForbidden()
+
+        non_attested_expenses = []
+        attested_expenses = []
+
+        for expense in user.profile.expense_set.all():
+            if expense.reimbursement is not None:
+                continue  # expense is waay past attesting
+
+            for expense_part in expense.expensepart_set.all():
+                if expense_part.attested_by is None:
+                    non_attested_expenses.append(expense)
+                    break
+            else:  # inner loop didn't break
+                attested_expenses.append(expense)
+
         return render(request, 'expenses/user.html',
                       {
-                          "showuser": user
+                          'showuser': user,
+                          'non_attested_expenses': non_attested_expenses,
+                          'attested_expenses': attested_expenses,
+                          'reimbursements': user.profile.receiver.all()
                       })
     except ObjectDoesNotExist:
         raise Http404("Användaren finns inte")
@@ -25,7 +42,7 @@ def get_user(request, username):
 def edit_user(request, username):
     try:
         user = models.User.objects.get_by_natural_key(username)
-        if not may_view_user(request, user):
+        if username != request.user.username:
             return HttpResponseForbidden()
         if request.method == 'POST':
             received_form = UserForm(request.POST, instance=user.profile)

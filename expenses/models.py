@@ -194,6 +194,8 @@ class Payment(models.Model):
         payment['account'] = self.account.to_dict()
         return payment
 
+    def tag(self):
+        return "data #" + str(self.id)
 
 class Expense(models.Model):
     created_date = models.DateField(auto_now_add=True)
