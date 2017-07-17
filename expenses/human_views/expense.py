@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponseRedirect
@@ -63,7 +62,6 @@ def new_comment(request, expense_pk):
     if request.method == 'POST':
         comment = models.Comment(
             expense_id=int(expense_pk),
-            date=datetime.now(),
             author=request.user.profile,
             content=request.POST['content']
         )

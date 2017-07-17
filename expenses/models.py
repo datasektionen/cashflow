@@ -300,7 +300,7 @@ post_save.connect(send_notification, sender=Expense)
 
 class Comment(models.Model):
     expense = models.ForeignKey(Expense)
-    date = models.DateField()
+    date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile)
     content = models.TextField()
 

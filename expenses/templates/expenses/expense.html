@@ -49,7 +49,7 @@
             <li class="list-group-item"><b>Inköpsdatum:</b> {{ expense.expense_date|date:"Y-m-d" }}</li>
             <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
             <li class="list-group-item"><b>Registrerat i cashflow:</b> {{ expense.created_date|date:"Y-m-d" }}</li>
-            <li class="list-group-item"><b>Återbetalning:</b> Ej återbetald <!-- TODO --> </li>
+            <li class="list-group-item"><b>Återbetalning:</b> {{ expense.reimbursement|default:"Ej återbetald" }}</li>
             <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
         </ul>
         <h2>Kvittodelar</h2>
@@ -112,7 +112,7 @@
                         <div class="panel-heading" style="padding-bottom: 30px">
                             <div>
                                 <b class="pull-left">{{ comment.author.user.get_full_name }}</b>
-                                <span class="text-muted pull-right">{{ comment.date|date:"Y-m-d" }}</span>
+                                <span class="text-muted pull-right">{{ comment.date|date:"Y-m-d H:i" }}</span>
                             </div>
                         </div>
                         <div class="panel-body">
