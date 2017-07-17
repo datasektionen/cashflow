@@ -197,6 +197,7 @@ class Payment(models.Model):
     def tag(self):
         return "data #" + str(self.id)
 
+
 class Expense(models.Model):
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
@@ -216,6 +217,10 @@ class Expense(models.Model):
         for part in self.expensepart_set.all():
             total += part.amount
         return total
+
+    def committees(self):
+        parts = self.expensepart_set.all()
+        return Committee.objects.filter(costcentre__budgetline__expensepart__in=parts)
 
     def to_dict(self):
         exp = model_to_dict(self)
