@@ -1,13 +1,14 @@
 # Cashflow 2.0
 
-Django and React project to manage receipts and reimbursements at Datasektionen.
+Django project to manage receipts and reimbursements at Datasektionen.
 
 ## Setup
 
-```
-pip install -r requirements.txt
-npm install
-```
+Install the packages in `requirements.txt`. You can then run the django-server with `manage.py runserver`.
+Make sure you first set up a database, an S3 bucket and supply the correct environment variables as specified below.
+
+
+TODO: Make sure the packages are up to date/throw out old stuff
 
 ## Run
 
