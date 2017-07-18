@@ -1,0 +1,58 @@
+{% extends "expenses/main.html" %}
+
+{% block full_content %}
+    <script>
+        function () {
+
+        }
+
+    </script>
+
+    <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare</p>
+    <h2>Kvitton</h2>
+    {% if payable_expenses %}
+        {% for expense in payable_expenses %}
+
+            {% ifchanged expense.owner %}
+                {% if not forloop.first %}
+                    </table>
+                    </div>
+                {% endif %}
+                <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4><b>{{ expense.owner }}</b></h4>
+                </div>
+                <table class="table">
+                <tr>
+                    <th>Beskrivning</th>
+                    <th>Nämnder</th>
+                    <th>Belopp</th>
+                    <th>Betala ut</th>
+                </tr>
+            {% endifchanged %}
+        <tr>
+            <td>{{ expense.description|capfirst }}</td>
+            <td>{% for committee in expense.committees %}
+                {{ committee }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}</td>
+            <td>{{ expense.total_amount }} kr</td>
+            <td><input type="checkbox" value="expense.id"></td>
+        </tr>
+        {% if forloop.last %}
+            <tr>
+                <td colspan="3">
+                    <div class="pull-right"><strong>Betala ut alla:</strong></div>
+                </td>
+                <td><input type="checkbox"></td>
+            </tr>
+            </table>
+            <div class="panel-body">
+                <button class="btn pull-right">Betala ut valda</button>
+            </div>
+            </div>
+        {% endif %}
+        {% endfor %}
+    {% else %}
+        Det finns inga nya kvitton som går att betala ut.
+    {% endif %}
+{% endblock %}

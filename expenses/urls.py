@@ -48,6 +48,7 @@ urlpatterns = [
     url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part'
                                                                                            '-attest'),
     url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
+    url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
     url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
     url(r'^api/', include(api_urlpatterns)),
 ]

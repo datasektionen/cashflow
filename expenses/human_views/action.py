@@ -1,5 +1,7 @@
+from django.http import HttpResponseForbidden
 from django.shortcuts import render
 
+from cashflow import dauth
 from expenses import models
 
 
@@ -14,6 +16,15 @@ def attest_overview(request):
             expensepart__budget_line__cost_centre__committee__in=may_attest_committees
         ).distinct()
     })
+
+
+def pay_overview(request):
+    if not dauth.has_permission('pay', request):
+        return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
+
+    return render(request, 'expenses/action_pay.html', {
+        'payable_expenses': models.Expense.objects.filter(reimbursement=None).exclude(expensepart__attested_by=None)
+                  .order_by('owner__user__username')})
 
 
 def accounting_overview(request):
