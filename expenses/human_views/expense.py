@@ -1,7 +1,7 @@
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -49,7 +49,7 @@ def get_expense(request, pk):
     # TODO: Only let certain users view expense
     try:
         pk = int(pk)
-        expense = models.Expense.objects.get(id=pk)
+        expense = models.Expense.objects.get(pk=pk)
 
         return render(request, 'expenses/expense.html', {
             'expense': expense
@@ -67,5 +67,24 @@ def new_comment(request, expense_pk):
         )
         comment.save()
         return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
+    else:
+        raise Http404()
+
+
+def set_verification(request, expense_pk):
+    if request.method == 'POST':
+        try:
+            expense = models.Expense.objects.get(pk=expense_pk)
+            if len(request.user.profile.may_account()) > 0:  # TODO: improve
+                return HttpResponseForbidden("Du har inte rättigheter för att bokföra")
+            if expense.reimbursement is None:
+                return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
+
+            expense.verification = request.POST['verification']
+            expense.save()
+
+            return HttpResponseRedirect(reverse('expenses-action-accounting'))
+        except ObjectDoesNotExist:
+            raise Http404("Utlägget finns inte")
     else:
         raise Http404()

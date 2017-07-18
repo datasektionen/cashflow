@@ -1,0 +1,53 @@
+{% extends "expenses/main.html" %}
+
+{% block full_content %}
+    <p>Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för.
+
+        Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så
+        prata med
+        bokföringsansvarig för den andra nämnden).</p>
+    <h2>Kvitton</h2>
+    <div class="col-sm-8 col-sm-offset-2">
+        {% if accounting_ready_expenses %}
+            <table class="table">
+                <tr>
+                    <th>Beskrivning</th>
+                    <th>Verifikatsnummer</th>
+                    <th></th>
+                </tr>
+                {% for expense in accounting_ready_expenses %}
+                    <tr>
+                        <td width="60%">{{ expense.description|capfirst }}</td>
+                        <form method="POST" action="{% url 'expenses-expense-verification' expense.id %}">
+                            {% csrf_token %}
+                            <td><input class="col-sm-10" type="text" name="verification" placeholder="E214"></td>
+                            <td>
+                                <button type="submit" class="btn">Registrera</button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <div class="col-sm-8 col-sm-offset-1">
+                                <table class="table">
+                                    {% for expense_part in expense.expensepart_set.all %}
+                                        <tr>
+                                            <td>{{ expense_part.budget_line }}</td>
+                                            <td>{{ expense_part.amount }} kr.</td>
+                                        </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <td><b>Totalt: </b></td>
+                                        <td>{{ expense.total_amount }} kr.</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            Det finns inga nya kvitton att bokföra.
+        {% endif %}
+    </div>
+{% endblock %}

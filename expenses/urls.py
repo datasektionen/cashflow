@@ -37,13 +37,18 @@ urlpatterns = [
     url(r'^$', general_views.index, name='expenses-index'),
     url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
+
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
     url(r'^expense/(?P<expense_pk>\d+)/comment/$', expense_views.new_comment, name='expenses-expense-comment-new'),
+    url(r'^expense/(?P<expense_pk>\d+)/verification/$', expense_views.set_verification, name='expenses-expense'
+                                                                                             '-verification'),
+
     url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part'
                                                                                            '-attest'),
-    url(r'^attest/$', action_views.attest_overview),
+    url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
+    url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
     url(r'^api/', include(api_urlpatterns)),
 ]
 

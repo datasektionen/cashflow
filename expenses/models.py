@@ -161,6 +161,14 @@ class Profile(models.Model):
                 may_attest.append(permission[len("attest-"):])
         return may_attest
 
+    def may_account(self):
+        may_account = []
+        from cashflow import dauth
+        for permission in dauth.get_permissions(self.user):
+            if permission.startswith("accounting-"):
+                may_account.append(permission[len("accounting-"):])
+        return may_account
+
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
 @receiver(post_save, sender=User)
