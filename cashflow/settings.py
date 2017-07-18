@@ -117,7 +117,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Stockholm'
 
 USE_I18N = True
 
