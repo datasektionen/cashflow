@@ -36,6 +36,17 @@
                     {{ form.bank_name|add_class:"form-control" }}
                 </div>
             </div>
+            {% if user.profile.may_pay %}
+                <div class="form-group">
+                    {{ form.bank_name.errors }}
+                    <label for="default_account" class="col-sm-4 control-label">
+                        Sektionskonto vid utbetalningar, ställ in till det konto du använder när du gör utbetalninar
+                    </label>
+                    <div class="col-sm-8">
+                        {{ form.default_account|add_class:"form-control" }}
+                    </div>
+                </div>
+            {% endif %}
             <div class="form-group">
                 <div class="col-sm-offset-10 col-sm-2">
                     <button type="submit" class="btn btn-default">Uppdatera min profil</button>

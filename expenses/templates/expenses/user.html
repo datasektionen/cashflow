@@ -106,6 +106,10 @@
                 <li class="list-group-item"> Bank: {{ showuser.profile.bank_name|default:"Saknas" }}</li>
                 <li class="list-group-item"> Clearingnummer: {{ showuser.profile.sorting_number|default:"Saknas" }}</li>
                 <li class="list-group-item"> Kontonummer: {{ showuser.profile.bank_account|default:"Saknas" }}</li>
+                {% if showuser.profile.may_pay %}
+                    <li class="list-group-item">Standardkonto för
+                        utbetalningar: {{ showuser.profile.default_account }}</li>
+                {% endif %}
             </ul>
         </div>
     </div>
