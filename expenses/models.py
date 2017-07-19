@@ -190,7 +190,6 @@ class Payment(models.Model):
     date = models.DateField()
     payer = models.ForeignKey(Profile, related_name='payer')
     receiver = models.ForeignKey(Profile, related_name='receiver')
-    amount = models.IntegerField()
     account = models.ForeignKey(BankAccount)
 
     def __str__(self):
@@ -206,8 +205,14 @@ class Payment(models.Model):
         payment['account'] = self.account.to_dict()
         return payment
 
+    def amount(self):
+        sum = 0
+        for expense in Expense.objects.filter(reimbursement=self):
+            sum += expense.total_amount()
+        return sum
+
     def tag(self):
-        return "data #" + str(self.id)
+        return "Data#" + str(self.id)
 
 
 class Expense(models.Model):

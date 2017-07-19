@@ -1,0 +1,42 @@
+{% extends "expenses/main.html" %}
+
+{% block full_content %}
+
+    <div class="col-sm-6 col-sm-offset-3 col-lg-6 col-lg-offset-3">
+        <div class="panel panel-info">
+            <div class="panel-heading clearfix">
+                <div class="panel-title pull-left">{{ payment.tag }}</div>
+            </div>
+            <ul class="list-group">
+                <li class="list-group-item"><b>Mottagare:</b> <u><a
+                        href="{% url 'expenses-user' payment.receiver.user %}">
+                    {{ payment.receiver.user.username }}
+                </a></u></li>
+                <li class="list-group-item"><b>Utbetalningsdatum:</b> {{ payment.date|date:"Y-m-d" }}</li>
+                <li class="list-group-item"><b>Utbetalat från:</b> {{ payment.account }}</li>
+                <li class="list-group-item"><b>Utbetalat av:</b> <u><a
+                        href="{% url 'expenses-user' payment.payer.user %}">
+                    {{ payment.payer.user.username }}
+                </a></u></li>
+                <li class="list-group-item"><b>Summa:</b> {{ payment.amount }} kr.</li>
+            </ul>
+        </div>
+
+        <h2>Kvitton</h2>
+        <table class="table table-hover">
+            <tr>
+                <th>Beskrivning</th>
+                <th>Belopp</th>
+            </tr>
+            {% for expense in payment.expense_set.all %}
+                <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
+                    <td>{{ expense.description|capfirst }}</td>
+                    <td>{{ expense.total_amount }} kr.</td>
+                </tr>
+            {% endfor %}
+
+
+        </table>
+    </div>
+
+{% endblock %}

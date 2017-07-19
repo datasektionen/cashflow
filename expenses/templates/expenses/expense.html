@@ -42,14 +42,18 @@
     <div class="col-sm-6 col-lg-6">
         <ul class="list-group">
             <li class="list-group-item"><b>Köpt av:</b>
-                <u><a class="" href="{% url 'expenses-user' expense.owner.user.username %}">
+                <u><a href="{% url 'expenses-user' expense.owner.user.username %}">
                     {{ expense.owner.user.username }}
                 </a></u>
             </li>
             <li class="list-group-item"><b>Inköpsdatum:</b> {{ expense.expense_date|date:"Y-m-d" }}</li>
             <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
             <li class="list-group-item"><b>Registrerat i cashflow:</b> {{ expense.created_date|date:"Y-m-d" }}</li>
-            <li class="list-group-item"><b>Återbetalning:</b> {{ expense.reimbursement|default:"Ej återbetald" }}</li>
+            <li class="list-group-item"><b>Återbetalning:</b>
+                <u><a href="{% url 'expenses-payment' expense.reimbursement.id %}" ma>
+                    {{ expense.reimbursement.tag|default:"Ej återbetald" }}
+                </a></u>
+            </li>
             <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
         </ul>
         <h2>Kvittodelar</h2>

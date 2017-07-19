@@ -13,6 +13,7 @@ import expenses.human_views.action as action_views
 import expenses.human_views.expense as expense_views
 import expenses.human_views.expense_part as expensepart_views
 import expenses.human_views.general as general_views
+import expenses.human_views.payment as payment_views
 import expenses.human_views.user as user_views
 
 router = DefaultRouter()
@@ -47,6 +48,9 @@ urlpatterns = [
     url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part'
                                                                                            '-attest'),
+
+    url(r'^payment/(?P<pk>\d+)/$', payment_views.get_payment, name='expenses-payment'),
+
     url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
     url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
     url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
