@@ -60,4 +60,6 @@ def edit_user(request, username):
 
 
 def may_view_user(request, user_to_view):
-    return (request.user == user_to_view) or has_permission('admin', request)
+    return (request.user == user_to_view) or \
+           has_permission('pay', request) or \
+           (len(request.user.profile.may_account()) > 0)
