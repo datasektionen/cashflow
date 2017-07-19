@@ -161,6 +161,10 @@ class Profile(models.Model):
                 may_attest.append(permission[len("attest-"):])
         return may_attest
 
+    def may_pay(self):
+        from cashflow import dauth
+        return 'pay' in dauth.get_permissions(self.user)
+
     def may_account(self):
         may_account = []
         from cashflow import dauth

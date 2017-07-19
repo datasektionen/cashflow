@@ -3,6 +3,15 @@
 {% block methone-links %}
     {% if user.is_authenticated %}
         {str: "Nytt utlägg", href: "{% url 'expenses-expense-new' %}" },
+        {% if user.profile.may_attest %}
+            {str: "Attestera", href: "{% url 'expenses-action-attest' %}"},
+        {% endif %}
+        {% if user.profile.may_pay %}
+            {str: "Betala ut", href: "{% url 'expenses-action-pay' %}"},
+        {% endif %}
+        {% if user.profile.may_account %}
+            {str: "Bokför", href: "{% url 'expenses-action-accounting' %}"},
+        {% endif %}
         {str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" }
     {% endif %}
 
