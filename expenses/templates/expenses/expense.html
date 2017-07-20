@@ -50,9 +50,9 @@
             <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
             <li class="list-group-item"><b>Registrerat i cashflow:</b> {{ expense.created_date|date:"Y-m-d" }}</li>
             <li class="list-group-item"><b>Återbetalning:</b>
-                <u><a href="{% url 'expenses-payment' expense.reimbursement.id %}" ma>
-                    {{ expense.reimbursement.tag|default:"Ej återbetald" }}
-                </a></u>
+                {% if expense.reimbursement %}<u><a href="{% url 'expenses-payment' expense.reimbursement.id %}" ma>
+                    {{ expense.reimbursement.tag }}
+                </a></u>{% else %}Ej återbetald{% endif %}
             </li>
             <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
         </ul>
