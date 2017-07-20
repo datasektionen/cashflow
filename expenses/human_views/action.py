@@ -22,9 +22,15 @@ def pay_overview(request):
     if not dauth.has_permission('pay', request):
         return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
 
-    return render(request, 'expenses/action_pay.html', {
-        'payable_expenses': models.Expense.objects.filter(reimbursement=None).exclude(expensepart__attested_by=None)
-                  .order_by('owner__user__username')})
+    context = {
+        'payable_expenses': models.Expense.objects.filter(reimbursement=None)
+            .exclude(expensepart__attested_by=None).order_by('owner__user__username'),
+        'accounts': models.BankAccount.objects.all().order_by('name')}
+
+    if request.GET:
+        context['payment'] = models.Payment.objects.get(id=int(request.GET['payment']))
+
+    return render(request, 'expenses/action_pay.html', context)
 
 
 def accounting_overview(request):

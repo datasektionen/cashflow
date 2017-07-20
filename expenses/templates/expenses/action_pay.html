@@ -13,9 +13,37 @@
             checkboxes.prop('checked', $(box).prop('checked'));
         }
 
+        function update_account() {
+            var accountclones = $('.account');
+            accountclones.val($('#main_account').val())
+        }
+
     </script>
+    {% if payment %}
+        <div class="alert alert-danger">
+            <b>{{ payment.date|date:"Y-m-d" }}</b><br>
+            Betala ut {{ payment.amount }} kr till {{ payment.receiver }} ({{ payment.receiver.user.username }}) från
+            sektionskontot "{{ payment.account }}", använd meddelandet "{{ payment.tag }}"
+            <br><b>Bank:</b> {{ payment.receiver.bank_name }}
+            <br><b>Clearingnummer:</b> {{ payment.receiver.sorting_number }}
+            <br><b>Kontonummer:</b> {{ payment.receiver.bank_account }}
+            <h1 style="border-bottom: 0"><b>Meddelande:</b> {{ payment.tag }}</h1>
+        </div>
+    {% endif %}
 
     <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare</p>
+
+    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar.
+        Du kan ställa in ditt standardkonto på din profil.</p>
+    <label for="account">Bankkonto:</label>
+    <select id="main_account" onchange="update_account()">
+        {% for account in accounts %}
+            <option value="{{ account.name }}"
+                    {% if account == user.profile.default_account %}
+                    selected
+                    {% endif %}>{{ account.name }}</option>
+        {% endfor %}
+    </select>
     <h2>Kvitton</h2>
     {% if payable_expenses %}
         {% for expense in payable_expenses %}
@@ -46,7 +74,9 @@
                     <th>Belopp</th>
                     <th>Betala ut</th>
                 </tr>
-                <form method="GET" action="{% url 'expenses-payment-new' %}">
+                <form method="POST" action="{% url 'expenses-payment-new' %}">
+                {% csrf_token %}
+                <input class="account" value="{{ user.profile.default_account.name }}" name="account" hidden>
             {% endifchanged %}
         <tr>
             <td>{{ expense.description|capfirst }}</td>

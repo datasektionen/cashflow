@@ -22,21 +22,7 @@ def new_payment(request):
     if not has_permission('pay', request):
         return HttpResponseForbidden()
 
-    if request.method == 'GET':
-        expenses = [
-            models.Expense.objects.get(id=int(expense_id)) for expense_id in request.GET.getlist('expense')
-        ]
-
-        expense_owner = expenses[0].owner
-        for expense in expenses:
-            if expense.owner != expense_owner:
-                return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
-
-        return render(request, 'expenses/new_payment.html', {
-            'expenses': expenses,
-            'accounts': models.BankAccount.objects.all().order_by('name')
-        })
-    elif request.method == "POST":
+    if request.method == "POST":
         try:
             expenses = [
                 models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')
@@ -58,6 +44,6 @@ def new_payment(request):
         for expense in expenses:
             expense.reimbursement = payment
             expense.save()
-        return HttpResponseRedirect(reverse('expenses-action-pay'))
+        return HttpResponseRedirect(reverse('expenses-action-pay') + "?payment=" + str(payment.id))
     else:
         raise Http404()
