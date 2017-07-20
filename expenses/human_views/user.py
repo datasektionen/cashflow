@@ -1,11 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.forms import modelform_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
 
 from cashflow.dauth import has_permission
 from expenses import models
-from expenses.forms import UserForm
 
 
 def get_user(request, username):
@@ -40,6 +40,9 @@ def get_user(request, username):
 
 
 def edit_user(request, username):
+    # noinspection PyPep8Naming
+    UserForm = modelform_factory(models.Profile,
+                                 fields=('bank_account', 'sorting_number', 'bank_name', 'default_account'))
     try:
         user = models.User.objects.get_by_natural_key(username)
         if username != request.user.username:
