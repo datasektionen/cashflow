@@ -206,10 +206,10 @@ class Payment(models.Model):
         return payment
 
     def amount(self):
-        sum = 0
+        total = 0
         for expense in Expense.objects.filter(reimbursement=self):
-            sum += expense.total_amount()
-        return sum
+            total += expense.total_amount()
+        return total
 
     def tag(self):
         return "Data#" + str(self.id)
@@ -267,7 +267,7 @@ class File(models.Model):
         }
 
     def is_image(self):
-        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)")  # TODO: Find better solution
+        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)")  # check if file has a known image-file-ending
         return file_regex.match(self.file.name)
 
 
