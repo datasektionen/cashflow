@@ -5,6 +5,7 @@ from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, H
 from django.shortcuts import render
 from django.urls import reverse
 
+from cashflow import dauth
 from expenses import models
 
 
@@ -46,10 +47,12 @@ def new_expense(request):
 
 
 def get_expense(request, pk):
-    # TODO: Only let certain users view expense
     try:
         pk = int(pk)
         expense = models.Expense.objects.get(pk=pk)
+
+        if not may_view_expense(request, expense):
+            return HttpResponseForbidden()
 
         return render(request, 'expenses/expense.html', {
             'expense': expense
@@ -59,24 +62,31 @@ def get_expense(request, pk):
 
 
 def new_comment(request, expense_pk):
-    if request.method == 'POST':
-        comment = models.Comment(
-            expense_id=int(expense_pk),
-            author=request.user.profile,
-            content=request.POST['content']
-        )
-        comment.save()
-        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
-    else:
-        raise Http404()
+    try:
+        expense = models.Expense.objects.get(pk=int(expense_pk))
+        if not may_view_expense(request, expense):
+            return HttpResponseForbidden()
+
+        if request.method == 'POST':
+            comment = models.Comment(
+                expense=expense,
+                author=request.user.profile,
+                content=request.POST['content']
+            )
+            comment.save()
+            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
+        else:
+            raise Http404()
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
 
 def set_verification(request, expense_pk):
     if request.method == 'POST':
         try:
             expense = models.Expense.objects.get(pk=expense_pk)
-            if len(request.user.profile.may_account()) > 0:  # TODO: improve
-                return HttpResponseForbidden("Du har inte rättigheter för att bokföra")
+            if may_account(request, expense):
+                return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
             if expense.reimbursement is None:
                 return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
 
@@ -88,3 +98,22 @@ def set_verification(request, expense_pk):
             raise Http404("Utlägget finns inte")
     else:
         raise Http404()
+
+
+def may_view_expense(request, expense):
+    if expense.owner.user.username == request.user.username or dauth.has_permission('pay', request):
+        return True
+    for committee in expense.committees():
+        if dauth.has_permission('attest-' + committee.name, request) or \
+                dauth.has_permission('accounting-' + committee.name, request):
+            return True
+
+    return False
+
+
+def may_account(request, expense):
+    for committee in expense.committees():
+        if dauth.has_permission('accounting-' + committee.name, request):
+            return True
+
+    return False
