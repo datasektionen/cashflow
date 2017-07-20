@@ -187,7 +187,7 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Payment(models.Model):
-    date = models.DateField()
+    date = models.DateField(auto_now_add=True)
     payer = models.ForeignKey(Profile, related_name='payer')
     receiver = models.ForeignKey(Profile, related_name='receiver')
     account = models.ForeignKey(BankAccount)
