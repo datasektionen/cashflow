@@ -44,11 +44,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'expenses',
     'rest_framework',
     'storages',
     'corsheaders',
     'widget_tweaks',
+    'expenses',
+    'budget',
 )
 
 MIDDLEWARE_CLASSES = (
