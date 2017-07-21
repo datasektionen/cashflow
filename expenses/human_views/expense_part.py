@@ -26,6 +26,8 @@ def edit_expense_part(request, pk):
             cost_centre = request.POST['cost_centre']
             budget_line = request.POST['budget_line']
 
+            original_str_repr = str(expense_part)
+
             expense_part.budget_line = models.BudgetLine.objects.get(
                 cost_centre__committee__name=committee,
                 cost_centre__name=cost_centre,
@@ -36,6 +38,13 @@ def edit_expense_part(request, pk):
             expense_part.attest_date = None
 
             expense_part.save()
+
+            comment = models.Comment(
+                author=request.user.profile,
+                expense=expense_part.expense,
+                content="Ändrade kvittodelen " + original_str_repr + " till " + str(expense_part)
+            )
+            comment.save()
             return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
         else:
             raise Http404()
@@ -57,6 +66,12 @@ def attest_expense_part(request, pk):
             expense_part.attest_date = date.today()
 
             expense_part.save()
+            comment = models.Comment(
+                author=request.user.profile,
+                expense=expense_part.expense,
+                content="Attesterade kvittodelen: " + str(expense_part)
+            )
+            comment.save()
             return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
         else:
             raise Http404()
