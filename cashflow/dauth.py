@@ -60,7 +60,7 @@ class AuthRequiredMiddleware(object):
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
         path = request.META['PATH_INFO']
-        whitelist = ['^/$', '^/login/$', '^/api/.*$']
+        whitelist = ['^/$', '^/login/$', '^/api/.*$', "^/budget/.*$"]
 
         for regex in whitelist:
             pattern = re.compile(regex)
