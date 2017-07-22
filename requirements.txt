@@ -4,4 +4,4 @@ djangorestframework == 3.6.2
 requests == 2.13.0
 django-cors-headers == 2.1.0
 boto == 2.48.0
-django-storages = 1.6.3
+django-storages == 1.6.3
