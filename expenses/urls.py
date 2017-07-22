@@ -15,6 +15,7 @@ import expenses.human_views.expense_part as expensepart_views
 import expenses.human_views.general as general_views
 import expenses.human_views.payment as payment_views
 import expenses.human_views.user as user_views
+from expenses import cron
 
 router = DefaultRouter()
 router.register('expense',  expense_api.ExpenseViewSet, base_name='Expense')
@@ -58,3 +59,6 @@ urlpatterns = [
     url(r'^api/', include(api_urlpatterns)),
 ]
 
+# Code to be run once (https://stackoverflow.com/questions/6791911/execute-code-when-django-starts-once-only)
+
+cron.start()
