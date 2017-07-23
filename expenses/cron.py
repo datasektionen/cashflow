@@ -7,12 +7,12 @@ from .models import Committee, CostCentre, BudgetLine
 
 
 def start():
-    threading.Timer(10, build_budget_from_api).start()  # Run first call after 10 seconds (let server start first)
+    threading.Timer(30, build_budget_from_api).start()  # Run first call after 10 seconds (let server start first)
 
 
 def build_budget_from_api():
     threading.Timer(60 * 15, build_budget_from_api).start()  # Run function every 15 min
-    response = requests.get("http://127.0.0.1:8000/budget/api/latest.json")
+    response = requests.get("http://127.0.0.1:80/budget/api/latest.json")
     budget = response.json()
 
     for committee_name in budget:
