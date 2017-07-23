@@ -7,3 +7,5 @@ boto == 2.48.0
 django-storages == 1.6.3
 gunicorn == 19.7.1
 django-widget-tweaks==1.4.1
+dj-database-url==0.4.2
+whitenoise==3.3.0
