@@ -129,8 +129,7 @@ AUTH_API_KEY = os.getenv('LOGIN2_KEY', 'key-012345678910111213141516171819')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
-STATICFILES_DIRS = ['build/static/']
-STATIC_ROOT = 'build/'
+STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
 
 AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')

@@ -13,8 +13,10 @@ Including another URLconf
     1. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 
+from cashflow import settings
 from .authviews import login, logout
 
 urlpatterns = [
@@ -23,4 +25,4 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^budget/', include("budget.urls")),
     url(r'^', include("expenses.urls")),
-]
+              ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
