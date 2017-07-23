@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
 
@@ -8,7 +9,12 @@ from expenses import models
 def attest_overview(request):
     may_attest = request.user.profile.may_attest()
 
-    may_attest_committees = [models.Committee.objects.get(name__iexact=committee) for committee in may_attest]
+    may_attest_committees = []
+    for committee in may_attest:
+        try:
+            may_attest_committees.append(models.Committee.objects.get(name__iexact=committee))
+        except ObjectDoesNotExist:
+            continue
 
     return render(request, 'expenses/action_attest.html', {
         'attestable_expenses': models.Expense.objects.exclude(owner__user=request.user).filter(
@@ -36,7 +42,12 @@ def pay_overview(request):
 def accounting_overview(request):
     may_account = request.user.profile.may_attest()
 
-    may_account_committees = [models.Committee.objects.get(name__iexact=committee) for committee in may_account]
+    may_account_committees = []
+    for committee in may_account:
+        try:
+            may_account_committees.append(models.Committee.objects.get(name__iexact=committee))
+        except ObjectDoesNotExist:
+            continue
 
     return render(request, 'expenses/action_accounting.html', {
         'accounting_ready_expenses': models.Expense.objects.exclude(reimbursement=None).filter(
