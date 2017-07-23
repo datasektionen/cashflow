@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 import expenses.api_views.accounting as accounting_api
@@ -56,7 +56,7 @@ urlpatterns = [
     url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
     url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
     url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
-    url(r'^api/', include(api_urlpatterns)),
+    # url(r'^api/', include(api_urlpatterns)),
 ]
 
 # Code to be run once (https://stackoverflow.com/questions/6791911/execute-code-when-django-starts-once-only)
