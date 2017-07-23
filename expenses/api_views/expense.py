@@ -1,11 +1,8 @@
 # coding=utf-8
-import json
 from datetime import datetime
 
-from channels import Group
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
@@ -60,14 +57,6 @@ class ExpenseViewSet(GenericViewSet):
             p.save()
 
         exp_dict = {'expense': exp.to_dict()}
-        for p in parts_to_be_saved:
-            Group("attest-" +
-                  p.budget_line.cost_centre.committee.name
-                  .replace(u'å', 'a')
-                  .replace(u'ä', 'a')
-                  .replace(u'ö', 'o')) \
-                .send(exp_dict)
-        Group("attest-.").send(exp_dict)
         return Response(exp_dict, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, **kwargs):

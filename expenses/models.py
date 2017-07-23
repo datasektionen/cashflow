@@ -1,10 +1,9 @@
 import re
 
 import requests
-from channels import Group
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_init, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
@@ -339,11 +338,3 @@ class Comment(models.Model):
         comment['author_first_name'] = self.author.user.first_name
         comment['author_last_name'] = self.author.user.last_name
         return comment
-
-
-# noinspection PyUnusedLocal
-def comment_created(sender, instance, **kwargs):
-    Group('cashflow-expense-' + str(instance.expense.id)).send({'comment': instance.to_dict()})
-
-
-post_init.connect(comment_created, sender=Comment)
