@@ -28,8 +28,6 @@ class DAuth(object):
                     email=data["emails"]
                 )
                 user.save()
-                p = Profile(user=user)
-                p.save()
             return user
 
     @staticmethod
@@ -60,7 +58,7 @@ class AuthRequiredMiddleware(object):
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
         path = request.META['PATH_INFO']
-        whitelist = ['^/$', '^/login/$', '^/api/.*$', "^/budget/.*$"]
+        whitelist = ['^/$', '^/login/$', '^/login/.*$', "^/budget/.*$"]
 
         for regex in whitelist:
             pattern = re.compile(regex)

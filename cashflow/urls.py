@@ -17,10 +17,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 from cashflow import settings
-from .authviews import login, logout
+from .authviews import login, login_with_token, logout
 
 urlpatterns = [
     url(r'^login/$', login, name='login'),
+    url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^budget/', include("budget.urls")),
