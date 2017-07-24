@@ -37,10 +37,22 @@ class BudgetLine(models.Model):
     cost_centre = models.ForeignKey(CostCentre)
     name = models.TextField()
     amount = models.DecimalField(decimal_places=2, max_digits=9)
-    spent = models.DecimalField(decimal_places=2, max_digits=9)
+    spent = models.DecimalField(decimal_places=2, max_digits=9, default=0)
 
     def __str__(self):
         return self.cost_centre.__str__() + " -> " + self.name
 
     def __unicode__(self):
         return self.cost_centre.__unicode__() + " -> " + self.name
+
+
+class BookingAccount(models.Model):
+    budgetlines = models.ManyToManyField(BudgetLine)
+    number = models.IntegerField()
+    name = models.TextField()
+
+    def __str__(self):
+        return str(self.number) + ": " + self.name
+
+    def __unicode__(self):
+        return str(self.number) + ": " + self.name
