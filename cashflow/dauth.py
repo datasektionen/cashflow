@@ -1,11 +1,11 @@
+import json
 import re
+import urllib.parse
 
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
-
-from expenses.models import Profile
 
 
 class DAuth(object):
@@ -39,17 +39,19 @@ class DAuth(object):
 
 
 def get_permissions(user):
-    return requests.get(
+    return json.loads(urllib.parse.unquote(requests.get(
         'http://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
-    ).json()
+    ).content.decode('utf-8')))
 
 
 def has_permission(permission, request):
     if 'permissions' not in request.session:
         # Fetch permissions from pls and store timestamp
-        request.session['permissions'] = requests.get(
+        response = requests.get(
                 'http://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/'
-            ).json()
+        )
+
+        request.session['permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
 
     return permission in request.session['permissions']
 
