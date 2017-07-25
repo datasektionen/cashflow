@@ -12,7 +12,7 @@ def start():
 
 def build_budget_from_api():
     threading.Timer(60 * 15, build_budget_from_api).start()  # Run function every 15 min
-    response = requests.get("http://127.0.0.1:80/budget/api/latest.json")
+    response = requests.get("http://cashflow.sips.datasektionen.se/budget/api/latest.json")
     budget = response.json()
 
     for committee_name in budget:
