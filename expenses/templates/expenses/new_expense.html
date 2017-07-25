@@ -119,6 +119,7 @@
                         <div class="col-sm-8">
                             <select class="form-control committee_select" name="expense_part-1-committee"
                                     onchange="enable_cost_centre(this)" required>
+                                <option disabled selected value> -- Välj en nämnd --</option>
                                 {% for committee in committees %}
                                     <option value="{{ committee }}">{{ committee }}</option>
                                 {% endfor %}
