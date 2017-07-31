@@ -157,7 +157,7 @@ class Profile(models.Model):
         from cashflow import dauth
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("attest-"):
-                may_attest.append(permission[len("attest-"):])
+                may_attest.append(permission[len("attest-"):].lower())
         return may_attest
 
     def may_pay(self):
@@ -169,7 +169,7 @@ class Profile(models.Model):
         from cashflow import dauth
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("accounting-"):
-                may_account.append(permission[len("accounting-"):])
+                may_account.append(permission[len("accounting-"):].lower())
         return may_account
 
 
