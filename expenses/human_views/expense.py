@@ -9,6 +9,16 @@ from cashflow import dauth
 from expenses import models
 
 
+def expense_overview(request):
+    if request.method == 'GET':
+        if len(dauth.get_permissions(request.user)) > 0:
+            return render(request, 'expenses/expense_list.html', {
+                'expenses': models.Expense.objects.order_by('-id').all()
+            })
+    else:
+        raise Http404()
+
+
 def new_expense(request):
     if request.method == 'GET':
 

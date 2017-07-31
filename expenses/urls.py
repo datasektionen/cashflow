@@ -56,6 +56,8 @@ urlpatterns = [
     url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
     url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
     url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
+
+    url(r'^expenses/$', expense_views.expense_overview, name='expenses-expense-overview')
     # url(r'^api/', include(api_urlpatterns)),
 ]
 
