@@ -12,12 +12,14 @@
             <table class="table">
                 <tr>
                     <th>Beskrivning</th>
+                    <th>Inköpsdatum</th>
                     <th>Verifikatsnummer</th>
                     <th></th>
                 </tr>
                 {% for expense in accounting_ready_expenses %}
                     <tr>
-                        <td width="60%">{{ expense.description|capfirst }}</td>
+                        <td width="50%">{{ expense.description|capfirst }}</td>
+                        <td> {{ expense.expense_date|date:"Y-m-d" }}</td>
                         <form method="POST" action="{% url 'expenses-expense-verification' expense.id %}">
                             {% csrf_token %}
                             <td><input class="col-sm-10" type="text" name="verification" placeholder="E214"></td>
