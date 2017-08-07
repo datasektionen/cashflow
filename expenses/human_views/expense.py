@@ -114,8 +114,8 @@ def may_view_expense(request, expense):
     if expense.owner.user.username == request.user.username or dauth.has_permission('pay', request):
         return True
     for committee in expense.committees():
-        if dauth.has_permission('attest-' + committee.name, request) or \
-                dauth.has_permission('accounting-' + committee.name, request):
+        if dauth.has_permission('attest-' + committee.name.lower(), request) or \
+                dauth.has_permission('accounting-' + committee.name.lower(), request):
             return True
 
     return False
@@ -123,7 +123,7 @@ def may_view_expense(request, expense):
 
 def may_account(request, expense):
     for committee in expense.committees():
-        if dauth.has_permission('accounting-' + committee.name, request):
+        if dauth.has_permission('accounting-' + committee.name.lower(), request):
             return True
 
     return False
