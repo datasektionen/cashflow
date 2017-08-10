@@ -40,7 +40,7 @@ def pay_overview(request):
 
 
 def accounting_overview(request):
-    may_account = request.user.profile.may_attest()
+    may_account = request.user.profile.may_account()
 
     may_account_committees = []
     for committee in may_account:
