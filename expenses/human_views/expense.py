@@ -95,7 +95,7 @@ def set_verification(request, expense_pk):
     if request.method == 'POST':
         try:
             expense = models.Expense.objects.get(pk=expense_pk)
-            if may_account(request, expense):
+            if not may_account(request, expense):
                 return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
             if expense.reimbursement is None:
                 return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
