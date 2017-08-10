@@ -4,8 +4,19 @@ from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
 
+from cashflow import dauth
 from cashflow.dauth import has_permission
 from expenses import models
+
+
+def user_list(request):
+    if request.method == 'GET':
+        if len(dauth.get_permissions(request.user)) > 0:
+            return render(request, 'expenses/user_list.html', {
+                'users': models.Profile.objects.order_by('-id').all()
+            })
+    else:
+        raise Http404()
 
 
 def get_user(request, username):

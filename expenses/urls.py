@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^$', general_views.index, name='expenses-index'),
     url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
+    url(r'^users/$', user_views.user_list, name='expenses-userlist'),
 
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
