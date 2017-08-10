@@ -266,7 +266,8 @@ class File(models.Model):
         }
 
     def is_image(self):
-        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)")  # check if file has a known image-file-ending
+        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)",
+                                re.IGNORECASE)  # check if file has a known image-file-ending
         return file_regex.match(self.file.name)
 
 
