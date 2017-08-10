@@ -123,7 +123,7 @@ def may_view_expense(request, expense):
 
 def may_account(request, expense):
     for committee in expense.committees():
-        if dauth.has_permission('accounting-' + committee.name.lower(), request):
+        if committee.name.lower() in request.user.profile.may_account():
             return True
 
     return False
