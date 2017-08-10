@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseRedirect, \
+    HttpResponseServerError
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -35,6 +36,8 @@ def new_payment(request):
 
         except ObjectDoesNotExist as e:
             raise Http404("Ett av utläggen finns inte.")
+        if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
+            return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
         payment = models.Payment(
             payer=request.user.profile,
             receiver=expense_owner,
