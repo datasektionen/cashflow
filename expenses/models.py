@@ -211,7 +211,7 @@ class Payment(models.Model):
         return total
 
     def tag(self):
-        return "Data#" + str(self.id)
+        return "Data" + str(self.id)
 
 
 class Expense(models.Model):
@@ -236,7 +236,7 @@ class Expense(models.Model):
 
     def committees(self):
         parts = self.expensepart_set.all()
-        return Committee.objects.filter(costcentre__budgetline__expensepart__in=parts)
+        return Committee.objects.filter(costcentre__budgetline__expensepart__in=parts).distinct()
 
     def to_dict(self):
         exp = model_to_dict(self)
