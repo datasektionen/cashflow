@@ -76,7 +76,8 @@
                 </tr>
                 <form method="POST" action="{% url 'expenses-payment-new' %}">
                 {% csrf_token %}
-                <input class="account" value="{{ user.profile.default_account.name }}" name="account" hidden>
+                <input class="account" value="{{ user.profile.default_account.name|default:accounts.0 }}" name="account"
+                       hidden>
             {% endifchanged %}
         <tr>
             <td>{{ expense.description|capfirst }}</td>
