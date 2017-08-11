@@ -12,3 +12,7 @@
 #footer #creators p {
     color: #fff;
 }
+
+img {
+    image-orientation: from-image;
+}
