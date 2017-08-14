@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
@@ -78,6 +79,8 @@ def new_comment(request, expense_pk):
             return HttpResponseForbidden()
 
         if request.method == 'POST':
+            if re.match('^\s*$', request.POST['content']):
+                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
             comment = models.Comment(
                 expense=expense,
                 author=request.user.profile,
