@@ -1,13 +1,10 @@
 import re
 
-import requests
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
-
-from cashflow.settings import FCM_API_KEY
 
 
 def get_budget_json():
@@ -295,29 +292,6 @@ class ExpensePart(models.Model):
             exp_part['attested_by_last_name'] = self.attested_by.user.last_name
 
         return exp_part
-
-
-# noinspection PyUnusedLocal
-def send_notification(sender, instance, **kwargs):
-    if isinstance(instance, ExpensePart):
-        exp = instance.expense
-    else:
-        exp = instance
-    if exp.owner.firebase_instance_id is not "":
-        req = requests.post('https://fcm.googleapis.com/fcm/send', json={
-            "notification": {
-                "title": "Uppdaterat kvitto",
-                "body": "Ditt kvitto \"" + str(exp.description) + "\" har uppdaterats"
-            },
-            "to": exp.owner.firebase_instance_id
-        }, headers={
-            "Authorization": "key=" + FCM_API_KEY,
-            "Content-type": "application/json"
-        })
-
-
-post_save.connect(send_notification, sender=ExpensePart)
-post_save.connect(send_notification, sender=Expense)
 
 
 class Comment(models.Model):

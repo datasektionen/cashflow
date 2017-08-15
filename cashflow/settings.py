@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import re
 
 import dj_database_url
-import re
 from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -174,5 +174,3 @@ AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
 MEDIAFILES_LOCATION = 'media'
 MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
 DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
-
-FCM_API_KEY = os.getenv('FCM_API_KEY', 'zzzzzzz-zzzzzzzzzzzzzzzzzzzzzz')
