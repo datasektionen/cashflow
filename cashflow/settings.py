@@ -174,3 +174,6 @@ AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
 MEDIAFILES_LOCATION = 'media'
 MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
 DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
+
+SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
+                                         'pate, brandy and with a fried egg on top and spam.')
