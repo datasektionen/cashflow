@@ -1,10 +1,13 @@
 import re
 
+import requests
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+
+from cashflow import settings
 
 
 def get_budget_json():
@@ -313,3 +316,18 @@ class Comment(models.Model):
         comment['author_first_name'] = self.author.user.first_name
         comment['author_last_name'] = self.author.user.last_name
         return comment
+
+
+@receiver(post_save, sender=Comment)
+def send_mail(sender, instance, created, *args, **kwargs):
+    if sender == Comment:
+        if created and instance.author != instance.expense.owner:
+            requests.post("http://spam.froyo.datasektionen.se/api/sendmail", json={
+                'from': 'no-reply@datasektionen.se',
+                'to': instance.expense.owner.user.email,
+                'subject': str(instance.author) + ' har kommenterat på ditt utlägg.',
+                'html': 'Ditt utlägg "' + instance.expense.description + '" har en ny kommentar av ' +
+                        str(instance.author) + '.',  # TODO: make it more nice looking, link etc.
+                'key': settings.SPAM_API_KEY
+            })
+            print('mail sent')
