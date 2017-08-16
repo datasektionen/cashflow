@@ -322,12 +322,11 @@ class Comment(models.Model):
 def send_mail(sender, instance, created, *args, **kwargs):
     if sender == Comment:
         if created and instance.author != instance.expense.owner:
-            requests.post("http://spam.froyo.datasektionen.se/api/sendmail", json={
+            requests.post("http://spam.datasektionen.se/api/sendmail", json={
                 'from': 'no-reply@datasektionen.se',
                 'to': instance.expense.owner.user.email,
-                'subject': str(instance.author) + ' har kommenterat på ditt utlägg.',
+                'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
                 'html': 'Ditt utlägg "' + instance.expense.description + '" har en ny kommentar av ' +
                         str(instance.author) + '.',  # TODO: make it more nice looking, link etc.
                 'key': settings.SPAM_API_KEY
             })
-            print('mail sent')
