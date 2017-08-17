@@ -1,0 +1,31 @@
+<div>
+    <div class="outer" style="background-color:#f7f7f7;margin:0;padding:0;border:0">
+        <div class="main" style="max-width:700px;margin:0 auto;padding:0;border:0">
+            <div class="top" style="background-color:#ee2a7b;margin:0;padding:0;border:0;text-align:center;height:10px">
+            </div>
+            <div class="content" style="background-color:#fff;padding:30px 30px;margin:0;border:0">
+                {% block content %}
+                    <p style="margin:0;padding:0;border:0">Hej, {{ receiver }}!</p>
+                    <br>
+                    <p style="margin:0;padding:0;border:0">
+                        Utlägget <a
+                            href="http://cashflow.datasektionen.se{% url "expenses-expense" comment.expense.id %}">"{{ comment.expense.description }}"</a>
+                        har fått en ny kommentar av {{ comment.author }}:
+                    </p>
+                    <br>
+                    <div>
+                        <p style="margin: 10px;padding: 10px; border-radius: 5px; border: 2px solid #ddd;">
+                            {{ comment.content }}
+                        </p>
+                    </div>
+                {% endblock %}
+            </div>
+            <div class="footer" style="background-color:#ee2a7b;margin:0;padding:0;border:0;text-align:center">
+                <img src="https://ci3.googleusercontent.com/proxy/eMndvuKRkNtzwKYBYNJ4twhtnInebyor61NJtiuX2zWerQMjWTU1DC-6H692udXZi0YCw6L2nmN9JIA8PIwPQPkoWMG21cVGKDN04wrxyPh1=s0-d-e1-ft#https://www.datasektionen.se/static/gfx/Skold_Vit_Final.png"
+                     style="height:100px;width:100px;margin:30px auto 0;text-align:center">
+                <h1 style="color:#fff;text-align:center;font-size:30px;height:30px;padding:0px 0 29px 0;margin:0;border:0">
+                    Konglig Datasektionen</h1>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from django.template.loader import render_to_string
 
 from cashflow import settings
 
@@ -326,7 +327,6 @@ def send_mail(sender, instance, created, *args, **kwargs):
                 'from': 'no-reply@datasektionen.se',
                 'to': instance.expense.owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'html': 'Ditt utlägg "' + instance.expense.description + '" har en ny kommentar av ' +
-                        str(instance.author) + '.',  # TODO: make it more nice looking, link etc.
+                'html': render_to_string("email.html", {'comment': instance, 'receiver': instance.expense.owner}),
                 'key': settings.SPAM_API_KEY
             })
