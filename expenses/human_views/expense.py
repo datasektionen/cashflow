@@ -2,6 +2,7 @@ import json
 import re
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.forms import modelform_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
@@ -55,6 +56,27 @@ def new_expense(request):
         return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
     else:
         raise Http404()
+
+
+def edit_expense(request, pk):
+    ExpenseForm = modelform_factory(models.Expense,
+                                    fields=('description', 'expense_date'))
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+        if expense.owner.user.username != request.user.username:
+            return HttpResponseForbidden()
+        if request.method == 'POST':
+            received_form = ExpenseForm(request.POST, instance=expense)
+            if received_form.is_valid():
+                received_form.save()
+                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': pk}))
+        else:
+
+            return render(request, 'expenses/edit_expense.html', {
+                "form": ExpenseForm(instance=expense)
+            })
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
 
 
 def get_expense(request, pk):

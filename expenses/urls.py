@@ -43,6 +43,7 @@ urlpatterns = [
 
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
     url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
+    url(r'^expense/(?P<pk>\d+)/edit/$', expense_views.edit_expense, name='expenses-expense-edit'),
     url(r'^expense/(?P<expense_pk>\d+)/comment/$', expense_views.new_comment, name='expenses-expense-comment-new'),
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', expense_views.set_verification, name='expenses-expense'
                                                                                              '-verification'),
