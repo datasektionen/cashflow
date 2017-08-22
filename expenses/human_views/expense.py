@@ -76,7 +76,8 @@ def edit_expense(request, pk):
                 "form": ExpenseForm(instance=expense)
             })
     except ObjectDoesNotExist:
-        raise Http404("Användaren finns inte")
+        raise Http404("Utlägget finns inte")
+
 
 
 def get_expense(request, pk):
