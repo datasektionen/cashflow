@@ -98,7 +98,8 @@
     <div class="col-sm-6 col-lg-6">
         {% for file in expense.file_set.all %}
             {% if  file.is_image %}
-                <img class="center-block" style="width: 70%;" src="{{ file.file.url }}">
+                <a href="{{ file.file.url }}" target="_blank"><img class="center-block" style="width: 70%;"
+                                                                   src="{{ file.file.url }}"></a>
             {% else %}
                 <a href="{{ file.file.url }}">{{ file.file.name }}</a>
 
