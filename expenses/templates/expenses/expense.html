@@ -45,6 +45,9 @@
                 <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
                     <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
                 </a>
+                <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
+                    <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
+                </a>
             {% endif %}
             <li class="list-group-item"><b>Köpt av:</b>
                 <u><a href="{% url 'expenses-user' expense.owner.user.username %}">

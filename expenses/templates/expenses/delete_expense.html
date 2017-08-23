@@ -1,0 +1,17 @@
+{% extends "expenses/main.html" %}
+{% load widget_tweaks %}
+
+{% block full_content %}
+    <div class="col-sm-8 col-sm-offset-2">
+        <h1>Ta bort kvitto</h1>
+        <p>Är du helt säker på att du vill ta bort kvittot "{{ expense.description }}"? Detta går inte att ångra!</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div class="form-group">
+                <div class="col-sm-offset-10 col-sm-2">
+                    <button type="submit" class="btn btn-default">Ta bort kvittot</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

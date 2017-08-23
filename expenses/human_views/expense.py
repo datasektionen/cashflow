@@ -79,6 +79,24 @@ def edit_expense(request, pk):
         raise Http404("Utlägget finns inte")
 
 
+def delete_expense(request, pk):
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+        if expense.owner.user.username != request.user.username:
+            return HttpResponseForbidden()
+        if request.method == 'GET':
+            return render(request, 'expenses/delete_expense.html', {
+                "expense": expense
+            })
+        if request.method == 'POST':
+            if expense.reimbursement is not None:
+                return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
+            expense.delete()
+            return HttpResponseRedirect(reverse('expenses-index'))
+
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+
 
 def get_expense(request, pk):
     try:
