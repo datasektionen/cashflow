@@ -39,6 +39,9 @@ def get_user(request, username):
             else:  # inner loop didn't break
                 attested_expenses.append(expense)
 
+        non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
+        attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
+
         return render(request, 'expenses/user.html',
                       {
                           'showuser': user,
