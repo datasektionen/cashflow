@@ -14,24 +14,27 @@ from expenses import models
 
 def budget_overview(request):
     if request.method == 'GET':
+        cost_centres = budgetModels.CostCentre.objects.order_by('name')
+        budget_lines = budgetModels.BudgetLine.objects.order_by('name')
+        expense_parts= models.ExpensePart.objects
         committees = {}
-        for committee in budgetModels.Committee.objects.order_by('name'):
+        for committee in budgetModels.Committee.objects.filter(id=55).order_by('name'):
             committees[committee.id] = {
                 'name': committee.name,
                 'cost_centres': {}
             }
 
-            for cost_centre in budgetModels.CostCentre.objects.order_by('name'):
+            for cost_centre in cost_centres:
                 committees[committee.id]['cost_centres'][cost_centre.id] = {
                     'name': cost_centre.name,
                     'budget_lines': {}
                 }
 
-                for budget_line in budgetModels.BudgetLine.objects.order_by('name'):
+                for budget_line in budget_lines:
                     committees[committee.id]['cost_centres'][cost_centre.id]['budget_lines'][budget_line.id] = {
                         'name': budget_line.name,
                         'amount': float(budget_line.amount),
-                        'spent': float(models.ExpensePart.objects.filter(budget_line=budget_line.id).aggregate(Sum('amount'))['amount__sum'] or 0)
+                        'spent': float(expense_parts.filter(budget_line=budget_line.id).aggregate(Sum('amount'))['amount__sum'] or 0)
                     }
 
         if len(dauth.get_permissions(request.user)) > 0:
