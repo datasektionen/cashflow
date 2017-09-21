@@ -37,6 +37,7 @@ api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
     url(r'^$', general_views.index, name='expenses-index'),
+    url(r'^budget/overview/$', general_views.budget, name='budget-index'),
     url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
     url(r'^users/$', user_views.user_list, name='expenses-userlist'),
