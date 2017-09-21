@@ -30,6 +30,9 @@ def new_expense(request):
 
         })
     elif request.method == 'POST':
+        if len((request.FILES.getlist('files'))) < 1:
+            return HttpResponseBadRequest("Du måste ladda upp minst en fil som verifikat")
+
         expense = models.Expense(
             owner=request.user.profile,
             expense_date=request.POST['expense-date'],
