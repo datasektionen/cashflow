@@ -114,7 +114,7 @@ else:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'cashflow'),
             'USER': os.getenv('DB_USER', 'cashflow'),
-            'PASSWORD': os.getenv('DB_PASS', 'Z8LKMXPavFFb2t8UmaEYr3zF'),
+            'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
         }
