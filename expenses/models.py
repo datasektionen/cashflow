@@ -251,7 +251,7 @@ class Expense(models.Model):
 
 
 class File(models.Model):
-    belonging_to = models.ForeignKey(Expense)
+    belonging_to = models.ForeignKey(Expense, on_delete=models.CASCADE)
     file = models.FileField()
 
     def __str__(self):
@@ -299,7 +299,7 @@ class ExpensePart(models.Model):
 
 
 class Comment(models.Model):
-    expense = models.ForeignKey(Expense)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile)
     content = models.TextField()

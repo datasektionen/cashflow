@@ -45,6 +45,9 @@
                 <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
                     <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
                 </a>
+                <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
+                    <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
+                </a>
             {% endif %}
             <li class="list-group-item"><b>Köpt av:</b>
                 <u><a href="{% url 'expenses-user' expense.owner.user.username %}">
@@ -95,7 +98,8 @@
     <div class="col-sm-6 col-lg-6">
         {% for file in expense.file_set.all %}
             {% if  file.is_image %}
-                <img class="center-block" style="width: 70%;" src="{{ file.file.url }}">
+                <a href="{{ file.file.url }}" target="_blank"><img class="center-block" style="width: 70%;"
+                                                                   src="{{ file.file.url }}"></a>
             {% else %}
                 <a href="{{ file.file.url }}">{{ file.file.name }}</a>
 

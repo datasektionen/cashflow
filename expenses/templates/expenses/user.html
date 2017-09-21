@@ -58,7 +58,7 @@
                     <th>Tagg</th>
                     <th>Belopp</th>
                 </tr>
-                {% for reimbursement in reimbursements %}
+                {% for reimbursement in reimbursements reversed %}
                     <tr style="cursor: pointer"
                         onclick="window.location = '{% url 'expenses-payment' reimbursement.id %}'">
                         <td>{{ reimbursement.date|date:"Y-m-d" }}</td>
