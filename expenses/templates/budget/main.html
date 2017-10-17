@@ -19,41 +19,23 @@
             {str: "Alla kvitton", href: "{% url 'expenses-expense-overview' %}"},
             {str: "Lista användare", href: "{% url 'expenses-userlist' %}"},
         {% endif %}
+        {str: "Budgetöversikt", href: "{% url 'budget-overview' %}"},
         {str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" }
     {% endif %}
 
 {% endblock %}
 
 {% block full_content %}
-    <div class="alert alert-danger">
-        <b>OBS!</b><br>
-        Du kan inte längre slänga kvitton som är uppladdade här, de måste också fysiskt sättas in i METAs kvittopärm!
-    </div>
     <h4>Välkommen till Cashflow 2.0, Datasektionens helt nya utläggshanteringssystem!</h4>
 
     <p>Är det första gången du använder systemet så börja med att registrera dina bankuppgifter genom att klicka på
         ditt användarnamn ovan, därefter är det fritt fram att registrera kvitton i systemet.</p>
 
-    <p>I Cashflow laddar upp kvitton för dina utlägg digitalt. Detta för att förenkla sektionens ekonomiska arbete.
-        Tyvärr, pga. hur lagstiftningen kring bokföring ser ut, behöver man fortfarande lämna in kvittot fysiskt.</p>
+    <p>I Cashflow kan du ladda upp kvitton för dina utlägg digitalt. Du behöver alltså inte lämna in kvitton fysiskt
+        längre.
+        Det är dock bra att behålla kvittot tills dess att du fått dina pengar utifall något skulle vara konstigt.</p>
 
     <p>När du laddat upp ett kvitto kan du följa kvittot från din användarsida och se när det är godkänt samt när det är
         utbetalat. På så sätt kan du enkelt jämföra dina bankhändelser med cashflow och vara säker på att du fått
         tillbaka allt</p>
-
-    <h2>Hur använder jag Cashflow och vad händer med kvittot?</h2>
-
-    <ol>
-        <li><b>Registrering.</b> Du som köpt något åt sektionen registrerar ditt kvitto här i Cashflow</li>
-        <li><b>Kvittopärmen.</b> Du sätter därefter in kvittot på en <u><a href="/static/kvittomall.pdf">sån här
-            mall</a></u> i METAs kvittopärm
-        </li>
-        <li><b>Kvittokontroll.</b> Sektionens kassör kontrollerar att kvittot är i kvittopärmen</li>
-        <li><b>Attestering.</b> Din nämndordförande, kassören eller ekonomiansvarig godkänner ditt kvitto.</li>
-        <li><b>Utbetalning.</b> Din nämndordförande, kassören eller ekonomiansvarig betalar ut kvittot. Flera kvitton
-            kan betalas ut samtidigt.
-        </li>
-        <li><b>Bokföring.</b> Kassören eller någon ekonomiansvarig bokför kvittot.</li>
-    </ol>
-
 {% endblock %}
