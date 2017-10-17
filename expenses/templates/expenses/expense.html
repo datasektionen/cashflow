@@ -45,6 +45,8 @@
                 <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
                     <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
                 </a>
+            {% endif %}
+            {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
                 <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
                     <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
                 </a>

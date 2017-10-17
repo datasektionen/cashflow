@@ -31,6 +31,9 @@ def new_expense(request):
 
         })
     elif request.method == 'POST':
+        if len((request.FILES.getlist('files'))) < 1:
+            return HttpResponseBadRequest("Du måste ladda upp minst en fil som verifikat")
+
         expense = models.Expense(
             owner=request.user.profile,
             expense_date=request.POST['expense-date'],
@@ -96,7 +99,7 @@ def edit_expense(request, pk):
 def delete_expense(request, pk):
     try:
         expense = models.Expense.objects.get(pk=pk)
-        if expense.owner.user.username != request.user.username:
+        if expense.owner.user.username != request.user.username and not(expense.expensepart_set.first().budget_line.cost_centre.committee.name.lower() in request.user.profile.may_attest()):
             return HttpResponseForbidden()
         if request.method == 'GET':
             return render(request, 'expenses/delete_expense.html', {
