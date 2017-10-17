@@ -49,6 +49,7 @@
                     <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
                 </a>
             {% endif %}
+            <li class="list-group-item"><b>Kvitto-id:</b> {{ expense.id }}</li>
             <li class="list-group-item"><b>Köpt av:</b>
                 <u><a href="{% url 'expenses-user' expense.owner.user.username %}">
                     {{ expense.owner.user.username }}

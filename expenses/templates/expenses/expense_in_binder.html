@@ -1,0 +1,13 @@
+{% extends "expenses/main.html" %}
+{% load widget_tweaks %}
+
+{% block full_content %}
+    <div class="col-sm-8 col-sm-offset-2">
+        <p> Sätt in ditt kvitto i kvittopärmen i META på en <a href="/static/kvittomall.pdf">kvittomall</a>.</p>
+        <br>
+        <p> Märk kvittomallen med id: {{ expense.pk }} </p>
+
+
+        <a href="{% url "expenses-expense" expense.pk %}" class="btn btn-default pull-right" role="button">Gå vidare</a>
+    </div>
+{% endblock %}

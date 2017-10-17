@@ -3,7 +3,8 @@ import re
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import modelform_factory
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
+    HttpResponseServerError
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -53,7 +54,20 @@ def new_expense(request):
             )
             expense_part.save()
 
-        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
+        return HttpResponseRedirect(reverse('expenses-expense-new-binder', kwargs={'pk': expense.id}))
+    else:
+        raise Http404()
+
+
+def expense_in_binder_alert(request, pk):
+    if request.method == 'GET':
+        try:
+            expense = models.Expense.objects.get(pk=int(pk))
+
+            return render(request, 'expenses/expense_in_binder.html', {'expense': expense})
+        except ObjectDoesNotExist:
+            return HttpResponseServerError("Något gick fel när du försökte skapa kvittot :(")
+
     else:
         raise Http404()
 
