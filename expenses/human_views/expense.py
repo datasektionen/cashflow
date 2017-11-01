@@ -39,12 +39,14 @@ def new_expense(request):
             file = models.File(belonging_to=expense, file=uploaded_file)
             file.save()
 
-        expense_part_indices = json.loads(request.POST['expense_part_indices'])
-        for i in expense_part_indices:
+        for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
+            print(expense)
+            print(budgetLineId)
+            print(request.POST.getlist('amount[]')[idx])
             expense_part = models.ExpensePart(
                 expense=expense,
-                budget_line_id=request.POST['expense_part-{}-committee'.format(i)],
-                amount=request.POST['expense_part-{}-amount'.format(i)]
+                budget_line_id=budgetLineId,
+                amount=request.POST.getlist('amount[]')[idx]
             )
             expense_part.save()
 
