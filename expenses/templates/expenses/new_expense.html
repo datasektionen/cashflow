@@ -3,23 +3,52 @@
 
 {% block full_content %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
     <script>
         //noinspection JSAnnotator
-        const budget = {% autoescape off %}{{ budget_json }}{% endautoescape %};
-        let number_of_parts = 1;
+        let committees = []
+        let number_of_parts = 1
 
-        function enable_cost_centre(caller) {
-            const part = $(caller).closest('#expense_part');
-            const committee_select = part.find('.committee_select');
-            const cost_centre_select = part.find('.cost_centre_select');
-            cost_centre_select.empty(); // Remove all (old) child elements
-            $.each(budget[committee_select.val()], (cost_centre) => {
-                cost_centre_select.append($("<option></option>")
-                    .attr("value", cost_centre)
-                    .text(cost_centre))
-            });
-            cost_centre_select.prop('disabled', false);
-            enable_budget_line(caller);
+        fetch('https://budget.datasektionen.se/api/committees?verbose')
+        .then(res => res.json())
+        .then(res => {
+            committees = res
+            renderCommittees()
+        })
+
+        function renderCommittees() {
+            const select = document.getElementById('committee_select')
+            select.innerHTML = committees.map(x => '<option value="' + x.id + '">' + x.name + '</option>').join()
+        }
+
+        function renderCostCentre() {
+            const select = document.getElementById('cost_centre_select')
+            const committeeSelect = document.getElementById("committee_select")
+            const committeeId = committeeSelect.options[committeeSelect.selectedIndex].value
+            console.log(committeeId)
+            console.log(committees)
+            select.innerHTML = committees
+                .filter(x => x.id == committeeId)[0].cost_centres
+                .map(x => '<option value="' + x.id + '">' + x.name + '</option>')
+                .join()
+
+            select.disabled = false
+            renderBudgetLine()
+        }
+
+        function renderBudgetLine() {
+            const select = document.getElementById('budget_line_select')
+            const committeeSelect = document.getElementById("committee_select")
+            const committeeId = committeeSelect.options[committeeSelect.selectedIndex].value
+            const costCentreSelect = document.getElementById("cost_centre_select")
+            const costCentreId = costCentreSelect.options[costCentreSelect.selectedIndex].value
+            select.innerHTML = committees
+                .filter(x => x.id == committeeId)[0].cost_centres
+                .filter(x => x.id == costCentreId)[0].budget_lines
+                .map(x => '<option value="' + x.id + '">' + x.name + '</option>')
+                .join()
+
+            select.disabled = false            
         }
 
         function enable_budget_line(caller) {
@@ -119,12 +148,8 @@
                             Nämnd:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control committee_select" name="expense_part-1-committee"
-                                    onchange="enable_cost_centre(this)" required>
-                                <option disabled selected value> -- Välj en nämnd --</option>
-                                {% for committee in committees %}
-                                    <option value="{{ committee }}">{{ committee }}</option>
-                                {% endfor %}
+                            <select id="committee_select" class="form-control committee_select" name="expense_part-1-committee"
+                                    onchange="renderCostCentre(this)" required>
                             </select>
                         </div>
                     </div>
@@ -133,8 +158,8 @@
                             Sekundärt resultatställe:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control cost_centre_select" name="expense_part-1-cost_centre"
-                                    onchange="enable_budget_line(this)" disabled required>
+                            <select id="cost_centre_select" class="form-control cost_centre_select" name="expense_part-1-cost_centre"
+                                    onchange="renderBudgetLine(this)" disabled required>
                             </select>
                         </div>
                     </div>
@@ -143,7 +168,7 @@
                             Budgetpost:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control budget_line_select" name="expense_part-1-budget_line" disabled
+                            <select id="budget_line_select" class="form-control budget_line_select" name="expense_part-1-budget_line" disabled
                                     required>
 
                             </select>
