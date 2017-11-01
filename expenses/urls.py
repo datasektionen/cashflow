@@ -15,7 +15,6 @@ import expenses.human_views.expense_part as expensepart_views
 import expenses.human_views.general as general_views
 import expenses.human_views.payment as payment_views
 import expenses.human_views.user as user_views
-from expenses import cron
 
 router = DefaultRouter()
 router.register('expense',  expense_api.ExpenseViewSet, base_name='Expense')
@@ -27,10 +26,7 @@ router.register('accounting', accounting_api.AccountingViewSet, base_name='Accou
 router.register('file', file_api.FileViewSet, base_name='File')
 api_urlpatterns = router.urls
 
-api_urlpatterns.append(url(r'^budget/$', misc_api.budget))
 api_urlpatterns.append(url(r'^firebase_instance_id/$', misc_api.set_firebase_instance_id))
-api_urlpatterns.append(url(r'^committees/$', misc_api.committees))
-api_urlpatterns.append(url(r'^cost_centre/(\d+)/$', misc_api.cost_centres))
 api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-login'))
 api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
@@ -68,5 +64,3 @@ urlpatterns = [
 ]
 
 # Code to be run once (https://stackoverflow.com/questions/6791911/execute-code-when-django-starts-once-only)
-
-cron.start()

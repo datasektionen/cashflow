@@ -10,19 +10,6 @@ from django.template.loader import render_to_string
 
 from cashflow import settings
 
-
-def get_budget_json():
-    budget = {}
-    for committee in Committee.objects.all().order_by('name'):
-        budget[str(committee.name)] = {}
-        for cost_centre in CostCentre.objects.filter(committee=committee).order_by('name'):
-            budget[str(committee.name)][str(cost_centre.name)] = []
-            for budget_line in BudgetLine.objects.filter(cost_centre=cost_centre).order_by('name'):
-                budget[str(committee.name)][str(cost_centre.name)].append(str(budget_line.name))
-    j = str(budget)
-    return j
-
-
 # represents a bank account owned by the organisation
 class BankAccount(models.Model):
     name = models.TextField()
@@ -199,7 +186,7 @@ class File(models.Model):
 
 class ExpensePart(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    budget_line = models.ForeignKey(BudgetLine)
+    budget_line_id = models.IntegerField()
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
