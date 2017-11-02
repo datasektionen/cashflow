@@ -16,3 +16,18 @@
 img {
     image-orientation: from-image;
 }
+
+.crop {
+	width: 100px;
+	height: 100px;
+	border-radius: 50px;
+	background-size: cover;
+	background-position: middle;
+	margin: 0 auto;
+}
+table {
+    width: 100%;
+}
+table th {
+    padding: 0 10px;
+}

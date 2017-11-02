@@ -1,48 +1,47 @@
 {% extends "expenses/main.html" %}
+{% load humanize %}
+
+{% block title %}{{ showuser.get_full_name }}{% endblock %}
 
 {% block full_content %}
     <div class="col-ms-6 col-lg-6">
-
-        <h2>Ej attesterade kvitton </h2><br>
+        <h2>Ej attesterade kvitton </h2>
         {% if non_attested_expenses %}
-
-            <table class="table table-hover">
-                <tr>
-                    <th>Skapat</th>
-                    <th>Beskrivning</th>
-                    <th>Summa</th>
-                </tr>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Skapat</th>
+                        <th>Beskrivning</th>
+                        <th>Summa</th>
+                    </tr>
+                </thead>
                 {% for expense in non_attested_expenses %}
-                    <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
-                        <td>{{ expense.created_date|date:"Y-m-d" }}</td>
-
-                        <td>{{ expense.description|capfirst }}</td>
-
-                        <td>{{ expense.total_amount }} kr</td>
-
+                    <tr>
+                        <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                        <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                        <td>{{ expense.total_amount|intcomma }} kr</td>
                     </tr>
                 {% endfor %}
             </table>
         {% else %}
-            Alla kvitton är attesterade!
+            Du har inga icke-attesterade kvitton!
         {% endif %}
+
         <h2>Attesterade kvitton</h2>
-
         {% if attested_expenses %}
-            <table class="table table-hover">
-                <tr>
-                    <th>Skapat</th>
-                    <th>Beskrivning</th>
-                    <th>Summa</th>
-                </tr>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Skapat</th>
+                        <th>Beskrivning</th>
+                        <th>Summa</th>
+                    </tr>
+                </thead>
                 {% for expense in attested_expenses %}
-                    <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
-                        <td>{{ expense.created_date|date:"Y-m-d" }}</td>
-
-                        <td>{{ expense.description|capfirst }}</td>
-
+                    <tr>
+                        <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                        <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
                         <td>{{ expense.total_amount }} kr</td>
-
                     </tr>
                 {% endfor %}
             </table>
@@ -53,31 +52,31 @@
         <h2>Utbetalda kvitton</h2>
         {% if reimbursements %}
             <table class="table">
-                <tr>
-                    <th>Utbetalningsdatum</th>
-                    <th>Tagg</th>
-                    <th>Belopp</th>
-                </tr>
-                {% for reimbursement in reimbursements reversed %}
-                    <tr style="cursor: pointer"
-                        onclick="window.location = '{% url 'expenses-payment' reimbursement.id %}'">
-                        <td>{{ reimbursement.date|date:"Y-m-d" }}</td>
-                        <td>{{ reimbursement.tag }}</td>
-                        <td>{{ reimbursement.amount }} kr</td>
-                    </tr>
+                <thead>
                     <tr>
-                        <td colspan="3">
-                            <div class="col-sm-10 col-sm-offset-1">
-                                <table class="table-bordered table">
-                                    {% for expense in reimbursement.expense_set.all %}
-                                        <tr class="detail-view">
-                                            <td>{{ expense.created_date|date:"Y-m-d" }}</td>
-                                            <td>{{ expense.description }}</td>
-                                            <td>{{ expense.total_amount }} kr</td>
-                                        </tr>
-                                    {% endfor %}
-                                </table>
-                            </div>
+                        <th>Utbet.datum</th>
+                        <th>Tagg</th>
+                        <th>Delar</th>
+                    </tr>
+                </thead>
+                {% for reimbursement in reimbursements reversed %}
+                    <tr>
+                        <td><a href="{% url 'expenses-payment' reimbursement.id %}">{{ reimbursement.date|date:"Y-m-d" }}</a></td>
+                        <td><a href="{% url 'expenses-payment' reimbursement.id %}">{{ reimbursement.tag }}</a></td>
+                        <td>
+                            <table>
+                                {% for expense in reimbursement.expense_set.all %}
+                                    <tr>
+                                        <td>{{ expense.created_date|date:"Y-m-d" }}</td>
+                                        <td>{{ expense.description }}</td>
+                                        <td>{{ expense.total_amount }} kr</td>
+                                    </tr>
+                                {% endfor %}
+                                <tr>
+                                    <th colspan="2">Summa</th>
+                                    <td>{{ reimbursement.amount|intcomma }} kr</td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 {% endfor %}
@@ -89,30 +88,39 @@
     </div>
 
     <div class="col-ms-6 col-lg-6">
-        <div class="panel panel-info">
-            <div class="panel-heading clearfix">
-                <div class="panel-title pull-left">{{ showuser.get_full_name }}</div>
-                {% if showuser.username == user.username %}
-                    <a class="btn btn-default pull-right" href="edit">
-                        <span class="glyphicon glyphicon-pencil"></span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="panel-body">
-                <img class="center-block" style="width:50%"
-                     src="https://zfinger.datasektionen.se/user/{{ showuser.username }}/image">
-            </div>
-            <ul class="list-group">
-                <li class="list-group-item"> Kth-id: {{ showuser.username }}</li>
-                <li class="list-group-item"> Bank: {{ showuser.profile.bank_name|default:"Saknas" }}</li>
-                <li class="list-group-item"> Clearingnummer: {{ showuser.profile.sorting_number|default:"Saknas" }}</li>
-                <li class="list-group-item"> Kontonummer: {{ showuser.profile.bank_account|default:"Saknas" }}</li>
-                {% if showuser.profile.may_pay %}
-                    <li class="list-group-item">Standardkonto för
-                        utbetalningar: {{ showuser.profile.default_account }}</li>
-                {% endif %}
-            </ul>
+        <h2>Din information</h2>
+        {% if showuser.username == user.username %}
+            <a class="btn theme-color pull-right" style="color:#fff" href="edit">
+                <i class="fa fa-pencil" aria-hidden="true"></i>
+            </a>
+        {% endif %}
+        <div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')">
         </div>
+        <br />
+        <table>
+            <tr>
+                <th>KTH-användarnamn</th>
+                <td>{{ showuser.username }}</td>
+            </tr>
+            <tr>
+                <th>Bank</th>
+                <td>{{ showuser.profile.bank_name|default:"Saknas" }}</td>
+            </tr>
+            <tr>
+                <th>Clearinnummer</th>
+                <td>{{ showuser.profile.sorting_number|default:"Saknas" }}</td>
+            </tr>
+            <tr>
+                <th>Kontonummer</th>
+                <td>{{ showuser.profile.bank_account|default:"Saknas" }}</td>
+            </tr>
+            {% if showuser.profile.may_pay %}
+            <tr>
+                <th>Standardkonto för utbetalningar</th>
+                <td>{{ showuser.profile.default_account }}</td>
+            </tr>
+            {% endif %}
+        </table>
     </div>
 
 {% endblock %}
