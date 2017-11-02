@@ -17,7 +17,7 @@
                     <td>{{ expense.description|capfirst }}</td>
                     <td>{{ expense.owner }}</td>
                     <td>{% for committee in expense.committees %}
-                        {{ committee }}{% if not forloop.last %}, {% endif %}
+                        {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                     </td>
                     <td>{{ expense.total_amount }} kr</td>

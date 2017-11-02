@@ -8,18 +8,11 @@ from expenses import models
 
 def attest_overview(request):
     may_attest = request.user.profile.may_attest()
-
-    may_attest_committees = []
-    for committee in may_attest:
-        try:
-            may_attest_committees.append(models.Committee.objects.get(name__iexact=committee))
-        except ObjectDoesNotExist:
-            continue
-
+    print(may_attest)
     return render(request, 'expenses/action_attest.html', {
         'attestable_expenses': models.Expense.objects.exclude(owner__user=request.user).filter(
             expensepart__attested_by=None,
-            expensepart__budget_line__cost_centre__committee__in=may_attest_committees
+            expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
         ).distinct()
     })
 
@@ -42,16 +35,9 @@ def pay_overview(request):
 def accounting_overview(request):
     may_account = request.user.profile.may_account()
 
-    may_account_committees = []
-    for committee in may_account:
-        try:
-            may_account_committees.append(models.Committee.objects.get(name__iexact=committee))
-        except ObjectDoesNotExist:
-            continue
-
     return render(request, 'expenses/action_accounting.html', {
         'accounting_ready_expenses': models.Expense.objects.exclude(reimbursement=None).filter(
             verification="",
-            expensepart__budget_line__cost_centre__committee__in=may_account_committees
+            expensepart__committee_name__in=may_account
         ).distinct()
     })

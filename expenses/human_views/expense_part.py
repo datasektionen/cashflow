@@ -15,10 +15,9 @@ def edit_expense_part(request, pk):
         if request.user.username != expense_part.expense.owner.user.username:
             return HttpResponseForbidden("Endast kvittoägaren får redigera kvittodelarna")
 
+        print(expense_part.amount)
         if request.method == 'GET':
             return render(request, 'expenses/edit_expense_part.html', {
-                "committees": models.Committee.objects.order_by('name'),
-                "budget_json": models.get_budget_json(),
                 'expense_part': expense_part
             })
         elif request.method == 'POST':

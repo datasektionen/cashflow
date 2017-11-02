@@ -7,6 +7,7 @@ from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, H
     HttpResponseServerError
 from django.shortcuts import render
 from django.urls import reverse
+import requests
 
 from cashflow import dauth
 from expenses import models
@@ -40,12 +41,17 @@ def new_expense(request):
             file.save()
 
         for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-            print(expense)
-            print(budgetLineId)
-            print(request.POST.getlist('amount[]')[idx])
+            response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
+            budgetLine = response.json()
+            print(budgetLine)
             expense_part = models.ExpensePart(
                 expense=expense,
-                budget_line_id=budgetLineId,
+                budget_line_id=budgetLine['id'],
+                budget_line_name=budgetLine['name'],
+                cost_centre_name=budgetLine['cost_centre']['name'],
+                cost_centre_id=budgetLine['cost_centre']['id'],
+                committee_name=budgetLine['cost_centre']['committee']['name'],
+                committee_id=budgetLine['cost_centre']['committee']['id'],
                 amount=request.POST.getlist('amount[]')[idx]
             )
             expense_part.save()

@@ -75,9 +75,9 @@
                         <span class="glyphicon glyphicon-pencil"></span> Redigera kvittodel
                     </a>
                 {% endif %}
-                <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.budget_line.cost_centre.committee.name }}</li>
-                <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.budget_line.cost_centre.name }}</li>
-                <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line.name }}</li>
+                <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.committee_name }}</li>
+                <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.cost_centre_name }}</li>
+                <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line_name }}</li>
                 <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount }} kr.</li>
                 {% if expense_part.attested_by %}
                     <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.user.get_full_name }}

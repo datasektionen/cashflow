@@ -148,8 +148,7 @@ class Expense(models.Model):
         return total
 
     def committees(self):
-        parts = self.expensepart_set.all()
-        return Committee.objects.filter(costcentre__budgetline__expensepart__in=parts).distinct()
+        return self.expensepart_set.order_by().values('committee_name').distinct()
 
     def to_dict(self):
         exp = model_to_dict(self)
@@ -186,16 +185,21 @@ class File(models.Model):
 
 class ExpensePart(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    budget_line_id = models.IntegerField()
+    budget_line_id = models.IntegerField(default=0)
+    budget_line_name = models.TextField(blank=True)
+    cost_centre_name = models.TextField(blank=True)
+    cost_centre_id = models.IntegerField(default=0)
+    committee_name = models.TextField(blank=True)
+    committee_id = models.IntegerField(default=0)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return self.expense.__str__() + " (" + self.budget_line.__str__() + ": " + str(self.amount) + " kr)"
+        return self.expense.__str__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
 
     def __unicode__(self):
-        return self.expense.__unicode__() + " (" + self.budget_line.__unicode__() + ": " + str(self.amount) + " kr)"
+        return self.expense.__unicode__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
 
     def to_dict(self):
         exp_part = model_to_dict(self)
