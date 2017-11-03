@@ -1,11 +1,12 @@
 {% extends "expenses/main.html" %}
 {% load widget_tweaks %}
 
+{% block title %}Nytt kvitto{% endblock %}
+
 {% block full_content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
     <div class="col-sm-8 col-sm-offset-2" id="form">
-        <h1>Nytt kvitto</h1>
         <p>
             Ladda endast upp ett kvitto i taget. När du laddar upp en faktura/onlinebetalning bör du även ladda upp ett
             kontoutdrag.

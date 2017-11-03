@@ -1,4 +1,5 @@
 {% extends "expenses/main.html" %}
+{% load humanize %}
 
 {% block full_content %}
     <!-- TODO: Do something about this-->
@@ -78,14 +79,14 @@
                 <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.committee_name }}</li>
                 <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.cost_centre_name }}</li>
                 <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line_name }}</li>
-                <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount }} kr.</li>
+                <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount|intcomma }} kr.</li>
                 {% if expense_part.attested_by %}
                     <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.user.get_full_name }}
                     </li>
                     <li class="list-group-item"><b>Attesterat den:</b> {{ expense_part.attest_date }}</li>
                 {% else %}
                     <li class="list-group-item"><b class="align-left">Kvittodel ej attesterad</b>
-                        {% if expense_part.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
+                        {% if expense_part.committee_name|lower in user.profile.may_attest %}
                             <form method="POST" class="pull-right"
                                   action="{% url 'expenses-expense_part-attest' expense_part.id %}">
                                 {% csrf_token %}

@@ -3,6 +3,9 @@
     HERE BE DRAGONS
     WARNING - Horrendous code below
 -->
+
+{% block title %}Betala ut{% endblock %}
+
 {% block full_content %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
@@ -31,23 +34,18 @@
         </div>
     {% endif %}
 
-    <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare</p>
-
-    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar.
-        Du kan ställa in ditt standardkonto på din profil.</p>
+    <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare.</p>
+    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar. Du kan ställa in ditt standardkonto på din profil.</p>
     <label for="account">Bankkonto:</label>
     <select id="main_account" onchange="update_account()">
         {% for account in accounts %}
-            <option value="{{ account.name }}"
-                    {% if account == user.profile.default_account %}
-                    selected
-                    {% endif %}>{{ account.name }}</option>
+            <option value="{{ account.name }}" {% if account == user.profile.default_account %} selected {% endif %}>{{ account.name }}</option>
         {% endfor %}
     </select>
+
     <h2>Kvitton</h2>
     {% if payable_expenses %}
         {% for expense in payable_expenses %}
-
             {% ifchanged expense.owner %}
                 {% if not forloop.first %}
                     <tr>
@@ -82,7 +80,7 @@
         <tr>
             <td>{{ expense.description|capfirst }}</td>
             <td>{% for committee in expense.committees %}
-                {{ committee }}{% if not forloop.last %}, {% endif %}
+                {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
             {% endfor %}</td>
             <td>{{ expense.total_amount }} kr</td>
             <td><input class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense"></td>

@@ -183,7 +183,8 @@ def may_view_expense(request, expense):
 
 def may_account(request, expense):
     for committee in expense.committees():
-        if committee.name.lower() in request.user.profile.may_account():
+        print(committee)
+        if committee['committee_name'].lower() in request.user.profile.may_account():
             return True
 
     return False

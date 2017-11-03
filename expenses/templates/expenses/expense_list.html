@@ -1,7 +1,9 @@
 {% extends "expenses/main.html" %}
+{% load humanize %}
+
+{% block title %}Alla utlägg{% endblock %}
 
 {% block full_content %}
-    <h2>Kvitton</h2>
     {% if expenses %}
         <table class="table table-hover">
             <tr>
@@ -20,7 +22,7 @@
                         {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                     </td>
-                    <td>{{ expense.total_amount }} kr</td>
+                    <td>{{ expense.total_amount|intcomma }} kr</td>
 
                 </tr>
             {% endfor %}

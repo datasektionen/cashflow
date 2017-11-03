@@ -141,6 +141,9 @@ class Expense(models.Model):
     def __unicode__(self):
         return self.description
 
+    def __repr__(self):
+        return str(self.to_dict())
+
     def total_amount(self):
         total = 0
         for part in self.expensepart_set.all():
@@ -204,7 +207,6 @@ class ExpensePart(models.Model):
     def to_dict(self):
         exp_part = model_to_dict(self)
         del exp_part['expense']
-        exp_part['budget_line'] = self.budget_line.to_dict()
 
         if self.attested_by is not None:
             exp_part['attested_by_username'] = self.attested_by.user.username
@@ -243,6 +245,6 @@ def send_mail(sender, instance, created, *args, **kwargs):
                 'from': 'no-reply@datasektionen.se',
                 'to': instance.expense.owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'html': render_to_string("email.html", {'comment': instance, 'receiver': instance.expense.owner}),
+                'content': render_to_string("email.html", {'comment': instance, 'receiver': instance.expense.owner}),
                 'key': settings.SPAM_API_KEY
             })

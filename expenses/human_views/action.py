@@ -1,6 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
+from django.core import serializers
+from django.forms.models import model_to_dict
+from datetime import date, datetime
+from decimal import *
+import json
 
 from cashflow import dauth
 from expenses import models
@@ -34,10 +39,27 @@ def pay_overview(request):
 
 def accounting_overview(request):
     may_account = request.user.profile.may_account()
+    expenses = models.Expense.objects.exclude(reimbursement=None).filter(
+        verification="",
+        expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+    ).distinct()
+
+    class fakefloat(float):
+        def __init__(self, value):
+            self._value = value
+        def __repr__(self):
+            return str(self._value)
+
+    def json_serial(obj):
+        """JSON serializer for objects not serializable by default json code"""
+
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return fakefloat(obj)
+        raise TypeError ("Type %s not serializable" % type(obj))
+
 
     return render(request, 'expenses/action_accounting.html', {
-        'accounting_ready_expenses': models.Expense.objects.exclude(reimbursement=None).filter(
-            verification="",
-            expensepart__committee_name__in=may_account
-        ).distinct()
+        'accounting_ready_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial)
     })

@@ -31,3 +31,16 @@ table {
 table th {
     padding: 0 10px;
 }
+
+input[type="text"] {
+    border: 1px solid #eee;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: 0px;
+}
+
+button {
+    margin: 0 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: 0px;
+}
