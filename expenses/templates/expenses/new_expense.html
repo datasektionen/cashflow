@@ -91,7 +91,7 @@
                         </div>
                     </div>
 
-                    <button type="button" class="small align-left" v-on:click="removePart()">Ta bort kvittodelen</button>
+                    <button type="button" class="small align-left" v-on:click="removePart()" v-if="expense_parts.length > 1">Ta bort kvittodelen</button>
                     <button type="button" class="small align-right" v-on:click="addPart(i)">Lägg till en till kvittodel</button>
                 </div>
             </div>
@@ -132,6 +132,9 @@
                     })
                 },
                 removePart: function (i) {
+                    if (this.expense_parts <= 2) {
+                        return
+                    }
                     this.expense_parts.splice(i, 1)
                 }
             }
