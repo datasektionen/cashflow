@@ -42,6 +42,12 @@ input[type="text"], input[type="date"], input[type="number"], .select {
 input[type="text"], input[type="date"], input[type="number"] {
     min-width: 200px;
 }
+.hint {
+    font-weight: 300;
+    font-size: 0.6em;
+    display: block;
+    margin-top: -4px;
+}
 
 button {
     margin: 0 10px;
