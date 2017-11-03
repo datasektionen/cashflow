@@ -2,6 +2,7 @@
 
 {% block methone-links %}
     {% if user.is_authenticated %}
+        {str: "Hem", href: "/" },
         {str: "Nytt utlägg", href: "{% url 'expenses-expense-new' %}" },
         {% if user.profile.may_attest %}
             {str: "Attestera", href: "{% url 'expenses-action-attest' %}"},
@@ -21,21 +22,26 @@
 {% endblock %}
 
 {% block full_content %}
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="border-radius:0px;">
         <b>OBS!</b><br>
-        Du kan inte längre slänga kvitton som är uppladdade här, de måste också fysiskt sättas in i METAs kvittopärm!
+        Du måste både sätta in kvittot i Metas kvittopärm och ladda upp det här. Du kan alltså inte längre slänga kvitton trots att det är uppladdat här.
     </div>
-    <h4>Välkommen till Cashflow 2.0, Datasektionens helt nya utläggshanteringssystem!</h4>
 
-    <p>Är det första gången du använder systemet så börja med att registrera dina bankuppgifter genom att klicka på
-        ditt användarnamn ovan, därefter är det fritt fram att registrera kvitton i systemet.</p>
+    <h1>Välkommen till Cashflow!</h1>
 
-    <p>I Cashflow laddar upp kvitton för dina utlägg digitalt. Detta för att förenkla sektionens ekonomiska arbete.
-        Tyvärr, pga. hur lagstiftningen kring bokföring ser ut, behöver man fortfarande lämna in kvittot fysiskt.</p>
+    <p>
+        Är det första gången du använder systemet måste du börja med att 
+        {% if user.is_authenticated %}
+            <a style="text-decoration: underline !important;" href="{% url 'expenses-user-edit' user.username %}">registrera dina bankuppgifter</a>.
+        {% else %}
+            <a style="text-decoration: underline !important;" href="/login">logga in</a> och registrera dina uppgifter.
+        {% endif %}
+        Därefter är det fritt fram att registrera kvitton i systemet.
+    </p>
 
-    <p>När du laddat upp ett kvitto kan du följa kvittot från din användarsida och se när det är godkänt samt när det är
-        utbetalat. På så sätt kan du enkelt jämföra dina bankhändelser med cashflow och vara säker på att du fått
-        tillbaka allt</p>
+    <p>I Cashflow laddar du upp kvitton för dina utlägg digitalt. Detta för att förenkla sektionens ekonomiska arbete. Tyvärr, på grund av hur lagstiftningen kring bokföring ser ut, behöver man fortfarande lämna in kvittot fysiskt i kvittopärmen som finns i Meta.</p>
+
+    <p>När du laddat upp ett kvitto kan du följa kvittot från din användarsida och se när det är godkänt samt när det är utbetalat. På så sätt kan du enkelt jämföra dina bankhändelser med Cashflow och vara säker på att du fått tillbaka allt.</p>
 
     <h2>Hur använder jag Cashflow och vad händer med kvittot?</h2>
 
@@ -51,5 +57,4 @@
         </li>
         <li><b>Bokföring.</b> Kassören eller någon ekonomiansvarig bokför kvittot.</li>
     </ol>
-
 {% endblock %}

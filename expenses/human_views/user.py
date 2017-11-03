@@ -25,6 +25,18 @@ def get_user(request, username):
         if not may_view_user(request, user):
             return HttpResponseForbidden()
 
+        return render(request, 'expenses/user_information.html', {
+            'showuser': user
+        })
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
+
+def get_user_receipts(request, username):
+    try:
+        user = models.User.objects.get_by_natural_key(username)
+        if not may_view_user(request, user):
+            return HttpResponseForbidden()
+
         non_attested_expenses = []
         attested_expenses = []
 
@@ -42,12 +54,13 @@ def get_user(request, username):
         non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
         attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
 
-        return render(request, 'expenses/user.html', {
+        return render(request, 'expenses/user_receipts.html', {
             'showuser': user,
             'non_attested_expenses': non_attested_expenses,
             'attested_expenses': attested_expenses,
             'reimbursements': user.profile.receiver.all()
         })
+
     except ObjectDoesNotExist:
         raise Http404("Användaren finns inte")
 

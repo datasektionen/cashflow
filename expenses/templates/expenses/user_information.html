@@ -1,0 +1,39 @@
+{% extends "expenses/user.html" %}
+{% load humanize %}
+
+{% block title %}{{ showuser.get_full_name }}{% endblock %}
+
+{% block content %}
+    {% if showuser.username == user.username %}
+        <a class="btn theme-color pull-right" style="color:#fff" href="edit">
+            <i class="fa fa-pencil" aria-hidden="true"></i>
+        </a>
+    {% endif %}
+    <div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')">
+    </div>
+    <br />
+    <table>
+        <tr>
+            <th>KTH-användarnamn</th>
+            <td>{{ showuser.username }}</td>
+        </tr>
+        <tr>
+            <th>Bank</th>
+            <td>{{ showuser.profile.bank_name|default:"Saknas" }}</td>
+        </tr>
+        <tr>
+            <th>Clearinnummer</th>
+            <td>{{ showuser.profile.sorting_number|default:"Saknas" }}</td>
+        </tr>
+        <tr>
+            <th>Kontonummer</th>
+            <td>{{ showuser.profile.bank_account|default:"Saknas" }}</td>
+        </tr>
+        {% if showuser.profile.may_pay %}
+        <tr>
+            <th>Standardkonto för utbetalningar</th>
+            <td>{{ showuser.profile.default_account }}</td>
+        </tr>
+        {% endif %}
+    </table>
+{% endblock %}

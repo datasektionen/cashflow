@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^budget/overview/$', general_views.budget, name='budget-index'),
     url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
+    url(r'^user/(?P<username>\w+)/receipts/$', user_views.get_user_receipts, name='expenses-user-receipts'),
     url(r'^users/$', user_views.user_list, name='expenses-userlist'),
 
     url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
