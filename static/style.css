@@ -37,7 +37,10 @@ input[type="text"], input[type="date"], input[type="number"], .select {
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     border-radius: 0px;
-    min-width: 250px;
+}
+
+input[type="text"], input[type="date"], input[type="number"] {
+    min-width: 200px;
 }
 
 button {
@@ -50,7 +53,7 @@ button {
     margin: 20px 0;
  }
  .form-entry {
-    margin: 20px 0;
+    margin: 0px 0;
     clear: both;
  }
  .form-entry .description {

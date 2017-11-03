@@ -5,24 +5,26 @@
 
 {% block full_content %}
     {% if expenses %}
-        <table class="table table-hover">
-            <tr>
-                <th>Verifikat</th>
-                <th>Beskrivning</th>
-                <th>Ägare</th>
-                <th>Nämnder</th>
-                <th>Belopp</th>
-            </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Verifikat</th>
+                    <th>Beskrivning</th>
+                    <th>Ägare</th>
+                    <th>Nämnder</th>
+                    <th style="float:right">Belopp</th>
+                </tr>
+            </thead>
             {% for expense in expenses %}
-                <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
-                    <td>{{ expense.verification|default:"Ej bokförd" }}</td>
-                    <td>{{ expense.description|capfirst }}</td>
-                    <td>{{ expense.owner }}</td>
+                <tr>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.verification|default:"Ej bokförd" }}</a></td>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td><a href="{% url 'expenses-user' expense.owner.user.username %}">{{ expense.owner }}</a></td>
                     <td>{% for committee in expense.committees %}
                         {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                     </td>
-                    <td>{{ expense.total_amount|intcomma }} kr</td>
+                    <td style="float:right">{{ expense.total_amount|intcomma }} kr</td>
 
                 </tr>
             {% endfor %}
