@@ -32,19 +32,144 @@ table th {
     padding: 0 10px;
 }
 
-input[type="text"] {
+input[type="text"], input[type="date"], input[type="number"], .select {
     border: 1px solid #eee;
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     border-radius: 0px;
+    min-width: 250px;
 }
 
 button {
     margin: 0 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     border-radius: 0px;
+}.form {
+    background: #fcfcfc;
+    padding: 15px;
+    margin: 20px 0;
+ }
+ .form-entry {
+    margin: 20px 0;
+    clear: both;
+ }
+ .form-entry .description {
+    display: block;
+    margin: 10px 0;
+    font-weight: bold;
+ }
+ .form-entry .description .desc {
+    display: block;
+    font-weight: 300;
+ }
+ .select {
+    padding: 10px 3px;
+    font-family: inherit;
+    font-size: inherit;
+    border: 1px solid #f7f7f7;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08) !important;
+    color: #696969;
+    float: left;
+    background: url(/static/images/dropdown.png) no-repeat right 17px, #fff;
+ }
+ .select select {
+    display: block;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: 1px;
+    text-overflow: '';
+    padding: 0 20px 0 7px;
+ }
+ .select.disabled {
+    opacity: 0.5;
+ }
+ .checkbox {
+    width: 500px;
+    max-width: 100%;
+    height: 45px;
+    margin: -10px 0;
+    position: relative;
+    margin: 10px 0 -10px;
+ }
+ table .checkbox {
+    width: 30px;
+    margin: 3px 0 0;
+    height: 20px;
+ }
+ .checkbox label {
+    position: absolute;
+    left: 12px;
+    top: 0;
+ }
+ .checkbox label:before {
+    content: '';
+    cursor: pointer;
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    top: -2px;
+    left: -12px;
+    float: left;
+    background: #fff;
+    border:1px solid #ddd;
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, .1);
+ }
+ .checkbox label:after {
+    opacity: 0.2;
+    content: '';
+    position: absolute;
+    width: 13px;
+    height: 8px;
+    background: transparent;
+    top: 4px;
+    left: -6px;
+    border: 3px solid #fff;
+    border-top: none;
+    border-right: none;
+    transition: .1s;
+    transform: rotate(-45deg);
+ }
+ .checkbox label:hover::after {
+    opacity: 0.5;
+ }
+ .checkbox input[type=checkbox]:checked + label:after {
+    opacity: 1;
+ }
+ .checkbox input[type=checkbox]:checked + label:before {
+    background: #ec5f99;
+ }
+ .checkbox input[type=checkbox]:disabled + label:before {
+    background: #eee;
+ }
+ .checkbox input[type=checkbox]:checked:disabled + label:before {
+    background: #666;
+ }
+ .checkbox input[type=checkbox]:checked + label {
+    color: #ec5f99;
+ }
+ input[type=checkbox] {
+    visibility: hidden;
+ }
+@media screen and (min-width: 700px) {
+    .form-entry .description {
+        width: 40%;
+        text-align: right;
+        float: left;
+        padding: 0 20px 0 0;
+    }
+    .form-entry .input {
+        width: 60%;
+        text-align: left;
+        float: right;
+    }
+    .form-entry {
+        padding: 10px 0;
+    }
 }
-
 
 
 
@@ -164,4 +289,9 @@ ul.comments textarea {
 }
 ul.comments button {
     margin: 0px 5px 5px;
+}
+
+.expense-part {
+    background: #eee;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }

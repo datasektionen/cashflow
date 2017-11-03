@@ -1,7 +1,7 @@
 {% extends "expenses/main.html" %}
 {% load widget_tweaks %}
 
-{% block title %}Nytt kvitto{% endblock %}
+{% block title %}Nytt utlägg{% endblock %}
 
 {% block full_content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
@@ -12,88 +12,121 @@
             kontoutdrag.
         </p>
         <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="expense-description" class="col-sm-4 control-label">
-                    Beskrivning:
-                </label>
-                <div class="col-sm-8">
-                    <input type="text" class="form-control" name="expense-description" required />
+            <div class="form">
+                {% csrf_token %}
+                <div class="form-entry">
+                    <span class="description"><label for="expense-description">Beskrivning:</label></span>
+                    <div class="input">
+                        <input type="text" name="expense-description" required />
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="files" class="col-sm-4 control-label">
-                    Bild/pdf av kvittot:
-                </label>
-                <div class="col-sm-8">
-                    <input type="file" name="files" multiple required>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="files">
+                            Bild/pdf av kvittot:
+                        </label>
+                    </span>
+                    <div class="input">
+                        <div style="padding: 8px 0;">
+                            <input type="file" name="files" multiple required>
+                        </div>
+                    </div>
                 </div>
-                <br><br>
-            </div>
 
-            <div class="form-group">
-                <label for="expense-date" class="col-sm-4 control-label">
-                    Transaktionsdatum:
-                </label>
-                <div class="col-sm-8">
-                    <input class="form-control" type="date" name="expense-date" required/>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense-date">
+                            Transaktionsdatum:
+                        </label>
+                    </span>
+                    <div class="input">
+                        <input type="date" name="expense-date" required/>
+                    </div>
                 </div>
+                <div class="clearfix"></div>
             </div>
 
             <h2>Kvittodelar</h2>
             <div id="expense_parts">
-                <div v-for="(expense_part, i) in expense_parts" class="well" class="expense_part">
-                    <div class="form-group">
-                        <label for="expense_part-committee" class="col-sm-4 control-label">
-                            Nämnd:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control" name="committee[]" v-model="expense_part.committeeId" required>
-                                <option value="0">- Välj -</option>
-                                <option v-for="committee in committees" v-html="committee.name" v-bind:value="committee.id"></option>
-                            </select>
+                <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative">
+                    <button type="button" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-committee">
+                                Nämnd:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select">
+                                <select name="committee[]" v-model="expense_part.committeeId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="committee in committees" v-html="committee.name" v-bind:value="committee.id"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-cost_centre">
+                                Sekundärt resultatställe:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0">
+                                <select name="costCentre[]" v-model="expense_part.costCentreId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="costCentre[]" required disabled></select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-budget_line">
+                                Budgetpost:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
+                                <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="budgetLine[]" required disabled></select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-amount">
+                                Summa:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <input type="number" step="0.01" model="expense_part.amount" name="amount[]" required>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="expense_part-cost_centre" class="col-sm-4 control-label">
-                            Sekundärt resultatställe:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control" name="costCentre[]" v-model="expense_part.costCentreId" required v-if="expense_part.committeeId > 0">
-                                <option value="0">- Välj -</option>
-                                <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
-                            </select>
-                            <select class="form-control" name="costCentre[]" required disabled v-else></select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="expense_part-budget_line" class="col-sm-4 control-label">
-                            Budgetpost:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control" name="budgetLine[]" v-model="expense_part.budgetLineId" required v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
-                                <option value="0">- Välj -</option>
-                                <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
-                            </select>
-                            <select class="form-control" name="budgetLine[]" required disabled v-else></select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="expense_part-amount" class="col-sm-4 control-label">
-                            Summa:
-                        </label>
-                        <div class="col-sm-8">
-                            <input type="number" step="0.01" class="form-control" model="expense_part.amount" name="amount[]" required>
-                        </div>
-                    </div>
-
-                    <button type="button" class="small align-left" v-on:click="removePart()" v-if="expense_parts.length > 1">Ta bort kvittodelen</button>
-                    <button type="button" class="small align-right" v-on:click="addPart(i)">Lägg till en till kvittodel</button>
+                    <div class="clearfix"></div>
                 </div>
+                
+                <button type="button" style="float:right;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
+                <div class="clearfix"></div>
             </div>
             <input type="submit" value="Lägg till kvitto" class="button primary-action theme-color btn-color">
         </form>
