@@ -12,8 +12,8 @@
             system_name: "cashflow",
             color_scheme: "money_green",
             {% if user.is_authenticated %}
-                login_text: "Logga ut",
-                login_href: "/logout/",
+                login_text: "{{ user.get_full_name }}",
+                login_href: "{% url 'expenses-user' user.username %}",
             {% else %}
                 login_text: "Logga in",
                 login_href: "/login/",

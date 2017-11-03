@@ -83,7 +83,6 @@
             </table>
         {% else %}
             Det finns inga tidigare utbetalda kvitton.
-
         {% endif %}
     </div>
 
@@ -121,6 +120,12 @@
             </tr>
             {% endif %}
         </table>
+        {% if showuser.username == user.username %}
+            <br />
+            <a href="/logout" class="button theme-color btn-color" style="color:#fff;float:right;">
+                <i class="fa fa-sign-out" aria-hidden="true"></i> Logga ut
+            </a>
+        {% endif %}
     </div>
 
 {% endblock %}

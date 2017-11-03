@@ -12,14 +12,10 @@
         {% if user.profile.may_account %}
             {str: "Bokför", href: "{% url 'expenses-action-accounting' %}"},
         {% endif %}
-        {% if user.profile.may_account %}
-            {str: "Bokför", href: "{% url 'expenses-action-accounting' %}"},
-        {% endif %}
         {% if user.profile.may_attest or user.profile.may_pay or user.profile.may_account %}
-            {str: "Alla kvitton", href: "{% url 'expenses-expense-overview' %}"},
-            {str: "Lista användare", href: "{% url 'expenses-userlist' %}"},
+            {str: "Kvitton", href: "{% url 'expenses-expense-overview' %}"},
+            {str: "Användare", href: "{% url 'expenses-userlist' %}"},
         {% endif %}
-        {str: "{{ user.username }}", href: "{% url 'expenses-user' user.username %}" }
     {% endif %}
 
 {% endblock %}
