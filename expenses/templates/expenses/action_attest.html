@@ -5,22 +5,24 @@
 {% block full_content %}
     <p>Här kan du hitta alla kvitton som har delar som du får attestera,
         klicka på ett kvitto för att komma till dess specifika vy</p>
-    <h2>Kvitton</h2>
     {% if attestable_expenses %}
-        <table class="table table-hover">
-            <tr>
-                <th>Beskrivning</th>
-                <th>Ägare</th>
-                <th>Nämnder</th>
-                <th>Belopp</th>
-            </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Beskrivning</th>
+                    <th>Ägare</th>
+                    <th>Nämnder</th>
+                    <th>Belopp</th>
+                </tr>
+            </thead>
             {% for expense in attestable_expenses %}
-                <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
-                    <td>{{ expense.description|capfirst }}</td>
-                    <td>{{ expense.owner }}</td>
-                    <td>{% for committee in expense.committees %}
-                        {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
+                <tr>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td><a href="{% url 'expenses-user' expense.owner.user.username %}">{{ expense.owner }}</a></td>
+                    <td>
+                        {% for committee in expense.committees %}
+                            {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
                     </td>
                     <td>{{ expense.total_amount }} kr</td>
 
