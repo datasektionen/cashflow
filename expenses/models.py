@@ -101,6 +101,11 @@ class Profile(models.Model):
         from cashflow import dauth
         return 'pay' in dauth.get_permissions(self.user)
 
+    # Returns a list of the committees that the user may pay for
+    def may_confirm(self):
+        from cashflow import dauth
+        return 'confirm' in dauth.get_permissions(self.user)
+
     # Returns a list of the committees that the user may account for
     def may_account(self):
         may_account = []

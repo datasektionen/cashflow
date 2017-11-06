@@ -7,6 +7,9 @@
         {% if user.profile.may_attest %}
             {str: "Attestera", href: "{% url 'expenses-action-attest' %}"},
         {% endif %}
+        {% if user.profile.may_confirm %}
+            {str: "Bekräfta", href: "{% url 'expenses-action-confirm' %}"},
+        {% endif %}
         {% if user.profile.may_pay %}
             {str: "Betala ut", href: "{% url 'expenses-action-pay' %}"},
         {% endif %}

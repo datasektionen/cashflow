@@ -48,6 +48,16 @@
                 </td>
             </tr>
             <tr>
+                <th>Bekräftat i pärmen:</th>
+                <td>
+                    {% if expense.confirmed_by_id %}
+                        Ja
+                    {% else %}
+                        Inte än
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
                 <th>Återbetalat:</th>
                 <td>
                     {% if expense.reimbursement %}
