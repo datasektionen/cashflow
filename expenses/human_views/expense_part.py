@@ -11,6 +11,8 @@ from expenses import models
 Shows form for editing expense part and handles the form submit.
 """
 def edit_expense_part(request, pk):
+    raise Http404('Det här är inte implementerat i Cashflow 3.0 än')
+    
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))
 

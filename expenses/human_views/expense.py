@@ -19,7 +19,7 @@ def expense_overview(request):
     if request.method == 'GET':
         if len(dauth.get_permissions(request.user)) > 0:
             return render(request, 'expenses/expense_list.html', {
-                'expenses': models.Expense.objects.order_by('-id').all()
+                'expenses': models.Expense.objects.order_by('verification', '-id').all()
             })
     else:
         raise Http404()
