@@ -1,6 +1,6 @@
 import json
 import re
-
+from datetime import date
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import modelform_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
@@ -103,6 +103,29 @@ def edit_expense(request, pk):
             })
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
+
+
+"""
+Confirms expense.
+"""
+def confirm_expense(request, pk):
+    if request.method == 'POST':
+        try:
+            expense = models.Expense.objects.get(pk=pk)
+
+            if not dauth.has_permission('confirm', request):
+                return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
+
+            expense.confirmed_by = request.user
+            expense.confirmed_at = date.today()
+            expense.save()
+
+            return HttpResponseRedirect(reverse('expenses-action-confirm'))
+        except ObjectDoesNotExist:
+            raise Http404("Utlägget finns inte")
+    else:
+        raise Http404()
+
 
 
 """

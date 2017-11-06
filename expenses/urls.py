@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^expense/(?P<pk>\d+)/delete/$', expense_views.delete_expense, name='expenses-expense-delete'),
     url(r'^expense/(?P<expense_pk>\d+)/comment/$', expense_views.new_comment, name='expenses-expense-comment-new'),
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', expense_views.set_verification, name='expenses-expense-verification'),
+    url(r'^expense/(?P<pk>\d+)/confirm/$', expense_views.confirm_expense, name='expenses-expense-confirm'),
     
     url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part-attest'),
@@ -51,6 +52,7 @@ urlpatterns = [
     url(r'^payment/new/$', payment_views.new_payment, name='expenses-payment-new'),
     url(r'^payment/(?P<pk>\d+)/$', payment_views.get_payment, name='expenses-payment'),
 
+    url(r'^confirm/$', action_views.confirm_overview, name='expenses-action-confirm'),
     url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
     url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
     url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
