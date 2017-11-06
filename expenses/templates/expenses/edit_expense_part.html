@@ -2,101 +2,90 @@
 {% load widget_tweaks %}
 
 {% block full_content %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script>
-        //noinspection JSAnnotator
-        const budget = {% autoescape off %}{{ budget_json }}{% endautoescape %};
-
-        function update_cost_centre() {
-            const committee_select = $('#committee_select');
-            const cost_centre_select = $('#cost_centre_select');
-            cost_centre_select.empty(); // Remove all (old) child elements
-            $.each(budget[committee_select.val()], (cost_centre) => {
-                cost_centre_select.append($("<option></option>")
-                    .attr("value", cost_centre)
-                    .text(cost_centre))
-            });
-
-            update_budget_line();
-        }
-
-        function update_budget_line() {
-            const committee_select = $('#committee_select');
-            const cost_centre_select = $('#cost_centre_select');
-            const budget_line_select = $('#budget_line_select');
-
-            budget_line_select.empty(); // Remove all (old) child elements
-            $.each(budget[committee_select.val()][cost_centre_select.val()], (_, budget_line) => {
-                budget_line_select.append($("<option></option>")
-                    .attr("value", budget_line)
-                    .text(budget_line))
-            });
-        }
-
-        $(document).ready(function () {
-            $('#committee_select').val("{{ expense_part.budget_line.cost_centre.committee.name }}");
-            $('#cost_centre_select').val("{{ expense_part.budget_line.cost_centre.name }}");
-            $('#budget_line_select').val("{{ expense_part.budget_line.name }}");
-        })
-    </script>
-    <div class="col-sm-8 col-sm-offset-2">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
+    <div id="form" class="col-sm-8 col-sm-offset-2">
         <h1>Redigera kvittodel</h1>
         <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <input type="text" id="indices" name="expense_part_indices" value="[1]" hidden>
-            <div id="expense_parts">
-                <div class="well" id="expense_part">
+                <div class="well" class="expense_part">
                     <div class="form-group">
-                        <label for="committee" class="col-sm-4 control-label">
+                        <label for="expense_part-committee" class="col-sm-4 control-label">
                             Nämnd:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control" id="committee_select" name="committee"
-                                    onchange="update_cost_centre()">
-                                {% for committee in committees %}
-                                    <option value="{{ committee }}">{{ committee }}</option>
-                                {% endfor %}
+                            <select class="form-control" name="committee" v-model="expense_part.committeeId" required>
+                                <option value="0">- Välj -</option>
+                                <option v-for="committee in committees" v-html="committee.name" v-bind:value="committee.id"></option>
                             </select>
+                            <select class="form-control" name="committee" required disabled v-else></select>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="cost_centre" class="col-sm-4 control-label">
+                        <label for="expense_part-cost_centre" class="col-sm-4 control-label">
                             Sekundärt resultatställe:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control" id="cost_centre_select" name="cost_centre"
-                                    onchange="update_budget_line()">
-                                {% for cost_centre in expense_part.budget_line.cost_centre.committee.costcentre_set.all %}
-                                    <option value="{{ cost_centre.name }}">{{ cost_centre.name }}</option>
-                                {% endfor %}
+                            <select class="form-control" name="costCentre" v-model="expense_part.costCentreId" required v-if="expense_part.committeeId > 0">
+                                <option value="0">- Välj -</option>
+                                <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
                             </select>
+                            <select class="form-control" name="costCentre" required disabled v-else></select>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="budget_line" class="col-sm-4 control-label">
+                        <label for="expense_part-budget_line" class="col-sm-4 control-label">
                             Budgetpost:
                         </label>
                         <div class="col-sm-8">
-                            <select class="form-control" id="budget_line_select" name="budget_line">
-                                {% for budget_line in expense_part.budget_line.cost_centre.budgetline_set.all %}
-                                    <option value="{{ budget_line.name }}">{{ budget_line.name }}</option>
-                                {% endfor %}
+                            <select class="form-control" name="budgetLine" v-model="expense_part.budgetLineId" required v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
+                                <option value="0">- Välj -</option>
+                                <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
                             </select>
+                            <select class="form-control" name="budgetLine" required disabled v-else></select>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label for="amount" class="col-sm-4 control-label">
+                        <label for="expense_part-amount" class="col-sm-4 control-label">
                             Summa:
                         </label>
                         <div class="col-sm-8">
-                            <input type="number" step="0.01" class="form-control amount" name="amount"
-                                   value="{{ expense_part.amount }}">
+                            <input type="number" step="0.01" class="form-control" v-model="expense_part.amount" name="amount" required>
                         </div>
                     </div>
                 </div>
-            </div>
-            <input type="submit">
         </form>
     </div>
+
+    <script type="text/javascript">
+        new Vue({
+            el: '#form', 
+            data: function () {
+                return {
+                    committees: [],
+                    expense_part: {
+                        committeeId: 0,
+                        costCentreId: 0,
+                        budgetLineId: 0,
+                        amount: '{{ expense_part.amount }}'
+                    }
+                }
+            },
+            created: function () {
+                fetch('https://budget.datasektionen.se/api/committees?verbose')
+                    .then(res => res.json())
+                    .then(res => {
+                        this.committees = res
+                        this.expense_part.committeeId = parseInt('{{ expense_part.committee_id }}')
+                        this.expense_part.costCentreId = parseInt('{{ expense_part.cost_centre_id }}')
+                        this.expense_part.budgetLineId = parseInt('{{ expense_part.budget_line_id }}')
+                        console.log(this.expense_part)
+                    })
+            }
+        })
+    </script>
 {% endblock %}

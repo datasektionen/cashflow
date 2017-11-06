@@ -10,10 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
+import os # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import re
-
 import dj_database_url
 from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
 
@@ -47,12 +45,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'rest_framework',
     'storages',
     'corsheaders',
     'widget_tweaks',
     'expenses',
-    'budget',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -139,7 +137,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'sv-SE'
 
 TIME_ZONE = 'Europe/Stockholm'
 

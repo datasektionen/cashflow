@@ -4,7 +4,6 @@ from django.conf import settings
 # noinspection PyPackageRequirements
 from storages.backends.s3boto import S3BotoStorage
 
-
 # noinspection PyAbstractClass
 class MediaStorage(S3BotoStorage):
     location = settings.MEDIAFILES_LOCATION

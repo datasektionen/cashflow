@@ -1,29 +1,32 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
+from django.core import serializers
+from django.forms.models import model_to_dict
+from datetime import date, datetime
+from decimal import *
+import json
 
 from cashflow import dauth
 from expenses import models
 
-
+"""
+Shows the attest list overview.
+"""
 def attest_overview(request):
     may_attest = request.user.profile.may_attest()
-
-    may_attest_committees = []
-    for committee in may_attest:
-        try:
-            may_attest_committees.append(models.Committee.objects.get(name__iexact=committee))
-        except ObjectDoesNotExist:
-            continue
-
+    print(may_attest)
     return render(request, 'expenses/action_attest.html', {
         'attestable_expenses': models.Expense.objects.exclude(owner__user=request.user).filter(
             expensepart__attested_by=None,
-            expensepart__budget_line__cost_centre__committee__in=may_attest_committees
+            expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
         ).distinct()
     })
 
 
+"""
+Shows the pay list overview.
+"""
 def pay_overview(request):
     if not dauth.has_permission('pay', request):
         return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
@@ -38,20 +41,32 @@ def pay_overview(request):
 
     return render(request, 'expenses/action_pay.html', context)
 
-
+"""
+Shows the account list overview.
+"""
 def accounting_overview(request):
     may_account = request.user.profile.may_account()
+    expenses = models.Expense.objects.exclude(reimbursement=None).filter(
+        verification="",
+        expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+    ).distinct()
 
-    may_account_committees = []
-    for committee in may_account:
-        try:
-            may_account_committees.append(models.Committee.objects.get(name__iexact=committee))
-        except ObjectDoesNotExist:
-            continue
+    class fakefloat(float):
+        def __init__(self, value):
+            self._value = value
+        def __repr__(self):
+            return str(self._value)
+
+    def json_serial(obj):
+        """JSON serializer for objects not serializable by default json code"""
+
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return fakefloat(obj)
+        raise TypeError ("Type %s not serializable" % type(obj))
+
 
     return render(request, 'expenses/action_accounting.html', {
-        'accounting_ready_expenses': models.Expense.objects.exclude(reimbursement=None).filter(
-            verification="",
-            expensepart__budget_line__cost_centre__committee__in=may_account_committees
-        ).distinct()
+        'accounting_ready_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial)
     })

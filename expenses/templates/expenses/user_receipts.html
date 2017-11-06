@@ -1,0 +1,87 @@
+{% extends "expenses/user.html" %}
+{% load humanize %}
+
+{% block title %}{{ showuser.get_full_name }}{% endblock %}
+
+{% block content %}
+    <h3>Ej attesterade kvitton </h3>
+    {% if non_attested_expenses %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Skapat</th>
+                    <th>Beskrivning</th>
+                    <th>Summa</th>
+                </tr>
+            </thead>
+            {% for expense in non_attested_expenses %}
+                <tr>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td>{{ expense.total_amount|intcomma }} kr</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        Det finns inga oattesterade kvitton!
+    {% endif %}
+    <br /><br />
+    <h3>Attesterade kvitton</h3>
+    {% if attested_expenses %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Skapat</th>
+                    <th>Beskrivning</th>
+                    <th>Summa</th>
+                </tr>
+            </thead>
+            {% for expense in attested_expenses %}
+                <tr>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td>{{ expense.total_amount }} kr</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        Det finns inga kvitton som väntar på att betalas ut.
+    {% endif %}
+    <br /><br />
+    <h3>Utbetalda kvitton</h3>
+    {% if reimbursements %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Utbet.datum</th>
+                    <th>Tagg</th>
+                    <th>Delar</th>
+                </tr>
+            </thead>
+            {% for reimbursement in reimbursements reversed %}
+                <tr>
+                    <td><a href="{% url 'expenses-payment' reimbursement.id %}">{{ reimbursement.date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-payment' reimbursement.id %}">{{ reimbursement.tag }}</a></td>
+                    <td>
+                        <table>
+                            {% for expense in reimbursement.expense_set.all %}
+                                <tr>
+                                    <td>{{ expense.created_date|date:"Y-m-d" }}</td>
+                                    <td>{{ expense.description }}</td>
+                                    <td>{{ expense.total_amount }} kr</td>
+                                </tr>
+                            {% endfor %}
+                            <tr>
+                                <th colspan="2">Summa</th>
+                                <td>{{ reimbursement.amount|intcomma }} kr</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        Det finns inga tidigare utbetalda kvitton.
+    {% endif %}
+
+{% endblock %}

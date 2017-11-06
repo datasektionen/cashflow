@@ -1,11 +1,7 @@
 from django.contrib import admin
 from expenses.models import *
 
-# Register your models here.
-
-admin.site.register(Committee)
-admin.site.register(CostCentre)
-admin.site.register(BudgetLine)
+# Our registered models
 admin.site.register(BankAccount)
 admin.site.register(Profile)
 admin.site.register(Payment)

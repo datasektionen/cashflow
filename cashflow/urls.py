@@ -24,6 +24,5 @@ urlpatterns = [
     url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^budget/', include("budget.urls")),
     url(r'^', include("expenses.urls")),
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

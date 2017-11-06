@@ -1,150 +1,186 @@
 {% extends "expenses/main.html" %}
+{% load humanize %}
+
+{% block title %}Kvitto: {{ expense.description|capfirst }}{% endblock %}
 
 {% block full_content %}
-    <!-- TODO: Do something about this-->
-    <style>
-        .thumbnail {
-            padding: 0px;
-        }
-
-        .panel {
-            position: relative;
-        }
-
-        .panel > .panel-heading:after, .panel > .panel-heading:before {
-            position: absolute;
-            top: 11px;
-            left: -16px;
-            right: 100%;
-            width: 0;
-            height: 0;
-            display: block;
-            content: " ";
-            border-color: transparent;
-            border-style: solid solid outset;
-            pointer-events: none;
-        }
-
-        .panel > .panel-heading:after {
-            border-width: 7px;
-            border-right-color: #f7f7f7;
-            margin-top: 1px;
-            margin-left: 2px;
-        }
-
-        .panel > .panel-heading:before {
-            border-right-color: #ddd;
-            border-width: 8px;
-        }
-    </style>
-
-    <h1>{{ expense.description|capfirst }}</h1>
     <div class="col-sm-6 col-lg-6">
-        <ul class="list-group">
-            {% if user.username == expense.owner.user.username %}
-                <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
-                    <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
-                </a>
-            {% endif %}
-            {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
-                <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
-                    <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
-                </a>
-            {% endif %}
-            <li class="list-group-item"><b>Kvitto-id:</b> {{ expense.id }}</li>
-            <li class="list-group-item"><b>Köpt av:</b>
-                <u><a href="{% url 'expenses-user' expense.owner.user.username %}">
-                    {{ expense.owner.user.username }}
-                </a></u>
-            </li>
-            <li class="list-group-item"><b>Inköpsdatum:</b> {{ expense.expense_date|date:"Y-m-d" }}</li>
-            <li class="list-group-item"><b>Totalsumma:</b> {{ expense.total_amount }}</li>
-            <li class="list-group-item"><b>Registrerat i cashflow:</b> {{ expense.created_date|date:"Y-m-d" }}</li>
-            <li class="list-group-item"><b>Återbetalning:</b>
-                {% if expense.reimbursement %}<u><a href="{% url 'expenses-payment' expense.reimbursement.id %}" ma>
-                    {{ expense.reimbursement.tag }}
-                </a></u>{% else %}Ej återbetald{% endif %}
-            </li>
-            <li class="list-group-item"><b>Verifikationsnummer:</b> {{ expense.verification|default:"Ej bokförd" }}</li>
-        </ul>
-        <h2>Kvittodelar</h2>
-        {% for expense_part in expense.expensepart_set.all %}
-            <ul class="list-group">
-                {% if user.username == expense.owner.user.username %}
-                    <a class="btn btn-default" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
-                        <span class="glyphicon glyphicon-pencil"></span> Redigera kvittodel
+        <h2>Information</h2>
+        {% if user.username == expense.owner.user.username %}
+            <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
+                <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
+            </a>
+        {% endif %}
+        {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
+            <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
+                <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
+            </a>
+        {% endif %}
+        <table>
+            <tr>
+                <th>Kvitto-id:</th>
+                <td>{{ expense.id }}</td>
+            </tr>
+            <tr>
+                <th>Köpt av:</th>
+                <td>
+                    <a href="{% url 'expenses-user' expense.owner.user.username %}">
+                        {{ expense.owner.user.get_full_name }} ({{ expense.owner.user.username }}@kth.se)
                     </a>
-                {% endif %}
-                <li class="list-group-item"><b>Nämnd:</b> {{ expense_part.budget_line.cost_centre.committee.name }}</li>
-                <li class="list-group-item"><b>Kostnadsställe:</b> {{ expense_part.budget_line.cost_centre.name }}</li>
-                <li class="list-group-item"><b>Budgetpost:</b> {{ expense_part.budget_line.name }}</li>
-                <li class="list-group-item"><b>Belopp:</b> {{ expense_part.amount }} kr.</li>
-                {% if expense_part.attested_by %}
-                    <li class="list-group-item"><b>Attesterat av:</b> {{ expense_part.attested_by.user.get_full_name }}
-                    </li>
-                    <li class="list-group-item"><b>Attesterat den:</b> {{ expense_part.attest_date }}</li>
-                {% else %}
-                    <li class="list-group-item"><b class="align-left">Kvittodel ej attesterad</b>
-                        {% if expense_part.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
+                </td>
+            </tr>
+            <tr>
+                <th>Inköpsdatum:</th>
+                <td>
+                    {{ expense.expense_date|date:"Y-m-d" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Totalsumma:</th>
+                <td>
+                    {{ expense.total_amount|intcomma }} kr
+                </td>
+            </tr>
+            <tr>
+                <th>Registrerat i Cashflow:</th>
+                <td>
+                    {{ expense.created_date|date:"Y-m-d" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Återbetalat:</th>
+                <td>
+                    {% if expense.reimbursement %}
+                        <a href="{% url 'expenses-payment' expense.reimbursement.id %}">
+                            {{ expense.reimbursement.tag }}
+                        </a>
+                    {% else %}
+                        Ej återbetald
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Verifikationsnummer:</th>
+                <td>{{ expense.verification|default:"Ej bokförd" }}</td>
+            </tr>
+        </table>
+
+        <h3>Kvittodelar</h3>
+        
+        {% for expense_part in expense.expensepart_set.all %}
+
+            <table>
+                {% if not expense_part.attested_by %}
+                {% if expense_part.committee_name|lower in user.profile.may_attest %}
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            {% if user.username == expense.owner.user.username %}
+                            <a class="btn darken-2" style="color:#fff" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
+                                <span class="fa fa-pencil"></span>
+                            </a>
+                            {% endif %}
                             <form method="POST" class="pull-right"
                                   action="{% url 'expenses-expense_part-attest' expense_part.id %}">
                                 {% csrf_token %}
-                                <button class="btn-primary btn-xs" type="submit">Attestera</button>
+                                <button class="btn darken-2" type="submit">Attestera</button>
                             </form>
-                        {% endif %}
-                    </li>
+                        </th>
+                    </tr>
+                </thead>
                 {% endif %}
-
-            </ul>
+                {% endif %}
+                <tr>
+                    <th>Nämnd:</th>
+                    <td>
+                        <a href="https://budget.datasektionen.se/committees/{{ expense_part.committee_id }}">
+                            {{ expense_part.committee_name }}
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Kostnadsställe:</th>
+                    <td>{{ expense_part.cost_centre_name }}</td>
+                </tr>
+                <tr>
+                    <th>Budgetpost:</th>
+                    <td>{{ expense_part.budget_line_name }}</td>
+                </tr>
+                <tr>
+                    <th>Belopp:</th>
+                    <td>{{ expense_part.amount|intcomma }} kr</td>
+                </tr>
+                {% if expense_part.attested_by %}
+                    <tr>
+                        <th>Attesterat av:</th>
+                        <td>
+                            <a href="{% url 'expenses-user' expense_part.attested_by.user.username %}">
+                                {{ expense_part.attested_by.user.get_full_name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Attesterat den:</th>
+                        <td>{{ expense_part.attest_date }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="2">Kvittodel ej attesterad</td>
+                    </tr>
+                {% endif %}
+            </table>
         {% endfor %}
     </div>
     <div class="col-sm-6 col-lg-6">
+        <h2>Filer</h2>
         {% for file in expense.file_set.all %}
+            <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
             {% if  file.is_image %}
-                <a href="{{ file.file.url }}" target="_blank"><img class="center-block" style="width: 70%;"
-                                                                   src="{{ file.file.url }}"></a>
+                <a href="{{ file.file.url }}" target="_blank">
+                    <img class="center-block" style="width: 70%;" src="{{ file.file.url }}" />
+                </a>
             {% else %}
-                <a href="{{ file.file.url }}">{{ file.file.name }}</a>
-
+                <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;"></iframe>
             {% endif %}
-
+            <br>
         {% endfor %}
     </div>
+
     <div class="col-sm-12 col-lg-8 col-lg-offset-2">
         <h2>Kommentarer</h2>
 
-
-
+        <ul class="comments">
         {% for comment in expense.comment_set.all %}
-            <div class="col-sm-12">
-                <div class="hidden-xs col-sm-2">
-                    <div class="thumbnail" style="border:none">
-                        <img class="img-responsive user-photo"
-                             src="https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image">
-                    </div><!-- /thumbnail -->
+            <li class="clearfix">
+                <div class="info">
+                    <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);"></div>
+                    <span class="name">
+                        <a href="{% url 'expenses-user' comment.author.user.username %}">
+                            {{ comment.author.user.get_full_name }}
+                        </a>
+                    </span>
+                    <span class="date">{{ comment.date|date:"Y-m-d H:i" }}</span>
                 </div>
-                <div class="col-sm-10">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="padding-bottom: 30px">
-                            <div>
-                                <b class="pull-left">{{ comment.author.user.get_full_name }}</b>
-                                <span class="text-muted pull-right">{{ comment.date|date:"Y-m-d H:i" }}</span>
-                            </div>
-                        </div>
-                        <div class="panel-body">
-                            {{ comment.content }}
-                        </div>
-                    </div>
+                <div class="comment">
+                    {{ comment.content }}
                 </div>
-            </div>
+            </li>
         {% endfor %}
-        <form method="POST" action="{% url 'expenses-expense-comment-new' expense.id %}">
-            {% csrf_token %}
-            <div class="col-sm-10 col-sm-offset-1">
-                <label for="content">Ny kommentar</label> <br>
-                <textarea name="content" rows="3" style="width: 100%"></textarea>
-                <button class="pull-right" type="submit">Skicka</button>
+        <li class="new">
+            <div class="info">
+                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/jonadahl/image);"></div>
+                <span class="name"><a href="/persons/1">Jonas Dahl</a></span>
+                <span class="date">Skapa en ny kommentar</span>
             </div>
-        </form>
-    </div>
+            <div class="comment">
+                <form method="POST" action="{% url 'expenses-expense-comment-new' expense.id %}">
+                    {% csrf_token %}
+                    <textarea name="content" rows="3" style="width: 100%;border:none;"></textarea>
+                    <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
+                    <div class="clearfix"></div>
+                </form>
+            </div>
+        </li>
+    </ul>
+</div>
 {% endblock %}

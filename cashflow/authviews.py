@@ -1,7 +1,9 @@
 from django.contrib import auth
 from django.http import HttpResponseRedirect, Http404
 
-
+"""
+Login route, redirects to login2 login URL.
+"""
 def login(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect(
@@ -10,7 +12,9 @@ def login(request):
     else:
         return HttpResponseRedirect("/")
 
-
+"""
+Handles a login2 redirect and authenticates user.
+"""
 def login_with_token(request, token):
     if request.method != 'GET':
         raise Http404()
@@ -20,7 +24,9 @@ def login_with_token(request, token):
         return HttpResponseRedirect(redirect_to=request.build_absolute_uri("/"))
     return HttpResponseRedirect("/")  # fail silently
 
-
+"""
+Logs out user.
+"""
 def logout(request):
     auth.logout(request)
     return HttpResponseRedirect("/")

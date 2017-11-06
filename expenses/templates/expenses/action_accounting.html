@@ -1,55 +1,94 @@
 {% extends "expenses/main.html" %}
 
-{% block full_content %}
-    <p>Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för.
+{% block title %}Bokför{% endblock %}
 
-        Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så
-        prata med
-        bokföringsansvarig för den andra nämnden).</p>
-    <h2>Kvitton</h2>
-    <div class="col-sm-8 col-sm-offset-2">
-        {% if accounting_ready_expenses %}
-            <table class="table">
-                <tr>
-                    <th>Beskrivning</th>
-                    <th>Inköpsdatum</th>
-                    <th>Verifikatsnummer</th>
-                    <th></th>
-                </tr>
-                {% for expense in accounting_ready_expenses %}
-                    <tr>
-                        <td width="50%">{{ expense.description|capfirst }}</td>
-                        <td> {{ expense.expense_date|date:"Y-m-d" }}</td>
-                        <form method="POST" action="{% url 'expenses-expense-verification' expense.id %}">
+{% block full_content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
+<div id="data">
+    <p>Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så prata med bokföringsansvarig för den andra nämnden).</p>
+
+    <table v-if="expenses.length > 0">
+        <thead>
+            <tr>
+                <th>Beskrivning</th>
+                <th>Inköpsdatum</th>
+                <th style="float:right">Verifikationsnummer</th>
+            </tr>
+        </thead>
+        <tbody v-for="expense in expenses">
+            <tr>
+                <td><a href="/expenses/1" v-html="expense.description"></a></td>
+                <td v-html="expense.expense_date"></td>
+                
+                <td style="text-align: right">
+                    <div v-if="!expense.verification">
+                        <form v-on:submit.prevent="save(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/verification'">
                             {% csrf_token %}
-                            <td><input class="col-sm-10" type="text" name="verification" placeholder="E214"></td>
-                            <td>
-                                <button type="submit" class="btn">Registrera</button>
-                            </td>
+                            <input type="text" name="verification" v-model="expense.verificationString" placeholder="Tex. E214">
+                            <button class="theme-color btn-color" v-on:click="save(expense, $event)">Spara</button>
                         </form>
-                    </tr>
-                    <tr>
-                        <td colspan="4">
-                            <div class="col-sm-8 col-sm-offset-1">
-                                <table class="table">
-                                    {% for expense_part in expense.expensepart_set.all %}
-                                        <tr>
-                                            <td>{{ expense_part.budget_line }}</td>
-                                            <td>{{ expense_part.amount }} kr.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    <tr>
-                                        <td><b>Totalt: </b></td>
-                                        <td>{{ expense.total_amount }} kr.</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            Det finns inga nya kvitton att bokföra.
-        {% endif %}
-    </div>
+                    </div>
+                    <div v-else>
+                        <span>Sparade: <span style="font-weight: bold;" v-html="expense.verification"></span>.</span>
+                    </div>
+                </td>
+            </tr>
+            <tr v-if="!expense.verification">
+                <td colspan="3">
+                    <table>
+                        <tr v-for="expensePart in expense.expense_parts">
+                            <td style="text-align: right; width: 50%;" v-html="expensePart.committee_name + ' > ' + expensePart.cost_centre_name + ' > ' + expensePart.budget_line_name"></td>
+                            <td v-html="expensePart.amount + ' kr'"></td>
+                        </tr>
+                        <tr style="font-weight: bold;">
+                            <td style="text-align: right;">Totalt:</td>
+                            <td><span v-html="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p v-else>
+        Du har inga kvitton att bokföra. Bra jobbat!
+    </p>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#data', 
+        data: function () {
+            return {
+                expenses: {% autoescape off %}{{ accounting_ready_expenses }}{% endautoescape %}
+            }
+        },
+        methods: {
+            save: function (expense, e) {
+                let idx = this.expenses.findIndex(x => x.id === expense.id)
+                if (idx === -1) {
+                    return
+                }
+
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+
+                fetch('/expense/' + expense.id + '/verification/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form
+                })
+                .then(res => {
+                    console.log(res)
+                    return res.text()
+                })
+                .then(res => {
+                    this.expenses[idx].verification = expense.verificationString
+                })
+                if (e) e.preventDefault()
+            }  
+        }
+    })
+</script>
 {% endblock %}

@@ -7,18 +7,21 @@ from django.urls import reverse
 
 from expenses import models
 
-
+"""
+Shows form for editing expense part and handles the form submit.
+"""
 def edit_expense_part(request, pk):
+    raise Http404('Det här är inte implementerat i Cashflow 3.0 än')
+    
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))
 
         if request.user.username != expense_part.expense.owner.user.username:
             return HttpResponseForbidden("Endast kvittoägaren får redigera kvittodelarna")
 
+        print(expense_part.amount)
         if request.method == 'GET':
             return render(request, 'expenses/edit_expense_part.html', {
-                "committees": models.Committee.objects.order_by('name'),
-                "budget_json": models.get_budget_json(),
                 'expense_part': expense_part
             })
         elif request.method == 'POST':
@@ -53,6 +56,9 @@ def edit_expense_part(request, pk):
         raise Http404("Kvittodelen finns inte")
 
 
+"""
+Handles attest action.
+"""
 def attest_expense_part(request, pk):
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))

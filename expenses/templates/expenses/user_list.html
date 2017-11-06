@@ -1,17 +1,20 @@
 {% extends "expenses/main.html" %}
 
+{% block title %}Alla användare{% endblock %}
+
 {% block full_content %}
-    <h2>Användare</h2>
     {% if users %}
-        <table class="table table-hover">
-            <tr>
-                <th>Kth-id</th>
-                <th>Namn</th>
-            </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kth-id</th>
+                    <th>Namn</th>
+                </tr>
+            </thead>
             {% for u in users %}
-                <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-user' u.user.username %}'">
-                    <td>{{ u.user.username }}</td>
-                    <td>{{ u }}</td>
+                <tr>
+                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u.user.username }}</a></td>
+                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u }}</a></td>
                 </tr>
             {% endfor %}
         </table>

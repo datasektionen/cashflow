@@ -8,7 +8,9 @@ from cashflow import dauth
 from cashflow.dauth import has_permission
 from expenses import models
 
-
+"""
+Returns a list of all users.
+"""
 def user_list(request):
     if request.method == 'GET':
         if len(dauth.get_permissions(request.user)) > 0:
@@ -18,8 +20,25 @@ def user_list(request):
     else:
         raise Http404()
 
-
+"""
+Shows information about a user.
+"""
 def get_user(request, username):
+    try:
+        user = models.User.objects.get_by_natural_key(username)
+        if not may_view_user(request, user):
+            return HttpResponseForbidden()
+
+        return render(request, 'expenses/user_information.html', {
+            'showuser': user
+        })
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
+
+"""
+Shows all receipts for user.
+"""
+def get_user_receipts(request, username):
     try:
         user = models.User.objects.get_by_natural_key(username)
         if not may_view_user(request, user):
@@ -42,21 +61,23 @@ def get_user(request, username):
         non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
         attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
 
-        return render(request, 'expenses/user.html',
-                      {
-                          'showuser': user,
-                          'non_attested_expenses': non_attested_expenses,
-                          'attested_expenses': attested_expenses,
-                          'reimbursements': user.profile.receiver.all()
-                      })
+        return render(request, 'expenses/user_receipts.html', {
+            'showuser': user,
+            'non_attested_expenses': non_attested_expenses,
+            'attested_expenses': attested_expenses,
+            'reimbursements': user.profile.receiver.all()
+        })
+
     except ObjectDoesNotExist:
         raise Http404("Användaren finns inte")
 
-
+"""
+Shows either a form for editing a user or handles a post request 
+and actually updates the user.
+"""
 def edit_user(request, username):
     # noinspection PyPep8Naming
-    UserForm = modelform_factory(models.Profile,
-                                 fields=('bank_account', 'sorting_number', 'bank_name', 'default_account'))
+    UserForm = modelform_factory(models.Profile, fields=('bank_account', 'sorting_number', 'bank_name', 'default_account'))
     try:
         user = models.User.objects.get_by_natural_key(username)
         if username != request.user.username:
@@ -67,7 +88,6 @@ def edit_user(request, username):
                 received_form.save()
                 return HttpResponseRedirect(reverse('expenses-user', args=[username]))
         else:
-
             form = UserForm(instance=user.profile)
             return render(request, 'expenses/edit_user.html', {
                 "form": form
@@ -75,7 +95,10 @@ def edit_user(request, username):
     except ObjectDoesNotExist:
         raise Http404("Användaren finns inte")
 
-
+"""
+Returns true if the request user is the user, or if the request user 
+may pay or account.
+"""
 def may_view_user(request, user_to_view):
     return (request.user == user_to_view) or \
            has_permission('pay', request) or \

@@ -1,172 +1,177 @@
 {% extends "expenses/main.html" %}
 {% load widget_tweaks %}
 
+{% block title %}Nytt utlägg{% endblock %}
+
 {% block full_content %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script>
-        //noinspection JSAnnotator
-        const budget = {% autoescape off %}{{ budget_json }}{% endautoescape %};
-        let number_of_parts = 1;
-
-        function enable_cost_centre(caller) {
-            const part = $(caller).closest('#expense_part');
-            const committee_select = part.find('.committee_select');
-            const cost_centre_select = part.find('.cost_centre_select');
-            cost_centre_select.empty(); // Remove all (old) child elements
-            $.each(budget[committee_select.val()], (cost_centre) => {
-                cost_centre_select.append($("<option></option>")
-                    .attr("value", cost_centre)
-                    .text(cost_centre))
-            });
-            cost_centre_select.prop('disabled', false);
-            enable_budget_line(caller);
-        }
-
-        function enable_budget_line(caller) {
-            const part = $(caller).closest('#expense_part');
-            const committee_select = part.find('.committee_select');
-            const cost_centre_select = part.find('.cost_centre_select');
-            const budget_line_select = part.find('.budget_line_select');
-
-            budget_line_select.empty(); // Remove all (old) child elements
-            $.each(budget[committee_select.val()][cost_centre_select.val()], (_, budget_line) => {
-                budget_line_select.append($("<option></option>")
-                    .attr("value", budget_line)
-                    .text(budget_line))
-            });
-            budget_line_select.prop('disabled', false);
-        }
-
-        function add_part() {
-            number_of_parts += 1;
-            const new_part = $('#expense_part').clone();
-            new_part.find('.committee_select').val(new_part.find('.committee_select option:first').val());
-            new_part.find('.committee_select')
-                .attr("name", 'expense_part-' + number_of_parts + '-committee')
-                .attr("required", true);
-            new_part.find('.cost_centre_select')
-                .empty()
-                .attr("name", 'expense_part-' + number_of_parts + '-cost_centre')
-                .attr("required", true);
-            new_part.find('.budget_line_select')
-                .empty()
-                .attr("name", 'expense_part-' + number_of_parts + '-budget_line')
-                .attr("required", true);
-            new_part.find('.amount')
-                .val('')
-                .attr("name", 'expense_part-' + number_of_parts + '-amount')
-                .attr("required", true);
-            $('#expense_parts').append(new_part);
-            var parts_indices = JSON.parse($('#indices').val());
-            parts_indices.push(number_of_parts);
-            $('#indices').val(JSON.stringify(parts_indices));
-        }
-
-        function remove_part(caller) {
-            if ($('#expense_parts > *').length > 1) {
-                const name = $(caller).closest('#expense_part').find('.committee_select').attr('name');
-                const match = /expense_part-(\d+)-committee/.exec(name);
-
-                const parts_indices = JSON.parse($('#indices').val());
-                const index = parts_indices.indexOf(parseInt(match[1]));
-                parts_indices.splice(index, 1);
-                $('#indices').val(JSON.stringify(parts_indices));
-                caller.closest('#expense_part').remove();
-            }
-        }
-
-    </script>
-    <div class="col-sm-8 col-sm-offset-2">
-        <h1>Nytt kvitto</h1>
-        <p>Ladda endast upp ett kvitto i taget. När du laddar upp en faktura/onlinebetalning bör du även ladda upp ett
-            kontoutdrag.</p>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
+    <div class="col-sm-8 col-sm-offset-2" id="form">
+        <p>
+            Ladda endast upp ett kvitto i taget. När du laddar upp en faktura/onlinebetalning bör du även ladda upp ett
+            kontoutdrag.
+        </p>
         <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="expense-description" class="col-sm-4 control-label">
-                    Beskrivning:
-                </label>
-                <div class="col-sm-8">
-                    <input type="text" class="form-control" name="expense-description" required/>
+            <div class="form">
+                {% csrf_token %}
+                <div class="form-entry">
+                    <span class="description"><label for="expense-description">Beskrivning:</label></span>
+                    <div class="input">
+                        <input type="text" name="expense-description" required />
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="files" class="col-sm-4 control-label">
-                    Bild/pdf av kvittot:
-                </label>
-                <div class="col-sm-8">
-                    <input type="file" name="files" multiple required>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense-date">
+                            Transaktionsdatum:
+                        </label>
+                        <span class="hint"></span>
+                    </span>
+                    <div class="input">
+                        <input type="date" name="expense-date" required/>
+                    </div>
                 </div>
-                <br><br>
-            </div>
 
-            <div class="form-group">
-                <label for="expense-date" class="col-sm-4 control-label">
-                    Transaktionsdatum:
-                </label>
-                <div class="col-sm-8">
-                    <input class="form-control" type="date" name="expense-date" required/>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="files">
+                            Bild/pdf av kvittot:
+                        </label>
+                    </span>
+                    <div class="input">
+                        <div style="padding: 8px 0;">
+                            <input type="file" name="files" multiple required>
+                        </div>
+                    </div>
                 </div>
+                <div class="clearfix"></div>
             </div>
 
             <h2>Kvittodelar</h2>
-            <input type="text" id="indices" name="expense_part_indices" value="[1]" hidden>
             <div id="expense_parts">
-                <div class="well" id="expense_part">
-                    <div class="form-group">
-                        <label for="expense_part-committee" class="col-sm-4 control-label">
-                            Nämnd:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control committee_select" name="expense_part-1-committee"
-                                    onchange="enable_cost_centre(this)" required>
-                                <option disabled selected value> -- Välj en nämnd --</option>
-                                {% for committee in committees %}
-                                    <option value="{{ committee }}">{{ committee }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense_part-cost_centre" class="col-sm-4 control-label">
-                            Sekundärt resultatställe:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control cost_centre_select" name="expense_part-1-cost_centre"
-                                    onchange="enable_budget_line(this)" disabled required>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="expense_part-budget_line" class="col-sm-4 control-label">
-                            Budgetpost:
-                        </label>
-                        <div class="col-sm-8">
-                            <select class="form-control budget_line_select" name="expense_part-1-budget_line" disabled
-                                    required>
+                <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative">
+                    <button type="button" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
 
-                            </select>
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-committee">
+                                Nämnd:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select">
+                                <select name="committee[]" v-model="expense_part.committeeId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="committee in committees" v-html="committee.name" v-bind:value="committee.id"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-cost_centre">
+                                Sekundärt resultatställe:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0">
+                                <select name="costCentre[]" v-model="expense_part.costCentreId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="costCentre[]" required disabled></select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-budget_line">
+                                Budgetpost:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
+                                <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="budgetLine[]" required disabled></select>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-amount">
+                                Summa:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <input type="number" step="0.01" model="expense_part.amount" name="amount[]" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="expense_part-amount" class="col-sm-4 control-label">
-                            Summa:
-                        </label>
-                        <div class="col-sm-8">
-                            <input type="number" step="0.01" class="form-control amount" name="expense_part-1-amount"
-                                   required>
-                        </div>
-                    </div>
-                    <button type="button" class="small align-left" onclick="remove_part(this)">
-                        Ta bort kvittodelen
-                    </button>
-                    <button type="button" class="small align-right" onclick="add_part()">
-                        Lägg till en till kvittodel
-                    </button>
+
+                    <div class="clearfix"></div>
                 </div>
+                
+                <button type="button" style="float:right;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
+                <div class="clearfix"></div>
             </div>
-            <input type="submit">
+            <input type="submit" value="Lägg till kvitto" class="button primary-action theme-color btn-color">
         </form>
     </div>
+
+    <script type="text/javascript">
+        new Vue({
+            el: '#form', 
+            data: function () {
+                return {
+                    committees: [],
+                    expense_parts: [
+                        {
+                            committeeId: 0,
+                            costCentreId: 0,
+                            budgetLineId: 0,
+                            amount: 0
+                        }
+                    ]
+                }
+            },
+            created: function () {
+                fetch('https://budget.datasektionen.se/api/committees?verbose')
+                    .then(res => res.json())
+                    .then(res => {
+                        this.committees = res
+                    })
+            },
+            methods: {
+                addPart: function () {
+                    this.expense_parts.push({
+                        committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
+                        costCentreId: 0,
+                        budgetLineId: 0,
+                        amount: 0
+                    })
+                },
+                removePart: function (i) {
+                    if (this.expense_parts <= 2) {
+                        return
+                    }
+                    this.expense_parts.splice(i, 1)
+                }
+            }
+        })
+    </script>
 {% endblock %}

@@ -1,37 +1,61 @@
 {% extends "expenses/main.html" %}
+{% load humanize %}
+
+{% block title %}Utbetalning {{ payment.tag }}{% endblock %}
 
 {% block full_content %}
 
-    <div class="col-sm-6 col-sm-offset-3 col-lg-6 col-lg-offset-3">
-        <div class="panel panel-info">
-            <div class="panel-heading clearfix">
-                <div class="panel-title pull-left">{{ payment.tag }}</div>
-            </div>
-            <ul class="list-group">
-                <li class="list-group-item"><b>Mottagare:</b> <u><a
-                        href="{% url 'expenses-user' payment.receiver.user %}">
-                    {{ payment.receiver.user.username }}
-                </a></u></li>
-                <li class="list-group-item"><b>Utbetalningsdatum:</b> {{ payment.date|date:"Y-m-d" }}</li>
-                <li class="list-group-item"><b>Utbetalat från:</b> {{ payment.account }}</li>
-                <li class="list-group-item"><b>Utbetalat av:</b> <u><a
-                        href="{% url 'expenses-user' payment.payer.user %}">
-                    {{ payment.payer.user.username }}
-                </a></u></li>
-                <li class="list-group-item"><b>Summa:</b> {{ payment.amount }} kr.</li>
-            </ul>
+    <div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">Utbetalning {{ payment.tag }}</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <th>Mottagare:</th>
+                    <td>
+                        <a href="{% url 'expenses-user' payment.receiver.user %}">
+                            {{ payment.receiver.user.get_full_name }} ({{ payment.receiver.user.username }}@kth.se)
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Utbetalningsdatum:</th>
+                    <td>{{ payment.date|date:"Y-m-d" }}</td>
+                </tr>
+                <tr>
+                    <th>Utbetalat från konto:</th> 
+                    <td>{{ payment.account }}</td>
+                </tr>
+                <tr>
+                    <th>Utbetalat av:</th>
+                    <td>
+                        <a href="{% url 'expenses-user' payment.payer.user %}">
+                            {{ payment.payer.user.get_full_name }} ({{ payment.payer.user.username }}@kth.se)
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Summa:</th>
+                    <td>{{ payment.amount|intcomma }} kr</td>
+                </tr>
+            </table>
         </div>
 
         <h2>Kvitton</h2>
-        <table class="table table-hover">
-            <tr>
-                <th>Beskrivning</th>
-                <th>Belopp</th>
-            </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Beskrivning</th>
+                    <th>Belopp</th>
+                </tr>
+            </thead>
             {% for expense in payment.expense_set.all %}
-                <tr style="cursor: pointer" onclick="window.location = '{% url 'expenses-expense' expense.id %}'">
-                    <td>{{ expense.description|capfirst }}</td>
-                    <td>{{ expense.total_amount }} kr.</td>
+                <tr>
+                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td>{{ expense.total_amount|intcomma }} kr</td>
                 </tr>
             {% endfor %}
 

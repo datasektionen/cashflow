@@ -1,56 +1,68 @@
 {% extends "expenses/main.html" %}
-{% load widget_tweaks %}
+
+{% block title %}Dina inställningar{% endblock %}
 
 {% block full_content %}
-    <div class="col-sm-6 col-sm-offset-3">
+    <div>
         <p> Skriv in dina kontouppgifter för att kunna få tillbaka dina utlägg. </p>
         <p> Observera att vi inte hämtar dina uppgifter varje gång vi betalar ett utlägg, då de lagras hos banken.
             Säg till om du ändrar dina uppgifter och behöver få pengarna att hamna rätt. </p>
-        <form method="POST" action="" class="form-horizontal">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
-            <div class="form-group">
-                {{ form.sorting_number.errors }}
-                <label for="{{ form.sorting_number.id_for_label }}" class="col-sm-4 control-label">
-                    Clearingnummer:
-                </label>
-                <div class="col-sm-8">
-                    {{ form.sorting_number|add_class:"form-control" }}
-                </div>
-            </div>
-            <div class="form-group">
-                {{ form.bank_account.errors }}
-                <label for="{{ form.bank_account.id_for_label }}" class="col-sm-4 control-label">
-                    Bankkonto:
-                </label>
-                <div class="col-sm-8">
-                    {{ form.bank_account|add_class:"form-control" }}
-                </div>
-            </div>
-            <div class="form-group">
-                {{ form.bank_name.errors }}
-                <label for="{{ form.bank_name.id_for_label }}" class="col-sm-4 control-label">
-                    Banknamn:
-                </label>
-                <div class="col-sm-8">
-                    {{ form.bank_name|add_class:"form-control" }}
-                </div>
-            </div>
-            {% if user.profile.may_pay %}
-                <div class="form-group">
-                    {{ form.bank_name.errors }}
-                    <label for="default_account" class="col-sm-4 control-label">
-                        Sektionskonto vid utbetalningar, ställ in till det konto du använder när du gör utbetalninar
-                    </label>
-                    <div class="col-sm-8">
-                        {{ form.default_account|add_class:"form-control" }}
+        <form method="POST" action="">
+            <div class="form">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="form-entry">
+                    {{ form.sorting_number.errors }}
+                    <span class="description">
+                        <label for="{{ form.sorting_number.id_for_label }}">
+                            Clearingnummer:
+                        </label>
+                    </span>
+                    <div class="input">
+                        {{ form.sorting_number }}
                     </div>
                 </div>
-            {% endif %}
-            <div class="form-group">
-                <div class="col-sm-offset-10 col-sm-2">
-                    <button type="submit" class="btn btn-default">Uppdatera min profil</button>
+                <div class="form-entry">
+                    {{ form.bank_account.errors }}
+                    <span class="description">
+                        <label for="{{ form.bank_account.id_for_label }}">
+                            Bankkonto:
+                        </label>
+                    </span>
+                    <div class="input">
+                        {{ form.bank_account }}
+                    </div>
                 </div>
+                <div class="form-entry">
+                    {{ form.bank_name.errors }}
+                    <span class="description">
+                        <label for="{{ form.bank_name.id_for_label }}">
+                            Banknamn:
+                        </label>
+                    </span>
+                    <div class="input">
+                        {{ form.bank_name }}
+                    </div>
+                </div>
+                {% if user.profile.may_pay %}
+                    <div class="form-entry">
+                        {{ form.bank_name.errors }}
+                        <span class="description">
+                            <label for="default_account">
+                                Sektionsbankkonto vid utbetalningar:
+                            </label>
+                            <span class="hint">Ställ in till det konto du använder när du gör utbetalninar</span>
+                        </span>
+                        <div class="input">
+                            <div class="select">
+                                {{ form.default_account }}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="clearfix"></div>
+                <div class="clearfix" style="height:20px;"></div>
+                <button type="submit" class="theme-color" style="color:#fff;margin: 0 auto;float:none;display: block;">Uppdatera min profil</button>
             </div>
         </form>
     </div>

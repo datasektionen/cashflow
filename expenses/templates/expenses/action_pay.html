@@ -3,6 +3,9 @@
     HERE BE DRAGONS
     WARNING - Horrendous code below
 -->
+
+{% block title %}Betala ut{% endblock %}
+
 {% block full_content %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
@@ -19,6 +22,7 @@
         }
 
     </script>
+    <div class="form">
     {% if payment %}
         <div class="alert alert-danger">
             <b>{{ payment.date|date:"Y-m-d" }}</b><br>
@@ -31,30 +35,28 @@
         </div>
     {% endif %}
 
-    <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare</p>
+    <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare.</p>
+    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar. Du kan ställa in ditt standardkonto på din profil.</p>
+    <label for="account">Bankkonto:</label><br>
+    <div class="select">
+        <select id="main_account" onchange="update_account()">
+            {% for account in accounts %}
+                <option value="{{ account.name }}" {% if account == user.profile.default_account %} selected {% endif %}>{{ account.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="clearfix"></div>
 
-    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar.
-        Du kan ställa in ditt standardkonto på din profil.</p>
-    <label for="account">Bankkonto:</label>
-    <select id="main_account" onchange="update_account()">
-        {% for account in accounts %}
-            <option value="{{ account.name }}"
-                    {% if account == user.profile.default_account %}
-                    selected
-                    {% endif %}>{{ account.name }}</option>
-        {% endfor %}
-    </select>
     <h2>Kvitton</h2>
     {% if payable_expenses %}
         {% for expense in payable_expenses %}
-
             {% ifchanged expense.owner %}
                 {% if not forloop.first %}
                     <tr>
                         <td colspan="3">
                             <div class="pull-right"><strong>Betala ut alla:</strong></div>
                         </td>
-                        <td><input type="checkbox" onclick="select_all(this)"></td>
+                        <td><div class="checkbox"><input type="checkbox" onclick="select_all(this)"><label></label></div></td>
                     </tr>
                     </table>
                     <div class="panel-body">
@@ -82,17 +84,17 @@
         <tr>
             <td>{{ expense.description|capfirst }}</td>
             <td>{% for committee in expense.committees %}
-                {{ committee }}{% if not forloop.last %}, {% endif %}
+                {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
             {% endfor %}</td>
             <td>{{ expense.total_amount }} kr</td>
-            <td><input class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense"></td>
+            <td><div class="checkbox"><input id="x{{ expense.id }}" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense"><label for="x{{ expense.id }}"></label></div></td>
         </tr>
         {% if forloop.last %}
             <tr>
                 <td colspan="3">
                     <div class="pull-right"><strong>Betala ut alla:</strong></div>
                 </td>
-                <td><input type="checkbox" onclick="select_all(this)"></td>
+                <td><div class="checkbox"><input type="checkbox" onclick="select_all(this)" id="x{{ expense.owner.username }}"><label for="x{{ expense.owner.username }}"></label></div></td>
             </tr>
             </table>
             <div class="panel-body">
@@ -105,4 +107,5 @@
     {% else %}
         Det finns inga nya kvitton som går att betala ut.
     {% endif %}
+</div>
 {% endblock %}
