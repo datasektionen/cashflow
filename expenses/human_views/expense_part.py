@@ -7,7 +7,9 @@ from django.urls import reverse
 
 from expenses import models
 
-
+"""
+Shows form for editing expense part and handles the form submit.
+"""
 def edit_expense_part(request, pk):
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))
@@ -52,6 +54,9 @@ def edit_expense_part(request, pk):
         raise Http404("Kvittodelen finns inte")
 
 
+"""
+Handles attest action.
+"""
 def attest_expense_part(request, pk):
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))

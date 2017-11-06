@@ -10,7 +10,9 @@ import json
 from cashflow import dauth
 from expenses import models
 
-
+"""
+Shows the attest list overview.
+"""
 def attest_overview(request):
     may_attest = request.user.profile.may_attest()
     print(may_attest)
@@ -22,6 +24,9 @@ def attest_overview(request):
     })
 
 
+"""
+Shows the pay list overview.
+"""
 def pay_overview(request):
     if not dauth.has_permission('pay', request):
         return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
@@ -36,7 +41,9 @@ def pay_overview(request):
 
     return render(request, 'expenses/action_pay.html', context)
 
-
+"""
+Shows the account list overview.
+"""
 def accounting_overview(request):
     may_account = request.user.profile.may_account()
     expenses = models.Expense.objects.exclude(reimbursement=None).filter(

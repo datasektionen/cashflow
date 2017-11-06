@@ -10,10 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
+import os # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import re
-
 import dj_database_url
 from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
 
@@ -53,7 +51,6 @@ INSTALLED_APPS = (
     'corsheaders',
     'widget_tweaks',
     'expenses',
-    'budget',
 )
 
 MIDDLEWARE_CLASSES = (
