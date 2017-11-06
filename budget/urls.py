@@ -9,6 +9,5 @@ api_urlpatterns = [
 ]
 
 urlpatterns = [
-    url(r'^api/', include(api_urlpatterns), name='budget-api-latest'),
-    url(r'^overview/$', views.budget_overview, name='budget-overview'),
+    url(r'^api/', include(api_urlpatterns), name='budget-api-latest')
 ]

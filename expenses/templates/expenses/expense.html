@@ -66,18 +66,20 @@
         </table>
 
         <h3>Kvittodelar</h3>
-        {% if user.username == expense.owner.user.username %}<a class="btn btn-default" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
-                <span class="glyphicon glyphicon-pencil"></span> Redigera kvittodel
-            </a>
-        {% endif %}
+        
         {% for expense_part in expense.expensepart_set.all %}
-                
+
             <table>
                 {% if not expense_part.attested_by %}
                 {% if expense_part.committee_name|lower in user.profile.may_attest %}
                 <thead>
                     <tr>
                         <th colspan="2">
+                            {% if user.username == expense.owner.user.username %}
+                            <a class="btn darken-2" style="color:#fff" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
+                                <span class="fa fa-pencil"></span>
+                            </a>
+                            {% endif %}
                             <form method="POST" class="pull-right"
                                   action="{% url 'expenses-expense_part-attest' expense_part.id %}">
                                 {% csrf_token %}
