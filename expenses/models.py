@@ -101,6 +101,11 @@ class Profile(models.Model):
         from cashflow import dauth
         return 'pay' in dauth.get_permissions(self.user)
 
+    # Returns a list of the committees that the user may pay for
+    def may_confirm(self):
+        from cashflow import dauth
+        return 'confirm' in dauth.get_permissions(self.user)
+
     # Returns a list of the committees that the user may account for
     def may_account(self):
         may_account = []
@@ -168,6 +173,7 @@ about the expense.
 class Expense(models.Model):
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
+    confirmed_by = models.ForeignKey(User, blank=True, null=True)
     owner = models.ForeignKey(Profile)
     description = models.TextField()
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
@@ -203,6 +209,7 @@ class Expense(models.Model):
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
+        exp['amount'] = self.total_amount()
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
