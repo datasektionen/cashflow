@@ -49,8 +49,6 @@
 <body>
 <div id="methone-container-replace"></div>
 <div id="application" class="money-green">
-
-
     <header>
         <div class="header-inner">
             <div class="row">
@@ -75,7 +73,6 @@
 		<div class="clear"></div>
     </div>
 </div>
-
 <div id="footer">
     <div class="col">
         <p>Hittat något som inte funkar? <a href="https://datasektionen.se/namnder/informationsorganet">IORs Crash &amp; Bränn</a> fixar det så snart som möjligt om du skapar ett issue på Github.</p>
@@ -91,7 +88,17 @@
     </div>
     <div class="clearfix"></div>
 </div>
-
-
+<script src="/static/snowflakes.js"></script>
+<script>
+    Snowflakes({
+        count: 100
+    });
+</script>
+<style>
+    .snowflake {
+        z-index: 9999;
+        transition: all 0s;
+    }
+</style>
 </body>
 </html>
