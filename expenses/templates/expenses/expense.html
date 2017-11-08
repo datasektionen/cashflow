@@ -178,8 +178,8 @@
         {% endfor %}
         <li class="new">
             <div class="info">
-                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/jonadahl/image);"></div>
-                <span class="name"><a href="/persons/1">Jonas Dahl</a></span>
+                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ user.username }}/image);"></div>
+                <span class="name"><a href="/user/{{ user.username }}">{{ user.get_full_name }}</a></span>
                 <span class="date">Skapa en ny kommentar</span>
             </div>
             <div class="comment">
