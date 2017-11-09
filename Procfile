@@ -1,1 +1,1 @@
-web: gunicorn cashflow.wsgi --log-file -
+web: gunicorn cashflow.wsgi -t 600 --log-file -

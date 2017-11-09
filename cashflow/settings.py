@@ -28,7 +28,7 @@ AUTHENTICATION_BACKENDS = ['cashflow.dauth.DAuth']
 SECRET_KEY = os.getenv('SECRET_KEY', '-01^^veefr*f_p=phew0w7ib37_738%=lwmp9n4bl_2*5^)vjy')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('DEBUG', False))
+DEBUG = True # bool(os.environ.get('DEBUG', False))
 
 ALLOWED_HOSTS = ['*']
 
