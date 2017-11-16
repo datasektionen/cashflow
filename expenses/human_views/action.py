@@ -70,12 +70,15 @@ Shows the account list overview.
 """
 def accounting_overview(request):
     may_account = request.user.profile.may_account()
-    expenses = models.Expense.objects.exclude(reimbursement=None).filter(
-        verification="",
-        expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
-    ).distinct()
-
-    print(expenses)
+    if '*' in may_account:
+        expenses = models.Expense.objects.exclude(reimbursement=None).filter(
+            verification=''
+        ).distinct()
+    else:
+        expenses = models.Expense.objects.exclude(reimbursement=None).filter(
+            verification='',
+            expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+        ).distinct()
 
     return render(request, 'expenses/action_accounting.html', {
         'accounting_ready_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial)
