@@ -75,6 +75,8 @@ def accounting_overview(request):
         expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
     ).distinct()
 
+    print(expenses)
+
     return render(request, 'expenses/action_accounting.html', {
         'accounting_ready_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial)
     })
