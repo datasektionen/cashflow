@@ -7,6 +7,7 @@ from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, H
     HttpResponseServerError
 from django.shortcuts import render
 from django.urls import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import requests
 
 from cashflow import dauth
@@ -16,10 +17,23 @@ from expenses import models
 Lists all expenses.
 """
 def expense_overview(request):
+    expenses_list = models.Expense.objects.order_by('verification', '-id').all()
+    paginator = Paginator(expenses_list, 25)
+    page = request.GET.get('page')
+
+    try:
+        expenses = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        expenses = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        expenses = paginator.page(paginator.num_pages)
+
     if request.method == 'GET':
         if len(dauth.get_permissions(request.user)) > 0:
             return render(request, 'expenses/expense_list.html', {
-                'expenses': models.Expense.objects.order_by('verification', '-id').all()
+                'expenses': expenses
             })
     else:
         raise Http404()
