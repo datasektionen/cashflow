@@ -133,6 +133,7 @@ def edit_expense(request, pk):
                         committee_id=budgetLine['cost_centre']['committee']['id'],
                         amount=request.POST.getlist('amount[]')[idx]
                     )
+                    expense_part.save()
                 else:
                     expense_part = models.ExpensePart.objects.get(pk=expensePartId)
                     expense_part.expense = expense

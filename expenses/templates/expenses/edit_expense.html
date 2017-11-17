@@ -152,7 +152,7 @@
         methods: {
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
+                    committeeId: this.expense_parts.length > 0 ? this.expense_parts[this.expense_parts.length - 1].committeeId : 0,
                     costCentreId: 0,
                     budgetLineId: 0,
                     amount: 0,
