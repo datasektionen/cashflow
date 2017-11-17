@@ -32,7 +32,7 @@ def confirm_overview(request):
         return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
     expenses = models.Expense.objects.filter(
         confirmed_by=None
-    ).distinct()
+    ).order_by('id').distinct()
 
     def json_serial(obj):
         """JSON serializer for objects not serializable by default json code"""
