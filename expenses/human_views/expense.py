@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import date
+from datetime import date, datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
@@ -48,7 +48,12 @@ def new_expense(request):
         return render(request, 'expenses/new_expense.html')
     elif request.method == 'POST':
         if len((request.FILES.getlist('files'))) < 1:
-            return HttpResponseBadRequest("Du måste ladda upp minst en fil som verifikat")
+            messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
+            return HttpResponseRedirect(reverse('expenses-expense-new'))
+
+        if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
+            messages.error(request, 'Du har angivit ett datum i framtiden')
+            return HttpResponseRedirect(reverse('expenses-expense-new'))
 
         expense = models.Expense(
             owner=request.user.profile,
