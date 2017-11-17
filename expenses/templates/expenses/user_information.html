@@ -22,6 +22,14 @@
             <th>Kontonummer</th>
             <td>{{ showuser.profile.bank_account|default:"Saknas" }}</td>
         </tr>
+        <tr>
+            <th>Totalt Cashflowat</th>
+            {% if total.amount__sum == None %}
+            <td>0 kr</td>
+            {% else %}
+            <td>{{ total.amount__sum|intcomma }} kr</td>
+            {% endif %}
+        </tr>
         {% if showuser.profile.may_pay %}
         <tr>
             <th>Standardkonto för utbetalningar</th>

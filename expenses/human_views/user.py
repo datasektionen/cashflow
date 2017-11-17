@@ -3,6 +3,7 @@ from django.forms import modelform_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
+from django.db.models import Sum
 
 from cashflow import dauth
 from cashflow.dauth import has_permission
@@ -30,7 +31,8 @@ def get_user(request, username):
             return HttpResponseForbidden()
 
         return render(request, 'expenses/user_information.html', {
-            'showuser': user
+            'showuser': user,
+            'total': models.ExpensePart.objects.filter(expense__owner=user.profile).aggregate(Sum('amount'))
         })
     except ObjectDoesNotExist:
         raise Http404("Användaren finns inte")
