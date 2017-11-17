@@ -3,26 +3,28 @@
 
 {% block title %}{{ showuser.get_full_name }}{% endblock %}
 
-{% block full_content %}
-<div class="row">
-    <div class="col-sm-4 col-md-3">
-        <div id="secondary-nav">
-            <h3>{{ showuser.get_full_name }}</h3>
-            <ul>
-                <li><a href="{% url 'expenses-user' showuser.username %}">Information</a></li>
-                <li><a href="{% url 'expenses-user-receipts' showuser.username %}">Kvitton</a></li>
-                {% if showuser.username == user.username %}
-                <li><a href="/logout/">Logga ut</a></li>
-                {% endif %}
-            </ul>
-        </div>
-        <div class="clearfix" style="height:20px;"></div>
-    </div>
-    <div class="col-sm-8 col-md-9">
-        {% block content %}
+{% block header %}
+<div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')"></div>
+{% if showuser.username == user.username %}
+    <a href="/user/{{ showuser.username }}/edit" class="floating-action-button"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+{% endif %}
+{% endblock %}
 
-        {% endblock %}
-    </div>
+{% block nav %}
+<div id="secondary-nav" class="below-pic">
+    <ul>
+        <li><a href="{% url 'expenses-user' showuser.username %}">Information</a></li>
+        <li><a href="{% url 'expenses-user-receipts' showuser.username %}">Kvitton</a></li>
+        {% if showuser.username == user.username %}
+        <li><a href="/logout/">Logga ut</a></li>
+        {% endif %}
+    </ul>
 </div>
+{% endblock %}
 
+{% block full_content %}
+<div class="pic-space">
+{% block content %}
+{% endblock %}
+</div>
 {% endblock %}

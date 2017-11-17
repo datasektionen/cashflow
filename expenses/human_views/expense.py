@@ -2,12 +2,13 @@ import json
 import re
 from datetime import date
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import modelform_factory
+from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
     HttpResponseServerError
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib import messages
 import requests
 
 from cashflow import dauth
@@ -101,20 +102,50 @@ def expense_in_binder_alert(request, pk):
 Shows form for editing expense and handles the post request on submit.
 """
 def edit_expense(request, pk):
-    ExpenseForm = modelform_factory(models.Expense, fields=('description', 'expense_date'))
     try:
         expense = models.Expense.objects.get(pk=pk)
         if expense.owner.user.username != request.user.username:
             return HttpResponseForbidden()
         if request.method == 'POST':
-            received_form = ExpenseForm(request.POST, instance=expense)
-            if received_form.is_valid():
-                received_form.save()
-                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': pk}))
-        else:
+            messages.success(request, 'Kvittot ändrades')
+            expense.description = request.POST['description']
+            expense.expense_date = request.POST['expense_date']
+            expense.save()
 
+            for idx, expensePartId in enumerate(request.POST.getlist('expensePartId[]')):
+                budgetLines = request.POST.getlist('budgetLine[]')
+                response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLines[idx]))
+                budgetLine = response.json()
+                print(expensePartId)
+                if (expensePartId == '-1'):
+                    expense_part = models.ExpensePart(
+                        expense=expense,
+                        budget_line_id=budgetLine['id'],
+                        budget_line_name=budgetLine['name'],
+                        cost_centre_name=budgetLine['cost_centre']['name'],
+                        cost_centre_id=budgetLine['cost_centre']['id'],
+                        committee_name=budgetLine['cost_centre']['committee']['name'],
+                        committee_id=budgetLine['cost_centre']['committee']['id'],
+                        amount=request.POST.getlist('amount[]')[idx]
+                    )
+                else:
+                    expense_part = models.ExpensePart.objects.get(pk=expensePartId)
+                    expense_part.expense = expense
+                    expense_part.budget_line_id = budgetLine['id']
+                    expense_part.budget_line_name = budgetLine['name']
+                    expense_part.cost_centre_name = budgetLine['cost_centre']['name']
+                    expense_part.cost_centre_id = budgetLine['cost_centre']['id']
+                    expense_part.committee_name = budgetLine['cost_centre']['committee']['name']
+                    expense_part.committee_id = budgetLine['cost_centre']['committee']['id']
+                    expense_part.amount = request.POST.getlist('amount[]')[idx]
+                    expense_part.save()
+
+                print(expense_part.to_dict())
+            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': pk}))
+        else:
             return render(request, 'expenses/edit_expense.html', {
-                "form": ExpenseForm(instance=expense)
+                "expense": expense,
+                "expenseparts": expense.expensepart_set.all()
             })
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
@@ -159,6 +190,7 @@ def delete_expense(request, pk):
             if expense.reimbursement is not None:
                 return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
             expense.delete()
+            messages.success(request, 'Kvittot raderades.')
             return HttpResponseRedirect(reverse('expenses-index'))
 
     except ObjectDoesNotExist:
@@ -169,6 +201,7 @@ def delete_expense(request, pk):
 Shows details about expense.
 """
 def get_expense(request, pk):
+    print(request.session['temp_data'])
     try:
         pk = int(pk)
         expense = models.Expense.objects.get(pk=pk)

@@ -12,7 +12,7 @@
                     <th>Beskrivning</th>
                     <th>Ägare</th>
                     <th>Nämnder</th>
-                    <th>Belopp</th>
+                    <th class="right">Belopp</th>
                 </tr>
             </thead>
             {% for expense in attestable_expenses %}
@@ -24,8 +24,7 @@
                             {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
                         {% endfor %}
                     </td>
-                    <td>{{ expense.total_amount }} kr</td>
-
+                    <td class="right">{{ expense.total_amount }} kr</td>
                 </tr>
             {% endfor %}
         </table>

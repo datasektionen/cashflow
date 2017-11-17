@@ -4,7 +4,7 @@
 {% block title %}{{ showuser.get_full_name }}{% endblock %}
 
 {% block content %}
-    <h3>Ej attesterade kvitton </h3>
+    <h2>Ej attesterade kvitton </h2>
     {% if non_attested_expenses %}
         <table>
             <thead>
@@ -26,7 +26,7 @@
         Det finns inga oattesterade kvitton!
     {% endif %}
     <br /><br />
-    <h3>Attesterade kvitton</h3>
+    <h2>Attesterade kvitton</h2>
     {% if attested_expenses %}
         <table>
             <thead>
@@ -48,7 +48,7 @@
         Det finns inga kvitton som väntar på att betalas ut.
     {% endif %}
     <br /><br />
-    <h3>Utbetalda kvitton</h3>
+    <h2>Utbetalda kvitton</h2>
     {% if reimbursements %}
         <table class="table">
             <thead>

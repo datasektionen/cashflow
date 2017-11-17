@@ -2,13 +2,9 @@
 {% load widget_tweaks %}
 
 {% block full_content %}
-    <div class="col-sm-8 col-sm-offset-2">
-        <p> Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
-        <br>
-        <p> Märk kvittomallen med id: {{ expense.pk }}. Du hittar det här id:t på kvittosidan igen om du glömmer bort
-            det.</p>
-
-
-        <a href="{% url "expenses-expense" expense.pk %}" class="btn btn-default pull-right" role="button">Gå vidare</a>
+    <div>
+        <p>Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
+        <p> Märk kvittomallen med id: <b>{{ expense.pk }}</b>. Du hittar det här id:t på kvittosidan igen om du glömmer bort det.</p>
+        <a href="{% url "expenses-expense" expense.pk %}" class="button primary-action" role="button">Gå vidare</a>
     </div>
 {% endblock %}

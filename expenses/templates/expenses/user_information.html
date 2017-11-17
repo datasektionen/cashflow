@@ -4,13 +4,6 @@
 {% block title %}{{ showuser.get_full_name }}{% endblock %}
 
 {% block content %}
-    {% if showuser.username == user.username %}
-        <a class="btn theme-color pull-right" style="color:#fff" href="edit">
-            <i class="fa fa-pencil" aria-hidden="true"></i>
-        </a>
-    {% endif %}
-    <div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')">
-    </div>
     <br />
     <table>
         <tr>

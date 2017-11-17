@@ -13,7 +13,7 @@
             <tr>
                 <th>Beskrivning</th>
                 <th>Inköpsdatum</th>
-                <th style="float:right">Verifikationsnummer</th>
+                <th class="right">Verifikationsnummer</th>
             </tr>
         </thead>
         <tbody v-for="expense in expenses">
@@ -21,7 +21,7 @@
                 <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
                 <td v-html="expense.expense_date"></td>
                 
-                <td style="text-align: right">
+                <td class="right">
                     <div v-if="!expense.verification">
                         <form v-on:submit.prevent="save(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/verification'">
                             {% csrf_token %}
@@ -42,7 +42,7 @@
                             <td v-html="expensePart.amount + ' kr'"></td>
                         </tr>
                         <tr style="font-weight: bold;">
-                            <td style="text-align: right;">Totalt:</td>
+                            <td class="right">Totalt:</td>
                             <td><span v-html="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
                         </tr>
                     </table>

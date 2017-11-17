@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
-
+from django.contrib import messages
 from expenses import models
 
 """
@@ -62,11 +62,10 @@ Handles attest action.
 def attest_expense_part(request, pk):
     try:
         expense_part = models.ExpensePart.objects.get(pk=int(pk))
-
         if request.method == 'POST':
-
             if request.user.username == expense_part.expense.owner.user.username:
-                return HttpResponseForbidden("Du får inte attestera ditt egna kvitto!")
+                messages.error(request, 'Du kan inte attestera dina egna kvitton')
+                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
 
             expense_part.attested_by = request.user.profile
             expense_part.attest_date = date.today()

@@ -1,180 +1,198 @@
 {% extends "expenses/main.html" %}
 {% load humanize %}
 
-{% block title %}Kvitto: {{ expense.description|capfirst }}{% endblock %}
+{% block title %}{{ expense.description|capfirst }}{% endblock %}
+
+{% block header %}
+    <h2>Kvitto</h2>
+    {% if user.username == expense.owner.user.username %}
+    <a href="{% url 'expenses-expense-edit' expense.id %}" class="floating-action-button">
+        <i class="fa fa-pencil" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block nav %}
+<div id="secondary-nav">
+    <ul>
+        {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
+        <li class="fab"><a href="{% url 'expenses-expense-delete' expense.id %}"><i class="fa fa-trash" aria-hidden="true"></i></a></li>
+        <li><a href="{% url 'expenses-expense-delete' expense.id %}">Fixa något</a></li>
+        <li><a href="{% url 'expenses-expense-delete' expense.id %}">Logg</a></li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
 
 {% block full_content %}
-    <div class="col-sm-6 col-lg-6">
-        <h2>Information</h2>
-        {% if user.username == expense.owner.user.username %}
-            <a class="btn btn-default" href="{% url 'expenses-expense-edit' expense.id %}">
-                <span class="glyphicon glyphicon-pencil"></span> Redigera kvitto
-            </a>
-        {% endif %}
-        {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
-            <a class="btn btn-warning" href="{% url 'expenses-expense-delete' expense.id %}">
-                <span class="glyphicon glyphicon-trash"></span> Ta bort kvitto
-            </a>
-        {% endif %}
-        <table>
-            <tr>
-                <th>Kvitto-id:</th>
-                <td>{{ expense.id }}</td>
-            </tr>
-            <tr>
-                <th>Köpt av:</th>
-                <td>
-                    <a href="{% url 'expenses-user' expense.owner.user.username %}">
-                        {{ expense.owner.user.get_full_name }} ({{ expense.owner.user.username }}@kth.se)
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <th>Inköpsdatum:</th>
-                <td>
-                    {{ expense.expense_date|date:"Y-m-d" }}
-                </td>
-            </tr>
-            <tr>
-                <th>Totalsumma:</th>
-                <td>
-                    {{ expense.total_amount|intcomma }} kr
-                </td>
-            </tr>
-            <tr>
-                <th>Registrerat i Cashflow:</th>
-                <td>
-                    {{ expense.created_date|date:"Y-m-d" }}
-                </td>
-            </tr>
-            <tr>
-                <th>Bekräftat i pärmen:</th>
-                <td>
-                    {% if expense.confirmed_by_id %}
-                        Ja
-                    {% else %}
-                        Inte än
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <th>Återbetalat:</th>
-                <td>
-                    {% if expense.reimbursement %}
-                        <a href="{% url 'expenses-payment' expense.reimbursement.id %}">
-                            {{ expense.reimbursement.tag }}
-                        </a>
-                    {% else %}
-                        Ej återbetald
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <th>Verifikationsnummer:</th>
-                <td>{{ expense.verification|default:"Ej bokförd" }}</td>
-            </tr>
-        </table>
 
-        <h3>Kvittodelar</h3>
-        
-        {% for expense_part in expense.expensepart_set.all %}
-
-            <table>
-                {% if not expense_part.attested_by %}
-                {% if expense_part.committee_name|lower in user.profile.may_attest %}
-                <thead>
-                    <tr>
-                        <th colspan="2">
-                            {% if user.username == expense.owner.user.username %}
-                            <a class="btn darken-2" style="color:#fff" href="{% url 'expenses-expense_part-edit' expense_part.id %}">
-                                <span class="fa fa-pencil"></span>
-                            </a>
-                            {% endif %}
-                            <form method="POST" class="pull-right"
-                                  action="{% url 'expenses-expense_part-attest' expense_part.id %}">
-                                {% csrf_token %}
-                                <button class="btn darken-2" type="submit">Attestera</button>
-                            </form>
-                        </th>
-                    </tr>
-                </thead>
-                {% endif %}
-                {% endif %}
-                <tr>
-                    <th>Nämnd:</th>
-                    <td>
-                        <a href="https://budget.datasektionen.se/committees/{{ expense_part.committee_id }}">
-                            {{ expense_part.committee_name }}
-                        </a>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Kostnadsställe:</th>
-                    <td>{{ expense_part.cost_centre_name }}</td>
-                </tr>
-                <tr>
-                    <th>Budgetpost:</th>
-                    <td>{{ expense_part.budget_line_name }}</td>
-                </tr>
-                <tr>
-                    <th>Belopp:</th>
-                    <td>{{ expense_part.amount|intcomma }} kr</td>
-                </tr>
-                {% if expense_part.attested_by %}
-                    <tr>
-                        <th>Attesterat av:</th>
-                        <td>
-                            <a href="{% url 'expenses-user' expense_part.attested_by.user.username %}">
-                                {{ expense_part.attested_by.user.get_full_name }}
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Attesterat den:</th>
-                        <td>{{ expense_part.attest_date }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="2">Kvittodel ej attesterad</td>
-                    </tr>
-                {% endif %}
-            </table>
-        {% endfor %}
+<h2>Kvittodelar</h2>
+<div class="form-table">
+    <div class="form-table-heading">
+        <div class="form-table-row">
+            <div class="form-table-head no-wrap">
+                Belopp
+            </div>
+            <div class="form-table-head no-wrap">
+                Nämnd
+            </div>
+            <div class="form-table-head no-wrap">
+                Sekundärt resultatställe
+            </div>
+            <div class="form-table-head no-wrap">
+                Budgetpost
+            </div>
+            <div class="form-table-head no-wrap">
+                Attesterad av
+            </div>
+        </div>
     </div>
-    <div class="col-sm-6 col-lg-6">
-        <h2>Filer</h2>
-        {% for file in expense.file_set.all %}
-            <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
-            {% if  file.is_image %}
-                <a href="{{ file.file.url }}" target="_blank">
-                    <img class="center-block" style="width: 70%;" src="{{ file.file.url }}" />
+    <div class="form-table-body">
+    {% for expense_part in expense.expensepart_set.all %}
+        <div class="form-table-row">
+            <div class="form-table-cell no-input no-wrap">
+                <div class="vertical-label">Belopp</div>
+                <span class="value">{{ expense_part.amount|intcomma }} kr</span>
+            </div>
+            <div class="form-table-cell no-input">
+                <div class="vertical-label">Nämnd</div>
+                <a class="value" href="https://budget.datasektionen.se/committees/{{ expense_part.committee_id }}">
+                    {{ expense_part.committee_name }}
                 </a>
-            {% else %}
-                <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;"></iframe>
-            {% endif %}
-            <br>
-        {% endfor %}
+            </div>
+            <div class="form-table-cell no-input">
+                <div class="vertical-label">Sek. resultatställe</div>
+                <span class="value">{{ expense_part.cost_centre_name }}</span>
+            </div>
+            <div class="form-table-cell no-input">
+                <div class="vertical-label">Budgetpost</div>
+                <span class="value">{{ expense_part.budget_line_name }}</span>
+            </div>
+            <div class="form-table-cell no-wrap">
+                <div class="vertical-label">Attesterad av</div>
+                {% if expense_part.attested_by %}
+                <a class="value" href="{% url 'expenses-user' expense_part.attested_by.user.username %}">
+                    {{ expense_part.attested_by.user.get_full_name }} ({{ expense_part.attest_date }})
+                </a>
+                {% else %}
+                    {% if expense_part.committee_name|lower in user.profile.may_attest %}
+                        <span style="display: block;">
+                            <form method="POST" action="{% url 'expenses-expense_part-attest' expense_part.id %}">
+                                {% csrf_token %}
+                                <button class="floating-action-button small pull-right" type="submit" style="margin-right:15px;"><i class="fa fa-check" aria-hidden="true"></i></button>
+                                <span style="margin: 5px 0;display:inline-block;">Du kan attestera&nbsp;</span>
+                            </form>
+                        </span>
+                    {% else %}
+                        <span class="value">Ej attesterad</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
     </div>
+</div>
 
-    <div class="col-sm-12 col-lg-8 col-lg-offset-2">
-        <h2>Kommentarer</h2>
 
-        <ul class="comments">
+<div class="col-sm-6 col-lg-6" style="padding-left: 0;">
+    <h2>Information</h2>
+    <table>
+        <tr>
+            <th>Kvitto-id:</th>
+            <td>{{ expense.id }}</td>
+        </tr>
+        <tr>
+            <th>Köpt av:</th>
+            <td>
+                <a href="{% url 'expenses-user' expense.owner.user.username %}">
+                    {{ expense.owner.user.get_full_name }} ({{ expense.owner.user.username }}@kth.se)
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <th>Inköpsdatum:</th>
+            <td>
+                {{ expense.expense_date|date:"Y-m-d" }}
+            </td>
+        </tr>
+        <tr>
+            <th>Totalsumma:</th>
+            <td>
+                {{ expense.total_amount|intcomma }} kr
+            </td>
+        </tr>
+        <tr>
+            <th>Registrerat i Cashflow:</th>
+            <td>
+                {{ expense.created_date|date:"Y-m-d" }}
+            </td>
+        </tr>
+        <tr>
+            <th>Bekräftat i pärmen:</th>
+            <td>
+                {% if expense.confirmed_by_id %}
+                Ja
+                {% else %}
+                Inte än
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Återbetalat:</th>
+            <td>
+                {% if expense.reimbursement %}
+                <a href="{% url 'expenses-payment' expense.reimbursement.id %}">
+                    {{ expense.reimbursement.tag }}
+                </a>
+                {% else %}
+                Ej återbetald
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Verifikationsnummer:</th>
+            <td>{{ expense.verification|default:"Ej bokförd" }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="col-sm-6 col-lg-6" style="padding-right: 0;">
+    <h2>Filer</h2>
+    {% for file in expense.file_set.all %}
+    <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
+    {% if  file.is_image %}
+    <a href="{{ file.file.url }}" target="_blank">
+        <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
+    </a>
+    {% else %}
+    <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;"></iframe>
+    {% endif %}
+    <br>
+    {% endfor %}
+</div>
+
+
+<div class="clearfix"></div>
+
+<div>
+    <h2>Kommentarer</h2>
+
+    <ul class="comments">
         {% for comment in expense.comment_set.all %}
-            <li class="clearfix">
-                <div class="info">
-                    <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);"></div>
-                    <span class="name">
-                        <a href="{% url 'expenses-user' comment.author.user.username %}">
-                            {{ comment.author.user.get_full_name }}
-                        </a>
-                    </span>
-                    <span class="date">{{ comment.date|date:"Y-m-d H:i" }}</span>
-                </div>
-                <div class="comment">
-                    {{ comment.content }}
-                </div>
-            </li>
+        <li class="clearfix">
+            <div class="info">
+                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);"></div>
+                <span class="name">
+                    <a href="{% url 'expenses-user' comment.author.user.username %}">
+                        {{ comment.author.user.get_full_name }}
+                    </a>
+                </span>
+                <span class="date">{{ comment.date|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="comment">
+                {{ comment.content }}
+            </div>
+        </li>
         {% endfor %}
         <li class="new">
             <div class="info">
@@ -193,4 +211,6 @@
         </li>
     </ul>
 </div>
+<div class="clearfix"></div>
+
 {% endblock %}
