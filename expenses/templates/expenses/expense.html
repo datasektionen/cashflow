@@ -17,8 +17,6 @@
     <ul>
         {% if user.username == expense.owner.user.username or expense.expensepart_set.first.budget_line.cost_centre.committee.name|lower in user.profile.may_attest %}
         <li class="fab"><a href="{% url 'expenses-expense-delete' expense.id %}"><i class="fa fa-trash" aria-hidden="true"></i></a></li>
-        <li><a href="{% url 'expenses-expense-delete' expense.id %}">Fixa något</a></li>
-        <li><a href="{% url 'expenses-expense-delete' expense.id %}">Logg</a></li>
         {% endif %}
     </ul>
 </div>
