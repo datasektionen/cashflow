@@ -14,7 +14,7 @@
     <p>Ladda endast upp ett kvitto i taget. När du laddar upp en faktura eller onlinebetalning måste du också ladda upp ett kontoutdrag.</p>
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="form-table">
+        <div class="form-table wide">
             <div class="form-table-heading">
                 <div class="form-table-row">
                     <div class="form-table-head">Bild på kvittot</div>
@@ -49,7 +49,7 @@
         <h2>Kvittodelar</h2>
         <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller lika med summan av nedanstående rader.</p>
 
-        <div class="form-table">
+        <div class="form-table wide">
             <div class="form-table-heading">
                 <div class="form-table-row">
                     <div class="form-table-head" v-if="expense_parts.length > 1"></div>
