@@ -24,13 +24,14 @@
 
 {% endblock %}
 
+{% block title %}Välkommen till Cashflow!{% endblock %}
+
 {% block full_content %}
     <div class="alert alert-danger" style="border-radius:0px;">
         <h2>OBS!</h2>
         <p>Du måste både sätta in kvittot i Metas kvittopärm och ladda upp det här. Du kan alltså inte längre slänga kvitton trots att det är uppladdat här.</p>
     </div>
 
-    <h2>Välkommen till Cashflow!</h2>
     <p>
         Är det första gången du använder systemet måste du börja med att 
         {% if user.is_authenticated %}
