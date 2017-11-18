@@ -70,7 +70,6 @@ def new_expense(request):
         for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
             response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
             budgetLine = response.json()
-            print(budgetLine)
             expense_part = models.ExpensePart(
                 expense=expense,
                 budget_line_id=budgetLine['id'],
@@ -121,7 +120,7 @@ def edit_expense(request, pk):
                 budgetLines = request.POST.getlist('budgetLine[]')
                 response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLines[idx]))
                 budgetLine = response.json()
-                print(expensePartId)
+
                 if (expensePartId == '-1'):
                     expense_part = models.ExpensePart(
                         expense=expense,
@@ -146,7 +145,6 @@ def edit_expense(request, pk):
                     expense_part.amount = request.POST.getlist('amount[]')[idx]
                     expense_part.save()
 
-                print(expense_part.to_dict())
             return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': pk}))
         else:
             return render(request, 'expenses/edit_expense.html', {
@@ -207,7 +205,6 @@ def delete_expense(request, pk):
 Shows details about expense.
 """
 def get_expense(request, pk):
-    print(request.session['temp_data'])
     try:
         pk = int(pk)
         expense = models.Expense.objects.get(pk=pk)
