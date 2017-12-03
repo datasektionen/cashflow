@@ -18,7 +18,7 @@
         </thead>
         <tbody v-for="expense in expenses">
             <tr>
-                <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
+                <td><a v-bind:href="'/expense/' + expense.id" v-html="expense.description"></a></td>
                 <td v-html="expense.expense_date"></td>
                 
                 <td class="right">
