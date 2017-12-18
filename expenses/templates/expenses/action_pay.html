@@ -1,111 +1,162 @@
 {% extends "expenses/detail.html" %}
-<!--
-    HERE BE DRAGONS
-    WARNING - Horrendous code below
--->
 
 {% block title %}Betala ut{% endblock %}
 
 {% block full_content %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-    <script>
-        function select_all(box) {
-            var checkboxes = $(box).closest("table").find(".select-expense");
-
-            checkboxes.prop('checked', $(box).prop('checked'));
-        }
-
-        function update_account() {
-            var accountclones = $('.account');
-            accountclones.val($('#main_account').val())
-        }
-
-    </script>
-    <div class="form">
-    {% if payment %}
-        <div class="alert alert-danger">
-            <b>{{ payment.date|date:"Y-m-d" }}</b><br>
-            Betala ut {{ payment.amount }} kr till {{ payment.receiver }} ({{ payment.receiver.user.username }}) från
-            sektionskontot "{{ payment.account }}", använd meddelandet "{{ payment.tag }}"
-            <br><b>Bank:</b> {{ payment.receiver.bank_name }}
-            <br><b>Clearingnummer:</b> {{ payment.receiver.sorting_number }}
-            <br><b>Kontonummer:</b> {{ payment.receiver.bank_account }}
-            <h1 style="border-bottom: 0"><b>Meddelande:</b> {{ payment.tag }}</h1>
-        </div>
-    {% endif %}
-
+<div id="app">
     <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare.</p>
     <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar. Du kan ställa in ditt standardkonto på din profil.</p>
-    <label for="account">Bankkonto:</label><br>
-    <div class="select">
-        <select id="main_account" onchange="update_account()">
-            {% for account in accounts %}
-                <option value="{{ account.name }}" {% if account == user.profile.default_account %} selected {% endif %}>{{ account.name }}</option>
-            {% endfor %}
+    <div style="float:left">
+        <label style="float:left;margin-right: 10px; line-height: 40px;height:40px;display:inline-block;" for="account">Bankkonto:</label>
+        <div class="select">
+            <select id="main_account" v-model="account">
+                <option v-for="account in accounts" :value="account" :selected="account" v-html="account"></option>
+            </select>
+        </div>
+    </div>
+    <div class="select" style="margin-left: 10px;float:right">
+        <select v-model="committee">
+            <option :value="false">Filtrera på nämnd</option>
+            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
     <div class="clearfix"></div>
 
-    <h2>Kvitton</h2>
-    {% if payable_expenses %}
-        {% for expense in payable_expenses %}
-            {% ifchanged expense.owner %}
-                {% if not forloop.first %}
-                    <tr>
-                        <td colspan="3">
-                            <div class="pull-right"><strong>Betala ut alla:</strong></div>
-                        </td>
-                        <td><div class="checkbox"><input type="checkbox" onclick="select_all(this)"><label></label></div></td>
-                    </tr>
-                    </table>
-                    <div class="panel-body">
-                        <button class="btn pull-right">Betala ut valda</button>
-                    </div>
-                    </form>
-                    </div>
-                {% endif %}
-                <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4><b>{{ expense.owner }}</b></h4>
-                </div>
-                <table class="table">
-                <tr>
-                    <th>Beskrivning</th>
-                    <th>Nämnder</th>
-                    <th>Belopp</th>
-                    <th>Betala ut</th>
-                </tr>
-                <form method="POST" action="{% url 'expenses-payment-new' %}">
-                {% csrf_token %}
-                <input class="account" value="{{ user.profile.default_account.name|default:accounts.0 }}" name="account"
-                       hidden>
-            {% endifchanged %}
-        <tr>
-            <td>{{ expense.description|capfirst }}</td>
-            <td>{% for committee in expense.committees %}
-                {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
-            {% endfor %}</td>
-            <td>{{ expense.total_amount }} kr</td>
-            <td><div class="checkbox"><input id="x{{ expense.id }}" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense"><label for="x{{ expense.id }}"></label></div></td>
-        </tr>
-        {% if forloop.last %}
-            <tr>
-                <td colspan="3">
-                    <div class="pull-right"><strong>Betala ut alla:</strong></div>
-                </td>
-                <td><div class="checkbox"><input type="checkbox" onclick="select_all(this)" id="x{{ expense.owner.username }}"><label for="x{{ expense.owner.username }}"></label></div></td>
+    <table v-if="expenses.length > 0" style="margin-top: 20px;">
+        <tbody v-for="expense, idx in expenses" v-if="committee == false || expenses.filter(e => e.owner === expense.owner && e.committees.indexOf(committee) > -1).length > 0">
+            <tr class="title-row" v-if="idx == 0 || expenses[idx - 1].owner_username != expense.owner_username">   
+                <th colspan="3" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></th>
+                <th><button class="btn theme-color pull-right" v-on:click="e => save(expense.owner, e)">Betala ut valda</button></th>
             </tr>
+            <tr v-if="committee == false || expense.committees.indexOf(committee) > -1">
+                <td v-html="expense.description"></td>
+                <td v-html="expense.committees.join(', ')"></td>
+                <td v-html="expense.amount + ' kr'"></td>
+                <td>
+                    <div style="float:right" class="checkbox">
+                        <input :id="expense.id" class="select-expense" type="checkbox" :value="expense.id" :checked="expense.checked" name="expense" v-model="expense.checked">
+                        <label :for="expense.id"></label>
+                    </div>
+                </td>
+            </tr>
+            <tr class="footer-row" v-if="idx == expenses.length - 1 || expenses[idx + 1].owner_username != expense.owner_username">
+                <td colspan="2">Summa</td>
+                <td v-html="expenses.filter(e => e.owner == expense.owner).map(x => x.amount).reduce((a,b) => (a+b),0) + ' kr'"></td>
+                <td>
+                    <div style="float:right" v-tooltip="{content:'Markera alla'}" class="checkbox">
+                        <input :id="expense.owner" v-on:change="e => trim(expense.owner, e)" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense">
+                        <label :for="expense.owner"></label>
+                    </div>
+                </td>
+            </tr>
+            <tr class="space-row" v-if="idx == expenses.length - 1 || expenses[idx + 1].owner_username != expense.owner_username">
+                <td colspan="4"></td>
+            </tr>
+        </tbody>
+    </table>
+    <p v-else><br><b>Du har inga utlägg att betala ut! Bra jobbat!</b></p>
+
+    <div id="cover" class="cover" v-on:click="payment = null" v-if="payment" style="display:none">
+        <div class="dialog" v-on:click="e => e.stopPropagation()">
+            <h1>Genomför nedanstående betalning</h1>
+            <table>
+                <tr>
+                    <th style="text-align: right;">Mottagare</th>
+                    <td style="color:#000 !important;" v-html="payment.receiver.first_name + ' ' + payment.receiver.last_name"></td>
+                </tr>
+                <tr>
+                    <th style="text-align: right;">Bank</th>
+                    <td style="color:#000 !important;" v-html="payment.receiver.bank_info.bank_name"></td>
+                </tr>
+                <tr>
+                    <th style="text-align: right;">Clearingnummer</th>
+                    <td style="color:#000 !important;" v-html="payment.receiver.bank_info.sorting_number"></td>
+                </tr>
+                <tr>
+                    <th style="text-align: right;">Kontonummer</th>
+                    <td style="color:#000 !important;" v-html="payment.receiver.bank_info.bank_account"></td>
+                </tr>
+                <tr>
+                    <th style="text-align: right;">Summa</th>
+                    <td style="color:#000 !important;" v-html="payment.amount"></td>
+                </tr>
+                <tr>
+                    <th style="text-align: right;">Meddelande</th>
+                    <td style="color:#000 !important;" v-html="payment.tag"></td>
+                </tr>
             </table>
-            <div class="panel-body">
-                <button class="btn pull-right">Betala ut valda</button>
-            </div>
-            </form>
-            </div>
-        {% endif %}
-        {% endfor %}
-    {% else %}
-        Det finns inga nya kvitton som går att betala ut.
-    {% endif %}
+            <br>
+            <button class="pull-right theme-color btn-color" v-on:click="payment = null">Klar</button>
+        </div>
+    </div>
 </div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                committee: false,
+                committees: [],
+                expenses: {% autoescape off %}{{ payable_expenses }}{% endautoescape %},
+                accounts: {% autoescape off %}{{ accounts }}{% endautoescape %},
+                account: '{{ user.profile.default_account }}',
+                payment: null
+            }
+        },
+        methods: {
+            save: function (user, e) {
+                let exps = this.expenses.filter(x => x.checked && x.owner == user)
+                if (exps.length < 1) {
+                    console.log('Not enough expenses')
+                    return
+                } 
+
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('account', this.account)
+                exps.forEach(e => {
+                    form.append('expense', e.id)
+                })
+
+                fetch('{% url 'expenses-api-payment-new' %}', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form
+                })
+                .then(res => res.json())
+                .then(res => {
+                    // Done
+                    console.log(res)
+                    this.payment = res.payment
+                    res.expenses.forEach(x => {
+                        let idx = this.expenses.map(x => x.id).indexOf(x.id)
+                        if (idx > -1) {
+                            this.expenses.splice(idx, 1)
+                        }
+                    })
+                })
+                if (e) e.preventDefault()
+            }, trim(id, event) {
+                this.expenses = this.expenses.map(e => {
+                    if (e.owner == id) {
+                        e.checked = event.target.checked
+                    }
+                    return e
+                })
+                console.log(this.expenses)
+            }
+        },
+        created: function() {
+            this.committees = Array.from(new Set([].concat.apply([], this.expenses.map(x => x.committees))))
+            document.getElementById('cover').style.display = 'flex'
+
+            document.addEventListener('keyup', (e) => { 
+                if (event.key === 'Escape' || event.keyCode === 27 || event.key === 'Enter' || event.keyCode === 13) {
+                    this.payment = null
+                }
+            });
+        }
+    })
+</script>
 {% endblock %}

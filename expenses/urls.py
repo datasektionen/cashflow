@@ -53,6 +53,7 @@ urlpatterns = [
     url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
     url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part-attest'),
     
+    url(r'^api/payment/new/$', payment_views.api_new_payment, name='expenses-api-payment-new'),
     url(r'^payment/new/$', payment_views.new_payment, name='expenses-payment-new'),
     url(r'^payment/(?P<pk>\d+)/$', payment_views.get_payment, name='expenses-payment'),
 

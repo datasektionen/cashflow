@@ -8,14 +8,15 @@
         Här kan du hitta alla kvitton som har delar som du får attestera,
         klicka på ett kvitto för att komma till dess specifika vy.
     </p>
-    <div class="select">
+    <div class="select" style="float:right">
         <select v-model="committee">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-html="committee" :value="committee"></option>
+            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
-    <br /><br /><br />
-    <table>
+    <div class="clearfix"></div>
+    <br />
+    <table v-if="expenses.length > 0">
         <thead>
             <tr>
                 <th>Beskrivning</th>
@@ -24,15 +25,14 @@
                 <th class="right">Belopp</th>
             </tr>
         </thead>
-        <tbody v-for="expense in expenses">
-            <tr v-if="committee == false || expense.committees.indexOf(committee) > -1">
-                <td><a :href="'/expense/' + expense.id" v-html="expense.description"></a></td>
-                <td><a :href="'/user/' + expense.owner_username" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
-                <td v-html="expense.committees.join(', ')"></td>
-                <td class="right" v-html="expense.amount + ' kr'"></td>
-            </tr>
-        </tbody>
+        <tr v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
+            <td><a :href="'/expense/' + expense.id" v-html="expense.description"></a></td>
+            <td><a :href="'/user/' + expense.owner_username" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
+            <td v-html="expense.committees.join(', ')"></td>
+            <td class="right" v-html="expense.amount + ' kr'"></td>
+        </tr>
     </table>
+    <p v-else><b>Du har inga utlägg som kan attesteras! Bra jobbat!</b></p>
 </div>
 
 <script type="text/javascript">
@@ -42,7 +42,7 @@
             return {
                 committee: false,
                 expenses: {% autoescape off %}{{ attestable_expenses }}{% endautoescape %},
-                committees: {% autoescape off %}{{ committees }}{% endautoescape %}
+                committees: []
             }
         },
         created: function() {

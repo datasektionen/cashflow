@@ -4,8 +4,18 @@
 
 {% block full_content %}
 <div id="data">
-    <p>Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så prata med bokföringsansvarig för den andra nämnden).</p>
+    <p>
+        Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så prata med bokföringsansvarig för den andra nämnden).
+    </p>
 
+    <div class="select" style="float:right">
+        <select v-model="committee">
+            <option :value="false">Filtrera på nämnd</option>
+            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+    <br />
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
@@ -14,7 +24,7 @@
                 <th class="right">Verifikationsnummer</th>
             </tr>
         </thead>
-        <tbody v-for="expense in expenses">
+        <tbody v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
             <tr>
                 <td><a v-bind:href="'/expense/' + expense.id" v-html="expense.description"></a></td>
                 <td v-html="expense.expense_date"></td>
@@ -23,7 +33,7 @@
                     <div v-if="!expense.verification">
                         <form v-on:submit.prevent="save(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/verification'">
                             {% csrf_token %}
-                            <input type="text" name="verification" v-model="expense.verificationString" placeholder="Tex. E214">
+                            <input type="text" style="width:120px;" name="verification" v-model="expense.verificationString" placeholder="Tex. E214">
                             <button class="theme-color btn-color" v-on:click="save(expense, $event)">Spara</button>
                         </form>
                     </div>
@@ -48,9 +58,7 @@
             </tr>
         </tbody>
     </table>
-    <p v-else>
-        Du har inga kvitton att bokföra. Bra jobbat!
-    </p>
+    <p v-else><b>Du har inga kvitton att bokföra. Bra jobbat!</b></p>
 </div>
 
 <script type="text/javascript">
@@ -58,6 +66,8 @@
         el: '#data', 
         data: function () {
             return {
+                committee: false,
+                committees: [],
                 expenses: {% autoescape off %}{{ accounting_ready_expenses }}{% endautoescape %}
             }
         },
@@ -85,7 +95,11 @@
                     this.expenses[idx].verification = expense.verificationString
                 })
                 if (e) e.preventDefault()
-            }  
+            }
+        },
+        created: function() {
+            this.committees = Array.from(new Set([].concat.apply([], this.expenses.map(x => x.committees))))
+            console.log(this.expenses)
         }
     })
 </script>

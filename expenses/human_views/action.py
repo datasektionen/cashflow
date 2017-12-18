@@ -20,10 +20,7 @@ def attest_overview(request):
         expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
     ).distinct()
     return render(request, 'expenses/action_attest.html', {
-        'attestable_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial),
-        'committees': json.dumps(
-            [committee['committee_name'] for committee in models.ExpensePart.objects.order_by('committee_name').values('committee_name').distinct()]
-        )
+        'attestable_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial)
     })
 
 
@@ -58,10 +55,10 @@ def pay_overview(request):
     if not dauth.has_permission('pay', request):
         return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
 
+    expenses = models.Expense.objects.filter(reimbursement=None).exclude(expensepart__attested_by=None).exclude(confirmed_by=None).order_by('owner__user__username')
     context = {
-        'payable_expenses': models.Expense.objects.filter(reimbursement=None)
-            .exclude(expensepart__attested_by=None).exclude(confirmed_by=None).order_by('owner__user__username'),
-        'accounts': models.BankAccount.objects.all().order_by('name')
+        'payable_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial),
+        'accounts': json.dumps([s.name for s in models.BankAccount.objects.all().order_by('name')])
     }
 
     if request.GET:

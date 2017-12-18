@@ -622,7 +622,39 @@ ul.comments button {
     background-position: middle;
     margin: 0 auto;
 }
+.title-row th {
+    padding: 10px;
+    background: #278032;
+    color: #fff;
+}
+.footer-row td {
+    font-weight: bold;
+    border-top: 1px solid #888;
+}
+.space-row td {
+    background: transparent;
+    height: 20px;
+}
 
+.cover {
+    background: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cover .dialog {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
 
 #stats header .inner {
     margin: 0 auto;

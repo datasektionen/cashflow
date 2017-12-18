@@ -67,6 +67,9 @@ class Profile(models.Model):
         person_dict['username'] = self.user.username
         person_dict['first_name'] = self.user.first_name
         person_dict['last_name'] = self.user.last_name
+        person_dict['bank_info']['bank_account'] = self.bank_account
+        person_dict['bank_info']['sorting_number'] = self.sorting_number
+        person_dict['bank_info']['bank_name'] = self.bank_name
         if self.default_account is not None:
             person_dict['default_account'] = self.default_account.to_dict()
         else:
@@ -82,7 +85,12 @@ class Profile(models.Model):
             'username': self.user.username,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
-            'email': self.user.email
+            'email': self.user.email,
+            'bank_info': {
+                'bank_account': self.bank_account,
+                'sorting_number': self.sorting_number,
+                'bank_name': self.bank_name
+            }
         }
 
     # Returns a list of the committees that the user may attest
@@ -149,6 +157,8 @@ class Payment(models.Model):
         payment['payer'] = self.payer.user_dict()
         payment['receiver'] = self.receiver.user_dict()
         payment['account'] = self.account.to_dict()
+        payment['tag'] = self.tag()
+        payment['amount'] = self.amount()
         return payment
 
     # Returns the total amount of the payment
