@@ -622,3 +622,21 @@ ul.comments button {
     background-position: middle;
     margin: 0 auto;
 }
+
+
+#stats header .inner {
+    margin: 0 auto;
+    color: #fff;
+    max-width: 1220px;
+    text-align: center;
+    padding: 30px 0;
+    font-weight: 300 !important;
+}
+#stats header .inner span.label {
+    font-weight: 300 !important;
+}
+#stats header .inner h2 {
+    margin: 0;
+    font-size: 2.5em;
+    font-weight: 300 !important;
+}

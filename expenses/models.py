@@ -16,8 +16,6 @@ Defines all the models of the app.
 
 """
 
-
-
 """
 BankAccount represents an actual bank account owned by the organisation.
 This is a real bank account like one on Handelsbanken or another bank.

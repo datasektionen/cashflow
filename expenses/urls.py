@@ -13,6 +13,7 @@ import expenses.human_views.action as action_views
 import expenses.human_views.expense as expense_views
 import expenses.human_views.expense_part as expensepart_views
 import expenses.human_views.general as general_views
+import expenses.human_views.stats as stats_views
 import expenses.human_views.payment as payment_views
 import expenses.human_views.user as user_views
 
@@ -32,6 +33,8 @@ api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
     url(r'^$', general_views.index, name='expenses-index'),
+    url(r'^stats/$', stats_views.index, name='expenses-stats'),
+
     url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
     url(r'^user/(?P<username>\w+)/receipts/$', user_views.get_user_receipts, name='expenses-user-receipts'),

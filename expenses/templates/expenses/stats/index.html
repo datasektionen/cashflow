@@ -1,0 +1,61 @@
+{% extends "main.html" %}
+{% load humanize %}
+
+{% block methone-links %}
+{% if user.is_authenticated %}
+{str: "Hem", href: "/" },
+{str: "Nytt utlägg", href: "{% url 'expenses-expense-new' %}" },
+{% if user.profile.may_attest %}
+{str: "Attestera", href: "{% url 'expenses-action-attest' %}"},
+{% endif %}
+{% if user.profile.may_confirm %}
+{str: "Bekräfta", href: "{% url 'expenses-action-confirm' %}"},
+{% endif %}
+{% if user.profile.may_pay %}
+{str: "Betala ut", href: "{% url 'expenses-action-pay' %}"},
+{% endif %}
+{% if user.profile.may_account %}
+{str: "Bokför", href: "{% url 'expenses-action-accounting' %}"},
+{% endif %}
+{% if user.profile.may_attest or user.profile.may_pay or user.profile.may_account %}
+{str: "Kvitton", href: "{% url 'expenses-expense-overview' %}"},
+{str: "Användare", href: "{% url 'expenses-userlist' %}"},
+{% endif %}
+{% endif %}
+{str: "Statistik", href: "/stats"},
+{% endblock %}
+
+{% block title %}Välkommen till Cashflow!{% endblock %}
+
+{% block app %}
+<div id="stats">
+    <header>
+        <div class="inner">
+            <span class="label">Utbetalt i år</span>
+            <h2>{{ year }} kr</h2>
+        </div>
+    </header>
+    <div id="content">
+        <h1>Mest Cashflowat</h1>
+        <ol class="">
+        {% for user in highscore %}
+        <li><a href="/user/{{ user.user.username }}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
+        {% endfor %}
+        </ol>
+    </div>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#stats', 
+        data: function () {
+            return {
+
+            }
+        },
+        created() {
+
+        }
+    })
+</script>
+{% endblock %}
