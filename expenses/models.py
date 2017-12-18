@@ -198,7 +198,7 @@ class Expense(models.Model):
 
     # Returns the committees belonging to the expense as a list [{ committee_name: 'Name' }, ...]
     def committees(self):
-        return self.expensepart_set.order_by().values('committee_name').distinct()
+        return self.expensepart_set.order_by('committee_name').values('committee_name').distinct()
 
     # Returns a dict representation of the model
     def to_dict(self):
@@ -208,6 +208,7 @@ class Expense(models.Model):
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
+        exp['committees'] = [committee['committee_name'] for committee in self.committees()]
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp

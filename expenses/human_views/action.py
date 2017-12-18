@@ -15,12 +15,15 @@ Shows the attest list overview.
 """
 def attest_overview(request):
     may_attest = request.user.profile.may_attest()
-    print(may_attest)
+    expenses = models.Expense.objects.exclude(owner__user=request.user).filter(
+        expensepart__attested_by=None,
+        expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
+    ).distinct()
     return render(request, 'expenses/action_attest.html', {
-        'attestable_expenses': models.Expense.objects.exclude(owner__user=request.user).filter(
-            expensepart__attested_by=None,
-            expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
-        ).distinct()
+        'attestable_expenses': json.dumps([expense.to_dict() for expense in expenses], default=json_serial),
+        'committees': json.dumps(
+            [committee['committee_name'] for committee in models.ExpensePart.objects.order_by('committee_name').values('committee_name').distinct()]
+        )
     })
 
 
@@ -58,7 +61,8 @@ def pay_overview(request):
     context = {
         'payable_expenses': models.Expense.objects.filter(reimbursement=None)
             .exclude(expensepart__attested_by=None).exclude(confirmed_by=None).order_by('owner__user__username'),
-        'accounts': models.BankAccount.objects.all().order_by('name')}
+        'accounts': models.BankAccount.objects.all().order_by('name')
+    }
 
     if request.GET:
         context['payment'] = models.Payment.objects.get(id=int(request.GET['payment']))
