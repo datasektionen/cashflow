@@ -70,7 +70,7 @@ def new_expense(request):
         for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
             response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
             budgetLine = response.json()
-            expense_part = models.ExpensePart(
+            models.ExpensePart(
                 expense=expense,
                 budget_line_id=budgetLine['id'],
                 budget_line_name=budgetLine['name'],
@@ -79,8 +79,7 @@ def new_expense(request):
                 committee_name=budgetLine['cost_centre']['committee']['name'],
                 committee_id=budgetLine['cost_centre']['committee']['id'],
                 amount=request.POST.getlist('amount[]')[idx]
-            )
-            expense_part.save()
+            ).save()
 
         return HttpResponseRedirect(reverse('expenses-expense-new-binder', kwargs={'pk': expense.id}))
     else:
@@ -154,6 +153,37 @@ def edit_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
+"""
+Shows form for editing expense verification and handles the post request on submit.
+"""
+def edit_expense_verification(request, pk):
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+        if not may_account(request, expense):
+            return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+        if expense.reimbursement is None:
+            return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
+
+        if request.method == 'POST':
+            expense.verification = request.POST['verification']
+            expense.save()
+
+            comment = models.Comment(
+                author=request.user.profile,
+                expense=expense,
+                content="Ändrade verifikationsnumret till: " + expense.verification
+            )
+            comment.save()
+
+            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
+        else:
+            return render(request, 'expenses/edit_expense_verification.html', {
+                "expense": expense,
+                "expense_parts": expense.expensepart_set.all()
+            })
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+
 
 """
 Confirms expense.
@@ -213,7 +243,8 @@ def get_expense(request, pk):
             return HttpResponseForbidden()
 
         return render(request, 'expenses/expense.html', {
-            'expense': expense
+            'expense': expense,
+            'may_account': may_account(request, expense)
         })
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
@@ -259,6 +290,13 @@ def set_verification(request, expense_pk):
             expense.verification = request.POST['verification']
             expense.save()
 
+            comment = models.Comment(
+                author=request.user.profile,
+                expense=expense,
+                content="Bokförde med verifikationsnumret: " + expense.verification
+            )
+            comment.save()
+
             return HttpResponseRedirect(reverse('expenses-action-accounting'))
         except ObjectDoesNotExist:
             raise Http404("Utlägget finns inte")
@@ -284,7 +322,6 @@ Returns true if user may account the expense.
 """
 def may_account(request, expense):
     for committee in expense.committees():
-        print(committee)
         if committee['committee_name'].lower() in request.user.profile.may_account():
             return True
 

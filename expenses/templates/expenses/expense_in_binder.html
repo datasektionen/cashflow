@@ -1,10 +1,12 @@
-{% extends "expenses/main.html" %}
+{% extends "expenses/detail.html" %}
 {% load widget_tweaks %}
+
+{% block title %}Sätt in kvittot i pärmen{% endblock %}
 
 {% block full_content %}
     <div>
         <p>Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
-        <p> Märk kvittomallen med id: <b>{{ expense.pk }}</b>. Du hittar det här id:t på kvittosidan igen om du glömmer bort det.</p>
-        <a href="{% url "expenses-expense" expense.pk %}" class="button primary-action btn-color" style="color:#fff">Gå vidare</a>
+        <p>Märk kvittomallen med id:t <b>{{ expense.pk }}</b>. Du hittar det på din sida igen om du glömmer bort det.</p>
+        <a href="{% url "expenses-expense" expense.pk %}" class="button primary-action btn-color theme-color" style="color:#fff">Gå vidare</a>
     </div>
 {% endblock %}

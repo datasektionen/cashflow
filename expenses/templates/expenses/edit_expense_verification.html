@@ -1,0 +1,36 @@
+{% extends "expenses/detail.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Ändra verifikation{% endblock %}
+
+{% block full_content %}
+<div id="form">
+    <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h2>Kvittodelar</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nämnd</th>
+                    <th>Kostnadsställe</th>
+                    <th>Budgetpost</th>
+                    <th>Summa</th>
+                </tr>
+            </thead>
+        {% for expense_part in expense_parts %}
+            <tr>
+                <td>{{ expense_part.committee_name }}</td>
+                <td>{{ expense_part.cost_centre_name }}</td>
+                <td>{{ expense_part.budget_line_name }}</td>
+                <td>{{ expense_part.amount }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <br />
+        <h2>Verifikationsnummer</h2>
+        <input type="text" name="verification" value="{{ expense.verification }}" />
+        <br /><br /><br /><br />
+        <input type="submit" value="Spara verifikationsnummer" class="button primary-action theme-color btn-color">
+    </form>
+</div>
+{% endblock %}

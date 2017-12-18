@@ -19,7 +19,7 @@ class DAuth(object):
     @staticmethod
     def authenticate(token=None):
         url = 'http://login2.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
-        print(settings.AUTH_API_KEY)
+
         req = requests.get(url)
         if req.status_code == 200:
             data = req.json()

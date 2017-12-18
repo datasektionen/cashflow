@@ -5,29 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Cashflow - Datasektionens ekonomisystem</title>
-    <link rel="stylesheet" href="//aurora2.datasektionen.se" type="text/css" />
-    <script type="text/javascript" src="//aurora2.datasektionen.se/js"></script>
+    <link rel="stylesheet" href="//aurora.datasektionen.se" type="text/css" />
     <link rel="stylesheet" href="/static/style.css">
-    <script type="text/javascript">
-        window.methone_conf = {
-            system_name: "cashflow",
-            color_scheme: "money_green",
-            {% if user.is_authenticated %}
-                login_text: "{{ user.get_full_name }}",
-                login_href: "{% url 'expenses-user' user.username %}",
-            {% else %}
-                login_text: "Logga in",
-                login_href: "/login/",
-            {% endif %}
-            links: [
-                {% block methone-links %}
-
-                {% endblock %}
-            ]
-        }
-    </script>
-
-    <script async src="//methone.datasektionen.se/bar.js"></script>
 
     <link rel="apple-touch-icon" sizes="57x57" href="/static/images/logos/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="/static/images/logos/apple-icon-60x60.png">
@@ -46,63 +25,35 @@
     <meta name="msapplication-TileColor" content="#216C2A">
     <meta name="msapplication-TileImage" content="/static/images/logos/ms-icon-144x144.png">
     <meta name="theme-color" content="#216C2A">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+    <script src="https://vuejs.org/js/vue.js"></script>
+    <script src="https://unpkg.com/popper.js"></script>
+    <script src="https://unpkg.com/v-tooltip"></script>
 </head>
 <body>
 <div id="methone-container-replace"></div>
 <div id="application" class="money-green">
-    <header></header>
-    <div class="header-inner">
-        {% block header %}{% endblock %}
-        <div class="clear"></div>
-    </div>
-    <div id="content">
-        {% block nav %}{% endblock %}
-        <div class="card">
-            <h1>{% block title %}Cashflow{% endblock %}</h1>
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-
-            {% block full_content %}
+    {% block app %}{% endblock %}
+</div>
+<script type="text/javascript">
+    window.methone_conf = {
+        system_name: "Cashflow",
+        color_scheme: "money_green",
+        {% if user.is_authenticated %}
+            login_text: "{{ user.get_full_name }}",
+            login_href: "{% url 'expenses-user' user.username %}",
+        {% else %}
+            login_text: "Logga in",
+            login_href: "/login/",
+        {% endif %}
+        links: [
+            {% block methone-links %}
 
             {% endblock %}
-        </div>
-		<div class="clear"></div>
-    </div>
-    <div class="footer-push"></div>
-</div>
-<div id="footer">
-    <div class="wrapper">
-        <div class="col">
-            <p>Hittat något som inte funkar? <a href="https://datasektionen.se/namnder/informationsorganet">IORs Crash &amp; Bränn</a> fixar det så snart som möjligt om du skapar ett issue på Github.</p>
-            <p class="link"><a href="https://github.com/datasektionen/cashflow/issues" class="button">Skapa ett issue</a></p>
-        </div>
-        <div class="col">
-            <p>Hela budgeten finns på <a href="https://budget.datasektionen.se">budget.datasektionen.se</a>. Cashflow skrevs från början av Alexander Viklund (viklu@kth.se).</p>
-        </div>
-        <div class="col">
-            <p>Vill du själv ändra saker här, eller koda något nytt? Tveka inte att komma på en Hackerkväll! För mer info, följ IORs Facebook.
-            </p>
-            <p class="link"><a href="https://www.facebook.com/informationsorganet/" class="button">IOR på Facebook</a></p>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-</div>
-<!--script src="/static/snowflakes.js"></script>
-<script>
-    Snowflakes({
-        count: 100
-    });
-</script>
-<style>
-    .snowflake {
-        z-index: 9999;
-        transition: all 0s;
+        ]
     }
-</style-->
+</script>
+<script src="//methone.datasektionen.se/bar.js"></script>
 </body>
 </html>

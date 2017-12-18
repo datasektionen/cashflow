@@ -85,7 +85,6 @@ def accounting_overview(request):
     })
 
 
-
 class fakefloat(float):
     def __init__(self, value):
         self._value = value

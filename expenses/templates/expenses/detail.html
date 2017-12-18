@@ -1,0 +1,43 @@
+{% extends "main.html" %}
+
+{% block methone-links %}
+    {% if user.is_authenticated %}
+        {str: "Hem", href: "/" },
+        {str: "Nytt utlägg", href: "{% url 'expenses-expense-new' %}" },
+        {% if user.profile.may_attest %}
+            {str: "Attestera", href: "{% url 'expenses-action-attest' %}"},
+        {% endif %}
+        {% if user.profile.may_confirm %}
+            {str: "Bekräfta", href: "{% url 'expenses-action-confirm' %}"},
+        {% endif %}
+        {% if user.profile.may_pay %}
+            {str: "Betala ut", href: "{% url 'expenses-action-pay' %}"},
+        {% endif %}
+        {% if user.profile.may_account %}
+            {str: "Bokför", href: "{% url 'expenses-action-accounting' %}"},
+        {% endif %}
+        {% if user.profile.may_attest or user.profile.may_pay or user.profile.may_account %}
+            {str: "Kvitton", href: "{% url 'expenses-expense-overview' %}"},
+            {str: "Användare", href: "{% url 'expenses-userlist' %}"},
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block app %}
+    <header>
+        <div class="header-inner">
+            <div class="row">
+                <div class="header-left col-md-2">
+                </div>
+                <div class="col-md-8">
+                    <h2>{% block title %}Cashflow{% endblock %}</h2>
+                </div>
+                <div class="header-right col-md-2"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </header>
+    <div id="content">
+        {% block full_content %}{% endblock %}
+    </div>
+{% endblock %}
