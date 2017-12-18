@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block full_content %}
-
+<div id="app">
 <h2>Kvittodelar</h2>
 <table>
     <thead>
@@ -173,38 +173,65 @@
 
     <ul class="comments">
         {% for comment in expense.comment_set.all %}
-        <li class="clearfix">
+        <li class="clearfix {% if comment.author.user.username == user.username %}own{% endif %}">
             <div class="info">
-                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);"></div>
+                <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/user/{{ comment.author.user.username }}"></a>
                 <span class="name">
                     <a href="{% url 'expenses-user' comment.author.user.username %}">
-                        {{ comment.author.user.get_full_name }}
+                        
                     </a>
                 </span>
-                <span class="date">{{ comment.date|date:"Y-m-d H:i" }}</span>
             </div>
-            <div class="comment">
+            <div class="comment" v-tooltip="{ content: 'Skapad {{ comment.date|date:'Y-m-d H:i' }}' }">
                 {{ comment.content }}
             </div>
         </li>
         {% endfor %}
         <li class="new">
-            <div class="info">
-                <div class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ user.username }}/image);"></div>
-                <span class="name"><a href="/user/{{ user.username }}">{{ user.get_full_name }}</a></span>
-                <span class="date">Skapa en ny kommentar</span>
-            </div>
             <div class="comment">
-                <form method="POST" action="{% url 'expenses-expense-comment-new' expense.id %}">
+                <form method="POST" id="new" action="{% url 'expenses-expense-comment-new' expense.id %}">
                     {% csrf_token %}
-                    <textarea name="content" rows="3" style="width: 100%;border:none;"></textarea>
+                    <textarea id="content-field" name="content" rows="3" style="width: 100%;border:none;" placeholder="Skriv en kommentar"></textarea>
                     <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
                     <div class="clearfix"></div>
                 </form>
             </div>
         </li>
+        <li class="alternatives">
+            <h3>Eller skicka en färdig kommentar:</h3>
+            <ul>
+                <li><a href="#" v-on:click="send">Jag kan inte hitta ditt utlägg i pärmen. Har du satt in det?</a></li>
+                <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
+                <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
+                <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>
+                <li><a href="#" v-on:click="send">Du måste ladda upp både en faktura och ett kontoutdrag.</a></li>
+                <li><a href="#" v-on:click="send">Avvakta med det här utlägget.</a></li>
+            </ul>
+        </li>
     </ul>
 </div>
 <div class="clearfix"></div>
+</div>
 
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+
+            }
+        },
+        methods: {
+            send(e) {
+                e.preventDefault()
+                console.log(e.target.innerHTML)
+                document.getElementById('content-field').value = e.target.innerHTML
+                document.getElementById('new').submit()
+            }
+        },
+        created() {
+
+        }
+    })
+</script>
 {% endblock %}

@@ -497,9 +497,10 @@ td.no-wrap, th.no-wrap {
 
 
 ul.comments {
+    max-width: 700px;
     list-style-type: none;
     padding: 0;
-    margin: 0;
+    margin: 0 auto;
 }
 ul.comments li {
     list-style-type: none;
@@ -507,51 +508,43 @@ ul.comments li {
     margin: 10px 0;
 }
 ul.comments li .info {
-    width: 100px;
+    width: 50px;
     float: left;
     font-size: 0.9em;
     text-align: center;
 }
+ul.comments li.own .info {
+    float: right;
+}
 ul.comments li .info .crop {
     display: block;
-    margin: 10px auto 0;
-}
-ul.comments li .info .info {
-    display: block;
-}
-ul.comments li .date {
-    display: block;
-    font-size: 0.7em;
+    margin: 0 auto;
+    height: 45px;
+    width: 45px;
 }
 ul.comments li .comment {
-    margin-left: 110px;
-    background: #f4f4f4;
-    color: #000 !important;
+    margin-left: 60px;
+    background: #ddd;
+    color: #000;
     padding: 10px 20px;
-    border-radius: 5px;
-    border-top-left-radius: 0px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: 23px;
     min-height: 30px;
+    max-width: 500px;
+}
+ul.comments li.own .comment {
+    background: #278032;
+    color:#fff;
+    margin-right: 60px;
+    margin-left: auto;
 }
 ul.comments li.new .comment {
     padding: 0;
+    background: none;
+    border-radius: 0;
+    margin-left: 0;
 }
 ul.comments li .comment .pane {
     font-size: 0.8em;
-}
-ul.comments li .comment:before {
-    content: ' ';
-    position: absolute;
-    width: 0;
-    height: 0;
-    margin-left: -40px;
-    margin-top: -5px;
-    border: 10px solid;
-    border-color: transparent #f4f4f4 #f4f4f4 transparent;
-}
-ul.comments li.new .comment:before {
-    margin-left: -20px;
-    margin-top: 5px;
 }
 ul.comments li.new input[type="submit"] {
     margin: 10px;
@@ -570,32 +563,31 @@ ul.comments .crop {
     width: 50px;
     height: 50px;
 }
-@media screen and (max-width:770px) {
-    ul.comments li .info {
-        width: 100%;
-        display: block;
-        float: none;
-    }
-    ul.comments li .comment {
-        width: 100%;
-        margin-left: 0;
-        margin-top: 10px;
-        display: block;
-        float: none;
-    }
-    ul.comments li .comment:before {
-        margin-left: 0px;
-        margin-top: -30px;
-        border-color: transparent #f4f4f4 #f4f4f4 transparent;
-    }
-    ul.comments li.new .comment:before {
-        margin-left: 20px;
-        margin-top: -20px;
-    }
-    ul.comments .crop {
-        width: 30px;
-        height: 30px;
-    }
+ul.comments .alternatives ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+ul.comments .alternatives ul li {
+    float: left;
+    display: inline-block;
+    margin: 0 5px 5px 0;
+    max-width: 100%;
+}
+ul.comments .alternatives ul li a {
+    display: inline-block;
+    white-space: nowrap;
+    background: #fff;
+    border: 1px solid #278032;
+    border-radius: 100px;
+    padding: 5px 10px;
+    color: #278032 !important;
+    max-width: 100%;
+    overflow: hidden;
+}
+ul.comments .alternatives ul li a:hover {
+    background: #278032;
+    color: #fff !important;
 }
 .description {
     margin-bottom: 20px;
