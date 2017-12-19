@@ -125,7 +125,7 @@
             <th>Bekräftat i pärmen:</th>
             <td>
                 {% if expense.confirmed_by_id %}
-                Ja
+                 {{ expense.confirmed_by.get_full_name }} ({{ expense.confirmed_at }})
                 {% else %}
                 Inte än
                 {% endif %}

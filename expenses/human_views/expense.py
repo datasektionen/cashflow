@@ -200,6 +200,13 @@ def confirm_expense(request, pk):
             expense.confirmed_at = date.today()
             expense.save()
 
+            comment = models.Comment(
+                expense=expense,
+                author=request.user.profile,
+                content='Jag bekräftar att kvittot finns i pärmen.'
+            )
+            comment.save()
+
             return HttpResponseRedirect(reverse('expenses-action-confirm'))
         except ObjectDoesNotExist:
             raise Http404("Utlägget finns inte")

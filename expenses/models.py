@@ -182,6 +182,7 @@ class Expense(models.Model):
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
     confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    confirmed_at = models.DateField(blank=True, null=True, default=None)
     owner = models.ForeignKey(Profile)
     description = models.TextField()
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
