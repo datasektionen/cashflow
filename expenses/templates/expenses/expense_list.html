@@ -4,6 +4,15 @@
 {% block title %}Alla utlägg{% endblock %}
 
 {% block full_content %}
+<div id="app">
+    <div class="select" style="margin-left: 10px;float:right">
+        <select v-model="committee" v-on:change="move">
+            <option :value="''">Filtrera på nämnd (visa alla)</option>
+            <option v-for="committee in committees" v-html="committee" :value="committee"></option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+    <br />
     {% if expenses %}
         <table>
             <thead>
@@ -54,6 +63,26 @@
             </span>
         </div>
     {% else %}
-        Det finns inga färdiga kvitton.
+        Det finns inga kvitton.
     {% endif %}
+</div>
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                committees: {% autoescape off %}{{ committees }}{% endautoescape %},
+                committee: '{% autoescape off %}{{ committee }}{% endautoescape %}'
+            }
+        },
+        methods: {
+            move() {
+                window.location.href = '?committee=' + this.committee
+            }
+        },
+        created: function() {
+            
+        }
+    })
+</script>
 {% endblock %}

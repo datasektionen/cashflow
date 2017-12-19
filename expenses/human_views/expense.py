@@ -18,7 +18,11 @@ from expenses import models
 Lists all expenses.
 """
 def expense_overview(request):
-    expenses_list = models.Expense.objects.order_by('verification', '-id').all()
+    committee = request.GET.get('committee')
+    expenses_list = models.Expense.objects.order_by('verification', '-id')
+    if committee != None and committee != '':
+        expenses_list = expenses_list.filter(expensepart__committee_name=committee)
+    expenses_list = expenses_list.all()
     paginator = Paginator(expenses_list, 25)
     page = request.GET.get('page')
 
@@ -34,7 +38,9 @@ def expense_overview(request):
     if request.method == 'GET':
         if len(dauth.get_permissions(request.user)) > 0:
             return render(request, 'expenses/expense_list.html', {
-                'expenses': expenses
+                'expenses': expenses,
+                'committees': json.dumps([x['committee_name'] for x in models.ExpensePart.objects.values('committee_name').distinct()]),
+                'committee': committee if committee != None else ''
             })
     else:
         raise Http404()
