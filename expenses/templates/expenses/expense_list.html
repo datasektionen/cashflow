@@ -50,15 +50,15 @@
         <div class="pagination">
             <span class="step-links">
                 {% if expenses.has_previous %}
-                    <a href="?page={{ expenses.previous_page_number }}">Föregående</a>
+                    <a :href="'?page={{ expenses.previous_page_number }}&committee=' + committee">Föregående</a>
                 {% endif %}
 
                 {% for i in expenses.paginator.page_range %}
-                    <a href="?page={{ i }}"{% if i == expenses.number %} class="active"{% endif %}>{{i}}</a>
+                    <a :href="'?page={{ i }}&committee=' + committee" {% if i == expenses.number %} class="active"{% endif %}>{{i}}</a>
                 {% endfor %}
 
                 {% if expenses.has_next %}
-                    <a href="?page={{ expenses.next_page_number }}">Nästa</a>
+                    <a :href="'?page={{ expenses.next_page_number }}&committee=' + committee">Nästa</a>
                 {% endif %}
             </span>
         </div>
@@ -67,6 +67,15 @@
     {% endif %}
 </div>
 <script type="text/javascript">
+    let getParameterByName = (name, url) => {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return '';
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
     new Vue({
         el: '#app', 
         data: function () {
@@ -77,7 +86,7 @@
         },
         methods: {
             move() {
-                window.location.href = '?committee=' + this.committee
+                window.location.href = '?page=' + getParameterByName('page') + '&committee=' + this.committee
             }
         },
         created: function() {
