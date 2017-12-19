@@ -29,7 +29,7 @@
                 <th><button class="btn theme-color pull-right" v-on:click="e => save(expense.owner, e)">Betala ut valda</button></th>
             </tr>
             <tr v-if="committee == false || expense.committees.indexOf(committee) > -1">
-                <td v-html="expense.description"></td>
+                <td><a :href="'/expense/' + expense.id" v-html="expense.description"></a></td>
                 <td v-html="expense.committees.join(', ')"></td>
                 <td v-html="expense.amount + ' kr'"></td>
                 <td>
