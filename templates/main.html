@@ -1,3 +1,5 @@
+{% load settings %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,6 +32,16 @@
     <script src="https://vuejs.org/js/vue.js"></script>
     <script src="https://unpkg.com/popper.js"></script>
     <script src="https://unpkg.com/v-tooltip"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96183461-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{% settings_value "GOOGLE_ANALYTICS_KEY" %}');
+    </script>
 </head>
 <body>
 <div id="methone-container-replace"></div>
