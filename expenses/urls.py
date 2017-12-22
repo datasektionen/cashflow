@@ -26,38 +26,22 @@ api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-
 api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
-    url(r'^$', views.index, name='expenses-index'),
-
     url(r'^user/(?P<username>\w+)/$', views.get_user, name='expenses-user'),
     url(r'^user/(?P<username>\w+)/edit/$', views.edit_user, name='expenses-user-edit'),
     url(r'^user/(?P<username>\w+)/receipts/$', views.get_user_receipts, name='expenses-user-receipts'),
 
-    url(r'^expense/new/$', views.new_expense, name='expenses-expense-new'),
-    url(r'^expense/new/binder/(?P<pk>\d+)/$', views.expense_in_binder_alert, name='expenses-expense-new-binder'),
-    url(r'^expense/(?P<pk>\d+)/$', views.get_expense, name='expenses-expense'),
-    url(r'^expense/(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-expense-edit'),
-    url(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='expenses-expense-edit-verification'),
-    url(r'^expense/(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-expense-delete'),
-    url(r'^expense/(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-expense-comment-new'),
-    url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='expenses-expense-verification'),
-    url(r'^expense/(?P<pk>\d+)/confirm/$', views.confirm_expense, name='expenses-expense-confirm'),
+    url(r'^new/$', views.new_expense, name='expenses-expense-new'),
+    url(r'^new/binder/(?P<pk>\d+)/$', views.expense_in_binder_alert, name='expenses-expense-new-binder'),
+    url(r'^(?P<pk>\d+)/$', views.get_expense, name='expenses-expense'),
+    url(r'^(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-expense-edit'),
+    url(r'^(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-expense-delete'),
+    url(r'^(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-expense-comment-new'),
     
     url(r'^expense_part/(?P<pk>\d+)/edit/$', views.edit_expense_part, name='expenses-expense_part-edit'),
-    url(r'^expense_part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='expenses-expense_part-attest'),
     
     url(r'^api/payment/new/$', views.api_new_payment, name='expenses-api-payment-new'),
     url(r'^payment/new/$', views.new_payment, name='expenses-payment-new'),
     url(r'^payment/(?P<pk>\d+)/$', views.get_payment, name='expenses-payment'),
 
-    url(r'^confirm/$', views.confirm_overview, name='expenses-action-confirm'),
-    url(r'^attest/$', views.attest_overview, name='expenses-action-attest'),
-    url(r'^pay/$', views.pay_overview, name='expenses-action-pay'),
-    url(r'^accounting/$', views.accounting_overview, name='expenses-action-accounting'),
-
     url(r'^expenses/$', views.expense_overview, name='expenses-expense-overview'),
-
-    url(r'^admin/$', views.index, name='expenses-admin-index'),
-    url(r'^admin/users/$', views.user_list, name='expenses-userlist'),
 ]
-
-# Code to be run once (https://stackoverflow.com/questions/6791911/execute-code-when-django-starts-once-only)

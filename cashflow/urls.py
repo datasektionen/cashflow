@@ -17,14 +17,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 from cashflow import settings
+from expenses import views
 from .authviews import login, login_with_token, logout
 
 urlpatterns = [
+    url(r'^$', views.index, name='expenses-index'),
     url(r'^login/$', login, name='login'),
     url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
+    url(r'^admin/', include("admin.urls")),
     url(r'^admin/django/', include(admin.site.urls)),
-    url(r'^', include("expenses.urls")),
+    url(r'^expenses/', include("expenses.urls")),
     url(r'^invoices/', include("invoices.urls")),
     url(r'^stats/', include("stats.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
