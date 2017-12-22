@@ -15,6 +15,9 @@
 	<div class="col-sm-4 col-md-3">
 		<div id="secondary-nav" class="below-pic">
 			<div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')"></div>
+			{% if showuser.username == user.username %}
+				<p style="font-size:0.8em;text-align: center;margin: 10px;">Du kan ändra bilden ovan på <a href="https://zfinger.datasektionen.se" class="primary-action">Z-finger</a>.</p>
+			{% endif %}
 			<h3>{{ showuser.get_full_name }}</h3>
 		    <ul>
 		        <li><a href="{% url 'user-show' showuser.username %}">Information</a></li>

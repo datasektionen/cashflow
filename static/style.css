@@ -611,7 +611,17 @@ ul.comments button {
 }
 
 
-
+.divide {
+    margin: 30px;
+    clear: both;
+    height: 1px;
+}
+ol.center {
+    text-align: center;
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+}
 .crop {
     width: 100px;
     height: 100px;
@@ -619,6 +629,20 @@ ul.comments button {
     background-size: cover;
     background-position: middle;
     margin: 0 auto;
+}
+@media screen and (max-width: 700px) {
+    .crop {
+        height: 40px;
+        width: 40px;
+    }
+    .col-md-3 {
+        float: right;
+        width: 100%;
+    }
+    .col-md-9 {
+        float: left;
+        width: 100%;
+    }
 }
 .title-row th {
     padding: 10px;

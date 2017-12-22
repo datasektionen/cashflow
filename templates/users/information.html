@@ -4,7 +4,7 @@
 {% block title %}{{ showuser.get_full_name }}{% endblock %}
 
 {% block content %}
-    <br />
+    <p>Nedan visas den information som används för att återbetala utlägg till {% if showuser.username == user.username %}dig{% else %}{{ showuser.get_full_name }}{% endif %}. Notera dock att man kan spara favoriter i banken, så om denna information ändras är det bra att också meddela betalningsansvarig för berörd nämnd.</p>
     <table>
         <tr>
             <th>KTH-användarnamn</th>

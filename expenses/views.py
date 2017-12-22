@@ -1,11 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
-    HttpResponseServerError
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.shortcuts import render
 from django.core import serializers
 from django.forms.models import model_to_dict
 from datetime import date, datetime
 from decimal import *
+from django.contrib import messages
 import re
 import json
 import requests
@@ -83,32 +83,29 @@ Shows form for editing expense.
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_expense(request, pk):
-    try:
-        expense = models.Expense.objects.get(pk=pk)
-    except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+    try: expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-    if expense.owner.user.username != request.user.username:
-        return HttpResponseForbidden()
+    if expense.owner.user.username != request.user.username: return HttpResponseForbidden()
 
     # Show the form on GET, otherwise handle as POST
     if request.method == 'GET':
-        return render(request, 'expenses/edit_expense.html', {
+        return render(request, 'expenses/edit.html', {
             "expense": expense,
             "expenseparts": expense.expensepart_set.all()
         })
 
-    messages.success(request, 'Kvittot ändrades')
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
     expense.save()
 
+    newIds = []
     for idx, expensePartId in enumerate(request.POST.getlist('expensePartId[]')):
         budgetLines = request.POST.getlist('budgetLine[]')
         response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLines[idx]))
         budgetLine = response.json()
 
-        if (expensePartId == '-1'):
+        if expensePartId == '-1':
             expense_part = models.ExpensePart(
                 expense=expense,
                 budget_line_id=budgetLine['id'],
@@ -120,6 +117,7 @@ def edit_expense(request, pk):
                 amount=request.POST.getlist('amount[]')[idx]
             )
             expense_part.save()
+            newIds.append(expense_part.id)
         else:
             expense_part = models.ExpensePart.objects.get(pk=expensePartId)
             expense_part.expense = expense
@@ -131,6 +129,11 @@ def edit_expense(request, pk):
             expense_part.committee_id = budgetLine['cost_centre']['committee']['id']
             expense_part.amount = request.POST.getlist('amount[]')[idx]
             expense_part.save()
+            newIds.append(expense_part.id)
+
+    models.ExpensePart.objects.filter(expense=expense).exclude(id__in=newIds).delete()
+
+    messages.success(request, 'Kvittot ändrades')
 
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
 
@@ -204,63 +207,76 @@ def get_payment(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utbetalningen finns inte")
 
+"""
+Performs a payment
+"""
+@login_required
+@require_POST
+@user_passes_test(lambda u: u.profile.may_pay())
 def new_payment(request):
-    if not has_permission('pay', request):
-        return HttpResponseForbidden()
+    try: expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
+    except ObjectDoesNotExist as e: raise Http404("Ett av utläggen finns inte.")
 
-    if request.method == "POST":
-        try:
-            expenses = [
-                models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')
-            ]
+    expense_owner = expenses[0].owner
+    for expense in expenses:
+        if expense.owner != expense_owner:
+            return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
-            expense_owner = expenses[0].owner
-            for expense in expenses:
-                if expense.owner != expense_owner:
-                    return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
+    if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
+        return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
+    
+    payment = models.Payment(
+        payer=request.user.profile,
+        receiver=expense_owner,
+        account=models.BankAccount.objects.get(name=request.POST['account'])
+    )
+    payment.save()
 
-        except ObjectDoesNotExist as e:
-            raise Http404("Ett av utläggen finns inte.")
-        if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
-            return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
-        payment = models.Payment(
-            payer=request.user.profile,
-            receiver=expense_owner,
-            account=models.BankAccount.objects.get(name=request.POST['account'])
-        )
-        payment.save()
-        for expense in expenses:
-            expense.reimbursement = payment
-            expense.save()
-        return HttpResponseRedirect(reverse('expenses-action-pay') + "?payment=" + str(payment.id))
-    else:
-        raise Http404()
+    for expense in expenses:
+        expense.reimbursement = payment
+        expense.save()
 
+        models.Comment(
+            author=request.user.profile,
+            expense=expense,
+            content="Betalade ut i betalning " + payment.id
+        ).save()
+
+    return HttpResponseRedirect(reverse('expenses-action-pay') + "?payment=" + str(payment.id))
+
+@login_required
+@require_POST
+@user_passes_test(lambda u: u.profile.may_pay())
 def api_new_payment(request):
-    if not has_permission('pay', request):
-        return HttpResponseForbidden()
+    try: expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
+    except ObjectDoesNotExist as e: raise Http404("Ett av utläggen finns inte.")
+        
+    expense_owner = expenses[0].owner
+    for expense in expenses:
+        if expense.owner != expense_owner:
+            return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
-    if request.method == "POST":
-        try:
-            expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
-            expense_owner = expenses[0].owner
-            for expense in expenses:
-                if expense.owner != expense_owner:
-                    return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
+    if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
+        return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
+    
+    payment = models.Payment(
+        payer=request.user.profile,
+        receiver=expense_owner,
+        account=models.BankAccount.objects.get(name=request.POST['account'])
+    )
+    payment.save()
 
-        except ObjectDoesNotExist as e:
-            raise Http404("Ett av utläggen finns inte.")
-        if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
-            return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
-        payment = models.Payment(
-            payer=request.user.profile,
-            receiver=expense_owner,
-            account=models.BankAccount.objects.get(name=request.POST['account'])
-        )
-        payment.save()
-        for expense in expenses:
-            expense.reimbursement = payment
-            expense.save()
-        return JsonResponse({'payment':payment.to_dict(), 'expenses':[e.to_dict() for e in expenses]})
-    else:
-        raise Http404()
+    for expense in expenses:
+        expense.reimbursement = payment
+        expense.save()
+
+        models.Comment(
+            author=request.user.profile,
+            expense=expense,
+            content="Betalade ut i betalning " + str(payment.id)
+        ).save()
+
+    return JsonResponse({
+        'payment': payment.to_dict(), 
+        'expenses': [e.to_dict() for e in expenses]
+    })

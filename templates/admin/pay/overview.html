@@ -41,7 +41,7 @@
             </tr>
             <tr class="footer-row" v-if="idx == expenses.length - 1 || expenses[idx + 1].owner_username != expense.owner_username">
                 <td colspan="2">Summa</td>
-                <td v-html="expenses.filter(e => e.owner == expense.owner).map(x => x.amount).reduce((a,b) => (a+b),0) + ' kr'"></td>
+                <td v-html="expenses.filter(e => e.owner == expense.owner && (committee == false || e.committees.indexOf(committee) > -1)).map(x => x.amount).reduce((a,b) => (a+b),0) + ' kr'"></td>
                 <td>
                     <div style="float:right" v-tooltip="{content:'Markera alla'}" class="checkbox">
                         <input :id="expense.owner" v-on:change="e => trim(expense.owner, e)" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense">
@@ -106,7 +106,7 @@
         },
         methods: {
             save: function (user, e) {
-                let exps = this.expenses.filter(x => x.checked && x.owner == user)
+                let exps = this.expenses.filter(x => x.checked && x.owner == user && (this.committee == false || x.committees.indexOf(this.committee) > -1))
                 if (exps.length < 1) {
                     console.log('Not enough expenses')
                     return
@@ -139,7 +139,7 @@
                 if (e) e.preventDefault()
             }, trim(id, event) {
                 this.expenses = this.expenses.map(e => {
-                    if (e.owner == id) {
+                    if (e.owner == id && (this.committee == false || e.committees.indexOf(this.committee) > -1)) {
                         e.checked = event.target.checked
                     }
                     return e

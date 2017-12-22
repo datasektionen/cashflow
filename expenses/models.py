@@ -121,7 +121,7 @@ class Profile(models.Model):
                 may_account.append(permission[len("accounting-"):].lower())
         if expense == None:
             return may_account
-        print("HÄÄÄÄR", expense.expensepart_set.all())
+
         for ep in expense.expensepart_set.all():
             if ep.committee_name.lower() in may_account:
                 return True

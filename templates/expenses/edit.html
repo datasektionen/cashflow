@@ -1,33 +1,31 @@
-{% extends "expenses/detail.html" %}
+{% extends "../detail.html" %}
 {% load widget_tweaks %}
 
 {% block title %}Ändra kvitto{% endblock %}
 
-
 {% block full_content %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
-<div id="form">
+<div id="form" class="form">
+    <p>Ladda endast upp ett kvitto i taget. När du laddar upp en faktura eller onlinebetalning måste du också ladda upp ett kontoutdrag.</p>
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
+        <div class="form">
         {% csrf_token %}
-        <div class="form-table">
-            <div class="form-table-heading">
-                <div class="form-table-row">
-                    <div class="form-table-head">Beskrivning</div>
-                    <div class="form-table-head">Transaktionsdatum</div>
+            <div class="form-entry">
+                <span class="description">
+                    <label for="expense-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning:</label>
+                </span>
+                <div class="input">
+                    <input type="text" name="description" value="{{ expense.description }}" placeholder="Lägg till beskrivning" class="long" required />
                 </div>
             </div>
-            <div class="form-table-body">
-                <div class="form-table-row">
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Beskrivning</div>
-                        <input type="text" name="description" value="{{ expense.description }}" placeholder="Lägg till beskrivning" class="long" required />
-                    </div>
-
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Transaktionsdatum</div>
-                        <input type="date" value="{{ expense.expense_date|date:"c" }}" name="expense_date" required/>
-                    </div>
+            <div class="form-entry">
+                <span class="description">
+                    <label for="expense-date" v-tooltip="{ content: 'Det datum inköpet gjordes (samma som på kvittot)' }">
+                        Transaktionsdatum:
+                    </label>
+                    <span class="hint"></span>
+                </span>
+                <div class="input">
+                    <input type="date" value="{{ expense.expense_date|date:"c" }}" name="expense_date" required/>
                 </div>
             </div>
         </div>
@@ -35,42 +33,35 @@
         <h2>Kvittodelar</h2>
         <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller lika med summan av nedanstående rader.</p>
 
-        <div class="form-table">
-            <div class="form-table-heading">
-                <div class="form-table-row">
-                    <div class="form-table-head" v-if="expense_parts.length > 1"></div>
-                    <div class="form-table-head">Summa</div>
-                    <div class="form-table-head">Nämnd</div>
-                    <div class="form-table-head">Sekundärt resultatställe</div>
-                    <div class="form-table-head">Budgetpost</div>
-                </div>
-            </div>
-            <div class="form-table-body" v-if="committees.length > 0">
-                <div class="form-table-row" v-for="(expense_part, i) in expense_parts">
-                    <div class="form-table-cell delete" v-if="expense_parts.length > 1">
-                        <button type="button" v-on:click="removePart(i)">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </div>
-
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Summa</div>
-                        <input type="hidden" v-model="expense_part.id" name="expensePartId[]" />
-                        <input type="number" step="0.01" min="0.01" style="width:90px;min-width: 90px;" v-model="expense_part.amount" name="amount[]" placeholder="Ange summa" />
-                    </div>
-
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Nämnd</div>
+        <div id="expense_parts" v-if="committees.length > 0">
+            <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
+                <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                </button>
+                <input type="hidden" name="expensePartId[]" :value="expense_part.id">
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense_part-committee">
+                            Nämnd:
+                        </label>
+                    </span>
+                    <div class="input">
                         <div class="select">
                             <select name="committee[]" v-model="expense_part.committeeId" required>
                                 <option value="0">- Välj -</option>
-                                <option v-for="committee in committees" v-html="committee.name" v-bind:value="committee.id"></option>
+                                <option v-for="committee in committees" :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Sek. resultatställe</div>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense_part-cost_centre">
+                            Sekundärt resultatställe:
+                        </label>
+                    </span>
+                    <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0">
                             <select name="costCentre[]" v-model="expense_part.costCentreId" required>
                                 <option value="0">- Välj -</option>
@@ -78,14 +69,18 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="costCentre[]" required disabled>
-                                <option value="0">- Välj nämnd först -</option>
-                            </select>
+                            <select name="costCentre[]" required disabled></select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-table-cell">
-                        <div class="vertical-label">Budgetpost</div>
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense_part-budget_line">
+                            Budgetpost:
+                        </label>
+                    </span>
+                    <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
                             <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
                                 <option value="0">- Välj -</option>
@@ -93,32 +88,29 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="budgetLine[]" required disabled>
-                                <option value="0">- Välj sek. resultatst. först -</option>
-                            </select>
+                            <select name="budgetLine[]" required disabled></select>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="form-table-body" v-else>
-                <div class="form-table-row">
-                    <div style="position: absolute;left: 0; right: 0;text-align: center;">
-                        <div style="display: inline-block;"><div class="loader">Loading...</div></div>
+
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="expense_part-amount">
+                            Summa:
+                        </label>
+                    </span>
+                    <div class="input">
+                        <input type="number" step="0.01" v-model="expense_part.amount" name="amount[]" required>
                     </div>
                 </div>
+
+                <div class="clearfix"></div>
             </div>
-            <div class="form-table-footer">
-                <div class="form-table-row">
-                    <div class="form-table-cell">
-                        <button type="button" v-on:click="addPart()">
-                            <i class="fa fa-plus" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+
+            <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
         </div>
-        
-        <input type="submit" value="Spara kvitto" class="button primary-action theme-color btn-color">
+        <p style="text-align: center" v-else>Laddar...</p>
+        <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera kvitto" class="button primary-action theme-color btn-color">
     </form>
 </div>
 

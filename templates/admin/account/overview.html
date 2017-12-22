@@ -26,7 +26,7 @@
         </thead>
         <tbody v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
             <tr>
-                <td><a v-bind:href="'/expense/' + expense.id" v-html="expense.description"></a></td>
+                <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
                 <td v-html="expense.expense_date"></td>
                 
                 <td class="right">
@@ -82,7 +82,7 @@
                 form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
                 form.append('verification', expense.verificationString)
 
-                fetch('/expense/' + expense.id + '/verification/', {
+                fetch('/admin/expense/' + expense.id + '/verification/', {
                     method: 'POST',
                     credentials: 'same-origin',
                     body: form

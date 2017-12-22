@@ -109,7 +109,7 @@ def edit_expense_verification(request, pk):
             content="Ändrade verifikationsnumret till: " + expense.verification
         ).save()
 
-        return HttpResponseRedirect(reverse('expenses-show', pk=expense.id))
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk':expense.id}))
     else:
         return render(request, 'expenses/edit-verification.html', {
             "expense": expense,
@@ -141,30 +141,28 @@ def confirm_expense(request, pk):
     else:
         raise Http404()
 
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_account())
 def set_verification(request, expense_pk):
-    if request.method == 'POST':
-        try:
-            expense = models.Expense.objects.get(pk=expense_pk)
-            if not may_account(request, expense):
-                return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
-            if expense.reimbursement is None:
-                return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
+    try: expense = models.Expense.objects.get(pk=expense_pk)
+    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-            expense.verification = request.POST['verification']
-            expense.save()
+    if not request.user.profile.may_account(expense=expense): return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+    if expense.reimbursement is None: return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
 
-            comment = models.Comment(
-                author=request.user.profile,
-                expense=expense,
-                content="Bokförde med verifikationsnumret: " + expense.verification
-            )
-            comment.save()
+    expense.verification = request.POST['verification']
+    expense.save()
 
-            return HttpResponseRedirect(reverse('expenses-action-account'))
-        except ObjectDoesNotExist:
-            raise Http404("Utlägget finns inte")
-    else:
-        raise Http404()
+    comment = models.Comment(
+        author=request.user.profile,
+        expense=expense,
+        content="Bokförde med verifikationsnumret: " + expense.verification
+    )
+    comment.save()
+
+    return HttpResponseRedirect(reverse('expenses-action-account'))
+        
 
 """
 Lists all expenses.

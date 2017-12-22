@@ -7,7 +7,7 @@
 
 {% block action %}
     {% if user.username == expense.owner.user.username %}
-        <a href="{% url 'expenses-edit' expense.id %}">
+        <a href="{% url 'expenses-edit' expense.id %}" class="primary-action">
             Redigera kvitto
         </a>
     {% endif %}

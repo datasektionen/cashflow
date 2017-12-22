@@ -1,4 +1,4 @@
-{% extends "expenses/detail.html" %}
+{% extends "../detail.html" %}
 {% load widget_tweaks %}
 
 {% block title %}Nytt utlägg{% endblock %}
@@ -50,6 +50,8 @@
         </div>
 
         <h2>Kvittodelar</h2>
+        <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller lika med summan av nedanstående rader.</p>
+        
         <div id="expense_parts">
             <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
                 <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
