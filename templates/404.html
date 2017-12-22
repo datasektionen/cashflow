@@ -1,13 +1,26 @@
-{% extends 'main.html' %}
+{% extends './main.html' %}
 
-{% block full_content %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            audio = new Audio('http://www.orangefreesounds.com/wp-content/uploads/2014/08/Wilhelm-Scream-ringtone.mp3')
-            audio.play()
-        })
-    </script>
-    <h1>404: Sidan du letar efter finns inte</h1>
+{% block app %}
+<header>
+    <div class="header-inner">
+        <div class="row">
+            <div class="header-left col-md-2">
+            </div>
+            <div class="col-md-8">
+                <h2>404: Sidan du letar efter finns inte</h2>
+            </div>
+            <div class="header-right col-md-2">
+                
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+</header>
+<div id="content">
     <p>{{ exception }}</p>
+    <script>
+        audio = new Audio('http://www.orangefreesounds.com/wp-content/uploads/2014/08/Wilhelm-Scream-ringtone.mp3')
+        audio.play()
+    </script>
+</div>
 {% endblock %}
