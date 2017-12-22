@@ -19,7 +19,7 @@
             </thead>
             <tr v-for="expense in expenses">
                 <td v-if="!expense.confirmed">
-                    <form v-on:submit.prevent="conf(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/confirm/'">
+                    <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
                         {% csrf_token %}
                         <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta</button>
                     </form>
@@ -27,9 +27,9 @@
                 <td v-else>
                     Bekräftad
                 </td>
-                <td><a v-bind:href="'/expense/' + expense.id + '/'" v-html="expense.id"></a></td>
-                <td><a v-bind:href="'/expense/' + expense.id + '/'" v-html="expense.description"></a></td>
-                <td><a v-bind:href="'/users/' + expense.owner.username + '/'" v-html="expense.owner.name"></a></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-html="expense.id"></a></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-html="expense.description"></a></td>
+                <td><a :href="'/users/' + expense.owner_username + '/'" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
                 <td v-html="expense.amount + ' kr'"></td>
             </tr>
         </table>
