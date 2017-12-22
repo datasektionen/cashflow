@@ -26,10 +26,6 @@ api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-
 api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
-    url(r'^user/(?P<username>\w+)/$', views.get_user, name='expenses-user'),
-    url(r'^user/(?P<username>\w+)/edit/$', views.edit_user, name='expenses-user-edit'),
-    url(r'^user/(?P<username>\w+)/receipts/$', views.get_user_receipts, name='expenses-user-receipts'),
-
     url(r'^new/$', views.new_expense, name='expenses-expense-new'),
     url(r'^new/binder/(?P<pk>\d+)/$', views.expense_in_binder_alert, name='expenses-expense-new-binder'),
     url(r'^(?P<pk>\d+)/$', views.get_expense, name='expenses-expense'),

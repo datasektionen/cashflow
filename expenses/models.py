@@ -126,6 +126,10 @@ class Profile(models.Model):
                 return True
         return False
 
+    def may_be_viewed_by(self, user):
+        return (user == self) or \
+           user.profile.is_admin()
+
     def is_admin(self):
         return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account()
 

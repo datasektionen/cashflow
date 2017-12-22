@@ -9,7 +9,9 @@
                 <div class="col-md-8">
                     <h2>{% block title %}Cashflow{% endblock %}</h2>
                 </div>
-                <div class="header-right col-md-2"></div>
+                <div class="header-right col-md-2">
+                    {% block action %}{% endblock %}
+                </div>
             </div>
             <div class="clear"></div>
         </div>
