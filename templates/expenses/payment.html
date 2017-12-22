@@ -16,7 +16,7 @@
                 <tr>
                     <th>Mottagare:</th>
                     <td>
-                        <a href="{% url 'expenses-user' payment.receiver.user %}">
+                        <a href="{% url 'user-show' payment.receiver.user %}">
                             {{ payment.receiver.user.get_full_name }} ({{ payment.receiver.user.username }}@kth.se)
                         </a>
                     </td>
@@ -32,7 +32,7 @@
                 <tr>
                     <th>Utbetalat av:</th>
                     <td>
-                        <a href="{% url 'expenses-user' payment.payer.user %}">
+                        <a href="{% url 'user-show' payment.payer.user %}">
                             {{ payment.payer.user.get_full_name }} ({{ payment.payer.user.username }}@kth.se)
                         </a>
                     </td>
@@ -54,7 +54,7 @@
             </thead>
             {% for expense in payment.expense_set.all %}
                 <tr>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
                     <td>{{ expense.total_amount|intcomma }} kr</td>
                 </tr>
             {% endfor %}

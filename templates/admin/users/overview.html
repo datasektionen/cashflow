@@ -13,8 +13,8 @@
             </thead>
             {% for u in users %}
                 <tr>
-                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u.user.username }}</a></td>
-                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u }}</a></td>
+                    <td><a href="{% url 'user-show' u.user.username %}">{{ u.user.username }}</a></td>
+                    <td><a href="{% url 'user-show' u.user.username %}">{{ u }}</a></td>
                 </tr>
             {% endfor %}
         </table>

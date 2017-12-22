@@ -1,7 +1,7 @@
 {% block content %}
     # Hej, {{ receiver }}!
     
-    Utlägget "[{{ comment.expense.description }}](http://cashflow.datasektionen.se{% url "expenses-expense" comment.expense.id %})" har fått en ny kommentar av {{ comment.author }}:
+    Utlägget "[{{ comment.expense.description }}](http://cashflow.datasektionen.se{% url "expenses-show" comment.expense.id %})" har fått en ny kommentar av {{ comment.author }}:
     
     {{ comment.content }}
 {% endblock %}

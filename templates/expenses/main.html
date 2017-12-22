@@ -1,0 +1,33 @@
+{% extends "detail.html" %}
+{% load humanize %}
+
+{% block title %}{{ showuser.get_full_name }}{% endblock %}
+
+{% block action %}
+	{% if showuser.username == user.username and not hide_edit %}
+		<a href="{% url 'user-edit' showuser.username %}" class="primary-action">Ändra info</a>
+	{% endif %}
+{% endblock %}
+
+
+{% block full_content %}
+<div class="row">
+	<div class="col-sm-4 col-md-3">
+		<div id="secondary-nav" class="below-pic">
+			<div class="crop" style="background-image: url('https://zfinger.datasektionen.se/user/{{ showuser.username }}/image')"></div>
+			<h3>{{ showuser.get_full_name }}</h3>
+		    <ul>
+		        <li><a href="{% url 'user-show' showuser.username %}">Information</a></li>
+		        <li><a href="{% url 'user-receipts' showuser.username %}">Kvitton</a></li>
+		        {% if showuser.username == user.username %}
+		        <li><a href="/logout/">Logga ut</a></li>
+		        {% endif %}
+		    </ul>
+		</div>
+	</div>
+	<div class="col-sm-8 col-md-9">
+		{% block content %}
+		{% endblock %}
+	</div>
+</div>
+{% endblock %}

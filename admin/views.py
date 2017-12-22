@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -46,17 +46,17 @@ def attest_expense_part(request, pk):
 
     if not request.user.profile.may_attest(expense_part):
         messages.error(request, 'Du får inte attestera denna kvittodel')
-        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
 
     if request.user.username == expense_part.expense.owner.user.username:
         messages.error(request, 'Du kan inte attestera dina egna kvitton')
-        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
 
     expense_part.attest(request.user)
 
     if expense_part.expense.is_attested():
         return HttpResponseRedirect(reverse('admin-attest'))
-    return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+    return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
 
 """
 Shows a list of confirmable receipts and lets user confirm them.
@@ -93,30 +93,25 @@ def account_overview(request):
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())
 def edit_expense_verification(request, pk):
-    try:
-        expense = models.Expense.objects.get(pk=pk)
-    except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+    try: expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_account(expense=expense):
-        return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
-    if expense.reimbursement is None:
-        return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
+    if not request.user.profile.may_account(expense=expense): return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+    if expense.reimbursement is None: return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
 
     if request.method == 'POST':
         expense.verification = request.POST['verification']
         expense.save()
 
-        comment = models.Comment(
+        models.Comment(
             author=request.user.profile,
             expense=expense,
             content="Ändrade verifikationsnumret till: " + expense.verification
-        )
-        comment.save()
+        ).save()
 
-        return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
+        return HttpResponseRedirect(reverse('expenses-show', pk=expense.id))
     else:
-        return render(request, 'expenses/edit_expense_verification.html', {
+        return render(request, 'expenses/edit-verification.html', {
             "expense": expense,
             "expense_parts": expense.expensepart_set.all()
         })

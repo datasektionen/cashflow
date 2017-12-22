@@ -17,9 +17,9 @@
             </thead>
             {% for expense in non_attested_expenses %}
                 <tr>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
                     <td>{{ expense.total_amount|intcomma }} kr</td>
                 </tr>
             {% endfor %}
@@ -41,9 +41,9 @@
             </thead>
             {% for expense in attested_expenses %}
                 <tr>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
+                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
                     <td>{{ expense.total_amount }} kr</td>
                 </tr>
             {% endfor %}
@@ -70,9 +70,9 @@
                         <table>
                             {% for expense in reimbursement.expense_set.all %}
                                 <tr>
-                                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
-                                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.description }}</a></td>
-                                    <td><a href="{% url 'expenses-expense' expense.id %}">{{ expense.total_amount }} kr</a></td>
+                                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
+                                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description }}</a></td>
+                                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.total_amount }} kr</a></td>
                                 </tr>
                             {% endfor %}
                             <tr>

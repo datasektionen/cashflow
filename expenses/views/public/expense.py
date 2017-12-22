@@ -55,11 +55,11 @@ def new_expense(request):
     elif request.method == 'POST':
         if len((request.FILES.getlist('files'))) < 1:
             messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
-            return HttpResponseRedirect(reverse('expenses-expense-new'))
+            return HttpResponseRedirect(reverse('expenses-show-new'))
 
         if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
             messages.error(request, 'Du har angivit ett datum i framtiden')
-            return HttpResponseRedirect(reverse('expenses-expense-new'))
+            return HttpResponseRedirect(reverse('expenses-show-new'))
 
         expense = models.Expense(
             owner=request.user.profile,
@@ -87,7 +87,7 @@ def new_expense(request):
                 amount=request.POST.getlist('amount[]')[idx]
             ).save()
 
-        return HttpResponseRedirect(reverse('expenses-expense-new-binder', kwargs={'pk': expense.id}))
+        return HttpResponseRedirect(reverse('expenses-show-new-binder', kwargs={'pk': expense.id}))
     else:
         raise Http404()
 
@@ -150,7 +150,7 @@ def edit_expense(request, pk):
                     expense_part.amount = request.POST.getlist('amount[]')[idx]
                     expense_part.save()
 
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': pk}))
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
         else:
             return render(request, 'expenses/edit_expense.html', {
                 "expense": expense,
@@ -181,7 +181,7 @@ def edit_expense_verification(request, pk):
             )
             comment.save()
 
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense.id}))
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense.id}))
         else:
             return render(request, 'expenses/edit_expense_verification.html', {
                 "expense": expense,
@@ -274,14 +274,14 @@ def new_comment(request, expense_pk):
 
         if request.method == 'POST':
             if re.match('^\s*$', request.POST['content']):
-                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
+                return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
             comment = models.Comment(
                 expense=expense,
                 author=request.user.profile,
                 content=request.POST['content']
             )
             comment.save()
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_pk}))
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
         else:
             raise Http404()
     except ObjectDoesNotExist:

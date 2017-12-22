@@ -15,7 +15,7 @@
         <h1>Mest Cashflowat</h1>
         <ol class="">
         {% for user in highscore %}
-        <li><a href="/user/{{ user.user.username }}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
+        <li><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
         {% endfor %}
         </ol>
     </div>

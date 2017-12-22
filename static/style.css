@@ -70,11 +70,6 @@
     background: none;
     color: #000;
 }
-#content h2 {
-    font-weight: normal;
-    text-transform: uppercase;
-    margin: 0px;
-}
 
 
 ul.info {
@@ -493,6 +488,9 @@ td.right, th.right {
 }
 td.no-wrap, th.no-wrap {
     white-space: nowrap;
+}
+th {
+    padding: 10px;
 }
 
 

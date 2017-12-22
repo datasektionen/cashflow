@@ -48,7 +48,7 @@ def edit_expense_part(request, pk):
                 content="Ändrade kvittodelen " + original_str_repr + " till " + str(expense_part)
             )
             comment.save()
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
         else:
             raise Http404()
 
@@ -65,7 +65,7 @@ def attest_expense_part(request, pk):
         if request.method == 'POST':
             if request.user.username == expense_part.expense.owner.user.username:
                 messages.error(request, 'Du kan inte attestera dina egna kvitton')
-                return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+                return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
 
             expense_part.attested_by = request.user.profile
             expense_part.attest_date = date.today()
@@ -77,7 +77,7 @@ def attest_expense_part(request, pk):
                 content="Attesterade kvittodelen: " + str(expense_part)
             )
             comment.save()
-            return HttpResponseRedirect(reverse('expenses-expense', kwargs={'pk': expense_part.expense.id}))
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
         else:
             raise Http404()
 

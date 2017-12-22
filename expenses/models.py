@@ -121,14 +121,27 @@ class Profile(models.Model):
                 may_account.append(permission[len("accounting-"):].lower())
         if expense == None:
             return may_account
-        for ep in expense.expensepart_set():
+        print("HÄÄÄÄR", expense.expensepart_set.all())
+        for ep in expense.expensepart_set.all():
             if ep.committee_name.lower() in may_account:
                 return True
         return False
 
+    def may_delete(self, expense):
+        if expense.owner.user.username == self.user.username: return True
+        return False
+
     def may_be_viewed_by(self, user):
-        return (user == self) or \
-           user.profile.is_admin()
+        return user == self or user.profile.is_admin()
+
+    def may_view_expense(self, expense):
+        if expense.owner.user.username == self.user.username or self.may_pay():
+            return True
+        for committee in expense.committees():
+            if committee.lower() in self.may_account() or committee.lower() in self.may_attest():
+                return True
+
+        return False
 
     def is_admin(self):
         return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account()
@@ -211,6 +224,14 @@ class Expense(models.Model):
     # Returns a json dict from the expense
     def __repr__(self):
         return str(self.to_dict())
+
+    def status(self):
+        if self.verification: return "Bokförd som " + str(self.verification)
+        if self.reimbursement: return "Utbetald"
+        if self.is_attested() and self.confirmed_by: return "Inväntar utbetalning"
+        if self.is_attested() and not self.confirmed_by: return "Attesterad men inte i pärmen"
+        if not self.is_attested() and self.confirmed_by: return "Inte attesterad men i pärmen"
+        return "Inte attesterad"
 
     # Return the total amount of the expense parts
     def total_amount(self):

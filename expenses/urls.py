@@ -26,12 +26,12 @@ api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-
 api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
-    url(r'^new/$', views.new_expense, name='expenses-expense-new'),
-    url(r'^new/binder/(?P<pk>\d+)/$', views.expense_in_binder_alert, name='expenses-expense-new-binder'),
-    url(r'^(?P<pk>\d+)/$', views.get_expense, name='expenses-expense'),
-    url(r'^(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-expense-edit'),
-    url(r'^(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-expense-delete'),
-    url(r'^(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-expense-comment-new'),
+    url(r'^new/$', views.new_expense, name='expenses-new'),
+    url(r'^new/confirmation/(?P<pk>\d+)/$', views.expense_new_confirmation, name='expenses-new-confirmation'),
+    url(r'^(?P<pk>\d+)/$', views.get_expense, name='expenses-show'),
+    url(r'^(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-edit'),
+    url(r'^(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-delete'),
+    url(r'^(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-comment'),
     
     url(r'^api/payment/new/$', views.api_new_payment, name='expenses-api-payment-new'),
     url(r'^payment/new/$', views.new_payment, name='expenses-payment-new'),

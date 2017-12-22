@@ -88,7 +88,7 @@ def edit_user(request, username):
             received_form = UserForm(request.POST, instance=user.profile)
             if received_form.is_valid():
                 received_form.save()
-                return HttpResponseRedirect(reverse('expenses-user', args=[username]))
+                return HttpResponseRedirect(reverse('user-show', args=[username]))
         else:
             form = UserForm(instance=user.profile)
             return render(request, 'expenses/edit_user.html', {
