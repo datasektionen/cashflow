@@ -15,5 +15,5 @@ urlpatterns = [
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),
     url(r'^expense/(?P<pk>\d+)/confirm/$', views.confirm_expense, name='admin-expense-confirm'),
 
-    url(r'^expense_part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='admin-expense_part-attest'),
+    url(r'^expense-part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='admin-expensepart-attest'),
 ]

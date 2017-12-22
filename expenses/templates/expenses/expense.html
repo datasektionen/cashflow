@@ -24,6 +24,14 @@
 
 {% block full_content %}
 <div id="app">
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
 <h2>Kvittodelar</h2>
 <table>
     <thead>
@@ -70,7 +78,7 @@
                 {% else %}
                     {% if expense.owner.user.username != user.username and expense_part.committee_name|lower in user.profile.may_attest %}
                         <span style="display: block;">
-                            <form method="POST" action="{% url 'expenses-expense_part-attest' expense_part.id %}">
+                            <form method="POST" action="{% url 'admin-expensepart-attest' expense_part.id %}">
                                 {% csrf_token %}
                                 <button class="pull-right small theme-color btn-color" type="submit" style="margin-right:15px;"><i class="fa fa-check" aria-hidden="true"></i></button>
                                 <span style="margin: 5px 0;display:inline-block;">Du kan attestera &nbsp;</span>
@@ -145,7 +153,7 @@
         </tr>
         <tr>
             <th>Verifikationsnummer:</th>
-            <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'expenses-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
+            <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
         </tr>
     </table>
 </div>

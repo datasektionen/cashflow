@@ -1,0 +1,56 @@
+{% extends "../main.html" %}
+
+{% block title %}Attestera kvitton{% endblock %}
+
+{% block content %}
+<div id="app">
+    <p>
+        Här kan du hitta alla kvitton som har delar som du får attestera,
+        klicka på ett kvitto för att komma till dess specifika vy.
+    </p>
+    <div class="select" style="float:right">
+        <select v-model="committee">
+            <option :value="false">Filtrera på nämnd</option>
+            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+    <br />
+    <table v-if="expenses.length > 0">
+        <thead>
+            <tr>
+                <th>Beskrivning</th>
+                <th>Ägare</th>
+                <th>Nämnder</th>
+                <th class="right">Belopp</th>
+            </tr>
+        </thead>
+        <tr v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
+            <td><a :href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
+            <td><a :href="'/users/' + expense.owner_username" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
+            <td v-html="expense.committees.join(', ')"></td>
+            <td class="right" v-html="expense.amount + ' kr'"></td>
+        </tr>
+    </table>
+    <p v-else><b>Du har inga utlägg som kan attesteras! Bra jobbat!</b></p>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                committee: false,
+                expenses: {% autoescape off %}{{ attestable_expenses }}{% endautoescape %},
+                committees: []
+            }
+        },
+        created: function() {
+            this.committees = Array.from(new Set([].concat.apply([], this.expenses.map(x => x.committees))))
+        },
+        methods: {
+
+        }
+    })
+</script>
+{% endblock %}

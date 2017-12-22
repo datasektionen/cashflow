@@ -1,0 +1,41 @@
+{% extends "expenses/detail.html" %}
+{% load humanize %}
+
+{% block title %}Administration{% endblock %}
+
+{% block full_content %}
+<div class="row">
+    <div class="col-sm-4 col-md-3">
+        <div id="secondary-nav" class="below-pic">
+            <h3>Administration</h3>
+            <ul>
+                <li><a href="/admin">Start</a></li>
+                
+                {% if user.profile.may_attest %}
+                    <li><a href="{% url 'admin-attest' %}">Attestera</a></li>
+                {% endif %}
+                
+                {% if user.profile.may_confirm %}
+                    <li><a href="{% url 'admin-confirm' %}">Bekräfta i pärmen</a></li>
+                {% endif %}
+                
+                {% if user.profile.may_pay %}
+                    <li><a href="{% url 'admin-pay' %}">Betala ut</a></li>
+                {% endif %}
+                
+                {% if user.profile.may_account %}
+                    <li><a href="{% url 'admin-account' %}">Bokför</a></li>
+                {% endif %}
+                
+                {% if user.is_staff or user.is_superuser %}
+                    <li><a href="/admin/django">Django-admin</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-sm-8 col-md-9">
+        {% block content %}
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}

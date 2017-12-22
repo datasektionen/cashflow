@@ -7,7 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
-
+from datetime import date, datetime
+        
+from cashflow import dauth
 from cashflow import settings
 
 """
@@ -94,32 +96,38 @@ class Profile(models.Model):
         }
 
     # Returns a list of the committees that the user may attest
-    def may_attest(self):
+    def may_attest(self, expense_part=None):
         may_attest = []
-        from cashflow import dauth
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("attest-"):
                 may_attest.append(permission[len("attest-"):].lower())
-        return may_attest
+        if expense_part == None:
+            return may_attest
+        return expense_part.committee_name.lower() in may_attest
 
     # Returns a list of the committees that the user may pay for
     def may_pay(self):
-        from cashflow import dauth
         return 'pay' in dauth.get_permissions(self.user)
 
     # Returns a list of the committees that the user may pay for
     def may_confirm(self):
-        from cashflow import dauth
         return 'confirm' in dauth.get_permissions(self.user)
 
     # Returns a list of the committees that the user may account for
-    def may_account(self):
+    def may_account(self, expense=None):
         may_account = []
-        from cashflow import dauth
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("accounting-"):
                 may_account.append(permission[len("accounting-"):].lower())
-        return may_account
+        if expense == None:
+            return may_account
+        for ep in expense.expensepart_set():
+            if ep.committee_name.lower() in may_account:
+                return True
+        return False
+
+    def is_admin(self):
+        return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account()
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -211,6 +219,11 @@ class Expense(models.Model):
     def committees(self):
         return self.expensepart_set.order_by('committee_name').values('committee_name').distinct()
 
+    # Returns the committees belonging to the expense as a list [{ committee_name: 'Name' }, ...]
+    def is_attested(self):
+        print(self.expensepart_set.filter(attested_by__isnull=True).count())
+        return self.expensepart_set.filter(attested_by__isnull=True).count() == 0
+
     # Returns a dict representation of the model
     def to_dict(self):
         exp = model_to_dict(self)
@@ -223,6 +236,30 @@ class Expense(models.Model):
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
+
+    @staticmethod
+    def attestable(may_attest, user):
+        return Expense.objects.exclude(owner__user=user).filter(
+            expensepart__attested_by=None,
+            expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
+        ).distinct()
+
+    @staticmethod
+    def payable():
+        return Expense.objects. \
+            filter(reimbursement=None). \
+            exclude(expensepart__attested_by=None). \
+            exclude(confirmed_by=None). \
+            order_by('owner__user__username')
+
+    @staticmethod
+    def accountable(may_account):
+        if '*' in may_account:
+            return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct()
+        return Expense.objects.exclude(reimbursement=None).filter(
+            verification='',
+            expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+        ).distinct()
 
 
 """
@@ -276,6 +313,18 @@ class ExpensePart(models.Model):
     # Returns unicode representation of the model
     def __unicode__(self):
         return self.expense.__unicode__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
+
+    def attest(self, user):
+        self.attested_by = user.profile
+        self.attest_date = date.today()
+
+        self.save()
+        comment = Comment(
+            author=user.profile,
+            expense=self.expense,
+            content="Attesterar kvittodelen ```" + str(self) + "```"
+        )
+        comment.save()
 
     # Returns dict representation of the model
     def to_dict(self):
