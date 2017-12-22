@@ -9,13 +9,7 @@ import expenses.api_views.file as file_api
 import expenses.api_views.misc as misc_api
 import expenses.api_views.pay as pay_api
 import expenses.api_views.user as user_api
-import expenses.human_views.action as action_views
-import expenses.human_views.expense as expense_views
-import expenses.human_views.expense_part as expensepart_views
-import expenses.human_views.general as general_views
-import expenses.human_views.stats as stats_views
-import expenses.human_views.payment as payment_views
-import expenses.human_views.user as user_views
+import expenses.views as views
 
 router = DefaultRouter()
 router.register('expense',  expense_api.ExpenseViewSet, base_name='Expense')
@@ -32,37 +26,38 @@ api_urlpatterns.append(url(r'^login/(.*)/$', misc_api.login, name='expenses-api-
 api_urlpatterns.append(url(r'^logout/$', misc_api.logout))
 
 urlpatterns = [
-    url(r'^$', general_views.index, name='expenses-index'),
-    url(r'^stats/$', stats_views.index, name='expenses-stats'),
+    url(r'^$', views.index, name='expenses-index'),
 
-    url(r'^user/(?P<username>\w+)/$', user_views.get_user, name='expenses-user'),
-    url(r'^user/(?P<username>\w+)/edit/$', user_views.edit_user, name='expenses-user-edit'),
-    url(r'^user/(?P<username>\w+)/receipts/$', user_views.get_user_receipts, name='expenses-user-receipts'),
-    url(r'^users/$', user_views.user_list, name='expenses-userlist'),
+    url(r'^user/(?P<username>\w+)/$', views.get_user, name='expenses-user'),
+    url(r'^user/(?P<username>\w+)/edit/$', views.edit_user, name='expenses-user-edit'),
+    url(r'^user/(?P<username>\w+)/receipts/$', views.get_user_receipts, name='expenses-user-receipts'),
 
-    url(r'^expense/new/$', expense_views.new_expense, name='expenses-expense-new'),
-    url(r'^expense/new/binder/(?P<pk>\d+)/$', expense_views.expense_in_binder_alert, name='expenses-expense-new-binder'),
-    url(r'^expense/(?P<pk>\d+)/$', expense_views.get_expense, name='expenses-expense'),
-    url(r'^expense/(?P<pk>\d+)/edit/$', expense_views.edit_expense, name='expenses-expense-edit'),
-    url(r'^expense/(?P<pk>\d+)/verification/edit/$', expense_views.edit_expense_verification, name='expenses-expense-edit-verification'),
-    url(r'^expense/(?P<pk>\d+)/delete/$', expense_views.delete_expense, name='expenses-expense-delete'),
-    url(r'^expense/(?P<expense_pk>\d+)/comment/$', expense_views.new_comment, name='expenses-expense-comment-new'),
-    url(r'^expense/(?P<expense_pk>\d+)/verification/$', expense_views.set_verification, name='expenses-expense-verification'),
-    url(r'^expense/(?P<pk>\d+)/confirm/$', expense_views.confirm_expense, name='expenses-expense-confirm'),
+    url(r'^expense/new/$', views.new_expense, name='expenses-expense-new'),
+    url(r'^expense/new/binder/(?P<pk>\d+)/$', views.expense_in_binder_alert, name='expenses-expense-new-binder'),
+    url(r'^expense/(?P<pk>\d+)/$', views.get_expense, name='expenses-expense'),
+    url(r'^expense/(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-expense-edit'),
+    url(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='expenses-expense-edit-verification'),
+    url(r'^expense/(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-expense-delete'),
+    url(r'^expense/(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-expense-comment-new'),
+    url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='expenses-expense-verification'),
+    url(r'^expense/(?P<pk>\d+)/confirm/$', views.confirm_expense, name='expenses-expense-confirm'),
     
-    url(r'^expense_part/(?P<pk>\d+)/edit/$', expensepart_views.edit_expense_part, name='expenses-expense_part-edit'),
-    url(r'^expense_part/(?P<pk>\d+)/attest/$', expensepart_views.attest_expense_part, name='expenses-expense_part-attest'),
+    url(r'^expense_part/(?P<pk>\d+)/edit/$', views.edit_expense_part, name='expenses-expense_part-edit'),
+    url(r'^expense_part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='expenses-expense_part-attest'),
     
-    url(r'^api/payment/new/$', payment_views.api_new_payment, name='expenses-api-payment-new'),
-    url(r'^payment/new/$', payment_views.new_payment, name='expenses-payment-new'),
-    url(r'^payment/(?P<pk>\d+)/$', payment_views.get_payment, name='expenses-payment'),
+    url(r'^api/payment/new/$', views.api_new_payment, name='expenses-api-payment-new'),
+    url(r'^payment/new/$', views.new_payment, name='expenses-payment-new'),
+    url(r'^payment/(?P<pk>\d+)/$', views.get_payment, name='expenses-payment'),
 
-    url(r'^confirm/$', action_views.confirm_overview, name='expenses-action-confirm'),
-    url(r'^attest/$', action_views.attest_overview, name='expenses-action-attest'),
-    url(r'^pay/$', action_views.pay_overview, name='expenses-action-pay'),
-    url(r'^accounting/$', action_views.accounting_overview, name='expenses-action-accounting'),
+    url(r'^confirm/$', views.confirm_overview, name='expenses-action-confirm'),
+    url(r'^attest/$', views.attest_overview, name='expenses-action-attest'),
+    url(r'^pay/$', views.pay_overview, name='expenses-action-pay'),
+    url(r'^accounting/$', views.accounting_overview, name='expenses-action-accounting'),
 
-    url(r'^expenses/$', expense_views.expense_overview, name='expenses-expense-overview')
+    url(r'^expenses/$', views.expense_overview, name='expenses-expense-overview'),
+
+    url(r'^admin/$', views.index, name='expenses-admin-index'),
+    url(r'^admin/users/$', views.user_list, name='expenses-userlist'),
 ]
 
 # Code to be run once (https://stackoverflow.com/questions/6791911/execute-code-when-django-starts-once-only)

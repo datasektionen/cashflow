@@ -61,7 +61,11 @@
         {% endif %}
         links: [
             {% block methone-links %}
-
+                {str: "Hem", href: "/" },
+                {% if user.is_authenticated %}
+                    {str: "Administrera", href: "/admin" },
+                    {str: "Statistik", href: "/stats"},
+                {% endif %}
             {% endblock %}
         ]
     }

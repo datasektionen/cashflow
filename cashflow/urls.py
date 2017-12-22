@@ -23,6 +23,8 @@ urlpatterns = [
     url(r'^login/$', login, name='login'),
     url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/django/', include(admin.site.urls)),
     url(r'^', include("expenses.urls")),
-              ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    url(r'^invoices/', include("invoices.urls")),
+    url(r'^stats/', include("stats.urls")),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
