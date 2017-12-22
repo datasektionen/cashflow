@@ -16,4 +16,7 @@ urlpatterns = [
     url(r'^expense/(?P<pk>\d+)/confirm/$', views.confirm_expense, name='admin-expense-confirm'),
 
     url(r'^expense-part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='admin-expensepart-attest'),
+
+    url(r'^expenses/$', views.expense_overview, name='admin-expense-overview'),
+    url(r'^users/$', views.user_overview, name='admin-user-overview'),
 ]

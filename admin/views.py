@@ -10,6 +10,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from cashflow import dauth
 from expenses import models
@@ -169,6 +170,49 @@ def set_verification(request, expense_pk):
             raise Http404("Utlägget finns inte")
     else:
         raise Http404()
+
+"""
+Lists all expenses.
+"""
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def expense_overview(request):
+    committee = request.GET.get('committee')
+    expenses_list = models.Expense.objects.order_by('verification', '-id')
+    if committee != None and committee != '':
+        expenses_list = expenses_list.filter(expensepart__committee_name=committee)
+    expenses_list = expenses_list.all()
+    paginator = Paginator(expenses_list, 25)
+    page = request.GET.get('page')
+
+    try: expenses = paginator.page(page)
+    except PageNotAnInteger: expenses = paginator.page(1)
+    except EmptyPage: expenses = paginator.page(paginator.num_pages)
+
+    return render(request, 'admin/expenses/overview.html', {
+        'expenses': expenses,
+        'committees': json.dumps([x['committee_name'] for x in models.ExpensePart.objects.values('committee_name').distinct()]),
+        'committee': committee if committee != None else ''
+    })
+
+"""
+Lists all users.
+"""
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def user_overview(request):
+    paginator = Paginator(models.Profile.objects.order_by('-id').all(), 25)
+    page = request.GET.get('page')
+
+    try: users = paginator.page(page)
+    except PageNotAnInteger: users = paginator.page(1)
+    except EmptyPage: users = paginator.page(paginator.num_pages)
+
+    return render(request, 'admin/users/overview.html', {
+        'users': users
+    })
 
 
 

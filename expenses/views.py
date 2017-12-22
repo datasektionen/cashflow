@@ -14,34 +14,6 @@ from cashflow import dauth
 from expenses import models
 
 
-def expense_overview(request):
-    committee = request.GET.get('committee')
-    expenses_list = models.Expense.objects.order_by('verification', '-id')
-    if committee != None and committee != '':
-        expenses_list = expenses_list.filter(expensepart__committee_name=committee)
-    expenses_list = expenses_list.all()
-    paginator = Paginator(expenses_list, 25)
-    page = request.GET.get('page')
-
-    try:
-        expenses = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        expenses = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        expenses = paginator.page(paginator.num_pages)
-
-    if request.method == 'GET':
-        if len(dauth.get_permissions(request.user)) > 0:
-            return render(request, 'expenses/expense_list.html', {
-                'expenses': expenses,
-                'committees': json.dumps([x['committee_name'] for x in models.ExpensePart.objects.values('committee_name').distinct()]),
-                'committee': committee if committee != None else ''
-            })
-    else:
-        raise Http404()
-
 def new_expense(request):
     if request.method == 'GET':
         return render(request, 'expenses/new_expense.html')
@@ -293,15 +265,6 @@ def api_new_payment(request):
             expense.reimbursement = payment
             expense.save()
         return JsonResponse({'payment':payment.to_dict(), 'expenses':[e.to_dict() for e in expenses]})
-    else:
-        raise Http404()
-
-def user_list(request):
-    if request.method == 'GET':
-        if len(dauth.get_permissions(request.user)) > 0:
-            return render(request, 'expenses/user_list.html', {
-                'users': models.Profile.objects.order_by('-id').all()
-            })
     else:
         raise Http404()
 

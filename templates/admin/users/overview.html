@@ -1,0 +1,40 @@
+{% extends "../main.html" %}
+
+{% block title %}Alla användare{% endblock %}
+
+{% block content %}
+    {% if users %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Kth-id</th>
+                    <th>Namn</th>
+                </tr>
+            </thead>
+            {% for u in users %}
+                <tr>
+                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u.user.username }}</a></td>
+                    <td><a href="{% url 'expenses-user' u.user.username %}">{{ u }}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        Det finns inga användare :sad:
+    {% endif %}
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if users.has_previous %}
+                <a href="?page={{ users.previous_page_number }}">Föregående</a>
+            {% endif %}
+
+            {% for i in users.paginator.page_range %}
+                <a href="?page={{ i }}" {% if i == users.number %} class="active"{% endif %}>{{i}}</a>
+            {% endfor %}
+
+            {% if users.has_next %}
+                <a href="?page={{ users.next_page_number }}">Nästa</a>
+            {% endif %}
+        </span>
+    </div>
+{% endblock %}

@@ -26,6 +26,9 @@
                 {% if user.profile.may_account %}
                     <li><a href="{% url 'admin-account' %}">Bokför</a></li>
                 {% endif %}
+
+                <li><a href="{% url 'admin-user-overview' %}">Användare</a></li>
+                <li><a href="{% url 'admin-expense-overview' %}">Kvitton</a></li>
                 
                 {% if user.is_staff or user.is_superuser %}
                     <li><a href="/admin/django">Django-admin</a></li>

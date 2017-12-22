@@ -37,11 +37,7 @@ urlpatterns = [
     url(r'^(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-expense-delete'),
     url(r'^(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-expense-comment-new'),
     
-    url(r'^expense_part/(?P<pk>\d+)/edit/$', views.edit_expense_part, name='expenses-expense_part-edit'),
-    
     url(r'^api/payment/new/$', views.api_new_payment, name='expenses-api-payment-new'),
     url(r'^payment/new/$', views.new_payment, name='expenses-payment-new'),
     url(r'^payment/(?P<pk>\d+)/$', views.get_payment, name='expenses-payment'),
-
-    url(r'^expenses/$', views.expense_overview, name='expenses-expense-overview'),
 ]
