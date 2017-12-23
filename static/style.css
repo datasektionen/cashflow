@@ -274,7 +274,7 @@ table .checkbox {
     opacity: 1;
 }
 .checkbox input[type=checkbox]:checked + label:before {
-    background: #ec5f99;
+    background: #278032;
 }
 .checkbox input[type=checkbox]:disabled + label:before {
     background: #eee;
@@ -283,7 +283,7 @@ table .checkbox {
     background: #666;
 }
 .checkbox input[type=checkbox]:checked + label {
-    color: #ec5f99;
+    color: #278032;
 }
 input[type=checkbox] {
     visibility: hidden;
@@ -349,10 +349,10 @@ table .radio {
     opacity: 1;
 }
 .radio input[type=radio]:checked + label:before {
-    background: #ec5f99;
+    background: #278032;
 }
 .radio input[type=radio]:checked + label {
-    color: #ec5f99;
+    color: #278032;
 }
 input[type=radio] {
     visibility: hidden;
