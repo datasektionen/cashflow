@@ -63,7 +63,7 @@
             {% block methone-links %}
                 {str: "Hem", href: "/" },
                 {% if user.is_authenticated %}
-                    {% if user.is_admin %}
+                    {% if user.profile.is_admin %}
                     {str: "Administrera", href: "/admin" },
                     {% endif %}
                     {str: "Statistik", href: "/stats"},
