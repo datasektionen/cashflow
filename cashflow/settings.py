@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'widget_tweaks',
     'expenses',
+    'invoices',
 )
 
 MIDDLEWARE_CLASSES = (

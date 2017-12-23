@@ -286,7 +286,6 @@ class Expense(models.Model):
             expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()
 
-
 """
 Represents a file on, for example, S3.
 """
