@@ -20,13 +20,10 @@ from expenses import models
 @require_GET
 @login_required
 def get_user(request, username):
-    try:
-        user = models.User.objects.get_by_natural_key(username)
-    except ObjectDoesNotExist:
-        raise Http404("Användaren finns inte")
+    try: user = models.User.objects.get_by_natural_key(username)
+    except ObjectDoesNotExist: raise Http404("Användaren finns inte")
 
-    if not user.profile.may_be_viewed_by(request.user):
-        return HttpResponseForbidden()
+    if not user.profile.may_be_viewed_by(request.user): return HttpResponseForbidden()
 
     return render(request, 'users/information.html', {
         'showuser': user,

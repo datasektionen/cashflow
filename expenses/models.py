@@ -132,7 +132,7 @@ class Profile(models.Model):
         return False
 
     def may_be_viewed_by(self, user):
-        return user == self or user.profile.is_admin()
+        return user.username == self.user.username or user.profile.is_admin()
 
     def may_view_expense(self, expense):
         if expense.owner.user.username == self.user.username or self.may_pay():
