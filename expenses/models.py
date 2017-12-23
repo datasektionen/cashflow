@@ -280,6 +280,10 @@ class Expense(models.Model):
         ).distinct()
 
     @staticmethod
+    def confirmable():
+        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+
+    @staticmethod
     def payable():
         return Expense.objects. \
             filter(reimbursement=None). \

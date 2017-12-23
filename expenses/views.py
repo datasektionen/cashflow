@@ -44,7 +44,7 @@ def new_expense(request):
 
         # Add the file
         for uploaded_file in request.FILES.getlist('files'):
-            file = models.File(belonging_to=expense, file=uploaded_file)
+            file = models.File(expense=expense, file=uploaded_file)
             file.save()
 
         # Add the expenseparts

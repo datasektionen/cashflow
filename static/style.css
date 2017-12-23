@@ -291,7 +291,17 @@ input[type=checkbox] {
 
 
 
-
+span.notification {
+    border-radius: 10px;
+    height: 20px;
+    min-width: 20px;
+    background: #278032;
+    display: inline-block;
+    color: #fff;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+}
 
 ul.search-result {
     list-style-type: none;

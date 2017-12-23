@@ -1,28 +1,58 @@
 {% extends "detail.html" %}
 {% load humanize %}
+{% load admin_counts %}
 
 {% block title %}Administration{% endblock %}
 
 {% block full_content %}
+{% counts %}
 <div class="row">
     <div class="col-sm-4 col-md-3">
         <div id="secondary-nav" class="below-pic">
             <h3>Utlägg</h3>
             <ul>
                 {% if user.profile.may_attest %}
-                    <li><a href="{% url 'admin-attest' %}">Attestera</a></li>
+                    <li>
+                        <a href="{% url 'admin-attest' %}">
+                            Attestera
+                            {% if counts.attest > 0 %}
+                                <span class="notification">{{ counts.attest }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
                 {% endif %}
                 
                 {% if user.profile.may_confirm %}
-                    <li><a href="{% url 'admin-confirm' %}">Bekräfta i pärmen</a></li>
+                    <li>
+                        <a href="{% url 'admin-confirm' %}">
+                            Bekräfta i pärmen
+                            {% if counts.confirm > 0 %}
+                                <span class="notification">{{ counts.confirm }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
                 {% endif %}
                 
                 {% if user.profile.may_pay %}
-                    <li><a href="{% url 'admin-pay' %}">Betala ut</a></li>
+                    <li>
+                        <a href="{% url 'admin-pay' %}">
+                            Betala ut
+                            {% if counts.pay > 0 %}
+                                <span class="notification">{{ counts.pay }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
                 {% endif %}
                 
                 {% if user.profile.may_account %}
-                    <li><a href="{% url 'admin-account' %}">Bokför</a></li>
+                    <li>
+                        <a href="{% url 'admin-account' %}">
+                            Bokför
+                            {% if counts.account > 0 %}
+                                <span class="notification">{{ counts.account }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
                 {% endif %}
 
                 <li><a href="{% url 'admin-expense-overview' %}">Lista alla</a></li>
