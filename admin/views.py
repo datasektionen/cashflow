@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -162,7 +162,7 @@ def set_verification(request, expense_pk):
     )
     comment.save()
 
-    return HttpResponseRedirect(reverse('expenses-action-account'))
+    return HttpResponseRedirect(reverse('admin-action-account'))
         
 
 """
@@ -231,6 +231,26 @@ def invoice_overview(request):
         'invoices': invoices,
         'committees': json.dumps([x['committee_name'] for x in ExpensePart.objects.values('committee_name').distinct()]),
         'committee': committee if committee != None else ''
+    })
+
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def search_verification(request):
+    return render(request, 'admin/search-verification.html')
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def search_verification_response(request):
+    if (len(request.POST['query']) < 1):
+        return JsonResponse({'invoices': [], 'expenses': []})
+
+    invoices = Invoice.objects.filter(verification__contains=request.POST['query']).all()
+    expenses = Expense.objects.filter(verification__contains=request.POST['query']).all()
+    return JsonResponse({
+        'invoices': [invoice.to_dict() for invoice in invoices[:10]],
+        'expenses': [expense.to_dict() for expense in expenses[:10]]
     })
 
 

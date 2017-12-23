@@ -1,0 +1,49 @@
+{% extends "./main.html" %}
+{% load humanize %}
+
+{% block title %}Sök verifikation{% endblock %}
+
+{% block content %}
+<div id="app">
+    <input type="text" v-on:keyup="search" v-model="query" placeholder="Skriv ett verifikationsnummer att söka efter..." />
+    <ul class="search-result">
+        <li v-for="invoice in invoices"><a :href="'/invoices/' + invoice.id" v-html="invoice.verification + ': Faktura ' + invoice.description"></a></li>
+        <li v-for="expense in expenses"><a :href="'/expenses/' + expense.id" v-html="expense.verification + ': Utlägg ' + expense.description"></a></li>
+    </ul>
+</div>
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                invoices: [],
+                expenses: [],
+                query: '',
+                hoverIndex: 0
+            }
+        },
+        methods: {
+            search() {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('query', this.query)
+
+                fetch('/admin/verifications/search/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => res.json())
+                .then(res => {
+                    this.invoices = res.invoices
+                    this.expenses = res.expenses
+                })
+            }
+        },
+        created: function() {
+            
+        }
+    })
+</script>
+{% endblock %}

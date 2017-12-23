@@ -293,6 +293,26 @@ input[type=checkbox] {
 
 
 
+ul.search-result {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+ul.search-result li {
+    display: block;
+    margin: 10px 0;
+}
+ul.search-result li a {
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: block;
+    padding: 10px;
+    border-radius: 2px;
+}
+ul.search-result li a:hover {
+    background: #eee;
+}
 
 
 

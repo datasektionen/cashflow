@@ -19,5 +19,7 @@ urlpatterns = [
 
     url(r'^expenses/$', views.expense_overview, name='admin-expense-overview'),
     url(r'^invoices/$', views.invoice_overview, name='admin-invoice-overview'),
+    url(r'^verifications/$', views.search_verification, name='admin-search-verification'),
+    url(r'^verifications/search/$', views.search_verification_response, name='admin-search-verification-api'),
     url(r'^users/$', views.user_overview, name='admin-user-overview'),
 ]
