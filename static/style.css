@@ -589,6 +589,10 @@ ul.comments .alternatives ul li a:hover {
 .description {
     margin-bottom: 20px;
 }
+.description.thin {
+    margin-top: 0;
+    padding-top: 0;
+}
 ul.comments textarea {
     padding: 10px;
     font-family: inherit;
