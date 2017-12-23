@@ -11,6 +11,7 @@ from datetime import date, datetime
         
 from cashflow import dauth
 from cashflow import settings
+from invoices.models import *
 
 """
 
@@ -138,6 +139,15 @@ class Profile(models.Model):
         if expense.owner.user.username == self.user.username or self.may_pay():
             return True
         for committee in expense.committees():
+            if committee.lower() in self.may_account() or committee.lower() in self.may_attest():
+                return True
+
+        return False
+
+    def may_view_invoice(self, invoice):
+        if invoice.owner.user.username == self.user.username or self.may_pay():
+            return True
+        for committee in invoice.committees():
             if committee.lower() in self.may_account() or committee.lower() in self.may_attest():
                 return True
 
@@ -290,7 +300,8 @@ class Expense(models.Model):
 Represents a file on, for example, S3.
 """
 class File(models.Model):
-    belonging_to = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField()
 
     # Returns a string representation of the file

@@ -1,0 +1,10 @@
+{% extends "../detail.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Sätt in fakturan i pärmen{% endblock %}
+
+{% block full_content %}
+    <div>
+        <a href="{% url "invoices-show" invoice.pk %}" class="button primary-action btn-color theme-color" style="color:#fff">Gå vidare</a>
+    </div>
+{% endblock %}

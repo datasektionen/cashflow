@@ -1,18 +1,19 @@
 from django.db import models
-
-# Create your models here.
+from django.contrib.auth.models import User
+from expenses.models import *
 
 """
 Represents an invoice.
 """
 class Invoice(models.Model):
     created_date = models.DateField(auto_now_add=True)
-    invoice_date = models.DateField()
+    invoice_date = models.DateField(blank=True, null=True)
+    due_date = models.DateField(blank=True, null=True)
     confirmed_by = models.ForeignKey(User, blank=True, null=True)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey(Profile)
+    owner = models.ForeignKey('expenses.Profile')
     description = models.TextField()
-    verification = models.CharField(max_length=7, blank=True)
+    verification = models.CharField(max_length=7, blank=True, null=True)
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -55,8 +56,6 @@ class Invoice(models.Model):
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
         exp['committees'] = [committee['committee_name'] for committee in self.committees()]
-        if self.reimbursement is not None:
-            exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
 
     @staticmethod
@@ -68,6 +67,7 @@ class Invoice(models.Model):
             invoicepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
         ).distinct()
 
+    # TODO
     @staticmethod
     def payable():
         return Invoice.objects. \
@@ -76,6 +76,7 @@ class Invoice(models.Model):
             exclude(confirmed_by=None). \
             order_by('owner__user__username')
 
+    # TODO
     @staticmethod
     def accountable(may_account):
         if '*' in may_account:
@@ -97,7 +98,7 @@ class InvoicePart(models.Model):
     committee_name = models.TextField(blank=True)
     committee_id = models.IntegerField(default=0)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey(Profile, blank=True, null=True)
+    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model
