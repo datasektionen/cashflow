@@ -19,6 +19,12 @@
                     <span class="description">Registrera utlägg</span>
                 </a>
             </li>
+            <li>
+                <a href="/invoices/new" v-tooltip.bottom="{ content: 'Ladda upp en faktura som ska betalas' }">
+                    <span class="icon"><i class="fa fa-file-text" aria-hidden="true"></i></span>
+                    <span class="description">Ladda upp faktura</span>
+                </a>
+            </li>
             {% else %}
             <li>
                 <a href="/login" v-tooltip.bottom="{ content: 'Logga in för att kunna skapa utlägg' }">
@@ -27,14 +33,6 @@
                 </a>
             </li>
             {% endif %}
-            {% comment "For later versions" %}
-            <li>
-                <a href="/invoice/new" v-tooltip.bottom="{ content: 'Ladda upp en faktura som ska betalas' }">
-                    <span class="icon"><i class="fa fa-file-text" aria-hidden="true"></i></span>
-                    <span class="description">Ladda upp faktura</span>
-                </a>
-            </li>
-            {% endcomment %}
         </ul>
         <div class="clear"></div>
     </div>
