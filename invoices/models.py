@@ -84,3 +84,48 @@ class Invoice(models.Model):
             verification='',
             invoicepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()
+
+"""
+Defines an invoice part, which is a specification of a part of an invoice.
+"""
+class InvoicePart(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    budget_line_id = models.IntegerField(default=0)
+    budget_line_name = models.TextField(blank=True)
+    cost_centre_name = models.TextField(blank=True)
+    cost_centre_id = models.IntegerField(default=0)
+    committee_name = models.TextField(blank=True)
+    committee_id = models.IntegerField(default=0)
+    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    attested_by = models.ForeignKey(Profile, blank=True, null=True)
+    attest_date = models.DateField(blank=True, null=True)
+
+    # Returns string representation of the model
+    def __str__(self):
+        return self.invoice.__str__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
+
+    # Returns unicode representation of the model
+    def __unicode__(self):
+        return self.invoice.__unicode__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
+
+    def attest(self, user):
+        self.attested_by = user.profile
+        self.attest_date = date.today()
+
+        self.save()
+        comment = Comment(
+            author=user.profile,
+            invoice=self.invoice,
+            content="Attesterar fakturadelen ```" + str(self) + "```"
+        )
+        comment.save()
+
+    # Returns dict representation of the model
+    def to_dict(self):
+        exp_part = model_to_dict(self)
+        del exp_part['invoice']
+        if self.attested_by is not None:
+            exp_part['attested_by_username'] = self.attested_by.user.username
+            exp_part['attested_by_first_name'] = self.attested_by.user.first_name
+            exp_part['attested_by_last_name'] = self.attested_by.user.last_name
+        return exp_part
