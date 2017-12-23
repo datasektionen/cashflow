@@ -7,6 +7,7 @@
     <div>
         <p>Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
         <p>Märk kvittomallen med id:t <b>{{ expense.pk }}</b>. Du hittar det på din sida igen om du glömmer bort det.</p>
+        <p>Kvittopärmen <b>ska</b> vara sorterad efter Cashflow-ID i stigande ordning. Om du sätter in ditt kvitto fel riskerar du att det inte blir utbetalt.</p>
         <a href="{% url "expenses-show" expense.pk %}" class="button primary-action btn-color theme-color" style="color:#fff">Gå vidare</a>
     </div>
 {% endblock %}
