@@ -7,10 +7,8 @@
 <div class="row">
     <div class="col-sm-4 col-md-3">
         <div id="secondary-nav" class="below-pic">
-            <h3>Administration</h3>
+            <h3>Utlägg</h3>
             <ul>
-                <li><a href="/admin">Start</a></li>
-                
                 {% if user.profile.may_attest %}
                     <li><a href="{% url 'admin-attest' %}">Attestera</a></li>
                 {% endif %}
@@ -27,8 +25,19 @@
                     <li><a href="{% url 'admin-account' %}">Bokför</a></li>
                 {% endif %}
 
+                <li><a href="{% url 'admin-expense-overview' %}">Lista alla</a></li>
+            </ul>
+
+            <br />
+            <h3>Fakturor</h3>
+            <ul>
+                <li><a href="{% url 'admin-invoice-overview' %}">Lista alla</a></li>
+            </ul>
+
+            <br />
+            <h3>Övrigt</h3>
+            <ul>
                 <li><a href="{% url 'admin-user-overview' %}">Användare</a></li>
-                <li><a href="{% url 'admin-expense-overview' %}">Kvitton</a></li>
                 
                 {% if user.is_staff or user.is_superuser %}
                     <li><a href="/admin/django">Django-admin</a></li>

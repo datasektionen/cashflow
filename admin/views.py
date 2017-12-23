@@ -13,7 +13,8 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from cashflow import dauth
-from expenses import models
+from expenses.models import *
+from invoices.models import *
 
 """
 Displays the admin index page.
@@ -32,7 +33,7 @@ Displays the attest overview list.
 @user_passes_test(lambda u: u.profile.may_attest())
 def attest_overview(request):
     return render(request, 'admin/attest/overview.html', {
-        'attestable_expenses': json.dumps([expense.to_dict() for expense in models.Expense.attestable(request.user.profile.may_attest(), request.user)], default=json_serial)
+        'attestable_expenses': json.dumps([expense.to_dict() for expense in Expense.attestable(request.user.profile.may_attest(), request.user)], default=json_serial)
     })
 
 @require_POST
@@ -40,7 +41,7 @@ def attest_overview(request):
 @user_passes_test(lambda u: u.profile.may_attest())
 def attest_expense_part(request, pk):
     try:
-        expense_part = models.ExpensePart.objects.get(pk=int(pk))
+        expense_part = ExpensePart.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
         raise Http404("Kvittodelen finns inte")
 
@@ -66,7 +67,7 @@ Shows a list of confirmable receipts and lets user confirm them.
 @user_passes_test(lambda u: u.profile.may_confirm())
 def confirm_overview(request):
     return render(request, 'admin/confirm/overview.html', {
-        'confirmable_expenses': json.dumps([expense.to_dict() for expense in models.Expense.objects.filter(confirmed_by=None).order_by('id').distinct()], default=json_serial)
+        'confirmable_expenses': json.dumps([expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()], default=json_serial)
     })
 
 """
@@ -77,8 +78,8 @@ Shows a list of all payable expenses and lets user pay them.
 @user_passes_test(lambda u: u.profile.may_pay())
 def pay_overview(request):
     return render(request, 'admin/pay/overview.html', {
-        'payable_expenses': json.dumps([expense.to_dict() for expense in models.Expense.payable()], default=json_serial),
-        'accounts': json.dumps([s.name for s in models.BankAccount.objects.all().order_by('name')])
+        'payable_expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
+        'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
     })
 
 @require_GET
@@ -86,14 +87,14 @@ def pay_overview(request):
 @user_passes_test(lambda u: u.profile.may_account())
 def account_overview(request):
     return render(request, 'admin/account/overview.html', {
-        'account_ready_expenses': json.dumps([expense.to_dict() for expense in models.Expense.accountable(request.user.profile.may_account())], default=json_serial)
+        'account_ready_expenses': json.dumps([expense.to_dict() for expense in Expense.accountable(request.user.profile.may_account())], default=json_serial)
     })
 
 @require_http_methods(["GET", "POST"])
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())
 def edit_expense_verification(request, pk):
-    try: expense = models.Expense.objects.get(pk=pk)
+    try: expense = Expense.objects.get(pk=pk)
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_account(expense=expense): return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
@@ -103,7 +104,7 @@ def edit_expense_verification(request, pk):
         expense.verification = request.POST['verification']
         expense.save()
 
-        models.Comment(
+        Comment(
             author=request.user.profile,
             expense=expense,
             content="Ändrade verifikationsnumret till: " + expense.verification
@@ -119,7 +120,7 @@ def edit_expense_verification(request, pk):
 def confirm_expense(request, pk):
     if request.method == 'POST':
         try:
-            expense = models.Expense.objects.get(pk=pk)
+            expense = Expense.objects.get(pk=pk)
 
             if not dauth.has_permission('confirm', request):
                 return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
@@ -128,7 +129,7 @@ def confirm_expense(request, pk):
             expense.confirmed_at = date.today()
             expense.save()
 
-            comment = models.Comment(
+            comment = Comment(
                 expense=expense,
                 author=request.user.profile,
                 content='Jag bekräftar att kvittot finns i pärmen.'
@@ -145,7 +146,7 @@ def confirm_expense(request, pk):
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())
 def set_verification(request, expense_pk):
-    try: expense = models.Expense.objects.get(pk=expense_pk)
+    try: expense = Expense.objects.get(pk=expense_pk)
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_account(expense=expense): return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
@@ -154,7 +155,7 @@ def set_verification(request, expense_pk):
     expense.verification = request.POST['verification']
     expense.save()
 
-    comment = models.Comment(
+    comment = Comment(
         author=request.user.profile,
         expense=expense,
         content="Bokförde med verifikationsnumret: " + expense.verification
@@ -172,7 +173,7 @@ Lists all expenses.
 @user_passes_test(lambda u: u.profile.is_admin())
 def expense_overview(request):
     committee = request.GET.get('committee')
-    expenses_list = models.Expense.objects.order_by('verification', '-id')
+    expenses_list = Expense.objects.order_by('verification', '-id')
     if committee != None and committee != '':
         expenses_list = expenses_list.filter(expensepart__committee_name=committee)
     expenses_list = expenses_list.all()
@@ -185,7 +186,7 @@ def expense_overview(request):
 
     return render(request, 'admin/expenses/overview.html', {
         'expenses': expenses,
-        'committees': json.dumps([x['committee_name'] for x in models.ExpensePart.objects.values('committee_name').distinct()]),
+        'committees': json.dumps([x['committee_name'] for x in ExpensePart.objects.values('committee_name').distinct()]),
         'committee': committee if committee != None else ''
     })
 
@@ -196,7 +197,7 @@ Lists all users.
 @login_required
 @user_passes_test(lambda u: u.profile.is_admin())
 def user_overview(request):
-    paginator = Paginator(models.Profile.objects.order_by('-id').all(), 25)
+    paginator = Paginator(Profile.objects.order_by('-id').all(), 25)
     page = request.GET.get('page')
 
     try: users = paginator.page(page)
@@ -207,6 +208,30 @@ def user_overview(request):
         'users': users
     })
 
+"""
+Lists all invoices.
+"""
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def invoice_overview(request):
+    committee = request.GET.get('committee')
+    invoices_list = Invoice.objects.order_by('verification', '-id')
+    if committee != None and committee != '':
+        invoices_list = invoices_list.filter(invoicepart__committee_name=committee)
+    invoices_list = invoices_list.all()
+    paginator = Paginator(invoices_list, 25)
+    page = request.GET.get('page')
+
+    try: invoices = paginator.page(page)
+    except PageNotAnInteger: invoices = paginator.page(1)
+    except EmptyPage: invoices = paginator.page(paginator.num_pages)
+
+    return render(request, 'admin/invoices/overview.html', {
+        'invoices': invoices,
+        'committees': json.dumps([x['committee_name'] for x in ExpensePart.objects.values('committee_name').distinct()]),
+        'committee': committee if committee != None else ''
+    })
 
 
 

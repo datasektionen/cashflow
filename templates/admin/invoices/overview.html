@@ -1,0 +1,97 @@
+{% extends "../main.html" %}
+{% load humanize %}
+
+{% block title %}Alla fakturor{% endblock %}
+
+{% block content %}
+<div id="app">
+    <div class="select" style="margin-left: 10px;float:right">
+        <select v-model="committee" v-on:change="move">
+            <option :value="''">Filtrera på nämnd (visa alla)</option>
+            <option v-for="committee in committees" v-html="committee" :value="committee"></option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+    <br />
+    {% if invoices %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Verifikat</th>
+                    <th>Beskrivning</th>
+                    <th>Ägare</th>
+                    <th>Nämnder</th>
+                    <th class="right">Belopp</th>
+                </tr>
+            </thead>
+            {% for invoice in invoices %}
+                <tr>
+                    <td class="no-wrap"><a href="{% url 'invoices-show' invoice.id %}">{{ invoice.status }}</a></td>
+                    <td><a href="{% url 'invoices-show' invoice.id %}">{{ invoice.description|capfirst }}</a></td>
+                    <td class="no-wrap"><a href="{% url 'user-show' invoice.owner.user.username %}">{{ invoice.owner }}</a></td>
+                    <td>{% for committee in invoice.committees %}
+                        {{ committee.committee_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    </td>
+                    <td class="right no-wrap">{{ invoice.total_amount|intcomma }} kr</td>
+                </tr>
+            {% endfor %}
+            <tfoot>
+                <tr>
+                    <td class="right" colspan="5">
+                        <span class="current">
+                            Sida {{ invoices.number }} av {{ invoices.paginator.num_pages }}.
+                        </span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if invoices.has_previous %}
+                    <a :href="'?page={{ invoices.previous_page_number }}&committee=' + committee">Föregående</a>
+                {% endif %}
+
+                {% for i in invoices.paginator.page_range %}
+                    <a :href="'?page={{ i }}&committee=' + committee" {% if i == invoices.number %} class="active"{% endif %}>{{i}}</a>
+                {% endfor %}
+
+                {% if invoices.has_next %}
+                    <a :href="'?page={{ invoices.next_page_number }}&committee=' + committee">Nästa</a>
+                {% endif %}
+            </span>
+        </div>
+    {% else %}
+        Det finns inga kvitton.
+    {% endif %}
+</div>
+<script type="text/javascript">
+    let getParameterByName = (name, url) => {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return '';
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                committees: {% autoescape off %}{{ committees }}{% endautoescape %},
+                committee: '{% autoescape off %}{{ committee }}{% endautoescape %}'
+            }
+        },
+        methods: {
+            move() {
+                window.location.href = '?page=' + getParameterByName('page') + '&committee=' + this.committee
+            }
+        },
+        created: function() {
+            
+        }
+    })
+</script>
+{% endblock %}
