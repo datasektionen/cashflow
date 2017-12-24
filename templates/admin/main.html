@@ -36,7 +36,7 @@
                 {% if user.profile.may_pay %}
                     <li>
                         <a href="{% url 'admin-pay' %}">
-                            Betala ut
+                            Betala
                             {% if counts.pay > 0 %}
                                 <span class="notification">{{ counts.pay }}</span>
                             {% endif %}

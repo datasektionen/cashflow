@@ -126,7 +126,8 @@ def invoice_pay(request, pk):
 @user_passes_test(lambda u: u.profile.may_account())
 def account_overview(request):
     return render(request, 'admin/account/overview.html', {
-        'account_ready_expenses': json.dumps([expense.to_dict() for expense in Expense.accountable(request.user.profile.may_account())], default=json_serial)
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.accountable(request.user.profile.may_account())], default=json_serial),
+        'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.accountable(request.user.profile.may_account())], default=json_serial)
     })
 
 @require_http_methods(["GET", "POST"])
@@ -202,7 +203,31 @@ def set_verification(request, expense_pk):
     comment.save()
 
     return HttpResponseRedirect(reverse('admin-action-account'))
-        
+      
+
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_account())
+def invoice_set_verification(request, invoice_pk):
+    try: invoice = Invoice.objects.get(pk=invoice_pk)
+    except ObjectDoesNotExist: raise Http404("Fakturan finns inte")
+
+    if not request.user.profile.may_account(invoice=invoice): return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+    if invoice.payed_by is None: return HttpResponseBadRequest("Du kan inte bokföra den här fakturan än")
+
+    invoice.verification = request.POST['verification']
+    invoice.save()
+
+    comment = Comment(
+        author=request.user.profile,
+        invoice=invoice,
+        content="Bokförde med verifikationsnumret: " + invoice.verification
+    )
+    comment.save()
+
+    return HttpResponseRedirect(reverse('admin-action-account'))
+
 
 """
 Lists all expenses.

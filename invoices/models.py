@@ -13,7 +13,7 @@ class Invoice(models.Model):
     confirmed_at = models.DateField(blank=True, null=True, default=None)
     owner = models.ForeignKey('expenses.Profile')
     description = models.TextField()
-    verification = models.CharField(max_length=7, blank=True, null=True)
+    verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
     payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")
 
@@ -102,8 +102,8 @@ class Invoice(models.Model):
     @staticmethod
     def accountable(may_account):
         if '*' in may_account:
-            return Invoice.objects.exclude(reimbursement=None).filter(verification='').distinct()
-        return Invoice.objects.exclude(reimbursement=None).filter(
+            return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
+        return Invoice.objects.exclude(payed_at__isnull=True).filter(
             verification='',
             invoicepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()

@@ -14,8 +14,7 @@
             <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
-    <div class="clearfix"></div>
-    <br />
+    <h2>Utlägg</h2>
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
@@ -59,6 +58,53 @@
         </tbody>
     </table>
     <p v-else><b>Du har inga kvitton att bokföra. Bra jobbat!</b></p>
+
+
+
+    <h2>Fakturor</h2>
+    <table v-if="invoices.length > 0">
+        <thead>
+            <tr>
+                <th>Beskrivning</th>
+                <th>Inköpsdatum</th>
+                <th class="right">Verifikationsnummer</th>
+            </tr>
+        </thead>
+        <tbody v-for="invoice in invoices" v-if="committee == false || invoice.committees.indexOf(committee) > -1">
+            <tr>
+                <td><a v-bind:href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
+                <td v-html="invoice.invoice_date"></td>
+                
+                <td class="right">
+                    <div v-if="!invoice.verification">
+                        <form v-on:submit.prevent="saveInvoice(invoice)" method="POST" v-bind:action="'invoice/' + invoice.id + '/verification'">
+                            {% csrf_token %}
+                            <input type="text" style="width:120px;" name="verification" v-model="invoice.verificationString" placeholder="Tex. U214">
+                            <button class="theme-color btn-color" v-on:click="saveInvoice(invoice, $event)">Spara</button>
+                        </form>
+                    </div>
+                    <div v-else>
+                        <span>Sparade: <span style="font-weight: bold;" v-html="invoice.verification"></span>.</span>
+                    </div>
+                </td>
+            </tr>
+            <tr v-if="!invoice.verification">
+                <td colspan="3">
+                    <table>
+                        <tr v-for="invoicePart in invoice.invoice_parts">
+                            <td style="text-align: right; width: 50%;" v-html="invoicePart.committee_name + ' > ' + invoicePart.cost_centre_name + ' > ' + invoicePart.budget_line_name"></td>
+                            <td v-html="invoicePart.amount + ' kr'"></td>
+                        </tr>
+                        <tr style="font-weight: bold;">
+                            <td class="right">Totalt:</td>
+                            <td><span v-html="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p v-else><b>Du har inga fakturor att bokföra. Bra jobbat!</b></p>
 </div>
 
 <script type="text/javascript">
@@ -68,7 +114,8 @@
             return {
                 committee: false,
                 committees: [],
-                expenses: {% autoescape off %}{{ account_ready_expenses }}{% endautoescape %}
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
+                invoices: {% autoescape off %}{{ invoices }}{% endautoescape %}
             }
         },
         methods: {
@@ -93,6 +140,30 @@
                 })
                 .then(res => {
                     this.expenses[idx].verification = expense.verificationString
+                })
+                if (e) e.preventDefault()
+            },
+            saveInvoice: function (invoice, e) {
+                let idx = this.invoices.findIndex(x => x.id === invoice.id)
+                if (idx === -1) {
+                    return
+                }
+
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', invoice.verificationString)
+
+                fetch('/admin/invoice/' + invoice.id + '/verification/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form
+                })
+                .then(res => {
+                    console.log(res)
+                    return res.text()
+                })
+                .then(res => {
+                    this.invoices[idx].verification = invoice.verificationString
                 })
                 if (e) e.preventDefault()
             }

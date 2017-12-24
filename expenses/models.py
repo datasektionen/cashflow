@@ -115,17 +115,22 @@ class Profile(models.Model):
         return 'confirm' in dauth.get_permissions(self.user)
 
     # Returns a list of the committees that the user may account for
-    def may_account(self, expense=None):
+    def may_account(self, expense=None, invoice=None):
         may_account = []
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("accounting-"):
                 may_account.append(permission[len("accounting-"):].lower())
-        if expense == None:
+        if expense == None and invoice == None:
             return may_account
 
-        for ep in expense.expensepart_set.all():
-            if ep.committee_name.lower() in may_account:
-                return True
+        if expense != None:
+            for ep in expense.expensepart_set.all():
+                if ep.committee_name.lower() in may_account:
+                    return True
+        else:
+            for ip in invoice.invoicepart_set.all():
+                if ip.committee_name.lower() in may_account:
+                    return True
         return False
 
     def may_delete(self, expense):
