@@ -13,6 +13,7 @@ class Invoice(models.Model):
     confirmed_at = models.DateField(blank=True, null=True, default=None)
     owner = models.ForeignKey('expenses.Profile')
     description = models.TextField()
+    file_is_original = models.BooleanField()
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
     payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")

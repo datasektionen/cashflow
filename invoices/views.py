@@ -6,6 +6,8 @@ from datetime import date, datetime
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
+import re
+
 from expenses.models import *
 from invoices.models import *
 
@@ -17,19 +19,26 @@ def new_invoice(request):
         messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
         return HttpResponseRedirect(reverse('invoices-new'))
 
-    if datetime.now() < datetime.strptime(request.POST['invoice-date'], '%Y-%m-%d'):
-        messages.error(request, 'Du har angivit ett datum i framtiden som fakturadatum')
-        return HttpResponseRedirect(reverse('invoices-new'))
+    invdate = request.POST['invoice-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-date']) else None
+    duedate = request.POST['invoice-due-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-due-date']) else None
 
     # Create the invoice
     invoice = Invoice(
         owner=request.user.profile,
-        invoice_date=request.POST['invoice-date'],
-        due_date=request.POST['invoice-due-date'],
+        invoice_date=invdate,
+        due_date=duedate,
+        file_is_original=(request.POST['invoice-original'] == "yes"),
         description=request.POST['invoice-description'],
-        confirmed_by=None
     )
     invoice.save()
+
+    if request.POST['payed'] != 'no-chapter-will':
+        invoice.payed_by = request.user
+        invoice.payed_at = date.today()
+        if request.POST['accounted'] == 'accounted-yes':
+            invoice.verification = request.POST['verification']
+        invoice.save()
+
 
     # Add the file
     for uploaded_file in request.FILES.getlist('files'):

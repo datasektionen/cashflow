@@ -135,16 +135,6 @@
                 </td>
             </tr>
             <tr>
-                <th>Bekräftat i pärmen:</th>
-                <td>
-                    {% if invoice.confirmed_by_id %}
-                     {{ invoice.confirmed_by.get_full_name }} ({{ invoice.confirmed_at }})
-                    {% else %}
-                    Inte än
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
                 <th>Betalad:</th>
                 <td>
                     {% if invoice.payed_at %}
