@@ -1,6 +1,6 @@
 {% extends "../main.html" %}
 
-{% block title %}Attestera kvitton{% endblock %}
+{% block title %}Attestera{% endblock %}
 
 {% block content %}
 <div id="app">
@@ -14,8 +14,7 @@
             <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
-    <div class="clearfix"></div>
-    <br />
+    <h2>Utlägg</h2>
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
@@ -33,6 +32,25 @@
         </tr>
     </table>
     <p v-else><b>Du har inga utlägg som kan attesteras! Bra jobbat!</b></p>
+
+    <h2>Fakturor</h2>
+    <table v-if="invoices.length > 0">
+        <thead>
+            <tr>
+                <th>Beskrivning</th>
+                <th>Ägare</th>
+                <th>Nämnder</th>
+                <th class="right">Belopp</th>
+            </tr>
+        </thead>
+        <tr v-for="invoice in invoices" v-if="committee == false || invoice.committees.indexOf(committee) > -1">
+            <td><a :href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
+            <td><a :href="'/users/' + invoice.owner_username" v-html="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
+            <td v-html="invoice.committees.join(', ')"></td>
+            <td class="right" v-html="invoice.amount + ' kr'"></td>
+        </tr>
+    </table>
+    <p v-else><b>Du har inga fakturor som kan attesteras! Bra jobbat!</b></p>
 </div>
 
 <script type="text/javascript">
@@ -41,7 +59,8 @@
         data: function () {
             return {
                 committee: false,
-                expenses: {% autoescape off %}{{ attestable_expenses }}{% endautoescape %},
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
+                invoices: {% autoescape off %}{{ invoices }}{% endautoescape %},
                 committees: []
             }
         },

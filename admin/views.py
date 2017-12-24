@@ -33,7 +33,8 @@ Displays the attest overview list.
 @user_passes_test(lambda u: u.profile.may_attest())
 def attest_overview(request):
     return render(request, 'admin/attest/overview.html', {
-        'attestable_expenses': json.dumps([expense.to_dict() for expense in Expense.attestable(request.user.profile.may_attest(), request.user)], default=json_serial)
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.attestable(request.user.profile.may_attest(), request.user)], default=json_serial),
+        'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.attestable(request.user.profile.may_attest(), request.user)], default=json_serial)
     })
 
 @require_POST
@@ -58,6 +59,27 @@ def attest_expense_part(request, pk):
     if expense_part.expense.is_attested():
         return HttpResponseRedirect(reverse('admin-attest'))
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
+
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_attest())
+def attest_invoice_part(request, pk):
+    try: invoice_part = InvoicePart.objects.get(pk=int(pk))
+    except ObjectDoesNotExist: raise Http404("Fakturadelen finns inte")
+
+    if not request.user.profile.may_attest(invoice_part):
+        messages.error(request, 'Du får inte attestera denna fakturadel')
+        return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_part.invoice.id}))
+
+    if request.user.username == invoice_part.invoice.owner.user.username:
+        messages.error(request, 'Du kan inte attestera dina egna fakturor')
+        return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_part.invoice.id}))
+
+    invoice_part.attest(request.user)
+
+    if invoice_part.invoice.is_attested(): return HttpResponseRedirect(reverse('admin-attest'))
+    return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_part.invoice.id}))
 
 """
 Shows a list of confirmable receipts and lets user confirm them.

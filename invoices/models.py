@@ -114,6 +114,7 @@ class InvoicePart(models.Model):
         self.attest_date = date.today()
 
         self.save()
+        from expenses.models import Comment
         comment = Comment(
             author=user.profile,
             invoice=self.invoice,

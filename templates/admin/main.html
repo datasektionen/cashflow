@@ -9,7 +9,7 @@
 <div class="row">
     <div class="col-sm-4 col-md-3">
         <div id="secondary-nav" class="below-pic">
-            <h3>Utlägg</h3>
+            <h3>Utlägg och fakturor</h3>
             <ul>
                 {% if user.profile.may_attest %}
                     <li>
@@ -55,13 +55,8 @@
                     </li>
                 {% endif %}
 
-                <li><a href="{% url 'admin-expense-overview' %}">Lista alla</a></li>
-            </ul>
-
-            <br />
-            <h3>Fakturor</h3>
-            <ul>
-                <li><a href="{% url 'admin-invoice-overview' %}">Lista alla</a></li>
+                <li><a href="{% url 'admin-expense-overview' %}">Lista utlägg</a></li>
+                <li><a href="{% url 'admin-invoice-overview' %}">Lista fakturor</a></li>
             </ul>
 
             <br />

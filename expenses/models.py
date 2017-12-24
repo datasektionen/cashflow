@@ -380,7 +380,8 @@ class ExpensePart(models.Model):
 Represents a comment on an expense.
 """
 class Comment(models.Model):
-    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile)
     content = models.TextField()
@@ -405,12 +406,13 @@ class Comment(models.Model):
 # Sends mail on comment
 @receiver(post_save, sender=Comment)
 def send_mail(sender, instance, created, *args, **kwargs):
+    owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
-        if created and instance.author != instance.expense.owner:
+        if created and instance.author != owner:
             requests.post("http://spam.datasektionen.se/api/sendmail", json={
                 'from': 'no-reply@datasektionen.se',
-                'to': instance.expense.owner.user.email,
+                'to': owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'content': render_to_string("email.html", {'comment': instance, 'receiver': instance.expense.owner}),
+                'content': render_to_string("email.html", {'comment': instance, 'receiver': owner}),
                 'key': settings.SPAM_API_KEY
             })
