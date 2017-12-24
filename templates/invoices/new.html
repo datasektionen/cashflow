@@ -12,6 +12,7 @@
             <div class="form-entry">
                 <span class="description thin">
                     Är fakturan betald?
+                    <span class="desc">Obligatoriskt</span>
                 </span>
                 <div class="input">
                     <div class="radio">
@@ -32,16 +33,84 @@
                     </div>
                 </div>
             </div>
-            <div v-if="payed">
+            <div v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
                 <div class="form-entry">
                     <span class="description">
                         <label for="invoice-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning av innehållet:</label>
+                    <span class="desc">Obligatoriskt</span>
                     </span>
                     <div class="input">
                         <input type="text" name="invoice-description" required />
                     </div>
                 </div>
 
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
+                            Bild/pdf av fakturan:
+                        </label>
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div style="padding: 8px 0;">
+                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
+                            <label for="file" class="file">
+                                <span class="icon theme-color"><i class="fa fa-upload"></i></span>
+                                <span class="val">Välj filer</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Är ovanstående fil originalversionen av fakturan?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div class="radio">
+                            <input type="radio" name="original" value="" id="no" />
+                            <label for="no">Nej</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="original" value="" id="yes" />
+                            <label for="yes">Ja</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry" v-if="payed == 'yes-chapter-have'">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Är fakturan bokförd?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div class="radio">
+                            <input type="radio" name="accounted" value="accounted-no" id="accounted-no" v-model="accounted" />
+                            <label for="accounted-no">Nej</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="accounted" value="accounted-yes" id="accounted-yes" v-model="accounted" />
+                            <label for="accounted-yes">Ja</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry" v-if="accounted == 'accounted-yes'">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Vilket verifikationsnummer har den?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <input type="text" name="verification" placeholder="Exempelvis U123" id="accounted-no" />
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="clearfix"></div>
+            <h2 v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Metadata</h2>
+            <p>Frivilligt, men ju mer desto bättre. Förfallodatum kan hjälpa den som betalar att betala ut i tid.</p>
+            <div class="form" v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
                 <div class="form-entry">
                     <span class="description">
                         <label for="invoice-date" v-tooltip="{ content: 'Det datum fakturan utfärdades (står på fakturan)' }">
@@ -65,42 +134,27 @@
                         <input type="date" name="invoice-due-date" required/>
                     </div>
                 </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
-                            Bild/pdf av fakturan:
-                        </label>
-                    </span>
-                    <div class="input">
-                        <div style="padding: 8px 0;">
-                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
-                            <label for="file" class="file">
-                                <span class="icon theme-color"><i class="fa fa-upload"></i></span>
-                                <span class="val">Välj filer</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-entry">
-                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
-                        Är ovanstående fil originalversionen av fakturan?
-                    </span>
-                    <div class="input">
-                        <div class="radio">
-                            <input type="radio" name="payed" value="" id="no" />
-                            <label for="no">Nej</label>
-                        </div>
-                        <div class="radio">
-                            <input type="radio" name="payed" value="" id="yes" />
-                            <label for="yes">Ja</label>
-                        </div>
-                    </div>
-                </div>
                 <div class="clearfix"></div>
             </div>
         </div>
-        <div v-if="payed">
+        <div class="clearfix"></div>
+        <div v-if="payed === 'yes-i-have'">
+            <p style="text-align: center;margin: 50px;">
+                Då räknas fakturan som ett eget utlägg. Lägg in den 
+                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
+                tillsammans med ett kontoutdrag istället. <br />
+                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+            </p>
+        </div>
+        <div v-if="payed === 'no-i-will'">
+            <p style="text-align: center;margin: 50px;">
+                Då räknas fakturan som ett eget utlägg. Lägg in den 
+                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
+                tillsammans med ett kontoutdrag istället. Notera att det måste göras efter att fakturan är betald.<br />
+                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+            </p>
+        </div>
+        <div v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
             <h2>Fakturadelar</h2>
             <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
             
@@ -179,8 +233,8 @@
                 </div>
 
                 <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
+                <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
             </div>
-            <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
         </div>
     </form>
 </div>
@@ -216,14 +270,15 @@
         data: function () {
             return {
                 payed: '',
+                accounted: '',
                 committees: [],
                 expense_parts: [
-                {
-                    committeeId: 0,
-                    costCentreId: 0,
-                    budgetLineId: 0,
-                    amount: 0
-                }
+                    {
+                        committeeId: 0,
+                        costCentreId: 0,
+                        budgetLineId: 0,
+                        amount: 0
+                    }
                 ]
             }
         },

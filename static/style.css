@@ -220,6 +220,8 @@ ul.info li a {
 .form-entry .description .desc {
     display: block;
     font-weight: 300;
+    font-size: 0.7em;
+    margin-top: -7px;
 }
 .checkbox {
     width: 500px;
@@ -622,6 +624,9 @@ ul.comments .alternatives ul li a:hover {
 .description.thin {
     margin-top: 0;
     padding-top: 0;
+}
+.description.thin .desc {
+    margin-top: 2px;
 }
 ul.comments textarea {
     padding: 10px;
