@@ -85,8 +85,8 @@ class Invoice(models.Model):
     @staticmethod
     def attestable(may_attest, user):
         if '*' in may_attest:
-            return Invoice.objects.exclude(owner__user=user).filter(invoicepart__attested_by=None).distinct()
-        return Invoice.objects.exclude(owner__user=user).filter(
+            return Invoice.objects.filter(invoicepart__attested_by=None).distinct()
+        return Invoice.objects.filter(
             invoicepart__attested_by=None,
             invoicepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
         ).distinct()

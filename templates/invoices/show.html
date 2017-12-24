@@ -75,7 +75,7 @@
                         {{ invoice_part.attested_by.user.get_full_name }} ({{ invoice_part.attest_date }})
                     </a>
                     {% else %}
-                        {% if invoice.owner.user.username != user.username and invoice_part.committee_name|lower in user.profile.may_attest %}
+                        {% if invoice_part.committee_name|lower in user.profile.may_attest %}
                             <span style="display: block;">
                                 <form method="POST" action="{% url 'admin-invoicepart-attest' invoice_part.id %}">
                                     {% csrf_token %}

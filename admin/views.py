@@ -73,10 +73,6 @@ def attest_invoice_part(request, pk):
         messages.error(request, 'Du får inte attestera denna fakturadel')
         return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_part.invoice.id}))
 
-    if request.user.username == invoice_part.invoice.owner.user.username:
-        messages.error(request, 'Du kan inte attestera dina egna fakturor')
-        return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_part.invoice.id}))
-
     invoice_part.attest(request.user)
 
     if invoice_part.invoice.is_attested(): return HttpResponseRedirect(reverse('admin-attest'))
