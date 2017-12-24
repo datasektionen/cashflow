@@ -69,10 +69,6 @@
             <ul>
                 <li><a href="{% url 'admin-user-overview' %}">Användare</a></li>
                 <li><a href="{% url 'admin-search-verification' %}">Sök verifikation</a></li>
-                
-                {% if user.is_staff or user.is_superuser %}
-                    <li><a href="/admin/django">Django-admin</a></li>
-                {% endif %}
             </ul>
         </div>
     </div>

@@ -47,7 +47,37 @@
 <div id="methone-container-replace"></div>
 <div id="application" class="money-green">
     {% block app %}{% endblock %}
+    <div class="push-footer"></div>
 </div>
+<footer>
+    <div class="upper">
+        <div class="wrapper">
+            <div class="col">
+                <h3>Om</h3>
+                <p>Cashflow är ett faktura- och utläggshanteringssystem på <a href="https://datasektionen.se">Konglig Datasektionen</a>.</p>
+            </div>
+            <div class="col">
+                <h3>Snabblänkar</h3>
+                <ul>
+                    <li><a href="{% url 'expenses-index' %}">Start</a></li>
+                    <li><a href="{% url 'expenses-new' %}">Nytt utlägg</a></li>
+                    <li><a href="{% url 'invoices-new' %}">Ny faktura</a></li>
+                </ul>
+            </div>
+            <div class="col">
+                <h3>Hjälp</h3>
+                <p>Om du behöver hjälp med att använda Cashflow kan du kontakta din nämndansvarig eller sektionens kassör.</p>
+            </div>
+            <div class="col">
+                <h3>Något som inte funkar?</h3>
+                <p><a href="https://github.com/datasektionen/cashflow/issues/new">Skapa ett issue på Github</a>, så brukar det lösas så snabbt som möjligt. Vill du vara med och utveckla sektionens system kan du komma förbi någon Hackerkväll som anordnas vissa torsdagar av <a href="https://www.facebook.com/informationsorganet/">Informationsorganet</a>. Säg hej vetja!</p>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <p>Cashflow är byggt av Alexander Viklund och Jonas Dahl och tillhör <a href="https://datasektionen.se">Konglig Datasektionen</a>.</p>
+    </div>
+</footer>
 <script type="text/javascript">
     window.methone_conf = {
         system_name: "Cashflow",
