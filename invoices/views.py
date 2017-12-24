@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime
 from django.urls import reverse
+from django.core.exceptions import ObjectDoesNotExist
 
 from expenses.models import *
 from invoices.models import *
@@ -82,3 +83,26 @@ def get_invoice(request, pk):
         'invoice': invoice,
         'may_account': request.user.profile.may_account()
     })
+
+
+
+"""
+Adds new comment to invoice.
+"""
+@require_POST
+@login_required
+def new_comment(request, invoice_pk):
+    try: invoice = models.Invoice.objects.get(pk=int(invoice_pk))
+    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+
+    if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
+    if re.match('^\s*$', request.POST['content']): return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_pk}))
+    
+    models.Comment(
+        invoice=invoice,
+        author=request.user.profile,
+        content=request.POST['content']
+    ).save()
+
+    return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_pk}))
+

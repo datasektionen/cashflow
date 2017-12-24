@@ -17,6 +17,12 @@
 
 {% block full_content %}
 <div id="app">
+    {% if invoice.is_payable and user.profile.may_pay %}
+    <form method="POST" action="{% url 'admin-invoice-pay' invoice.id %}" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="submit" value="Markera som betald" class="button primary-action theme-color btn-color" style="margin: 0 auto; display: block;" />
+    </form>
+    {% endif %}
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -139,14 +145,12 @@
                 </td>
             </tr>
             <tr>
-                <th>Återbetalat:</th>
+                <th>Betalad:</th>
                 <td>
-                    {% if invoice.reimbursement %}
-                    <a href="{% url 'invoices-payment' invoice.reimbursement.id %}">
-                        {{ invoice.reimbursement.tag }}
-                    </a>
+                    {% if invoice.payed_at %}
+                        {{ invoice.payed_at|date:"c" }} av {{ invoice.payed_by.profile }}
                     {% else %}
-                    Ej återbetald
+                        Ej betalad
                     {% endif %}
                 </td>
             </tr>
@@ -174,7 +178,6 @@
 
 
     <div class="clearfix"></div>
-    {% comment %}
     <div>
         <h2>Kommentarer</h2>
 
@@ -217,7 +220,6 @@
             </li>
         </ul>
     </div>
-    {% endcomment %}
     <div class="clearfix"></div>
 </div>
 

@@ -5,6 +5,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from datetime import date, datetime
 from django.urls import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from decimal import *
 import json
 from django.contrib import messages
@@ -100,9 +101,25 @@ Shows a list of all payable expenses and lets user pay them.
 @user_passes_test(lambda u: u.profile.may_pay())
 def pay_overview(request):
     return render(request, 'admin/pay/overview.html', {
-        'payable_expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
+        'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
         'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
     })
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_pay())
+def invoice_pay(request, pk):
+    try: invoice = Invoice.objects.get(pk=pk)
+    except ObjectDoesNotExist: raise Http404("Fakturan finns inte")
+
+    if not invoice.is_payable(): 
+        messages.error(request, 'Fakturan är inte attesterad än.')
+        return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice.id}))
+
+    invoice.pay(request.user)
+    return HttpResponseRedirect(reverse('admin-pay'))
+
 
 @require_GET
 @login_required

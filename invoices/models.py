@@ -14,6 +14,8 @@ class Invoice(models.Model):
     owner = models.ForeignKey('expenses.Profile')
     description = models.TextField()
     verification = models.CharField(max_length=7, blank=True, null=True)
+    payed_at = models.DateField(blank=True, null=True, default=None)
+    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -31,6 +33,19 @@ class Invoice(models.Model):
         if self.verification: return "Bokförd som " + str(self.verification)
         return "Oklart"
 
+    def pay(self, user):
+        self.payed_by = user
+        self.payed_at = date.today()
+        self.save()
+
+        from expenses.models import Comment
+        comment = Comment(
+            author=user.profile,
+            invoice=self,
+            content="Betalade fakturan ```" + str(self) + "```"
+        )
+        comment.save()
+
     # Return the total amount of the invoice parts
     def total_amount(self):
         total = 0
@@ -46,6 +61,14 @@ class Invoice(models.Model):
     def is_attested(self):
         print(self.invoicepart_set.filter(attested_by__isnull=True).count())
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
+
+    # TODO
+    def is_payable(self):
+        if self.payed_at:
+            return False
+        for ip in self.invoicepart_set.all(): 
+            if ip.attested_by == None: return False
+        return True
 
     # Returns a dict representation of the model
     def to_dict(self):
@@ -71,9 +94,8 @@ class Invoice(models.Model):
     @staticmethod
     def payable():
         return Invoice.objects. \
-            filter(reimbursement=None). \
+            exclude(payed_at__isnull=False). \
             exclude(invoicepart__attested_by=None). \
-            exclude(confirmed_by=None). \
             order_by('owner__user__username')
 
     # TODO
