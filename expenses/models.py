@@ -11,6 +11,7 @@ from datetime import date, datetime
         
 from cashflow import dauth
 from cashflow import settings
+from invoices.models import *
 
 """
 
@@ -114,21 +115,35 @@ class Profile(models.Model):
         return 'confirm' in dauth.get_permissions(self.user)
 
     # Returns a list of the committees that the user may account for
-    def may_account(self, expense=None):
+    def may_account(self, expense=None, invoice=None):
+        if '*' in dauth.get_permissions(self.user) and (not expense == None or not invoice == None):
+            return True
+
         may_account = []
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("accounting-"):
                 may_account.append(permission[len("accounting-"):].lower())
-        if expense == None:
+        if expense == None and invoice == None:
             return may_account
 
-        for ep in expense.expensepart_set.all():
-            if ep.committee_name.lower() in may_account:
-                return True
+        if expense != None:
+            for ep in expense.expensepart_set.all():
+                if ep.committee_name.lower() in may_account:
+                    return True
+        else:
+            for ip in invoice.invoicepart_set.all():
+                if ip.committee_name.lower() in may_account:
+                    return True
         return False
 
     def may_delete(self, expense):
+        if expense.reimbursement:
+            return False
+
         if expense.owner.user.username == self.user.username: return True
+        for expense_part in expense.expensepart_set.all():
+            if self.may_attest(expense_part):
+                return True
         return False
 
     def may_be_viewed_by(self, user):
@@ -138,6 +153,15 @@ class Profile(models.Model):
         if expense.owner.user.username == self.user.username or self.may_pay():
             return True
         for committee in expense.committees():
+            if committee.lower() in self.may_account() or committee.lower() in self.may_attest():
+                return True
+
+        return False
+
+    def may_view_invoice(self, invoice):
+        if invoice.owner.user.username == self.user.username or self.may_pay():
+            return True
+        for committee in invoice.committees():
             if committee.lower() in self.may_account() or committee.lower() in self.may_attest():
                 return True
 
@@ -270,6 +294,10 @@ class Expense(models.Model):
         ).distinct()
 
     @staticmethod
+    def confirmable():
+        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+
+    @staticmethod
     def payable():
         return Expense.objects. \
             filter(reimbursement=None). \
@@ -286,12 +314,12 @@ class Expense(models.Model):
             expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()
 
-
 """
 Represents a file on, for example, S3.
 """
 class File(models.Model):
-    belonging_to = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField()
 
     # Returns a string representation of the file
@@ -366,7 +394,8 @@ class ExpensePart(models.Model):
 Represents a comment on an expense.
 """
 class Comment(models.Model):
-    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile)
     content = models.TextField()
@@ -391,12 +420,13 @@ class Comment(models.Model):
 # Sends mail on comment
 @receiver(post_save, sender=Comment)
 def send_mail(sender, instance, created, *args, **kwargs):
+    owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
-        if created and instance.author != instance.expense.owner:
+        if created and instance.author != owner:
             requests.post("http://spam.datasektionen.se/api/sendmail", json={
                 'from': 'no-reply@datasektionen.se',
-                'to': instance.expense.owner.user.email,
+                'to': owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'content': render_to_string("email.html", {'comment': instance, 'receiver': instance.expense.owner}),
+                'content': render_to_string("email.html", {'comment': instance, 'receiver': owner}),
                 'key': settings.SPAM_API_KEY
             })

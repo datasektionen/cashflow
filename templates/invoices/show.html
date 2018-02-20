@@ -2,19 +2,27 @@
 {% load humanize %}
 
 {% block title %}
-    {{ expense.description|capfirst }}
+    {{ invoice.description|capfirst }}
 {% endblock %}
 
 {% block action %}
-    {% if user.username == expense.owner.user.username %}
-        <a href="{% url 'expenses-edit' expense.id %}" class="primary-action">
-            Redigera kvitto
+{% comment "later" %}
+    {% if user.username == invoice.owner.user.username %}
+        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
+            Redigera faktura
         </a>
     {% endif %}
+{% endcomment %}
 {% endblock %}
 
 {% block full_content %}
 <div id="app">
+    {% if invoice.is_payable and user.profile.may_pay %}
+    <form method="POST" action="{% url 'admin-invoice-pay' invoice.id %}" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="submit" value="Markera som betald" class="button primary-action theme-color btn-color" style="margin: 0 auto; display: block;" />
+    </form>
+    {% endif %}
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -23,7 +31,7 @@
         </ul>
     {% endif %}
 
-    <h2>Kvittodelar</h2>
+    <h2>Fakturadelar</h2>
     <table>
         <thead>
             <tr>
@@ -45,31 +53,31 @@
             </tr>
         </thead>
         <tbody>
-        {% for expense_part in expense.expensepart_set.all %}
+        {% for invoice_part in invoice.invoicepart_set.all %}
             <tr>
                 <td>
-                    <span class="value">{{ expense_part.amount|intcomma }} kr</span>
+                    <span class="value">{{ invoice_part.amount|intcomma }} kr</span>
                 </td>
                 <td>
-                    <a class="value" href="https://budget.datasektionen.se/committees/{{ expense_part.committee_id }}">
-                        {{ expense_part.committee_name }}
+                    <a class="value" href="https://budget.datasektionen.se/committees/{{ invoice_part.committee_id }}">
+                        {{ invoice_part.committee_name }}
                     </a>
                 </td>
                 <td>
-                    <span class="value">{{ expense_part.cost_centre_name }}</span>
+                    <span class="value">{{ invoice_part.cost_centre_name }}</span>
                 </td>
                 <td>
-                    <span class="value">{{ expense_part.budget_line_name }}</span>
+                    <span class="value">{{ invoice_part.budget_line_name }}</span>
                 </td>
                 <td>
-                    {% if expense_part.attested_by %}
-                    <a class="value" href="{% url 'user-show' expense_part.attested_by.user.username %}">
-                        {{ expense_part.attested_by.user.get_full_name }} ({{ expense_part.attest_date }})
+                    {% if invoice_part.attested_by %}
+                    <a class="value" href="{% url 'user-show' invoice_part.attested_by.user.username %}">
+                        {{ invoice_part.attested_by.user.get_full_name }} ({{ invoice_part.attest_date }})
                     </a>
                     {% else %}
-                        {% if expense.owner.user.username != user.username and expense_part.committee_name|lower in user.profile.may_attest %}
+                        {% if invoice_part.committee_name|lower in user.profile.may_attest %}
                             <span style="display: block;">
-                                <form method="POST" action="{% url 'admin-expensepart-attest' expense_part.id %}">
+                                <form method="POST" action="{% url 'admin-invoicepart-attest' invoice_part.id %}">
                                     {% csrf_token %}
                                     <button class="pull-right small theme-color btn-color" type="submit" style="margin-right:15px;"><i class="fa fa-check" aria-hidden="true"></i></button>
                                     <span style="margin: 5px 0;display:inline-block;">Du kan attestera &nbsp;</span>
@@ -91,70 +99,61 @@
         <h2>Information</h2>
         <table>
             <tr>
-                <th>Kvitto-id:</th>
-                <td>{{ expense.id }}</td>
+                <th>Faktura-id:</th>
+                <td>{{ invoice.id }}</td>
             </tr>
             <tr>
-                <th>Köpt av:</th>
+                <th>Skapad av:</th>
                 <td>
-                    <a href="{% url 'user-show' expense.owner.user.username %}">
-                        {{ expense.owner.user.get_full_name }} ({{ expense.owner.user.username }}@kth.se)
+                    <a href="{% url 'user-show' invoice.owner.user.username %}">
+                        {{ invoice.owner.user.get_full_name }} ({{ invoice.owner.user.username }}@kth.se)
                     </a>
                 </td>
             </tr>
             <tr>
-                <th>Inköpsdatum:</th>
+                <th>Fakturadatum:</th>
                 <td>
-                    {{ expense.expense_date|date:"Y-m-d" }}
+                    {{ invoice.invoice_date|date:"Y-m-d" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Förfallodatum:</th>
+                <td>
+                    {{ invoice.due_date|date:"Y-m-d" }}
                 </td>
             </tr>
             <tr>
                 <th>Totalsumma:</th>
                 <td>
-                    {{ expense.total_amount|intcomma }} kr
+                    {{ invoice.total_amount|intcomma }} kr
                 </td>
             </tr>
             <tr>
                 <th>Registrerat i Cashflow:</th>
                 <td>
-                    {{ expense.created_date|date:"Y-m-d" }}
+                    {{ invoice.created_date|date:"Y-m-d" }}
                 </td>
             </tr>
             <tr>
-                <th>Bekräftat i pärmen:</th>
+                <th>Betalad:</th>
                 <td>
-                    {% if expense.confirmed_by_id %}
-                     {{ expense.confirmed_by.get_full_name }} ({{ expense.confirmed_at }})
+                    {% if invoice.payed_at %}
+                        {{ invoice.payed_at|date:"c" }} av {{ invoice.payed_by.profile }}
                     {% else %}
-                    Inte än
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <th>Återbetalat:</th>
-                <td>
-                    {% if expense.reimbursement %}
-                    <a href="{% url 'expenses-payment' expense.reimbursement.id %}">
-                        {{ expense.reimbursement.tag }}
-                    </a>
-                    {% else %}
-                    Ej återbetald
+                        Ej betalad
                     {% endif %}
                 </td>
             </tr>
             <tr>
                 <th>Verifikationsnummer:</th>
-                <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
-            </tr>
-            <tr>
-                <td colspan="2"><a href="{% url 'expenses-delete' expense.id %}"><i class="fa fa-trash"></i> Ta bort kvitto</a></td>
+                <td>{{ invoice.verification|default:"Ej bokförd" }} {% comment "if may_account" %}(<a href="{% url 'admin-invoice-edit-verification' invoice.id %}">Ändra</a>){% endcomment %}</td>
             </tr>
         </table>
     </div>
 
     <div class="col-sm-6 col-lg-6" style="padding-right: 0;">
         <h2>Filer</h2>
-        {% for file in expense.file_set.all %}
+        {% for file in invoice.file_set.all %}
         <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
         {% if  file.is_image %}
         <a href="{{ file.file.url }}" target="_blank">
@@ -169,12 +168,11 @@
 
 
     <div class="clearfix"></div>
-
     <div>
         <h2>Kommentarer</h2>
 
         <ul class="comments">
-            {% for comment in expense.comment_set.all %}
+            {% for comment in invoice.comment_set.all %}
             <li class="clearfix {% if comment.author.user.username == user.username %}own{% endif %}">
                 <div class="info">
                     <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/user/{{ comment.author.user.username }}"></a>
@@ -191,7 +189,7 @@
             {% endfor %}
             <li class="new">
                 <div class="comment">
-                    <form method="POST" id="new" action="{% url 'expenses-comment' expense.id %}">
+                    <form method="POST" id="new" action="{% url 'invoices-comment' invoice.id %}">
                         {% csrf_token %}
                         <textarea id="content-field" name="content" rows="3" style="width: 100%;border:none;" placeholder="Skriv en kommentar"></textarea>
                         <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
@@ -205,7 +203,7 @@
                     <li><a href="#" v-on:click="send">Jag kan inte hitta ditt utlägg i pärmen. Har du satt in det?</a></li>
                     <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
                     <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
-                    <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>
+                    <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på fakturan.</a></li>
                     <li><a href="#" v-on:click="send">Du måste ladda upp både en faktura och ett kontoutdrag.</a></li>
                     <li><a href="#" v-on:click="send">Avvakta med det här utlägget.</a></li>
                 </ul>

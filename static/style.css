@@ -16,8 +16,7 @@
 }
 #pick ul.alternatives li {
     width: 50%;
-    /*float: left;*/
-    margin: 0 auto;
+    float: left;
 }
 #pick ul.alternatives li a {
     width: 100%;
@@ -221,6 +220,8 @@ ul.info li a {
 .form-entry .description .desc {
     display: block;
     font-weight: 300;
+    font-size: 0.7em;
+    margin-top: -7px;
 }
 .checkbox {
     width: 500px;
@@ -245,7 +246,7 @@ table .checkbox {
     cursor: pointer;
     position: absolute;
     width: 25px;
-    height: 25px;
+    height: 20px;
     top: -2px;
     left: -12px;
     float: left;
@@ -275,7 +276,7 @@ table .checkbox {
     opacity: 1;
 }
 .checkbox input[type=checkbox]:checked + label:before {
-    background: #ec5f99;
+    background: #278032;
 }
 .checkbox input[type=checkbox]:disabled + label:before {
     background: #eee;
@@ -284,7 +285,7 @@ table .checkbox {
     background: #666;
 }
 .checkbox input[type=checkbox]:checked + label {
-    color: #ec5f99;
+    color: #278032;
 }
 input[type=checkbox] {
     visibility: hidden;
@@ -292,15 +293,45 @@ input[type=checkbox] {
 
 
 
+span.notification {
+    border-radius: 10px;
+    height: 20px;
+    min-width: 20px;
+    background: #278032;
+    display: inline-block;
+    color: #fff;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+}
 
-
+ul.search-result {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+ul.search-result li {
+    display: block;
+    margin: 10px 0;
+}
+ul.search-result li a {
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: block;
+    padding: 10px;
+    border-radius: 2px;
+}
+ul.search-result li a:hover {
+    background: #eee;
+}
 
 
 
 .radio {
     width: 500px;
     max-width: 100%;
-    height: 45px;
+    height: 30px;
     margin: -10px 0;
     position: relative;
     margin: 10px 0 -10px;
@@ -350,10 +381,10 @@ table .radio {
     opacity: 1;
 }
 .radio input[type=radio]:checked + label:before {
-    background: #ec5f99;
+    background: #278032;
 }
 .radio input[type=radio]:checked + label {
-    color: #ec5f99;
+    color: #278032;
 }
 input[type=radio] {
     visibility: hidden;
@@ -590,6 +621,13 @@ ul.comments .alternatives ul li a:hover {
 .description {
     margin-bottom: 20px;
 }
+.description.thin {
+    margin-top: 0;
+    padding-top: 0;
+}
+.description.thin .desc {
+    margin-top: 2px;
+}
 ul.comments textarea {
     padding: 10px;
     font-family: inherit;
@@ -693,4 +731,130 @@ ol.center {
     margin: 0;
     font-size: 2.5em;
     font-weight: 300 !important;
+}
+#content {
+    min-height: 0;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+}
+#application {
+    margin-bottom: -350px;
+    min-height: 100%;
+}
+
+footer {
+    color: #fff;
+    font-weight: 300;
+    height: 350px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+.push-footer {
+    height: 350px;
+}
+footer a {
+    color: #fff;
+    font-weight: bold;
+}
+footer a:hover {
+    color: #ccc;
+}
+footer .upper {
+    height: 300px;
+    background: #216C2A;
+    overflow: hidden;
+}
+footer .upper .col {
+    width: 25%;
+    float: left;
+    padding: 20px 20px;
+}
+footer .upper ul {
+    list-style-type: none;
+    padding: 0;
+    margin: -5px 0 10px;
+}
+footer .upper ul li a {
+    display: block;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 5px 0;
+}
+footer .wrapper {
+    max-width: 1200px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+footer .bottom {
+    height: 50px;
+    text-align: center;
+    background: #15451b;
+}
+footer .bottom p {
+    padding: 13px 0 0;
+}
+
+@media screen and (max-width: 1200px) {
+    #application {
+        margin-bottom: -450px;
+    }
+    .push-footer {
+        height: 450px;
+    }
+    footer .upper {
+        height: 400px;
+    }
+    footer .bottom {
+        height: 50px;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    #application {
+        margin-bottom: 0;
+    }
+    .push-footer {
+        height: 0;
+    }
+    footer .upper {
+        height: auto;
+    }
+    footer .upper .col {
+        width: 100%;
+        float: none;
+        display: block;
+        padding: 10px 20px 0;
+    }
+    footer .upper .col:last-child {
+        padding-bottom: 20px;
+    }
+    footer .bottom {
+        height: auto;
+    }
+    footer .bottom p {
+        padding: 13px 20px;
+        margin-bottom: -13px;
+    }
+}
+
+
+@media print {
+    #secondary-nav, footer, header, #methone-container-replace {
+        display: none;
+    }
+    .select {
+        display: none;
+    }
+    table {
+        width: 100% !important;
+        font-size: 0.8em !important;
+    }
+    table th, table td {
+        padding: 2px 5px !important;
+        border: 1px solid #ccc;
+    }
+    table th {
+        background: #ccc !important;
+        color: #fff;
+    }
 }

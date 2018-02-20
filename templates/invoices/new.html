@@ -1,0 +1,313 @@
+{% extends "../detail.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Ny faktura{% endblock %}
+
+{% block full_content %}
+<div id="form">
+    <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
+        <p>Ladda endast upp en faktura i taget.</p>
+        <div class="form">
+            {% csrf_token %}
+            <div class="form-entry">
+                <span class="description thin">
+                    Är fakturan betald?
+                    <span class="desc">Obligatoriskt</span>
+                </span>
+                <div class="input">
+                    <div class="radio">
+                        <input type="radio" name="payed" value="no-chapter-will" id="no-chapter-will" v-model="payed" />
+                        <label for="no-chapter-will">Nej, sektionen ska göra det</label>
+                    </div>
+                    <div class="radio">
+                        <input type="radio" name="payed" value="no-i-will" id="no-i-will" v-model="payed" />
+                        <label for="no-i-will">Nej, jag ska göra det själv</label>
+                    </div>
+                    <div class="radio">
+                        <input type="radio" name="payed" value="yes-i-have" id="yes-i-have" v-model="payed" />
+                        <label for="yes-i-have">Ja, jag har gjort det själv</label>
+                    </div>
+                    <div class="radio">
+                        <input type="radio" name="payed" value="yes-chapter-have" id="yes-chapter-have" v-model="payed" />
+                        <label for="yes-chapter-have">Ja, från sektionens konto</label>
+                    </div>
+                </div>
+            </div>
+            <div v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="invoice-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning av innehållet:</label>
+                    <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <input type="text" name="invoice-description" required />
+                    </div>
+                </div>
+
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
+                            Bild/pdf av fakturan:
+                        </label>
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div style="padding: 8px 0;">
+                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
+                            <label for="file" class="file">
+                                <span class="icon theme-color"><i class="fa fa-upload"></i></span>
+                                <span class="val">Välj filer</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Är ovanstående fil originalversionen av fakturan?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div class="radio">
+                            <input type="radio" name="invoice-original" value="no" id="no" />
+                            <label for="no">Nej</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="invoice-original" value="yes" id="yes" />
+                            <label for="yes">Ja</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry" v-if="payed == 'yes-chapter-have'">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Är fakturan bokförd?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <div class="radio">
+                            <input type="radio" name="accounted" value="accounted-no" id="accounted-no" v-model="accounted" />
+                            <label for="accounted-no">Nej</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="accounted" value="accounted-yes" id="accounted-yes" v-model="accounted" />
+                            <label for="accounted-yes">Ja</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-entry" v-if="accounted == 'accounted-yes'">
+                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                        Vilket verifikationsnummer har den?
+                        <span class="desc">Obligatoriskt</span>
+                    </span>
+                    <div class="input">
+                        <input type="text" name="verification" placeholder="Exempelvis U123" id="accounted-no" />
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="clearfix"></div>
+            <h2 v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Metadata</h2>
+            <p v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Frivilligt, men ju mer desto bättre. Förfallodatum kan hjälpa den som betalar att betala ut i tid.</p>
+            <div class="form" v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="invoice-date" v-tooltip="{ content: 'Det datum fakturan utfärdades (står på fakturan)' }">
+                            Fakturadatum:
+                        </label>
+                        <span class="hint"></span>
+                    </span>
+                    <div class="input">
+                        <input type="date" name="invoice-date" />
+                    </div>
+                </div>
+
+                <div class="form-entry">
+                    <span class="description">
+                        <label for="invoice-due-date" v-tooltip="{ content: 'Det datum fakturan senast ska vara betald (står på fakturan)' }">
+                            Förfallodatum:
+                        </label>
+                        <span class="hint"></span>
+                    </span>
+                    <div class="input">
+                        <input type="date" name="invoice-due-date" />
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div v-if="payed === 'yes-i-have'">
+            <p style="text-align: center;margin: 50px;">
+                Då räknas fakturan som ett eget utlägg. Lägg in den 
+                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
+                tillsammans med ett kontoutdrag istället. <br />
+                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+            </p>
+        </div>
+        <div v-if="payed === 'no-i-will'">
+            <p style="text-align: center;margin: 50px;">
+                Då räknas fakturan som ett eget utlägg. Lägg in den 
+                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
+                tillsammans med ett kontoutdrag istället. Notera att det måste göras efter att fakturan är betald.<br />
+                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+            </p>
+        </div>
+        <div v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
+            <h2>Fakturadelar</h2>
+            <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
+            
+            <div id="expense_parts">
+                <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
+                    <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-committee">
+                                Nämnd:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select">
+                                <select name="committee[]" v-model="expense_part.committeeId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="committee in committees" :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-cost_centre">
+                                Sekundärt resultatställe:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0">
+                                <select name="costCentre[]" v-model="expense_part.costCentreId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="costCentre[]" required disabled></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-budget_line">
+                                Budgetpost:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
+                                <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
+                                    <option value="0">- Välj -</option>
+                                    <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId).length == 0 ? [] : committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                                </select>
+                            </div>
+                            <div class="select disabled" v-else>
+                                <select name="budgetLine[]" required disabled></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-entry">
+                        <span class="description">
+                            <label for="expense_part-amount">
+                                Summa:
+                            </label>
+                        </span>
+                        <div class="input">
+                            <input type="number" step="0.01" model="expense_part.amount" name="amount[]" required>
+                        </div>
+                    </div>
+
+                    <div class="clearfix"></div>
+                </div>
+
+                <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
+                <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="clearfix"></div>
+    </form>
+    <div class="clearfix"></div>
+</div>
+
+<script type="text/javascript">
+    window.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="file"]')
+
+        Array.prototype.forEach.call(inputs, function(input) {
+        const label = input.nextElementSibling;
+        const labelVal = label.innerHTML;
+
+        input.addEventListener('change', function(e) {
+            let fileName = '';
+            if (this.files && this.files.length > 1) {
+                fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+            } else {
+                fileName = e.target.value.split('\\').pop();
+            }
+
+            if (fileName) {
+                label.querySelector('span.val').innerHTML = fileName;
+            } else {
+                label.innerHTML = labelVal;
+            }
+        });
+    });
+    }, true);
+
+
+    new Vue({
+        el: '#form', 
+        data: function () {
+            return {
+                payed: '',
+                accounted: '',
+                committees: [],
+                expense_parts: [
+                    {
+                        committeeId: 0,
+                        costCentreId: 0,
+                        budgetLineId: 0,
+                        amount: 0
+                    }
+                ]
+            }
+        },
+        created: function () {
+            fetch('https://budget.datasektionen.se/api/committees?verbose')
+            .then(res => res.json())
+            .then(res => {
+                this.committees = res
+            })
+        },
+        methods: {
+            addPart: function () {
+                this.expense_parts.push({
+                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
+                    costCentreId: 0,
+                    budgetLineId: 0,
+                    amount: 0
+                })
+            },
+            removePart: function (i) {
+                if (this.expense_parts <= 2) {
+                    return
+                }
+                this.expense_parts.splice(i, 1)
+            }
+        }
+    })
+</script>
+{% endblock %}

@@ -51,7 +51,7 @@ class FileViewSet(GenericViewSet):
 
             if exp.owner.user is request.user or True:
                 # noinspection PyShadowingBuiltins
-                file = File(belonging_to=exp, file=request.FILES['file'])
+                file = File(expense=exp, file=request.FILES['file'])
                 file.save()
                 return JsonResponse({'file': file.to_dict()})
             else:
@@ -60,7 +60,7 @@ class FileViewSet(GenericViewSet):
             if 'file' in request.POST:
                 # Probably has base64-file from android
                 data = ContentFile(base64.b64decode(request.POST['file']), name='temp.png')
-                file = File(belonging_to=exp, file=data)
+                file = File(expense=exp, file=data)
                 file.save()
                 return JsonResponse({'file': file.to_dict()})
             print(request.POST['file'])
@@ -84,7 +84,7 @@ class FileViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check if user is eligible to destroy it
-        if f.belonging_to.owner is request.user:
+        if f.expense.owner is request.user:
             f.delete()
             return Response(status=status.HTTP_200_OK)
 
