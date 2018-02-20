@@ -24,7 +24,7 @@
         </thead>
         <tr v-for="expense in expenses" v-if="expense.expense_date.startsWith(year)">
             <td v-html="expense.verification"></td>
-            <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.id"></a></td>
+            <td v-html="expense.id"></td>
             <td v-html="expense.expense_date"></td>
             <td v-html="expense.description"></td>
         </tr>
