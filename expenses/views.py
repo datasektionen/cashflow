@@ -146,7 +146,7 @@ def delete_expense(request, pk):
     try: expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-    if request.user.profile.may_delete(expense): return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
+    if not request.user.profile.may_delete(expense): return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
     if expense.reimbursement is not None: return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
 
     if request.method == 'GET': return render(request, 'expenses/delete.html', { "expense": expense })

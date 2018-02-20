@@ -146,6 +146,9 @@
                 <th>Verifikationsnummer:</th>
                 <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
             </tr>
+            <tr>
+                <td colspan="2"><a href="{% url 'expenses-delete' expense.id %}"><i class="fa fa-trash"></i> Ta bort kvitto</a></td>
+            </tr>
         </table>
     </div>
 
