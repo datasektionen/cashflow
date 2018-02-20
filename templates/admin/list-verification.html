@@ -1,0 +1,44 @@
+{% extends "./main.html" %}
+{% load humanize %}
+
+{% block title %}Lista verifikat{% endblock %}
+
+{% block content %}
+<div id="app">
+    <div class="select">
+        <select v-model="year">
+            <option value="0">-- Välj år --</option>
+            {% for year in years %}
+            <option value="{{ year }}">{{ year }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="clear"></div>
+    <br />
+    <table>
+        <thead>
+            <th>Ver.nr.</th>
+            <th>ID</th>
+            <th>Inköpsdatum</th>
+            <th>Beskrivning</th>
+        </thead>
+        <tr v-for="expense in expenses" v-if="expense.expense_date.startsWith(year)">
+            <td v-html="expense.verification"></td>
+            <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.id"></a></td>
+            <td v-html="expense.expense_date"></td>
+            <td v-html="expense.description"></td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    new Vue({
+        el: '#app', 
+        data: function () {
+            return {
+                year: {% now "Y" %},
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %}
+            }
+        }
+    })
+</script>
+{% endblock %}

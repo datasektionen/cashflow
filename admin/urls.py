@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^invoices/(?P<pk>\d+)/pay$', views.invoice_pay, name='admin-invoice-pay'),
     url(r'^verifications/$', views.search_verification, name='admin-search-verification'),
     url(r'^verifications/search/$', views.search_verification_response, name='admin-search-verification-api'),
+    url(r'^verifications/list$', views.list_verification, name='admin-list-verification'),
     url(r'^users/$', views.user_overview, name='admin-user-overview'),
 ]

@@ -836,3 +836,25 @@ footer .bottom p {
         margin-bottom: -13px;
     }
 }
+
+
+@media print {
+    #secondary-nav, footer, header, #methone-container-replace {
+        display: none;
+    }
+    .select {
+        display: none;
+    }
+    table {
+        width: 100% !important;
+        font-size: 0.8em !important;
+    }
+    table th, table td {
+        padding: 2px 5px !important;
+        border: 1px solid #ccc;
+    }
+    table th {
+        background: #ccc !important;
+        color: #fff;
+    }
+}

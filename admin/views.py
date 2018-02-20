@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models.functions import Length
 
 from cashflow import dauth
 from expenses.models import *
@@ -311,6 +312,15 @@ def search_verification_response(request):
     return JsonResponse({
         'invoices': [invoice.to_dict() for invoice in invoices[:10]],
         'expenses': [expense.to_dict() for expense in expenses[:10]]
+    })
+
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def list_verification(request):
+    return render(request, 'admin/list-verification.html', {
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.objects.filter(verification__regex=r'E').order_by(Length('verification').asc(), 'verification').all()], default=json_serial),
+        'years': range(2017, datetime.now().year + 1)
     })
 
 
