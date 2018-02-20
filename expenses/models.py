@@ -137,7 +137,13 @@ class Profile(models.Model):
         return False
 
     def may_delete(self, expense):
+        if expense.reimbursement:
+            return False
+
         if expense.owner.user.username == self.user.username: return True
+        for expense_part in expense.expensepart_set.all():
+            if self.may_attest(expense_part):
+                return True
         return False
 
     def may_be_viewed_by(self, user):
