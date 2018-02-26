@@ -3,7 +3,9 @@
 {% block methone-links %}
     {str: "Hem", href: "/" },
     {% if user.is_authenticated %}
-        {str: "Administrera", href: "/admin" },
+        {% if user.profile.is_admin %}
+            {str: "Administrera", href: "/admin" },
+        {% endif %}
         {str: "Statistik", href: "/stats"},
     {% endif %}
 {% endblock %}
