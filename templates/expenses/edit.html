@@ -31,7 +31,7 @@
         </div>
 
         <h2>Kvittodelar</h2>
-        <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller lika med summan av nedanstående rader.</p>
+        <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.</p>
 
         <div id="expense_parts" v-if="committees.length > 0">
             <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
