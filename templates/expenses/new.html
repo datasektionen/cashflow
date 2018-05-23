@@ -5,10 +5,43 @@
 
 {% block full_content %}
 <div id="form">
-    <p>Ladda endast upp ett kvitto i taget. När du laddar upp en faktura eller onlinebetalning måste du också ladda upp ett kontoutdrag.</p>
-    <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
+    <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data" ref="form">
         <div class="form">
             {% csrf_token %}
+            <div v-on:drag="dragStart" v-on:dragstart="dragStart" v-on:dragover="dragOver" v-on:dragenter="dragOver" v-on:dragend="dragLeave" v-on:dragleave="dragLeave" v-on:drop="dragDrop" class="form-entry">
+                <div class="input file">
+                    <div class="file-input">
+                        <div class="uploaded-file" v-for="file in files">
+                            <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
+                                <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }"></i>
+                            </div> 
+                            <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
+                            <span v-else class="name" v-html="file.name"></span>
+                            <span class="delete" v-on:click="deleteFile(file)">
+                                <i class="fa fa-times"></i>
+                            </span>
+                        </div>
+                        <div class="file-inner">
+                            <label for="file">
+                                <input type="file" name="files" id="file" multiple="multiple" v-on:change="fileSelected">
+
+                                <div class="icon"><i class="fa fa-upload"></i></div>
+                                <div class="status" v-if="isWaiting">
+                                    <b>Ladda upp</b> minst en bild på ditt kvitto
+                                    <p>Du kan dra och släppa en fil här.</p>
+                                </div>
+                                <div class="status" v-if="isUploading">
+                                    <b>Laddar upp...</b>
+                                </div>
+                                <div class="status" v-if="isDragging">
+                                    <b>Släpp filen här för att ladda upp den</b>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-entry">
                 <span class="description">
                     <label for="expense-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning:</label>
@@ -30,40 +63,30 @@
                 </div>
             </div>
 
-            <div class="form-entry">
-                <span class="description">
-                    <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
-                        Bild/pdf av kvittot:
-                    </label>
-                </span>
-                <div class="input">
-                    <div style="padding: 8px 0;">
-                        <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
-                        <label for="file" class="file">
-                            <span class="icon theme-color"><i class="fa fa-upload"></i></span>
-                            <span class="val">Välj filer</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
             <div class="clearfix"></div>
         </div>
 
         <h2>Kvittodelar</h2>
         <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.</p>
         
-        <div id="expense_parts">
-            <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
-                <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                </button>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-committee">
-                            Nämnd:
-                        </label>
-                    </span>
+        <table class="card">
+            <thead>
+                <tr>
+                    <th style="width:30px"></th>
+                    <th>Nämnd</th>
+                    <th>Sek. resultatställe</th>
+                    <th>Budgetpost</th>
+                    <th>Summa</th> 
+                </tr>
+            </thead>
+            <tr v-for="(expense_part, i) in expense_parts" :key="i">
+                <td>
+                    <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                    <span class="info">Kvittodel <span v-html="i + 1"></span></span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select">
                             <select name="committee[]" v-model="expense_part.committeeId" required>
@@ -72,14 +95,8 @@
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-cost_centre">
-                            Sekundärt resultatställe:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0">
                             <select name="costCentre[]" v-model="expense_part.costCentreId" required>
@@ -88,17 +105,13 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="costCentre[]" required disabled></select>
+                            <select name="costCentre[]" required disabled>
+                                <option value="0">- Välj nämnd först -</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-budget_line">
-                            Budgetpost:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
                             <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
@@ -107,27 +120,27 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="budgetLine[]" required disabled></select>
+                            <select name="budgetLine[]" required disabled>
+                                <option value="0">- Välj sek. resultatställe först -</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-amount">
-                            Summa:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
-                        <input type="number" step="0.01" model="expense_part.amount" name="amount[]" required>
+                        <input type="number" placeholder="Fyll i summa" step="0.01" model="expense_part.amount" name="amount[]" required>
                     </div>
                 </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>
+                </td>
+            </tr>
+        </table>
 
-                <div class="clearfix"></div>
-            </div>
-
-            <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
-        </div>
+        <br />
         <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera kvitto" class="button primary-action theme-color btn-color">
     </form>
 </div>
@@ -137,26 +150,30 @@
         const inputs = document.querySelectorAll('input[type="file"]')
 
         Array.prototype.forEach.call(inputs, function(input) {
-        const label = input.nextElementSibling;
-        const labelVal = label.innerHTML;
+            const label = input.nextElementSibling;
+            const labelVal = label.innerHTML;
 
-        input.addEventListener('change', function(e) {
-            let fileName = '';
-            if (this.files && this.files.length > 1) {
-                fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
-            } else {
-                fileName = e.target.value.split('\\').pop();
-            }
+            input.addEventListener('change', function(e) {
+                let fileName = '';
+                if (this.files && this.files.length > 1) {
+                    fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+                } else {
+                    fileName = e.target.value.split('\\').pop();
+                }
 
-            if (fileName) {
-                label.querySelector('span.val').innerHTML = fileName;
-            } else {
-                label.innerHTML = labelVal;
-            }
+                if (fileName) {
+                    label.querySelector('span.val').innerHTML = fileName;
+                } else {
+                    label.innerHTML = labelVal;
+                }
+            });
         });
-    });
     }, true);
 
+    var isAdvancedUpload = function() {
+        var div = document.createElement('div');
+        return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
+    }();
 
     new Vue({
         el: '#form', 
@@ -170,7 +187,9 @@
                     budgetLineId: 0,
                     amount: 0
                 }
-                ]
+                ],
+                uploadStatus: 0,
+                files: [{'name': 'name', 'status': 1}]
             }
         },
         created: function () {
@@ -180,11 +199,89 @@
                 this.committees = res
             })
         },
+        computed: {
+            isWaiting: function() {
+                return this.uploadStatus === 0
+            },
+            isDragging: function() {
+                return this.uploadStatus === 1
+            },
+            isUploading: function() {
+                return this.uploadStatus === 2
+            }
+        },
         methods: {
+            deleteFile: function(file) {
+                this.files = this.files.filter(f => f !== file)
+            },
+            upload: function(formData, file) {
+                const url = '/api/files/new/'
+                this.files.push({name: file.name, file: file, status: 0})
+
+                fetch(url, {
+                    method: 'POST', 
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(x => x.json())
+                .catch(x => console.log("Error", x))
+                .then(x => {
+                    console.log("Done")
+                    this.files = this.files.map(f => {
+                        if (f.file === file) {
+                            f.status = 1
+                            f.url = x.files[0].url
+                            f.id = x.files[0].id
+                            console.log("Done2")
+                        }
+                        console.log(f)
+                        return f
+                    })
+                })
+                .catch(x => console.log("Error", x))
+            },
+            uploadFiles: function(droppedFiles) {
+                Array.prototype.forEach.call(droppedFiles, (file) => {
+                    const formData = new FormData()
+                    formData.append('files', file, file.name)
+                    this.upload(formData, file)
+                })
+            },
+            dragStart: function (e) {
+                console.log("Dragging1", e);
+                e.preventDefault();
+                e.stopPropagation();
+                this.uploadStatus = 1
+            },
+            dragOver: function (e) {
+                console.log("Dragging2", e);
+                e.preventDefault();
+                e.stopPropagation();
+                this.uploadStatus = 1
+            },
+            dragLeave: function (e) {
+                console.log("Leaving", e);
+                e.preventDefault();
+                e.stopPropagation();
+                this.uploadStatus = 0
+            },
+            dragDrop: function (e) {
+                console.log("Dropping", e);
+                e.preventDefault();
+                e.stopPropagation();
+                var droppedFiles = e.dataTransfer.files;
+                console.log(droppedFiles)
+                this.uploadStatus = 2
+                this.uploadFiles(droppedFiles)
+            },
+            fileSelected: function (e) {
+                console.log(e)
+                this.upload(new FormData(this.$refs.form), {name: 'file'})
+            },
             addPart: function () {
                 this.expense_parts.push({
                     committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
-                    costCentreId: 0,
+                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
                     budgetLineId: 0,
                     amount: 0
                 })
