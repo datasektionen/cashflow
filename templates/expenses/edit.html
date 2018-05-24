@@ -4,11 +4,43 @@
 {% block title %}Ändra kvitto{% endblock %}
 
 {% block full_content %}
-<div id="form" class="form">
-    <p>Ladda endast upp ett kvitto i taget. När du laddar upp en faktura eller onlinebetalning måste du också ladda upp ett kontoutdrag.</p>
+<div id="form" class="form" style="margin-top: -30px;">
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
         <div class="form">
-        {% csrf_token %}
+            {% csrf_token %}
+            <div v-on:drag="dragStart" v-on:dragstart="dragStart" v-on:dragover="dragOver" v-on:dragenter="dragOver" v-on:dragend="dragLeave" v-on:dragleave="dragLeave" v-on:drop="dragDrop" class="form-entry">
+                <div class="input file">
+                    <div class="file-input">
+                        <div class="uploaded-file" v-for="file in files" style="text-align: center">
+                            <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
+                                <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }"></i>
+                            </div> 
+                            <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
+                            <span v-else class="name" v-html="file.name"></span>
+                            <span class="delete" v-on:click="deleteFile(file)">
+                                <i class="fa fa-times"></i>
+                            </span>
+                            <a v-if="file.isImg" target="_blank" v-bind:href="file.url">
+                                <br />
+                                <img v-bind:src="file.url" />
+                            </a>
+                        </div>
+                        <div class="file-inner">
+                            <label for="file">
+                                <input type="file" ref="files" name="files" id="file" multiple="multiple" v-on:change="fileSelected">
+                                <div class="icon"><i class="fa fa-upload"></i></div>
+                                <div class="status" v-if="isWaiting">
+                                    <b>Ladda upp</b> minst en bild på ditt kvitto
+                                    <p>Du kan dra och släppa en fil här.</p>
+                                </div>
+                                <div class="status" v-if="isDragging">
+                                    <b>Släpp filen här för att ladda upp den</b>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="form-entry">
                 <span class="description">
                     <label for="expense-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning:</label>
@@ -25,26 +57,32 @@
                     <span class="hint"></span>
                 </span>
                 <div class="input">
-                    <input type="date" value="{{ expense.expense_date|date:"c" }}" name="expense_date" required/>
+                    <input type="date" model="expense_part.amount" value="{{ expense.expense_date|date:"c" }}" name="expense_date" required/>
                 </div>
             </div>
         </div>
-
+        <div class="clear"></div>
         <h2>Kvittodelar</h2>
         <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.</p>
 
-        <div id="expense_parts" v-if="committees.length > 0">
-            <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
-                <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                </button>
-                <input type="hidden" name="expensePartId[]" :value="expense_part.id">
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-committee">
-                            Nämnd:
-                        </label>
-                    </span>
+        <table class="card" v-if="committees.length > 0">
+            <thead>
+                <tr>
+                    <th style="width:30px"></th>
+                    <th>Nämnd</th>
+                    <th>Sek. resultatställe</th>
+                    <th>Budgetpost</th>
+                    <th>Summa</th> 
+                </tr>
+            </thead>
+            <tr v-for="(expense_part, i) in expense_parts" :key="i">
+                <td>
+                    <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                    <span class="info">Kvittodel <span v-html="i + 1"></span></span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select">
                             <select name="committee[]" v-model="expense_part.committeeId" required>
@@ -53,14 +91,8 @@
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-cost_centre">
-                            Sekundärt resultatställe:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0">
                             <select name="costCentre[]" v-model="expense_part.costCentreId" required>
@@ -69,17 +101,13 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="costCentre[]" required disabled></select>
+                            <select name="costCentre[]" required disabled>
+                                <option value="0">- Välj nämnd först -</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-budget_line">
-                            Budgetpost:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
                         <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
                             <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
@@ -88,29 +116,37 @@
                             </select>
                         </div>
                         <div class="select disabled" v-else>
-                            <select name="budgetLine[]" required disabled></select>
+                            <select name="budgetLine[]" required disabled>
+                                <option value="0">- Välj sek. resultatställe först -</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-entry">
-                    <span class="description">
-                        <label for="expense_part-amount">
-                            Summa:
-                        </label>
-                    </span>
+                </td>
+                <td>
                     <div class="input">
-                        <input type="number" step="0.01" v-model="expense_part.amount" name="amount[]" required>
+                        <input type="number" placeholder="Fyll i summa" step="0.01" v-model="expense_part.amount" name="amount[]" required>
                     </div>
                 </div>
-
-                <div class="clearfix"></div>
-            </div>
-
-            <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
-        </div>
+                </td>
+            </tr>
+            <tfoot>
+                <tr>
+                    <td colspan="5">
+                        <button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
         <p style="text-align: center" v-else>Laddar...</p>
-        <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera kvitto" class="button primary-action theme-color btn-color">
+
+        <br />
+        <input v-for="file in files" v-if="file.status === 1" type="hidden" name="fileIds[]" v-model="file.id" />
+        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0)">
+            <div v-if="files.length === 0 || files.some(x => x.status === 0)" class="icon spin" style="display: inline-block">
+                <i class="fa fa-spinner"></i>
+            </div> 
+            Spara och registrera kvitto
+        </button>
     </form>
 </div>
 
@@ -131,6 +167,18 @@
                         id: {{ expense_part.id }}
                     } {% if not forloop.last %},{% endif %}
                 {% endfor %}
+                ],
+                dragStatus: 0,
+                files: [
+                {% for file in expense.file_set.all %}
+                    {
+                        id: {{ file.id }},
+                        name: '{{ file.file.name }}',
+                        status: 1,
+                        url: '{{ file.file.url }}',
+                        isImg: {% if file.is_image %}true{% else %}false{% endif %}
+                    }{% if not forloop.last %},{% endif %}
+                {% endfor %}
                 ]
             }
         },
@@ -141,14 +189,99 @@
                     this.committees = res
                 })
         },
+        computed: {
+            isWaiting: function() {
+                return this.dragStatus === 0
+            },
+            isDragging: function() {
+                return this.dragStatus === 1
+            }
+        },
         methods: {
+            deleteFile: function(file) {
+                fetch('/api/files/' + file.id + '/delete/', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                })
+                .then(x => x.json())
+                .then(x => {
+                    this.files = this.files.filter(f => f !== file)
+                })
+            },
+            upload: function(formData, file) {
+                this.files.push({
+                    name: file.name, 
+                    file: file, 
+                    status: 0
+                })
+
+                fetch('/api/files/new/?expense={{ expense.id }}', {
+                    method: 'POST', 
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(x => x.json())
+                .catch(x => console.log("Error", x))
+                .then(x => {
+                    this.files = this.files.map(f => {
+                        if (f.file === file) {
+                            f.status = 1
+                            f.url = x.files[0].url
+                            f.id = x.files[0].id
+                            f.isImg = f.url.endsWith('.jpg') 
+                                || f.url.endsWith('.png')
+                                || f.url.endsWith('.jpeg')
+                                || f.url.endsWith('.gif')
+                        }
+                        console.log(f)
+                        return f
+                    })
+                })
+                .catch(x => console.log("Error", x))
+            },
+            uploadFiles: function(droppedFiles) {
+                Array.prototype.forEach.call(droppedFiles, (file) => {
+                    const formData = new FormData()
+                    formData.append('files', file, file.name)
+                    this.upload(formData, file)
+                })
+            },
+            dragStart: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
+            },
+            dragOver: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
+            },
+            dragLeave: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
+            },
+            dragDrop: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
+                const droppedFiles = e.dataTransfer.files;
+                this.uploadFiles(droppedFiles)
+            },
+            fileSelected: function (e) {
+                Array.prototype.forEach.call(this.$refs.files.files, (file) => {
+                    const formData = new FormData()
+                    formData.append('files', file, file.name)
+                    this.upload(formData, file)
+                })
+                this.$refs.files.value = ''
+            },
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts.length > 0 ? this.expense_parts[this.expense_parts.length - 1].committeeId : 0,
-                    costCentreId: 0,
+                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
+                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
                     budgetLineId: 0,
-                    amount: 0,
-                    id: -1
+                    amount: 0
                 })
             },
             removePart: function (i) {

@@ -31,4 +31,5 @@ urlpatterns = [
     url(r'^invoices/', include("invoices.urls")),
     url(r'^stats/', include("stats.urls")),
     url(r'^users/', include("users.urls")),
+    url(r'^api/files/', include("file_api.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
