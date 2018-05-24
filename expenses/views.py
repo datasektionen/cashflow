@@ -93,6 +93,8 @@ Shows form for editing expense.
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_expense(request, pk):
+    raise Http404("Under underhåll")
+    
     try: expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
