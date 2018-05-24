@@ -4,14 +4,22 @@
 {% block title %}Nytt utlägg{% endblock %}
 
 {% block full_content %}
-<div id="form">
+<div id="form" style="margin-top: -30px;">
+    {% if messages %}
+        <ul class="messages" style="margin: 20px 0 0;">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data" ref="form">
         <div class="form">
             {% csrf_token %}
             <div v-on:drag="dragStart" v-on:dragstart="dragStart" v-on:dragover="dragOver" v-on:dragenter="dragOver" v-on:dragend="dragLeave" v-on:dragleave="dragLeave" v-on:drop="dragDrop" class="form-entry">
                 <div class="input file">
                     <div class="file-input">
-                        <div class="uploaded-file" v-for="file in files">
+                        <div class="uploaded-file" v-for="file in files" style="text-align: center">
                             <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
                                 <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }"></i>
                             </div> 
@@ -20,18 +28,18 @@
                             <span class="delete" v-on:click="deleteFile(file)">
                                 <i class="fa fa-times"></i>
                             </span>
+                            <a v-if="file.isImg" target="_blank" v-bind:href="file.url">
+                                <br />
+                                <img v-bind:src="file.url" />
+                            </a>
                         </div>
                         <div class="file-inner">
                             <label for="file">
-                                <input type="file" name="files" id="file" multiple="multiple" v-on:change="fileSelected">
-
+                                <input type="file" ref="files" name="files" id="file" multiple="multiple" v-on:change="fileSelected">
                                 <div class="icon"><i class="fa fa-upload"></i></div>
                                 <div class="status" v-if="isWaiting">
                                     <b>Ladda upp</b> minst en bild på ditt kvitto
                                     <p>Du kan dra och släppa en fil här.</p>
-                                </div>
-                                <div class="status" v-if="isUploading">
-                                    <b>Laddar upp...</b>
                                 </div>
                                 <div class="status" v-if="isDragging">
                                     <b>Släpp filen här för att ladda upp den</b>
@@ -133,43 +141,27 @@
                 </div>
                 </td>
             </tr>
-            <tr>
-                <td colspan="5">
-                    <button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>
-                </td>
-            </tr>
+            <tfoot>
+                <tr>
+                    <td colspan="5">
+                        <button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>
+                    </td>
+                </tr>
+            </tfoot>
         </table>
 
         <br />
-        <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera kvitto" class="button primary-action theme-color btn-color">
+        <input v-for="file in files" v-if="file.status === 1" type="hidden" name="fileIds[]" v-model="file.id" />
+        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0)">
+            <div v-if="files.length === 0 || files.some(x => x.status === 0)" class="icon spin" style="display: inline-block">
+                <i class="fa fa-spinner"></i>
+            </div> 
+            Spara och registrera kvitto
+        </button>
     </form>
 </div>
 
 <script type="text/javascript">
-    window.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input[type="file"]')
-
-        Array.prototype.forEach.call(inputs, function(input) {
-            const label = input.nextElementSibling;
-            const labelVal = label.innerHTML;
-
-            input.addEventListener('change', function(e) {
-                let fileName = '';
-                if (this.files && this.files.length > 1) {
-                    fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
-                } else {
-                    fileName = e.target.value.split('\\').pop();
-                }
-
-                if (fileName) {
-                    label.querySelector('span.val').innerHTML = fileName;
-                } else {
-                    label.innerHTML = labelVal;
-                }
-            });
-        });
-    }, true);
-
     var isAdvancedUpload = function() {
         var div = document.createElement('div');
         return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
@@ -188,8 +180,8 @@
                     amount: 0
                 }
                 ],
-                uploadStatus: 0,
-                files: [{'name': 'name', 'status': 1}]
+                dragStatus: 0,
+                files: []
             }
         },
         created: function () {
@@ -201,13 +193,10 @@
         },
         computed: {
             isWaiting: function() {
-                return this.uploadStatus === 0
+                return this.dragStatus === 0
             },
             isDragging: function() {
-                return this.uploadStatus === 1
-            },
-            isUploading: function() {
-                return this.uploadStatus === 2
+                return this.dragStatus === 1
             }
         },
         methods: {
@@ -215,10 +204,13 @@
                 this.files = this.files.filter(f => f !== file)
             },
             upload: function(formData, file) {
-                const url = '/api/files/new/'
-                this.files.push({name: file.name, file: file, status: 0})
+                this.files.push({
+                    name: file.name, 
+                    file: file, 
+                    status: 0
+                })
 
-                fetch(url, {
+                fetch('/api/files/new/', {
                     method: 'POST', 
                     body: formData,
                     credentials: 'same-origin'
@@ -226,13 +218,15 @@
                 .then(x => x.json())
                 .catch(x => console.log("Error", x))
                 .then(x => {
-                    console.log("Done")
                     this.files = this.files.map(f => {
                         if (f.file === file) {
                             f.status = 1
                             f.url = x.files[0].url
                             f.id = x.files[0].id
-                            console.log("Done2")
+                            f.isImg = f.url.endsWith('.jpg') 
+                                || f.url.endsWith('.png')
+                                || f.url.endsWith('.jpeg')
+                                || f.url.endsWith('.gif')
                         }
                         console.log(f)
                         return f
@@ -248,35 +242,34 @@
                 })
             },
             dragStart: function (e) {
-                console.log("Dragging1", e);
-                e.preventDefault();
-                e.stopPropagation();
-                this.uploadStatus = 1
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
             },
             dragOver: function (e) {
-                console.log("Dragging2", e);
-                e.preventDefault();
-                e.stopPropagation();
-                this.uploadStatus = 1
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
             },
             dragLeave: function (e) {
-                console.log("Leaving", e);
-                e.preventDefault();
-                e.stopPropagation();
-                this.uploadStatus = 0
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
             },
             dragDrop: function (e) {
-                console.log("Dropping", e);
-                e.preventDefault();
-                e.stopPropagation();
-                var droppedFiles = e.dataTransfer.files;
-                console.log(droppedFiles)
-                this.uploadStatus = 2
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
+                const droppedFiles = e.dataTransfer.files;
                 this.uploadFiles(droppedFiles)
             },
             fileSelected: function (e) {
-                console.log(e)
-                this.upload(new FormData(this.$refs.form), {name: 'file'})
+                Array.prototype.forEach.call(this.$refs.files.files, (file) => {
+                    const formData = new FormData()
+                    formData.append('files', file, file.name)
+                    this.upload(formData, file)
+                })
+                this.$refs.files.value = ''
             },
             addPart: function () {
                 this.expense_parts.push({

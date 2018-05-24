@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import re
 
 from expenses.models import File
+from expenses.models import Expense
 
 
 def pretty_request(request):
@@ -35,17 +36,21 @@ def pretty_request(request):
     )
 
 
-#@require_http_methods(["POST"])
+@require_http_methods(["POST"])
 @csrf_exempt
 def new_file(request):
-    print(pretty_request(request))
     if len((request.FILES.getlist('files'))) < 1:
         return JsonResponse({'message':'No file specified.','explanation':'Upload at least one file.'}, status=400)
+
+    eId = int(request.GET.get('expense', '0'))
+    expense = None
+    if eId > 0:
+        expense = Expense.objects.get(pk=eId)
 
     # Upload the file
     files = []
     for uploaded_file in request.FILES.getlist('files'):
-        file = File(file=uploaded_file)
+        file = File(file=uploaded_file, expense=expense)
         file.save()
 
         files.append(file)
@@ -53,3 +58,14 @@ def new_file(request):
     print(files)
 
     return JsonResponse({'message':'File uploaded.', 'files':[file.to_dict() for file in files]})
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def delete_file(request, pk):
+    file = File.objects.get(pk=int(pk))
+    if not file.expense == None and not request.user.profile.may_delete(file.expense): 
+        return JsonResponse({'Du har inte behörighet att ta bort denna bild.'}, 403)
+    file.expense = None
+    file.save()
+
+    return JsonResponse({'message':'File deleted.'})

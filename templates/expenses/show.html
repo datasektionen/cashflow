@@ -156,7 +156,7 @@
         <h2>Filer</h2>
         {% for file in expense.file_set.all %}
         <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
-        {% if  file.is_image %}
+        {% if file.is_image %}
         <a href="{{ file.file.url }}" target="_blank">
             <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
         </a>

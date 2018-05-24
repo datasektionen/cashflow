@@ -430,9 +430,14 @@ input[type="file"] {
     display: block;
     outline: 2px dashed rgb(220, 230, 220);
     line-height: 40px;
-    height: 40px;
     padding: 0 7px;
     margin-bottom: 10px;
+}
+.file-input .uploaded-file img {
+    max-width: 100px;
+    max-height: 100px;
+    display: inline-block;
+    padding-bottom: 10px;
 }
 .file-input .delete {
     float: right;
@@ -448,7 +453,7 @@ input[type="file"] {
 .fa-check {
     color: rgb(33, 108, 42);
 }
-.file-input .uploaded-file .icon.spin i {
+.icon.spin i {
     -webkit-animation: spin 2s linear infinite;
     -moz-animation: spin 2s linear infinite;
     animation: spin 2s linear infinite;
@@ -545,6 +550,9 @@ input[type="date"], input[type="time"] {
     background: #fff;
     border-bottom: 1px solid #efefef;
 }
+#content table.card tbody tr:last-child {
+    border-bottom: none;
+}
 table .select {
     box-shadow: none !important;
     border: none;
@@ -552,6 +560,12 @@ table .select {
 table input[type="number"] {
     border: none !important;
     box-shadow: none !important;
+}
+table.card tfoot {
+    border-top: 1px solid #ccc !important;
+}
+table.card {
+    border-bottom: 1px solid #ccc !important;
 }
 
 
@@ -944,7 +958,7 @@ table.card button {
         padding: 5px 10px 5px 10px;
         margin: -6px 10px -7px -6px;
     }
-    table.card, table.card thead, table.card tbody, table.card th, table.card td, table.card tr { 
+    table.card, table.card thead, table.card tbody, table.card tfoot, table.card th, table.card td, table.card tr { 
         display: block; 
     }
     
@@ -1014,4 +1028,18 @@ table.card button {
     table.card td:nth-of-type(3):before { content: "Sek. resultatställe"; }
     table.card td:nth-of-type(4):before { content: "Budgetpost"; }
     table.card td:nth-of-type(5):before { content: "Summa"; }
+}
+
+ul.messages {
+    background: #fee;
+    border: 1px solid #d00;
+    color: #444 !important;
+    padding: 10px 10px 10px 30px;
+}
+
+.money-green button.button.theme-color:disabled {
+    background: #ccc;
+}
+.money-green button.button.theme-color:disabled:hover {
+    background: #ddd !important;
 }

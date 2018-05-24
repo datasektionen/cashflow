@@ -24,12 +24,12 @@ Add a new expense.
 def new_expense(request):
     if request.method == 'GET': return render(request, 'expenses/new.html')
     elif request.method == 'POST':
-        # Validate
-        if len((request.FILES.getlist('files'))) < 1:
+        if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
             messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
             return HttpResponseRedirect(reverse('expenses-new'))
 
         if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
+            print("Felaktigt datum")
             messages.error(request, 'Du har angivit ett datum i framtiden')
             return HttpResponseRedirect(reverse('expenses-new'))
 
@@ -42,9 +42,19 @@ def new_expense(request):
         )
         expense.save()
 
-        # Add the file
-        for uploaded_file in request.FILES.getlist('files'):
-            file = models.File(expense=expense, file=uploaded_file)
+        # Add the files submitted
+        for posted_file in request.FILES.getlist('files'):
+            file = models.File(expense=expense, file=posted_file)
+            file.save()
+
+        # Add the files submitted to the javascript upload
+        for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
+            file = models.File.objects.get(pk=int(pre_uploaded_file_id))
+            if file.expense == None:
+                file.expense = expense
+                print("None")
+            else:
+                print("Inte none")
             file.save()
 
         # Add the expenseparts
