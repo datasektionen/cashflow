@@ -1,14 +1,5 @@
 {% extends "main.html" %}
 
-{% block methone-links %}
-    {str: "Hem", href: "/" },
-    {% if user.is_authenticated %}
-        {% if user.profile.is_admin %}
-            {str: "Administrera", href: "/admin" },
-        {% endif %}
-        {str: "Statistik", href: "/stats"},
-    {% endif %}
-{% endblock %}
 
 {% block app %}
 <div id="welcome">
