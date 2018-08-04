@@ -1,5 +1,4 @@
 
-.idea
 
 ### Node, React, etc ###
 node_modules
@@ -58,6 +57,7 @@ media
 ## Plugin-specific files:
 
 # IntelliJ
+.idea
 /out/
 
 # mpeltonen/sbt-idea plugin
@@ -132,6 +132,8 @@ coverage.xml
 *.mo
 
 # Django stuff:
+
+static/
 
 # Flask stuff:
 instance/
