@@ -93,6 +93,9 @@
             {% block methone-links %}
                 {str: "Hem", href: "/" },
                 {% if user.is_authenticated %}
+                	{str: "Nytt utlägg", href: "/expenses/new/" },
+                	{str: "Ny faktura", href: "/invoices/new/" },
+                	{str: "Mina utlägg", href: "/users/{{ user.username }}/receipts/" },
                     {% if user.profile.is_admin %}
                     {str: "Administrera", href: "/admin" },
                     {% endif %}
