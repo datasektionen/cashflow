@@ -8,13 +8,13 @@
             {% if user.is_authenticated %}
             <li>
                 <a href="/expenses/new" v-tooltip.bottom="{ content: 'Lägg in ett nytt utlägg (kvitto) i Cashflow' }">
-                    <span class="icon"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                    <span class="icon"><i class="fa fa-receipt" aria-hidden="true"></i></span>
                     <span class="description">Registrera utlägg</span>
                 </a>
             </li>
             <li>
                 <a href="/invoices/new" v-tooltip.bottom="{ content: 'Ladda upp en faktura som ska betalas' }">
-                    <span class="icon"><i class="fa fa-file-text" aria-hidden="true"></i></span>
+                    <span class="icon"><i class="fa fa-file-invoice" aria-hidden="true"></i></span>
                     <span class="description">Ladda upp faktura</span>
                 </a>
             </li>
