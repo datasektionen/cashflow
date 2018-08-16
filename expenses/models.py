@@ -423,7 +423,7 @@ def send_mail(sender, instance, created, *args, **kwargs):
     owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
         if created and instance.author != owner:
-            requests.post("http://spam.datasektionen.se/api/sendmail", json={
+            requests.post("https://spam.datasektionen.se/api/sendmail", json={
                 'from': 'no-reply@datasektionen.se',
                 'to': owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',

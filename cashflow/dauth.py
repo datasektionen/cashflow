@@ -18,7 +18,7 @@ class DAuth(object):
     """
     @staticmethod
     def authenticate(token=None):
-        url = 'http://login2.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
+        url = 'https://login2.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
 
         req = requests.get(url)
         if req.status_code == 200:
@@ -53,7 +53,7 @@ Get permissions for user through the pls API.
 """
 def get_permissions(user):
     return json.loads(urllib.parse.unquote(requests.get(
-        'http://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
+        'https://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
     ).content.decode('utf-8')))
 
 """
@@ -64,7 +64,7 @@ Gets user from request.
 def has_permission(permission, request):
     if 'permissions' not in request.session:
         # Fetch permissions from pls and store timestamp
-        response = requests.get('http://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/')
+        response = requests.get('https://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/')
         request.session['permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
 
     return permission in request.session['permissions']
