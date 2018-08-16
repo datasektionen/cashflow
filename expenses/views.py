@@ -16,12 +16,13 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from cashflow import dauth
 from expenses import models
 
-"""
-Add a new expense.
-"""
+
 @require_http_methods(["GET", "POST"])
 @login_required
 def new_expense(request):
+    """
+    Add a new expense.
+    """
     if request.method == 'GET': return render(request, 'expenses/new.html')
     elif request.method == 'POST':
         if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
@@ -74,12 +75,13 @@ def new_expense(request):
 
         return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
 
-"""
-Shows a confirmation of the new expense and tells user to put receipt into binder.
-"""
+
 @require_GET
 @login_required
 def expense_new_confirmation(request, pk):
+    """
+    Shows a confirmation of the new expense and tells user to put receipt into binder.
+    """
     try: expense = models.Expense.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
         messages.error(request, 'Ett fel uppstod och kvittot skapades inte.')
@@ -87,12 +89,13 @@ def expense_new_confirmation(request, pk):
 
     return render(request, 'expenses/confirmation.html', {'expense': expense})
 
-"""
-Shows form for editing expense.
-"""
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_expense(request, pk):
+    """
+    Shows form for editing expense.
+    """
     raise Http404("Under underhåll")
     
     try: expense = models.Expense.objects.get(pk=pk)
@@ -149,12 +152,13 @@ def edit_expense(request, pk):
 
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
 
-"""
-Delete expense. Ask for confirmation on GET and send to POST.
-"""
+
 @require_http_methods(["GET", "POST"])
 @login_required
 def delete_expense(request, pk):
+    """
+    Delete expense. Ask for confirmation on GET and send to POST.
+    """
     try: expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
@@ -167,12 +171,13 @@ def delete_expense(request, pk):
         messages.success(request, 'Kvittot raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
 
-"""
-Shows one expense.
-"""
+
 @require_GET
 @login_required
 def get_expense(request, pk):
+    """
+    Shows one expense.
+    """
     try: expense = models.Expense.objects.get(pk=int(pk))
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
@@ -183,12 +188,13 @@ def get_expense(request, pk):
         'may_account': request.user.profile.may_account()
     })
 
-"""
-Adds new comment to receipt.
-"""
+
 @require_POST
 @login_required
 def new_comment(request, expense_pk):
+    """
+    Adds new comment to receipt.
+    """
     try: expense = models.Expense.objects.get(pk=int(expense_pk))
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
@@ -203,11 +209,13 @@ def new_comment(request, expense_pk):
 
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
 
-"""
-Displays an index page.
-"""
+
 def index(request):
+    """
+    Displays an index page.
+    """
     return render(request, 'index.html')
+
 
 def get_payment(request, pk):
     try:
@@ -219,13 +227,14 @@ def get_payment(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utbetalningen finns inte")
 
-"""
-Performs a payment
-"""
+
 @login_required
 @require_POST
 @user_passes_test(lambda u: u.profile.may_pay())
 def new_payment(request):
+    """
+    Performs a payment
+    """
     try: expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
     except ObjectDoesNotExist as e: raise Http404("Ett av utläggen finns inte.")
 
@@ -255,6 +264,7 @@ def new_payment(request):
         ).save()
 
     return HttpResponseRedirect(reverse('expenses-action-pay') + "?payment=" + str(payment.id))
+
 
 @login_required
 @require_POST

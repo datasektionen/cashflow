@@ -7,17 +7,18 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 
-"""
-Authenticates user through the login2 API.
-"""
-class DAuth(object):
 
+class DAuth(object):
     """
-    Do the authentication via login2.
-    Save user in database if did not exist before.
+    Authenticates user through the login2 API.
     """
+
     @staticmethod
     def authenticate(token=None):
+        """
+        Do the authentication via login2.
+        Save user in database if did not exist before.
+        """
         url = 'https://login2.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
 
         req = requests.get(url)
@@ -38,30 +39,32 @@ class DAuth(object):
         else:
             print(req)
 
-    """
-    Get user from kth user id.
-    """
     @staticmethod
     def get_user(user_id):
+        """
+        Get user from kth user id.
+        """
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
 
-"""
-Get permissions for user through the pls API.
-"""
+
 def get_permissions(user):
+    """
+    Get permissions for user through the pls API.
+    """
     return json.loads(urllib.parse.unquote(requests.get(
         'https://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
     ).content.decode('utf-8')))
 
-"""
-Check is user has permission to specific property.
-Will always lookup the pls API.
-Gets user from request.
-"""
+
 def has_permission(permission, request):
+    """
+    Check is user has permission to specific property.
+    Will always lookup the pls API.
+    Gets user from request.
+    """
     if 'permissions' not in request.session:
         # Fetch permissions from pls and store timestamp
         response = requests.get('https://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/')
@@ -69,13 +72,15 @@ def has_permission(permission, request):
 
     return permission in request.session['permissions']
 
-"""
-Middleware for defining authentication.
-Forces user to be authenticated before sending on.
-"""
+
 class AuthRequiredMiddleware(object):
+
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
+        """
+        Middleware for defining authentication.
+        Forces user to be authenticated before sending on.
+        """
         path = request.META['PATH_INFO']
         whitelist = ['^/$', '^/login/$', '^/login/.*$', "^/budget/.*$"]
 

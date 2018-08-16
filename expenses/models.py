@@ -13,17 +13,12 @@ from cashflow import dauth
 from cashflow import settings
 from invoices.models import *
 
-"""
 
-Defines all the models of the app.
-
-"""
-
-"""
-BankAccount represents an actual bank account owned by the organisation.
-This is a real bank account like one on Handelsbanken or another bank.
-"""
 class BankAccount(models.Model):
+    """
+    BankAccount represents an actual bank account owned by the organisation.
+    This is a real bank account like one on Handelsbanken or another bank.
+    """
     name = models.TextField()
 
     # Return a string representation of the bank account
@@ -39,12 +34,11 @@ class BankAccount(models.Model):
         return model_to_dict(self)
 
 
-
-"""
-A profile is attached to each user to be able to store more information
-and relations with it.
-"""
 class Profile(models.Model):
+    """
+    A profile is attached to each user to be able to store more information
+    and relations with it.
+    """
     # The relation to the original django user
     user = models.OneToOneField(User)
 
@@ -177,16 +171,16 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
+
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
 
-
-"""
-Represents a payment from a chapter account to a member.
-"""
 class Payment(models.Model):
+    """
+    Represents a payment from a chapter account to a member.
+    """
     date = models.DateField(auto_now_add=True)
     payer = models.ForeignKey(Profile, related_name='payer')
     receiver = models.ForeignKey(Profile, related_name='receiver')
@@ -222,12 +216,11 @@ class Payment(models.Model):
         return "Data" + str(self.id)
 
 
-
-"""
-Represents an expense. An expense contains expense parts and information 
-about the expense.
-"""
 class Expense(models.Model):
+    """
+    Represents an expense. An expense contains expense parts and information
+    about the expense.
+    """
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
     confirmed_by = models.ForeignKey(User, blank=True, null=True)
@@ -314,10 +307,11 @@ class Expense(models.Model):
             expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()
 
-"""
-Represents a file on, for example, S3.
-"""
+
 class File(models.Model):
+    """
+    Represents a file on, for example, S3.
+    """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField()
@@ -343,11 +337,10 @@ class File(models.Model):
         return file_regex.match(self.file.name)
 
 
-
-"""
-Defines an expense part, which is a specification of a part of an expense.
-"""
 class ExpensePart(models.Model):
+    """
+    Defines an expense part, which is a specification of a part of an expense.
+    """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
     budget_line_id = models.IntegerField(default=0)
     budget_line_name = models.TextField(blank=True)
@@ -390,10 +383,10 @@ class ExpensePart(models.Model):
         return exp_part
 
 
-"""
-Represents a comment on an expense.
-"""
 class Comment(models.Model):
+    """
+    Represents a comment on an expense.
+    """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -416,6 +409,7 @@ class Comment(models.Model):
         comment['author_first_name'] = self.author.user.first_name
         comment['author_last_name'] = self.author.user.last_name
         return comment
+
 
 # Sends mail on comment
 @receiver(post_save, sender=Comment)
