@@ -11,7 +11,7 @@ from datetime import date, datetime
         
 from cashflow import dauth
 from cashflow import settings
-from invoices.models import *
+from invoices.models import Invoice
 
 
 class BankAccount(models.Model):
