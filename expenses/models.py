@@ -13,7 +13,7 @@ from base.models import BankAccount
 
 from cashflow import dauth
 from cashflow import settings
-from invoices.models import *
+from invoices.models import Invoice
 
 
 class Profile(models.Model):
