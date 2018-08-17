@@ -15,6 +15,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
 
 from cashflow import dauth
+from base.models import BankAccount
 from expenses.models import *
 from invoices.models import *
 

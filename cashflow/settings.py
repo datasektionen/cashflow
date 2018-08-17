@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'storages',
     'corsheaders',
     'widget_tweaks',
+    'base',
     'expenses',
     'invoices',
 )
