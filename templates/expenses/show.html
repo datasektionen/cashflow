@@ -177,7 +177,7 @@
             {% for comment in expense.comment_set.all %}
             <li class="clearfix {% if comment.author.user.username == user.username %}own{% endif %}">
                 <div class="info">
-                    <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/user/{{ comment.author.user.username }}"></a>
+                    <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/users/{{ comment.author.user.username }}"></a>
                     <span class="name">
                         <a href="{% url 'user-show' comment.author.user.username %}">
                             
