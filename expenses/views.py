@@ -1,19 +1,14 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import render
-from django.core import serializers
-from django.forms.models import model_to_dict
-from datetime import date, datetime
-from decimal import *
+from datetime import datetime
 from django.contrib import messages
 import re
-import json
 import requests
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
-from cashflow import dauth
 from expenses import models
 
 
@@ -23,7 +18,8 @@ def new_expense(request):
     """
     Add a new expense.
     """
-    if request.method == 'GET': return render(request, 'expenses/new.html')
+    if request.method == 'GET':
+        return render(request, 'expenses/new.html')
     elif request.method == 'POST':
         if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
             messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
@@ -51,7 +47,7 @@ def new_expense(request):
         # Add the files submitted to the javascript upload
         for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
             file = models.File.objects.get(pk=int(pre_uploaded_file_id))
-            if file.expense == None:
+            if file.expense is None:
                 file.expense = expense
                 print("None")
             else:
@@ -61,15 +57,15 @@ def new_expense(request):
         # Add the expenseparts
         for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
             response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
-            budgetLine = response.json()
+            budget_line = response.json()
             models.ExpensePart(
                 expense=expense,
-                budget_line_id=budgetLine['id'],
-                budget_line_name=budgetLine['name'],
-                cost_centre_name=budgetLine['cost_centre']['name'],
-                cost_centre_id=budgetLine['cost_centre']['id'],
-                committee_name=budgetLine['cost_centre']['committee']['name'],
-                committee_id=budgetLine['cost_centre']['committee']['id'],
+                budget_line_id=budget_line['id'],
+                budget_line_name=budget_line['name'],
+                cost_centre_name=budget_line['cost_centre']['name'],
+                cost_centre_id=budget_line['cost_centre']['id'],
+                committee_name=budget_line['cost_centre']['committee']['name'],
+                committee_id=budget_line['cost_centre']['committee']['id'],
                 amount=request.POST.getlist('amount[]')[idx]
             ).save()
 
@@ -82,7 +78,8 @@ def expense_new_confirmation(request, pk):
     """
     Shows a confirmation of the new expense and tells user to put receipt into binder.
     """
-    try: expense = models.Expense.objects.get(pk=int(pk))
+    try:
+        expense = models.Expense.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
         messages.error(request, 'Ett fel uppstod och kvittot skapades inte.')
         return HttpResponseRedirect(reverse('expenses-new'))
@@ -98,10 +95,13 @@ def edit_expense(request, pk):
     """
     raise Http404("Under underhåll")
     
-    try: expense = models.Expense.objects.get(pk=pk)
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
-    if expense.owner.user.username != request.user.username: return HttpResponseForbidden()
+    if expense.owner.user.username != request.user.username:
+        return HttpResponseForbidden()
 
     # Show the form on GET, otherwise handle as POST
     if request.method == 'GET':
@@ -114,39 +114,39 @@ def edit_expense(request, pk):
     expense.expense_date = request.POST['expense_date']
     expense.save()
 
-    newIds = []
+    new_ids = []
     for idx, expensePartId in enumerate(request.POST.getlist('expensePartId[]')):
-        budgetLines = request.POST.getlist('budgetLine[]')
-        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLines[idx]))
-        budgetLine = response.json()
+        budget_lines = request.POST.getlist('budgetLine[]')
+        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budget_lines[idx]))
+        budget_line = response.json()
 
         if expensePartId == '-1':
             expense_part = models.ExpensePart(
                 expense=expense,
-                budget_line_id=budgetLine['id'],
-                budget_line_name=budgetLine['name'],
-                cost_centre_name=budgetLine['cost_centre']['name'],
-                cost_centre_id=budgetLine['cost_centre']['id'],
-                committee_name=budgetLine['cost_centre']['committee']['name'],
-                committee_id=budgetLine['cost_centre']['committee']['id'],
+                budget_line_id=budget_line['id'],
+                budget_line_name=budget_line['name'],
+                cost_centre_name=budget_line['cost_centre']['name'],
+                cost_centre_id=budget_line['cost_centre']['id'],
+                committee_name=budget_line['cost_centre']['committee']['name'],
+                committee_id=budget_line['cost_centre']['committee']['id'],
                 amount=request.POST.getlist('amount[]')[idx]
             )
             expense_part.save()
-            newIds.append(expense_part.id)
+            new_ids.append(expense_part.id)
         else:
             expense_part = models.ExpensePart.objects.get(pk=expensePartId)
             expense_part.expense = expense
-            expense_part.budget_line_id = budgetLine['id']
-            expense_part.budget_line_name = budgetLine['name']
-            expense_part.cost_centre_name = budgetLine['cost_centre']['name']
-            expense_part.cost_centre_id = budgetLine['cost_centre']['id']
-            expense_part.committee_name = budgetLine['cost_centre']['committee']['name']
-            expense_part.committee_id = budgetLine['cost_centre']['committee']['id']
+            expense_part.budget_line_id = budget_line['id']
+            expense_part.budget_line_name = budget_line['name']
+            expense_part.cost_centre_name = budget_line['cost_centre']['name']
+            expense_part.cost_centre_id = budget_line['cost_centre']['id']
+            expense_part.committee_name = budget_line['cost_centre']['committee']['name']
+            expense_part.committee_id = budget_line['cost_centre']['committee']['id']
             expense_part.amount = request.POST.getlist('amount[]')[idx]
             expense_part.save()
-            newIds.append(expense_part.id)
+            new_ids.append(expense_part.id)
 
-    models.ExpensePart.objects.filter(expense=expense).exclude(id__in=newIds).delete()
+    models.ExpensePart.objects.filter(expense=expense).exclude(id__in=new_ids).delete()
 
     messages.success(request, 'Kvittot ändrades')
 
@@ -159,13 +159,18 @@ def delete_expense(request, pk):
     """
     Delete expense. Ask for confirmation on GET and send to POST.
     """
-    try: expense = models.Expense.objects.get(pk=pk)
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_delete(expense): return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
-    if expense.reimbursement is not None: return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
+    if not request.user.profile.may_delete(expense):
+        return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
+    if expense.reimbursement is not None:
+        return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
 
-    if request.method == 'GET': return render(request, 'expenses/delete.html', { "expense": expense })
+    if request.method == 'GET':
+        return render(request, 'expenses/delete.html', {"expense": expense})
     if request.method == 'POST':
         expense.delete()
         messages.success(request, 'Kvittot raderades.')
@@ -178,10 +183,13 @@ def get_expense(request, pk):
     """
     Shows one expense.
     """
-    try: expense = models.Expense.objects.get(pk=int(pk))
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    try:
+        expense = models.Expense.objects.get(pk=int(pk))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_view_expense(expense): return HttpResponseForbidden()
+    if not request.user.profile.may_view_expense(expense):
+        return HttpResponseForbidden()
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
@@ -195,11 +203,15 @@ def new_comment(request, expense_pk):
     """
     Adds new comment to receipt.
     """
-    try: expense = models.Expense.objects.get(pk=int(expense_pk))
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    try:
+        expense = models.Expense.objects.get(pk=int(expense_pk))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_view_expense(expense): return HttpResponseForbidden()
-    if re.match('^\s*$', request.POST['content']): return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
+    if not request.user.profile.may_view_expense(expense):
+        return HttpResponseForbidden()
+    if re.match('^\s*$', request.POST['content']):
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
     
     models.Comment(
         expense=expense,
@@ -235,8 +247,10 @@ def new_payment(request):
     """
     Performs a payment
     """
-    try: expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
-    except ObjectDoesNotExist as e: raise Http404("Ett av utläggen finns inte.")
+    try:
+        expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
+    except ObjectDoesNotExist:
+        raise Http404("Ett av utläggen finns inte.")
 
     expense_owner = expenses[0].owner
     for expense in expenses:
@@ -244,7 +258,7 @@ def new_payment(request):
             return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
-        return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
+        return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
     
     payment = models.Payment(
         payer=request.user.profile,
@@ -260,7 +274,7 @@ def new_payment(request):
         models.Comment(
             author=request.user.profile,
             expense=expense,
-            content="Betalade ut i betalning " + payment.id
+            content="Betalade ut i betalning " + str(payment.id)
         ).save()
 
     return HttpResponseRedirect(reverse('expenses-action-pay') + "?payment=" + str(payment.id))
@@ -270,8 +284,10 @@ def new_payment(request):
 @require_POST
 @user_passes_test(lambda u: u.profile.may_pay())
 def api_new_payment(request):
-    try: expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
-    except ObjectDoesNotExist as e: raise Http404("Ett av utläggen finns inte.")
+    try:
+        expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
+    except ObjectDoesNotExist:
+        raise Http404("Ett av utläggen finns inte.")
         
     expense_owner = expenses[0].owner
     for expense in expenses:
@@ -279,7 +295,7 @@ def api_new_payment(request):
             return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
-        return HttpResponseServerError("Användaren har inte angett alla sina bankuppgifter")
+        return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
     
     payment = models.Payment(
         payer=request.user.profile,

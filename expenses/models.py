@@ -7,8 +7,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
-from datetime import date, datetime
-        
+from datetime import date
+
 from cashflow import dauth
 from cashflow import settings
 from invoices.models import Invoice
@@ -44,7 +44,7 @@ class Profile(models.Model):
 
     # Represents a bank account owned by the user
     bank_account = models.CharField(max_length=13, blank=True)
-    
+
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
     default_account = models.ForeignKey(BankAccount, blank=True, null=True)
@@ -96,7 +96,7 @@ class Profile(models.Model):
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("attest-"):
                 may_attest.append(permission[len("attest-"):].lower())
-        if expense_part == None:
+        if expense_part is None:
             return may_attest
         return expense_part.committee_name.lower() in may_attest
 
@@ -110,17 +110,17 @@ class Profile(models.Model):
 
     # Returns a list of the committees that the user may account for
     def may_account(self, expense=None, invoice=None):
-        if '*' in dauth.get_permissions(self.user) and (not expense == None or not invoice == None):
+        if '*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
             return True
 
         may_account = []
         for permission in dauth.get_permissions(self.user):
             if permission.startswith("accounting-"):
                 may_account.append(permission[len("accounting-"):].lower())
-        if expense == None and invoice == None:
+        if expense is None and invoice is None:
             return may_account
 
-        if expense != None:
+        if expense is not None:
             for ep in expense.expensepart_set.all():
                 if ep.committee_name.lower() in may_account:
                     return True
@@ -134,7 +134,8 @@ class Profile(models.Model):
         if expense.reimbursement:
             return False
 
-        if expense.owner.user.username == self.user.username: return True
+        if expense.owner.user.username == self.user.username:
+            return True
         for expense_part in expense.expensepart_set.all():
             if self.may_attest(expense_part):
                 return True
@@ -166,12 +167,14 @@ class Profile(models.Model):
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
@@ -243,11 +246,16 @@ class Expense(models.Model):
         return str(self.to_dict())
 
     def status(self):
-        if self.verification: return "Bokförd som " + str(self.verification)
-        if self.reimbursement: return "Utbetald"
-        if self.is_attested() and self.confirmed_by: return "Inväntar utbetalning"
-        if self.is_attested() and not self.confirmed_by: return "Attesterad men inte i pärmen"
-        if not self.is_attested() and self.confirmed_by: return "Inte attesterad men i pärmen"
+        if self.verification:
+            return "Bokförd som " + str(self.verification)
+        if self.reimbursement:
+            return "Utbetald"
+        if self.is_attested() and self.confirmed_by:
+            return "Inväntar utbetalning"
+        if self.is_attested() and not self.confirmed_by:
+            return "Attesterad men inte i pärmen"
+        if not self.is_attested() and self.confirmed_by:
+            return "Inte attesterad men i pärmen"
         return "Inte attesterad"
 
     # Return the total amount of the expense parts
@@ -412,6 +420,7 @@ class Comment(models.Model):
 
 
 # Sends mail on comment
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Comment)
 def send_mail(sender, instance, created, *args, **kwargs):
     owner = instance.expense.owner if instance.expense else instance.invoice.owner
