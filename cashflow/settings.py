@@ -95,9 +95,8 @@ TEMPLATES = [
 if not DEBUG:
     RAVEN_CONFIG = {
         'dsn': 'https://8454517d78524997a90a51fdab243d7b:8bddac8028dd41daa99198c80c80ba2a@sentry.io/1256268',
-        # If you are using git, you can also automatically configure the
-        # release based on the git info.
-        # 'release': raven.fetch_git_sha(os.path.abspath(os.curdir)),
+        # Configure release based on git hash
+        'release': os.getenv('GIT_REV'),
     }
 
 
