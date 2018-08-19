@@ -138,16 +138,6 @@ else:
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-        },
-        "ROUTING": "expenses.routing.channel_routing",
-    },
-}
-
 # noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 
