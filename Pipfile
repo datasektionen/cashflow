@@ -16,6 +16,7 @@ whitenoise = "==3.3.1"
 django-queued-storage = "==0.8.0"
 django-storages = "==1.6.6"
 boto = "==2.49.0"
+raven = "*"
 
 [dev-packages]
 django-extensions = "*"

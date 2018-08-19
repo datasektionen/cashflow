@@ -10,7 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
-import os # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import raven
 import re
 import dj_database_url
 from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
@@ -50,6 +51,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'rest_framework',
+    'raven.contrib.django.raven_compat',
     'storages',
     'corsheaders',
     'widget_tweaks',
@@ -88,6 +90,16 @@ TEMPLATES = [
         },
     },
 ]
+
+# Raven/sentry config
+if not DEBUG:
+    RAVEN_CONFIG = {
+        'dsn': 'https://8454517d78524997a90a51fdab243d7b:8bddac8028dd41daa99198c80c80ba2a@sentry.io/1256268',
+        # If you are using git, you can also automatically configure the
+        # release based on the git info.
+        # 'release': raven.fetch_git_sha(os.path.abspath(os.curdir)),
+    }
+
 
 WSGI_APPLICATION = 'cashflow.wsgi.application'
 
