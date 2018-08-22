@@ -228,7 +228,7 @@ def set_verification(request, expense_pk):
     )
     comment.save()
 
-    return HttpResponseRedirect(reverse('admin-action-account'))
+    return HttpResponseRedirect(reverse('admin-account'))
 
 
 @require_POST
@@ -255,7 +255,7 @@ def invoice_set_verification(request, invoice_pk):
     )
     comment.save()
 
-    return HttpResponseRedirect(reverse('admin-action-account'))
+    return HttpResponseRedirect(reverse('admin-account'))
 
 
 @require_GET
