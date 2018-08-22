@@ -197,7 +197,7 @@ def confirm_expense(request, pk):
             )
             comment.save()
 
-            return HttpResponseRedirect(reverse('expenses-action-confirm'))
+            return HttpResponseRedirect(reverse('admin-confirm'))
         except ObjectDoesNotExist:
             raise Http404("Utlägget finns inte")
     else:
