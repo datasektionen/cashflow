@@ -30,6 +30,10 @@ def new_expense(request):
             messages.error(request, 'Du har angivit ett datum i framtiden')
             return HttpResponseRedirect(reverse('expenses-new'))
 
+        if len(list(filter(lambda x: int(x) < 1, request.POST.getlist('amount[]')))) > 0:
+            messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
+            return HttpResponseRedirect(reverse('expenses-new'))
+
         # Create the expense
         expense = models.Expense(
             owner=request.user.profile,
