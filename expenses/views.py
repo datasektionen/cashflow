@@ -93,15 +93,20 @@ def edit_expense(request, pk):
     """
     Shows form for editing expense.
     """
-    raise Http404("Under underhåll")
-    
+    #raise Http404("Under underhåll")
+
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
+    if expense.reimbursement:
+        messages.error(request, 'Kan inte ändra utlägg som har blivit utbetald')
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
+
     if expense.owner.user.username != request.user.username:
-        return HttpResponseForbidden()
+        messages.error(request, 'Kan inte ändra på någon annans utlägg')
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
 
     # Show the form on GET, otherwise handle as POST
     if request.method == 'GET':
@@ -115,36 +120,29 @@ def edit_expense(request, pk):
     expense.save()
 
     new_ids = []
-    for idx, expensePartId in enumerate(request.POST.getlist('expensePartId[]')):
-        budget_lines = request.POST.getlist('budgetLine[]')
-        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budget_lines[idx]))
+
+    for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
+
+        amount = request.POST.getlist('amount[]')[idx]
+
+        if int(amount) < 1:
+            continue
+
+        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
         budget_line = response.json()
 
-        if expensePartId == '-1':
-            expense_part = models.ExpensePart(
-                expense=expense,
-                budget_line_id=budget_line['id'],
-                budget_line_name=budget_line['name'],
-                cost_centre_name=budget_line['cost_centre']['name'],
-                cost_centre_id=budget_line['cost_centre']['id'],
-                committee_name=budget_line['cost_centre']['committee']['name'],
-                committee_id=budget_line['cost_centre']['committee']['id'],
-                amount=request.POST.getlist('amount[]')[idx]
-            )
-            expense_part.save()
-            new_ids.append(expense_part.id)
-        else:
-            expense_part = models.ExpensePart.objects.get(pk=expensePartId)
-            expense_part.expense = expense
-            expense_part.budget_line_id = budget_line['id']
-            expense_part.budget_line_name = budget_line['name']
-            expense_part.cost_centre_name = budget_line['cost_centre']['name']
-            expense_part.cost_centre_id = budget_line['cost_centre']['id']
-            expense_part.committee_name = budget_line['cost_centre']['committee']['name']
-            expense_part.committee_id = budget_line['cost_centre']['committee']['id']
-            expense_part.amount = request.POST.getlist('amount[]')[idx]
-            expense_part.save()
-            new_ids.append(expense_part.id)
+        expense_part = models.ExpensePart(
+            expense=expense,
+            budget_line_id=budget_line['id'],
+            budget_line_name=budget_line['name'],
+            cost_centre_name=budget_line['cost_centre']['name'],
+            cost_centre_id=budget_line['cost_centre']['id'],
+            committee_name=budget_line['cost_centre']['committee']['name'],
+            committee_id=budget_line['cost_centre']['committee']['id'],
+            amount=amount
+        )
+        expense_part.save()
+        new_ids.append(expense_part.id)
 
     models.ExpensePart.objects.filter(expense=expense).exclude(id__in=new_ids).delete()
 
