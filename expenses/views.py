@@ -97,7 +97,6 @@ def edit_expense(request, pk):
     """
     Shows form for editing expense.
     """
-    #raise Http404("Under underhåll")
 
     try:
         expense = models.Expense.objects.get(pk=pk)
