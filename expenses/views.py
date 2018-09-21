@@ -30,7 +30,7 @@ def new_expense(request):
             messages.error(request, 'Du har angivit ett datum i framtiden')
             return HttpResponseRedirect(reverse('expenses-new'))
 
-        if any(map(lambda x: int(x) <= 0, request.POST.getlist('amount[]'))) > 0:
+        if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
             messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
             return HttpResponseRedirect(reverse('expenses-new'))
 
@@ -128,7 +128,7 @@ def edit_expense(request, pk):
 
         amount = request.POST.getlist('amount[]')[idx]
 
-        if int(amount) < 1:
+        if float(amount) < 1:
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
             continue
 
