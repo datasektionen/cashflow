@@ -24,7 +24,7 @@ def new_invoice(request):
 
     if any(map(lambda x: int(x) <= 0, request.POST.getlist('amount[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
-        return HttpResponseRedirect(reverse('expenses-new'))
+        return HttpResponseRedirect(reverse('invoices-new'))
 
     # Create the invoice
     invoice = Invoice(
