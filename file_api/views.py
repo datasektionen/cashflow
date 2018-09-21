@@ -46,6 +46,9 @@ def new_file(request):
     expense = None
     if eId > 0:
         expense = Expense.objects.get(pk=eId)
+        expense.confirmed_by = None
+        expense.confirmed_at = None
+        expense.save()
 
     # Upload the file
     files = []
