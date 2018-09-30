@@ -148,6 +148,10 @@ def edit_expense(request, pk):
         expense_part.save()
         new_ids.append(expense_part.id)
 
+    if (len(new_ids) < 1):
+        messages.warning(request, 'Något gick fel med inladdning av budgetposterna')
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
+
     models.ExpensePart.objects.filter(expense=expense).exclude(id__in=new_ids).delete()
 
     messages.success(request, 'Kvittot ändrades')
