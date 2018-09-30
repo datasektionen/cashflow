@@ -141,10 +141,10 @@
 
         <br />
         <input v-for="file in files" v-if="file.status === 1" type="hidden" name="fileIds[]" v-model="file.id" />
-        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0)">
-            <div v-if="files.length === 0 || files.some(x => x.status === 0)" class="icon spin" style="display: inline-block">
+        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || committees.length == 0">
+            <div v-if="files.length === 0 || files.some(x => x.status === 0) || committees.length == 0" class="icon spin" style="display: inline-block">
                 <i class="fa fa-spinner"></i>
-            </div> 
+            </div>
             Spara och registrera kvitto
         </button>
     </form>
