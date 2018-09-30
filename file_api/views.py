@@ -66,8 +66,10 @@ def new_file(request):
 @csrf_exempt
 def delete_file(request, pk):
     file = File.objects.get(pk=int(pk))
-    if not file.expense == None and not request.user.profile.may_delete(file.expense): 
+    if not file.expense == None and not request.user.profile.may_delete(file.expense):
         return JsonResponse({'Du har inte behörighet att ta bort denna bild.'}, 403)
+    file.expense.confirmed_by = None
+    file.expense.confirmed_at = None
     file.expense = None
     file.save()
 
