@@ -22,7 +22,7 @@ def new_invoice(request):
     invdate = request.POST['invoice-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-date']) else None
     duedate = request.POST['invoice-due-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-due-date']) else None
 
-    if any(map(lambda x: int(x) <= 0, request.POST.getlist('amount[]'))) > 0:
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         return HttpResponseRedirect(reverse('invoices-new'))
 
