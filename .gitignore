@@ -185,4 +185,6 @@ Session.vim
 # auto-generated tag files
 tags
 
+.vscode/
+
 # End of https://www.gitignore.io/api/django,pycharm,python,vim
