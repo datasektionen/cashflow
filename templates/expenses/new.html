@@ -152,8 +152,8 @@
 
         <br />
         <input v-for="file in files" v-if="file.status === 1" type="hidden" name="fileIds[]" v-model="file.id" />
-        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0)">
-            <div v-if="files.length === 0 || files.some(x => x.status === 0)" class="icon spin" style="display: inline-block">
+        <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || !validateBudgetLines()">
+            <div v-if="files.length === 0 || files.some(x => x.status === 0) || !validateBudgetLines()" class="icon spin" style="display: inline-block">
                 <i class="fa fa-spinner"></i>
             </div> 
             Spara och registrera kvitto
@@ -284,7 +284,10 @@
                     return
                 }
                 this.expense_parts.splice(i, 1)
-            }
+            },
+	validateBudgetLines: function () {
+		return Array.prototype.filter.call((this.expense_parts), (budget => budget.budgetLineId > 0)).length == this.expense_parts.length
+	}
         }
     })
 </script>
