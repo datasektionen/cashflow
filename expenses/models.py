@@ -133,7 +133,8 @@ class Profile(models.Model):
     def may_delete(self, expense):
         if expense.reimbursement:
             return False
-
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and expense is not None:
+            return True
         if expense.owner.user.username == self.user.username:
             return True
         for expense_part in expense.expensepart_set.all():
