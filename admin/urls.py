@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^attest/$', views.attest_overview, name='admin-attest'),
     url(r'^pay/$', views.pay_overview, name='admin-pay'),
     url(r'^account/$', views.account_overview, name='admin-account'),
+    url(r'^payables', views.attested_expenses, name='admin-payables'),
 
     url(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),

@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
+from django.db.models import Sum
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -15,6 +16,27 @@ from cashflow import dauth
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from invoices.models import Invoice, InvoicePart
 
+from django.http import JsonResponse
+
+@require_GET
+@login_required
+def attested_expenses(request):
+    if 'attest-firmatecknare' not in dauth.get_permissions(request.user):
+        return HttpResponseForbidden("Du har inte rättigheter att se det här")
+
+    expense_data = ExpensePart.objects \
+    .filter(attested_by__isnull=False) \
+    .filter(expense__created_date__year = str(datetime.now().year)) \
+    .values('committee_name', 'cost_centre_name', 'budget_line_name', 'expense__verification') \
+    .annotate(amount=Sum('amount'))
+
+    invoice_data = InvoicePart.objects \
+    .filter(attested_by__isnull=False) \
+    .filter(invoice__created_date__year = str(datetime.now().year)) \
+    .values('committee_name', 'cost_centre_name', 'budget_line_name', 'invoice__verification') \
+    .annotate(amount=Sum('amount'))
+
+    return JsonResponse({'invoices': list(invoice_data), 'expenses': list(expense_data)})
 
 @require_GET
 @login_required
