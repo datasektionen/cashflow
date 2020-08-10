@@ -310,11 +310,11 @@ class Expense(models.Model):
     @staticmethod
     def accountable(may_account):
         if '*' in may_account:
-            return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct()
+            return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by('expense_date')
         return Expense.objects.exclude(reimbursement=None).filter(
             verification='',
             expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
-        ).distinct()
+        ).distinct().order_by('expense_date')
 
 
 class File(models.Model):
