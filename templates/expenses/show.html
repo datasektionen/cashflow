@@ -22,7 +22,6 @@
             {% endfor %}
         </ul>
     {% endif %}
-
     <h2>Kvittodelar</h2>
     <table>
         <thead>
@@ -122,12 +121,18 @@
             </tr>
             <tr>
                 <th>Bekräftat i pärmen:</th>
-                <td>
-                    {% if expense.confirmed_by_id %}
-                     {{ expense.confirmed_by.get_full_name }} ({{ expense.confirmed_at }})
-                    {% else %}
-                    Inte än
-                    {% endif %}
+                <td v-if="expense.confirmed">
+                    [[expense.confirmed_by]]  ([[expense.confirmed_date]])
+                </td>
+                <td v-else>
+                    {% if user.profile.is_admin %}
+                        <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
+                            {% csrf_token %}
+                            <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta</button>
+                        </form>
+                        {% else %}
+                        Inte än
+                        {%endif%}
                 </td>
             </tr>
             <tr>
@@ -224,9 +229,22 @@
 <script type="text/javascript">
     new Vue({
         el: '#app', 
+        delimiters: ['[[', ']]'],
         data: function () {
             return {
-
+                expense: {
+                    id: {{ expense.id }},
+                    {% if expense.confirmed_by %}
+                    confirmed: true,
+                    confirmed_by: "{{ expense.confirmed_by.get_full_name }}",
+                    confirmed_date: "{{ expense.confirmed_at }}"
+                    {% else%}
+                    confirmed: false
+                    {%endif%}
+                },
+                user: {
+                    full_name: "{{ user.first_name }} {{user.last_name}}"
+                }
             }
         },
         methods: {
@@ -235,7 +253,27 @@
                 console.log(e.target.innerHTML)
                 document.getElementById('content-field').value = e.target.innerHTML
                 document.getElementById('new').submit()
-            }
+            },
+            conf: function (expense, e) {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+                fetch('/admin/expense/' + expense.id + '/confirm/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => {
+                    return res.text()
+                })
+                .then(res => {
+                    this.expense.confirmed = true;
+                    this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
+                    this.expense.confirmed_by = this.user.full_name;
+                })
+                if (e) e.preventDefault()
+            } 
         },
         created() {
 
