@@ -50,7 +50,7 @@
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
-                            <td><span v-html="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
+                            <td><span v-html="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr</td>
                         </tr>
                     </table>
                 </td>
