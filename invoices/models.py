@@ -63,6 +63,11 @@ class Invoice(models.Model):
         print(self.invoicepart_set.filter(attested_by__isnull=True).count())
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
 
+    def is_payed(self):
+        if self.payed_at and self.payed_by:
+            return True
+        return False
+
     # TODO
     def is_payable(self):
         if self.payed_at:

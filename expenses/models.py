@@ -142,6 +142,18 @@ class Profile(models.Model):
                 return True
         return False
 
+    def may_delete_invoice(self, invoice):
+        if invoice.is_payed():
+            return False
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and invoice is not None:
+            return True
+        if invoice.owner.user.username == self.user.username:
+            return True
+        for invoice in invoice.invoicepart_set.all():
+            if self.may_attest(invoice_part):
+                return True
+        return False
+
     def may_be_viewed_by(self, user):
         return user.username == self.user.username or user.profile.is_admin()
 
