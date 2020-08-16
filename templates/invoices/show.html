@@ -148,6 +148,15 @@
                 <th>Verifikationsnummer:</th>
                 <td>{{ invoice.verification|default:"Ej bokförd" }} {% comment "if may_account" %}(<a href="{% url 'admin-invoice-edit-verification' invoice.id %}">Ändra</a>){% endcomment %}</td>
             </tr>
+            <tr>
+                <td colspan="2">
+                    <a href="{% url 'invoices-delete' invoice.id %}">
+                        <button type="button" class="btn btn-danger">
+                            <i class="fa fa-trash"></i> Ta bort faktura
+                        </button>
+                    </a>
+                </td>
+            </tr>
         </table>
     </div>
 

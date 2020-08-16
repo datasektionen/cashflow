@@ -119,3 +119,25 @@ def new_comment(request, invoice_pk):
 
     return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_pk}))
 
+@require_http_methods(["GET", "POST"])
+@login_required
+def delete_invoice(request, pk):
+    """
+    Delete invoice. Ask for confirmation on GET and send to POST.
+    """
+    try:
+        invoice = Invoice.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        raise Http404("Fakturan finns inte")
+
+    if not request.user.profile.may_delete_invoice(invoice):
+        return HttpResponseForbidden('Du har inte behörighet att ta bort denna faktura.')
+    if invoice.is_payed():
+        return HttpResponseBadRequest('Du kan inte ta bort en faktura som är återbetalt!')
+
+    if request.method == 'GET':
+        return render(request, 'invoices/delete.html', {"invoice": invoice})
+    if request.method == 'POST':
+        invoice.delete()
+        #messages.success(request, 'Fakturan raderades.')
+        return HttpResponseRedirect(reverse('expenses-index'))

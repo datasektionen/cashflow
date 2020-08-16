@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^new/$', views.new_invoice, name='invoices-new'),
     url(r'^new/confirmation/(?P<pk>\d+)/$', views.invoice_new_confirmation, name='invoices-new-confirmation'),
     url(r'^(?P<invoice_pk>\d+)/comment/$', views.new_comment, name='invoices-comment'),
+    url(r'^(?P<pk>\d+)/delete/$', views.delete_invoice, name='invoices-delete'),
 ]
