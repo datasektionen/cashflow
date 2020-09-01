@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from django.db.models import Sum, Count
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
 
 from expenses import models
@@ -26,7 +26,7 @@ def index(request):
     z1 = [0 if y1[i].count() == 0 else float(y1[i].get()['value']) for i in range(0, 12)]
 
     return render(request, 'stats/index.html', {
-        'year': models.Expense.objects.filter(reimbursement__isnull=False).aggregate(year=Sum('expensepart__amount'))['year'],
+        'year': models.Expense.objects.filter(reimbursement__isnull=False).aggregate(year=Coalesce(Sum('expensepart__amount'), 0))['year'],
         'highscore': models.Profile.objects.filter(expense__reimbursement__isnull=False).annotate(
             total_amount=Sum('expense__expensepart__amount')
         ).filter(total_amount__gte=0).order_by('-total_amount')[:10],
