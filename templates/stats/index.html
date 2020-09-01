@@ -45,11 +45,7 @@ var config = {
             label: "Antal utlägg",
             backgroundColor: '#278032',
             borderColor: '#278032',
-            data: [
-                {% for m in month_count %}
-                    {{ m }},
-                {% endfor %}
-            ],
+            data: {{ month_count }},
             yAxisID: "A",
             fill: false,
         }, {
@@ -57,11 +53,7 @@ var config = {
             fill: false,
             backgroundColor: '#222',
             borderColor: '#222',
-            data: [
-                {% for m in month_sum %}
-                    {{ m }},
-                {% endfor %}
-            ],
+            data: {{ month_sum }},
             yAxisID: "B",
         }]
     },
@@ -84,7 +76,7 @@ var config = {
                 display: true,
                 scaleLabel: {
                     display: true,
-                    labelString: 'Month'
+                    labelString: 'Månad'
                 }
             }],
             yAxes: [{
