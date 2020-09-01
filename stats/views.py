@@ -23,9 +23,8 @@ def index(request):
         .order_by('month') \
         .values('month', 'value').all()
     y1 = [x1.filter(month=date(datetime.now().year, i, 1)) for i in range(1, 13)]
-    z1 = [0 if y1[i].count() == 0 else y1[i].get()['value'] for i in range(0, 12)]
+    z1 = [0 if y1[i].count() == 0 else float(y1[i].get()['value']) for i in range(0, 12)]
 
-    print(z1)
     return render(request, 'stats/index.html', {
         'year': models.Expense.objects.filter(reimbursement__isnull=False).aggregate(year=Sum('expensepart__amount'))['year'],
         'highscore': models.Profile.objects.filter(expense__reimbursement__isnull=False).annotate(
