@@ -128,7 +128,7 @@
                     {% if user.profile.is_admin %}
                         <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
                             {% csrf_token %}
-                            <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta</button>
+                            <button class="theme-color btn-color" v-on:click="conf(expense, $event)">[[expense.btn_message]]</button>
                         </form>
                         {% else %}
                         Inte än
@@ -233,6 +233,7 @@
         data: function () {
             return {
                 expense: {
+                    btn_message: "Bekräfta",
                     id: {{ expense.id }},
                     {% if expense.confirmed_by %}
                     confirmed: true,
@@ -265,12 +266,17 @@
                     redirect: 'manual'
                 })
                 .then(res => {
-                    return res.text()
+                    if(res.type === "opaqueredirect"){    
+                        this.expense.confirmed = true;
+                        this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
+                        this.expense.confirmed_by = this.user.full_name;
+                    } else {
+                        this.expense.btn_message = "Error! Försök igen"
+                    } 
+                    return res.text();
                 })
                 .then(res => {
-                    this.expense.confirmed = true;
-                    this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
-                    this.expense.confirmed_by = this.user.full_name;
+                    //console.log(res);
                 })
                 if (e) e.preventDefault()
             } 
