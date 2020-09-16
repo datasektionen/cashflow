@@ -132,8 +132,6 @@ def delete_invoice(request, pk):
 
     if not request.user.profile.may_delete_invoice(invoice):
         return HttpResponseForbidden('Du har inte behörighet att ta bort denna faktura.')
-    if invoice.is_payed():
-        return HttpResponseBadRequest('Du kan inte ta bort en faktura som är återbetald!')
 
     if request.method == 'GET':
         return render(request, 'invoices/delete.html', {"invoice": invoice})
