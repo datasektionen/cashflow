@@ -4,11 +4,11 @@ from django.http import HttpResponseRedirect, Http404
 
 def login(request):
     """
-    Login route, redirects to login2 login URL.
+    Login route, redirects to the login system.
     """
     if not request.user.is_authenticated:
         return HttpResponseRedirect(
-            'https://login2.datasektionen.se/login?callback=' +
+            'https://login.datasektionen.se/login?callback=' +
             request.scheme + '://' + request.get_host() + '/login/')
     else:
         return HttpResponseRedirect("/")
@@ -16,7 +16,7 @@ def login(request):
 
 def login_with_token(request, token):
     """
-    Handles a login2 redirect and authenticates user.
+    Handles a login redirect and authenticates user.
     """
     if request.method != 'GET':
         raise Http404()
