@@ -1,11 +1,9 @@
-{% block content %}
-    # Hej, {{ receiver }}!
-    
-    {% if comment.expense %}
-    Utlägget "[{{ comment.expense.description }}](https://cashflow.datasektionen.se{% url "expenses-show" comment.expense.id %})" har fått en ny kommentar av {{ comment.author }}:
-    {% else %}
-    Fakturan "[{{ comment.invoice.description }}](https://cashflow.datasektionen.se{% url "invoices-show" comment.invoice.id %})" har fått en ny kommentar av {{ comment.author }}:
-    {% endif %}
-    
-    {{ comment.content }}
-{% endblock %}
+# Hej, {{ receiver }}!
+
+{% if comment.expense %}
+Utlägget "[{{ comment.expense.description }}](https://cashflow.datasektionen.se{% url "expenses-show" comment.expense.id %})" har fått en ny kommentar av {{ comment.author }}:
+{% else %}
+Fakturan "[{{ comment.invoice.description }}](https://cashflow.datasektionen.se{% url "invoices-show" comment.invoice.id %})" har fått en ny kommentar av {{ comment.author }}:
+{% endif %}
+
+{{ comment.content }}
