@@ -6,6 +6,7 @@ from datetime import date, datetime
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import render_to_string
+from cashflow import settings
 
 import re
 
