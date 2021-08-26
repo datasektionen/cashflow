@@ -144,7 +144,7 @@ def delete_invoice(request, pk):
         requests.post("https://spam.datasektionen.se/api/sendmail", json={
             'from': 'no-reply@datasektionen.se',
             'to': invoice.owner.user.email,
-            'subject': deleter_name + ' har tagit bort ditt faktura',
+            'subject': deleter_name + ' har tagit bort din faktura',
             'content': render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description}),
             'key': settings.SPAM_API_KEY
         })
