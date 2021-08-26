@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.template.loader import render_to_string
 
 import re
 
@@ -137,5 +138,14 @@ def delete_invoice(request, pk):
         return render(request, 'invoices/delete.html', {"invoice": invoice})
     if request.method == 'POST':
         invoice.delete()
+        receiver_name = invoice.owner.user.first_name + ' ' + invoice.owner.user.last_name
+        deleter_name = request.user.first_name + ' ' + request.user.last_name
+        requests.post("https://spam.datasektionen.se/api/sendmail", json={
+            'from': 'no-reply@datasektionen.se',
+            'to': invoice.owner.user.email,
+            'subject': deleter_name + ' har tagit bort ditt faktura',
+            'content': render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description}),
+            'key': settings.SPAM_API_KEY
+        })
         #messages.success(request, 'Fakturan raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
