@@ -4,19 +4,24 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 ## Setup
 
-Install the packages in `requirements.txt`. You can then run the django-server with `manage.py runserver`.
-Make sure you first set up a database, an S3 bucket and supply the correct environment variables as specified below.
+Cashflow uses Python 3.6.2
 
-TODO: Make sure the packages are up to date/throw out old stuff
+`pipenv install`
+`pipenv run ./manage.py migrate`
+`pipenv run ./manage.py runserver`
 
 ## Run
 
 The following environment variables are required to run the project:
 
+They can be put in an .env-file in root. They will be loaded automatically by `pipenv`.
+
+Check out [.env.example](.env.example) for an example.
+
 | Variable              | Description                           | Default                       |
 |-----------------------|---------------------------------------|-------------------------------|
 | DATABASE_URL                | PostgreSQL server url                 | ---                           |
-| DEBUG                 | Django debug mode                     | False                         |
+| DEBUG                 | Django debug mode. Set to True when developing locally. Never set to True in production.                     | False                         |
 | SECRET_KEY            | Django encryption key                 | ---                           |
 | LOGIN2_KEY            | Login2 API key for KTH authentication | ---                           |
 | S3_BUCKET_NAME        | Amazon AWS s3 bucket name             | ---                           |
