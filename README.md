@@ -15,7 +15,7 @@ The following environment variables are required to run the project:
 
 | Variable              | Description                           | Default                       |
 |-----------------------|---------------------------------------|-------------------------------|
-| DB_URL                | PostgreSQL server url                 | ---                           |
+| DATABASE_URL                | PostgreSQL server url                 | ---                           |
 | DEBUG                 | Django debug mode                     | False                         |
 | SECRET_KEY            | Django encryption key                 | ---                           |
 | LOGIN2_KEY            | Login2 API key for KTH authentication | ---                           |
