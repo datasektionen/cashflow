@@ -2,15 +2,19 @@
 
 Django project to manage receipts and reimbursements at Datasektionen.
 
-## Setup
+## Developing locally
 
 Cashflow uses Python 3.6.2
 
 `pipenv install`
+
 `pipenv run ./manage.py migrate`
+
 `pipenv run ./manage.py runserver`
 
-## Run
+The server will restart on file changes.
+
+## Environment variables
 
 The following environment variables are required to run the project:
 
