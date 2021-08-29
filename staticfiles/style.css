@@ -1,6 +1,10 @@
 * {
     transition: all .1s;
 }
+
+div#methone-container-replace a {
+    color: #fff;
+}
 #pick {
     background: #278032;
     width: 100%;
