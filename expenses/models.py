@@ -110,7 +110,7 @@ class Profile(models.Model):
 
     # Returns a list of the committees that the user may account for
     def may_account(self, expense=None, invoice=None):
-        if '*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
+        if 'accounting-*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
             return True
 
         may_account = []

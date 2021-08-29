@@ -154,7 +154,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-AUTH_API_KEY = os.getenv('LOGIN2_KEY', 'key-012345678910111213141516171819')
+AUTH_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/

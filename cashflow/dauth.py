@@ -10,16 +10,16 @@ from django.http import HttpResponseRedirect
 
 class DAuth(object):
     """
-    Authenticates user through the login2 API.
+    Authenticates user through the login API.
     """
 
     @staticmethod
     def authenticate(token=None):
         """
-        Do the authentication via login2.
+        Do the authentication via the login system.
         Save user in database if did not exist before.
         """
-        url = 'https://login2.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
+        url = 'https://login.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
 
         req = requests.get(url)
         if req.status_code == 200:
