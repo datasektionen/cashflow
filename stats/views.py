@@ -33,8 +33,6 @@ def index(request):
             .filter(total_amount__gte=0) \
             .order_by('-total_amount')[:10]
 
-    print(highscore)
-
     return render(request, 'stats/index.html', {
         'year': models.Expense.objects.filter(reimbursement__isnull=False).aggregate(year=Coalesce(Sum('expensepart__amount'), 0))['year'],
         'highscore': highscore,
