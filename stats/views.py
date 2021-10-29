@@ -25,11 +25,15 @@ def index(request):
     y1 = [x1.filter(month=date(datetime.now().year, i, 1)) for i in range(1, 13)]
     z1 = [0 if y1[i].count() == 0 else float(y1[i].get()['value']) for i in range(0, 12)]
 
+    highscore = models.Profile.objects \
+            .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=20000) \
+            .annotate(total_amount=Sum('expense__expensepart__amount')) \
+            .filter(total_amount__gte=0) \
+            .order_by('-total_amount')[:10]
+
     return render(request, 'stats/index.html', {
         'year': models.Expense.objects.filter(reimbursement__isnull=False).aggregate(year=Coalesce(Sum('expensepart__amount'), 0))['year'],
-        'highscore': models.Profile.objects.filter(expense__reimbursement__isnull=False).annotate(
-            total_amount=Sum('expense__expensepart__amount')
-        ).filter(total_amount__gte=0).order_by('-total_amount')[:10],
+        'highscore': highscore,
         'month_count': z,
         'month_sum': z1
     })

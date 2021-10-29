@@ -15,9 +15,10 @@
         <h2>Mest Cashflowat</h2>
         <ol class="center">
             {% for user in highscore %}
-                <li><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
+            <li><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
             {% endfor %}
         </ol>
+        <p>OBS. Räknar bara med utbetalningar mindre än 20 000 kr</p>
 
         <div class="divide"></div>
 
