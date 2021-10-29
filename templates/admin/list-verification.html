@@ -4,41 +4,78 @@
 {% block title %}Lista verifikat{% endblock %}
 
 {% block content %}
-<div id="app">
-    <div class="select">
-        <select v-model="year">
-            <option value="0">-- Välj år --</option>
-            {% for year in years %}
-            <option value="{{ year }}">{{ year }}</option>
+    <div id="app">
+        <div class="select">
+            <select v-model="year" v-on:change="move">
+                {% for year in years %}
+                    <option :value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="clear"></div>
+        <br/>
+        {% if expenses %}
+            <table>
+                <thead>
+                    <th>Ver.nr.</th>
+                    <th>Beskrivning</th>
+                    <th>Ägare</th>
+                    <th>Inköpsdatum</th>
+                </thead>
+                {% for expense in expenses %}
+                    <tr>
+                        <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.verification }}</a></td>
+                        <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
+                        <td class="no-wrap"><a
+                                href="{% url 'user-show' expense.owner.user.username %}">{{ expense.owner }}</a></td>
+                        <td>{{ expense.expense_date }}</td>
+                    </tr>
+                {% endfor %}
+                <tfoot>
+                <tr>
+                    <td class="right" colspan="4">
+                        <span class="current">Sida {{ expenses.number }} av {{ expenses.paginator.num_pages }}</span>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+            <div class="pagination">
+        <span class="step-links">
+            {% if expenses.has_previous %}
+                <a href="?page={{ expenses.previous_page_number }}&year={{ year }}">Föregående</a>
+            {% endif %}
+
+            {% for i in expenses.paginator.page_range %}
+                <a href="?page={{ i }}&year={{ year }}" {% if i == expenses.number %}
+                   class="active"{% endif %}>{{ i }}</a>
             {% endfor %}
-        </select>
+
+            {% if expenses.has_next %}
+                <a href="?page={{ expenses.next_page_number }}&year={{ year }}">Nästa</a>
+            {% endif %}
+        </span>
+            </div>
+        {% else %}
+            Det finns inga verifikat.
+        {% endif %}
     </div>
-    <div class="clear"></div>
-    <br />
-    <table>
-        <thead>
-            <th>Ver.nr.</th>
-            <th>ID</th>
-            <th>Inköpsdatum</th>
-            <th>Beskrivning</th>
-        </thead>
-        <tr v-for="expense in expenses" v-if="expense.expense_date.startsWith(year)">
-            <td v-html="expense.verification"></td>
-            <td v-html="expense.id"></td>
-            <td v-html="expense.expense_date"></td>
-            <td v-html="expense.description"></td>
-        </tr>
-    </table>
-</div>
-<script type="text/javascript">
-    new Vue({
-        el: '#app', 
-        data: function () {
-            return {
-                year: {% now "Y" %},
-                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %}
-            }
-        }
-    })
-</script>
+    <script type="text/javascript">
+        new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    year: {% autoescape off %} {{ year }} {% endautoescape %},
+                }
+            },
+            methods: {
+                move() {
+                    this.params.set('year', this.year)
+                    window.location.href = `?${this.params.toString()}`
+                }
+            },
+            created: function () {
+                this.params = new URLSearchParams(window.location.search)
+            },
+        })
+    </script>
 {% endblock %}
