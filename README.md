@@ -24,10 +24,10 @@ Check out [.env.example](.env.example) for an example.
 
 | Variable              | Description                           | Default                       |
 |-----------------------|---------------------------------------|-------------------------------|
-| DATABASE_URL                | PostgreSQL server url                 | ---                           |
-| DEBUG                 | Django debug mode. Set to True when developing locally. Never set to True in production.                     | False                         |
+| DATABASE_URL          | PostgreSQL server url                 | ---                           |
+| DEBUG                 | Django debug mode. Set to True when developing locally. Never set to True in production.             | False                         |
 | SECRET_KEY            | Django encryption key                 | ---                           |
-| LOGIN_KEY            | Login2 API key for KTH authentication | ---                           |
+| LOGIN_KEY             | Login API key for KTH authentication | ---                           |
 | S3_BUCKET_NAME        | Amazon AWS s3 bucket name             | ---                           |
 | S3_ACCESS_KEY_ID      | Amazon AWS IAM access key id          | ---                           |
 | S3_SECRET_ACCESS_KEY  | Amazon AWS IAM secret access key      | ---                           |

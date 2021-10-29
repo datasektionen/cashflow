@@ -143,9 +143,9 @@ class Profile(models.Model):
         return False
 
     def may_delete_invoice(self, invoice):
-        if invoice.is_payed():
+        if invoice is None or invoice.is_payed():
             return False
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and invoice is not None:
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
             return True
         if invoice.owner.user.username == self.user.username:
             return True

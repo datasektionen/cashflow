@@ -132,21 +132,23 @@ def delete_invoice(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Fakturan finns inte")
 
-    if not request.user.profile.may_delete_invoice(invoice):
-        return HttpResponseForbidden('Du har inte behörighet att ta bort denna faktura.')
+    may_delete_invoice = request.user.profile.may_delete_invoice(invoice)
 
     if request.method == 'GET':
-        return render(request, 'invoices/delete.html', {"invoice": invoice})
+        return render(request, 'invoices/delete.html', {'invoice': invoice, 'may_delete': may_delete_invoice})
     if request.method == 'POST':
+        if not may_delete_invoice:
+            return HttpResponseForbidden('Du har inte behörighet att ta bort denna faktura.')
         invoice.delete()
-        receiver_name = invoice.owner.user.first_name + ' ' + invoice.owner.user.last_name
-        deleter_name = request.user.first_name + ' ' + request.user.last_name
-        requests.post("https://spam.datasektionen.se/api/sendmail", json={
-            'from': 'no-reply@datasektionen.se',
-            'to': invoice.owner.user.email,
-            'subject': deleter_name + ' har tagit bort din faktura',
-            'content': render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description}),
-            'key': settings.SPAM_API_KEY
-        })
-        #messages.success(request, 'Fakturan raderades.')
+        # Inform owner that someone removed it
+        if request.user != invoice.owner.user:
+            receiver_name = invoice.owner.user.first_name + ' ' + invoice.owner.user.last_name
+            deleter_name = request.user.first_name + ' ' + request.user.last_name
+            requests.post("https://spam.datasektionen.se/api/sendmail", json={
+                'from': 'no-reply@datasektionen.se',
+                'to': invoice.owner.user.email,
+                'subject': deleter_name + ' har tagit bort din faktura',
+                'content': render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description}),
+                'key': settings.SPAM_API_KEY
+            })
         return HttpResponseRedirect(reverse('expenses-index'))
