@@ -2,7 +2,6 @@ from datetime import date, datetime
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
-from django.db.models import Q
 
 from expenses import models
 
@@ -27,8 +26,7 @@ def index(request):
     z1 = [0 if y1[i].count() == 0 else float(y1[i].get()['value']) for i in range(0, 12)]
 
     highscore = models.Profile.objects \
-            .filter(expense__reimbursement__isnull=False) \
-            .exclude(expense__expensepart__amount__gte=30000) \
+            .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=20000) \
             .annotate(total_amount=Sum('expense__expensepart__amount')) \
             .filter(total_amount__gte=0) \
             .order_by('-total_amount')[:10]
