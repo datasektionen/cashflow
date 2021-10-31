@@ -154,6 +154,7 @@ USE_L10N = True
 USE_TZ = True
 
 AUTH_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
+AUTH_URL = os.getenv('LOGIN_URL', 'https://login.datasektionen.se')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -179,3 +180,6 @@ DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
 
 SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
                                          'pate, brandy and with a fried egg on top and spam.')
+SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
+
+PLS_URL = os.getenv('PLS_URL', 'https://pls.datasektionen.se')
