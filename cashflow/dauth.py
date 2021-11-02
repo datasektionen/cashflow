@@ -19,7 +19,7 @@ class DAuth(object):
         Do the authentication via the login system.
         Save user in database if did not exist before.
         """
-        url = 'https://login.datasektionen.se/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
+        url = settings.AUTH_URL + '/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
 
         req = requests.get(url)
         if req.status_code == 200:
@@ -55,7 +55,7 @@ def get_permissions(user):
     Get permissions for user through the pls API.
     """
     return json.loads(urllib.parse.unquote(requests.get(
-        'https://pls.datasektionen.se/api/user/' + user.username + '/cashflow/'
+        settings.PLS_URL + '/api/user/' + user.username + '/cashflow/'
     ).content.decode('utf-8')))
 
 
@@ -67,7 +67,7 @@ def has_permission(permission, request):
     """
     if 'permissions' not in request.session:
         # Fetch permissions from pls and store timestamp
-        response = requests.get('https://pls.datasektionen.se/api/user/' + request.user.username + '/cashflow/')
+        response = requests.get(settings.PLS_URL + '/api/user/' + request.user.username + '/cashflow/')
         request.session['permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
 
     return permission in request.session['permissions']

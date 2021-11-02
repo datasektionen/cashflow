@@ -1,6 +1,8 @@
 from django.contrib import auth
 from django.http import HttpResponseRedirect, Http404
 
+from cashflow import settings
+
 
 def login(request):
     """
@@ -8,7 +10,7 @@ def login(request):
     """
     if not request.user.is_authenticated:
         return HttpResponseRedirect(
-            'https://login.datasektionen.se/login?callback=' +
+            settings.AUTH_URL + '/login?callback=' +
             request.scheme + '://' + request.get_host() + '/login/')
     else:
         return HttpResponseRedirect("/")

@@ -451,7 +451,7 @@ input[type="file"] {
     color: inherit;
 }
 .fa-check {
-    color: rgb(33, 108, 42);
+    color: #fff;
 }
 .icon.spin i {
     -webkit-animation: spin 2s linear infinite;

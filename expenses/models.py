@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 import requests
 from django.contrib.auth.models import User
@@ -7,7 +8,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
-from datetime import date
 
 from cashflow import dauth
 from cashflow import settings
@@ -143,15 +143,14 @@ class Profile(models.Model):
         return False
 
     def may_delete_invoice(self, invoice):
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and invoice is not None:
-            return True
-        if invoice.is_payed():
+        if invoice is None or invoice.is_payed():
             return False
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
+            return True
         if invoice.owner.user.username == self.user.username:
             return True
-        for invoice in invoice.invoicepart_set.all():
-            if self.may_attest(invoice_part):
-                return True
+        if all([self.may_attest(invoice_part) for invoice_part in invoice.invoicepart_set.all()]):
+            return True
         return False
 
     def may_be_viewed_by(self, user):
@@ -322,7 +321,8 @@ class Expense(models.Model):
     @staticmethod
     def accountable(may_account):
         if '*' in may_account:
-            return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by('expense_date')
+            return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by(
+                'expense_date')
         return Expense.objects.exclude(reimbursement=None).filter(
             verification='',
             expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
@@ -439,10 +439,10 @@ def send_mail(sender, instance, created, *args, **kwargs):
     owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
         if created and instance.author != owner:
-            requests.post("https://spam.datasektionen.se/api/sendmail", json={
+            requests.post(settings.SPAM_URL + '/api/sendmail', json={
                 'from': 'no-reply@datasektionen.se',
                 'to': owner.user.email,
                 'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'content': render_to_string("email.html", {'comment': instance, 'receiver': owner}),
+                'content': render_to_string('email.html', {'comment': instance, 'receiver': owner}),
                 'key': settings.SPAM_API_KEY
             })

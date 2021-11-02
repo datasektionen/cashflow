@@ -107,8 +107,9 @@ WSGI_APPLICATION = 'cashflow.wsgi.application'
 if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
 
     # Parse the DATABASE_URL env var.
-    USER, PASSWORD, HOST, PORT, NAME = re.match(
-        "^postgres://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
+    # First group is the (ql)? group, hence _
+    _, USER, PASSWORD, HOST, PORT, NAME = re.match(
+        "^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
         os.environ.get("DATABASE_URL", "")).groups()
 
     DATABASES = {
@@ -154,6 +155,7 @@ USE_L10N = True
 USE_TZ = True
 
 AUTH_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
+AUTH_URL = os.getenv('LOGIN_URL', 'https://login.datasektionen.se')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -179,3 +181,6 @@ DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
 
 SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
                                          'pate, brandy and with a fried egg on top and spam.')
+SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
+
+PLS_URL = os.getenv('PLS_URL', 'https://pls.datasektionen.se')

@@ -4,14 +4,27 @@
 {% block title %}Ta bort faktura{% endblock %}
 
 {% block full_content %}
+{% if may_delete %}
 <p>Är du helt säker på att du vill ta bort fakturan "{{ invoice.description }}"? Detta går inte att ångra!</p>
 <form method="POST" action="">
     {% csrf_token %}
     <div class="form-group">
+        <a href="{% url 'invoices-show' invoice.id %}">Tillbaka</a>
         <div class="col-sm-offset-10 col-sm-2">
             <button type="submit" class="button btn-danger">Ta bort fakturan</button>
         </div>
     </div>
 </form>
+{% else %}
+<div class="form-group">
+    <p style="color: #d9534f;">Du har inte tillstånd att radera denna faktura.</p>
+    <p>Fakturan går inte att ta bort på grund av någon av följande anledningar:</p>
+    <ul>
+        <li>Fakturan är betald.</li>
+        <li>Du har inte rättigheter att ta bort fakturan. Du måste vara firmatecknare eller ägare av fakturan i Cashflow.</li>
+    </ul>
+    <a href="{% url 'invoices-show' invoice.id %}">Tillbaka</a>
+</div>
+{% endif %}
 <div class="clearfix"></div>
 {% endblock %}

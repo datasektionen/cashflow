@@ -21,7 +21,7 @@
                     <div class="file-input">
                         <div class="uploaded-file" v-for="file in files" style="text-align: center">
                             <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
-                                <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }"></i>
+                                <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
                             </div> 
                             <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
                             <span v-else class="name" v-html="file.name"></span>
