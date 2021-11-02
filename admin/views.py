@@ -1,6 +1,7 @@
 import json
 from datetime import date, datetime
 from decimal import *
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
@@ -366,10 +367,30 @@ def search_verification_response(request):
 @login_required
 @user_passes_test(lambda u: u.profile.is_admin())
 def list_verification(request):
+    years = range(2017, datetime.now().year + 1)
+    year = request.GET.get('year')
+
+    year = year if year is not None and year != '' else datetime.now().year
+
+    verification_list = Expense.objects \
+        .filter(expense_date__year=year, verification__regex=r'E') \
+        .order_by(Length('verification').asc(), 'verification') \
+        .all()
+
+    paginator = Paginator(verification_list, 25)
+    page = request.GET.get('page')
+
+    try:
+        verifications = paginator.page(page)
+    except PageNotAnInteger:
+        verifications = paginator.page(1)
+    except EmptyPage:
+        verifications = paginator.page(paginator.num_pages)
+
     return render(request, 'admin/list-verification.html', {
-        'expenses': json.dumps([expense.to_dict() for expense in Expense.objects.filter(verification__regex=r'E')
-                               .order_by(Length('verification').asc(), 'verification').all()], default=json_serial),
-        'years': range(2017, datetime.now().year + 1)
+        'expenses': verifications,
+        'years': years,
+        'year': year,
     })
 
 
