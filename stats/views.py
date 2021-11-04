@@ -15,8 +15,11 @@ def index(request):
     highscore = models.Profile.objects \
         .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=20000) \
         .annotate(total_amount=Sum('expense__expensepart__amount')) \
-        .filter(total_amount__gte=0) \
-        .order_by('-total_amount')[:10]
+        .annotate(receipts=Count('expense__expensepart')) \
+        .filter(total_amount__gte=0)
+
+    highscore_amount = highscore.order_by('-total_amount')[:10]
+    highscore_receipts = highscore.order_by('-receipts')[:10]
 
     months = models.Expense.objects \
         .filter(expense_date__year=datetime.now().year) \
@@ -33,7 +36,8 @@ def index(request):
 
     return render(request, 'stats/index.html', {
         'year': year,
-        'highscore': highscore,
+        'highscore_amount': highscore_amount,
+        'highscore_receipts': highscore_receipts,
         'month_count': month_count,
         'month_sum': month_sum,
     })

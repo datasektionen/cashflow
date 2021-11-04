@@ -13,12 +13,42 @@
     </header>
     <div id="content">
         <h2>Mest Cashflowat</h2>
-        <ol class="center">
-            {% for user in highscore %}
-            <li><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a> ({{ user.total_amount|intcomma }} kr)</li>
-            {% endfor %}
-        </ol>
-        <p>OBS. Räknar bara med utlägg mindre än 20 000 kr</p>
+        <div style="padding: 0 0 25px;">
+            <button v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
+        </div>
+        <div style="display: flex; justify-content: center;">
+            <table style="width: 600px;">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Namn</th>
+                        <th>Total summa</th>
+                        <th>Antal kvitton</th>
+                    </tr>
+                </thead>
+                <tbody v-if="selected == 'Total summa'">
+                        {% for user in highscore_amount %}
+                            <tr>
+                                <td style="width: 5%;">{{ forloop.counter }}</td>
+                                <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
+                                <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
+                                <td style="width: 25%;">{{ user.receipts }} st</td>
+                            </tr>
+                        {% endfor %}
+                </tbody>
+                <tbody v-if="selected == 'Antal kvitton'">
+                    {% for user in highscore_receipts %}
+                        <tr>
+                            <td style="width: 5%;">{{ forloop.counter }}</td>
+                            <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
+                            <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
+                            <td style="width: 25%;">{{ user.receipts }} st</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="padding-top: 15px;">OBS. Räknar bara med utlägg mindre än 20 000 kr</div>
 
         <div class="divide"></div>
 
@@ -26,6 +56,22 @@
         <canvas id="monthly" width="300" height="100"></canvas>
     </div>
 </div>
+<script type="text/javascript">
+    new Vue({
+        el: '#content',
+        data: function () {
+            return {
+                selected: "Total summa",
+            }
+        },
+        methods: {
+            click(e) {
+                if (this.selected === "Total summa") this.selected = "Antal kvitton"
+                else this.selected = "Total summa"
+            }
+        }
+    })
+</script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
 <script type="text/javascript">
 window.chartColors = {
