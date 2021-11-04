@@ -12,9 +12,10 @@
         </div>
     </header>
     <div id="content">
-        <h2>Mest Cashflowat</h2>
+        <h2 v-if="selected == 'Total summa'">Mest Cashflowat</h2>
+        <h2 v-if="selected == 'Antal cashflows'">Flest Cashflows</h2>
         <div style="padding: 0 0 25px;">
-            <button v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
+            <button style="width: 170px;" v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
         </div>
         <div style="display: flex; justify-content: center;">
             <table style="width: 600px;">
@@ -23,7 +24,7 @@
                         <th></th>
                         <th>Namn</th>
                         <th>Total summa</th>
-                        <th>Antal kvitton</th>
+                        <th>Antal cashflows</th>
                     </tr>
                 </thead>
                 <tbody v-if="selected == 'Total summa'">
@@ -36,7 +37,7 @@
                             </tr>
                         {% endfor %}
                 </tbody>
-                <tbody v-if="selected == 'Antal kvitton'">
+                <tbody v-if="selected == 'Antal cashflows'">
                     {% for user in highscore_receipts %}
                         <tr>
                             <td style="width: 5%;">{{ forloop.counter }}</td>
@@ -66,7 +67,7 @@
         },
         methods: {
             click(e) {
-                if (this.selected === "Total summa") this.selected = "Antal kvitton"
+                if (this.selected === "Total summa") this.selected = "Antal cashflows"
                 else this.selected = "Total summa"
             }
         }
