@@ -157,6 +157,8 @@ USE_TZ = True
 AUTH_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
 AUTH_URL = os.getenv('LOGIN_URL', 'https://login.datasektionen.se')
 
+SEND_EMAILS = (os.getenv('SEND_EMAILS', False) == 'True')
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')

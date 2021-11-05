@@ -436,6 +436,9 @@ class Comment(models.Model):
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=Comment)
 def send_mail(sender, instance, created, *args, **kwargs):
+    if not settings.SEND_EMAILS:
+        return
+
     owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
         if created and instance.author != owner:

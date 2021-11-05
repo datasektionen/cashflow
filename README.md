@@ -34,6 +34,7 @@ The following environment variables are required to run the project:
 | SPAM_URL             | URL to spam service                  | https://spam.datasektionen.se  |
 | PLS_URL              | URL to pls service                   | https://pls.datasektionen.se   |
 | LOGIN_URL            | URL to login service                 | https://login.datasektionen.se |
+| SEND_EMAILS          | Will send emails if set to True      | False                          |
 
 They can be put in an .env-file in root. They will be loaded automatically by `pipenv`.
 
