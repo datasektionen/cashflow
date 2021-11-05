@@ -19,7 +19,7 @@ def index(request):
         .filter(total_amount__gte=0)
 
     highscore_amount = highscore.order_by('-total_amount')[:10]
-    highscore_receipts = highscore.order_by('-receipts')[:10]
+    highscore_receipts = highscore.order_by('-receipts', '-total_amount')[:10]
 
     months = models.Expense.objects \
         .filter(expense_date__year=datetime.now().year) \
