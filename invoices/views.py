@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime
@@ -92,7 +92,7 @@ def get_invoice(request, pk):
     try: invoice = Invoice.objects.get(pk=int(pk))
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
+    if not request.user.profile.may_view_invoice(invoice): return render(request, '403.html')
 
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
@@ -110,7 +110,7 @@ def new_comment(request, invoice_pk):
     try: invoice = Invoice.objects.get(pk=int(invoice_pk))
     except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
+    if not request.user.profile.may_view_invoice(invoice): return render(request, '403.html')
     if re.match('^\s*$', request.POST['content']): return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_pk}))
     
     Comment(
@@ -138,7 +138,8 @@ def delete_invoice(request, pk):
         return render(request, 'invoices/delete.html', {'invoice': invoice, 'may_delete': may_delete_invoice})
     if request.method == 'POST':
         if not may_delete_invoice:
-            return HttpResponseForbidden('Du har inte behörighet att ta bort denna faktura.')
+            return render(request, '403.html', {
+                'exception': 'Du har inte behörighet att ta bort denna faktura.'})
         invoice.delete()
         # Inform owner that someone removed it
         if request.user != invoice.owner.user:

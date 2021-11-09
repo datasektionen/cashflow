@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render
 from datetime import datetime
 from django.contrib import messages
@@ -171,9 +171,14 @@ def delete_expense(request, pk):
         raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_delete(expense):
-        return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
+        return render(request, '403.html', {
+            'exception': 'Du har inte behörighet att ta bort detta kvitto.'
+        })
+
     if expense.reimbursement is not None:
-        return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
+        return render(request, '403.html', {
+            'exception': 'Du kan inte ta bort ett kvitto som är återbetalt!'
+        })
 
     if request.method == 'GET':
         return render(request, 'expenses/delete.html', {"expense": expense})
@@ -195,7 +200,7 @@ def get_expense(request, pk):
         raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_view_expense(expense):
-        return HttpResponseForbidden()
+        return render(request, '403.html')
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
@@ -215,7 +220,7 @@ def new_comment(request, expense_pk):
         raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_view_expense(expense):
-        return HttpResponseForbidden()
+        return render(request, '403.html')
     if re.match('^\s*$', request.POST['content']):
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
     

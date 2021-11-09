@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, \
     HttpResponseServerError
 from django.shortcuts import render
 from django.core import serializers
@@ -26,7 +26,7 @@ def get_user(request, username):
     try: user = models.User.objects.get_by_natural_key(username)
     except ObjectDoesNotExist: raise Http404("Användaren finns inte")
 
-    if not user.profile.may_be_viewed_by(request.user): return HttpResponseForbidden()
+    if not user.profile.may_be_viewed_by(request.user): return render(request, '403.html')
 
     return render(request, 'users/information.html', {
         'showuser': user,
@@ -42,7 +42,7 @@ def get_user_receipts(request, username):
     try: user = models.User.objects.get_by_natural_key(username)
     except ObjectDoesNotExist: raise Http404("Användaren finns inte")
 
-    if not user.profile.may_be_viewed_by(request.user): return HttpResponseForbidden()
+    if not user.profile.may_be_viewed_by(request.user): return render(request, '403.html')
 
     non_attested_expenses = []
     attested_expenses = []
@@ -77,7 +77,8 @@ def edit_user(request, username):
     try: user = models.User.objects.get_by_natural_key(username)
     except ObjectDoesNotExist: raise Http404("Användaren finns inte")
 
-    if username != request.user.username: return HttpResponseForbidden()
+    if username != request.user.username:
+        return render(request, '403.html')
 
     if request.method == 'POST':
         received_form = UserForm(request.POST, instance=user.profile)

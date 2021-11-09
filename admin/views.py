@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
-from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -157,7 +157,9 @@ def edit_expense_verification(request, pk):
         raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_account(expense=expense):
-        return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+        return render(request, '403.html', {
+            'exception': 'Du har inte rättigheter att bokföra det här'
+        })
     if expense.reimbursement is None:
         return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
 
@@ -185,7 +187,9 @@ def confirm_expense(request, pk):
             expense = Expense.objects.get(pk=pk)
 
             if not dauth.has_permission('confirm', request):
-                return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
+                return render(request, '403.html', {
+                    'exception': 'Du har inte rättigheterna för att se den här sidan'
+                })
 
             expense.confirmed_by = request.user
             expense.confirmed_at = date.today()
@@ -215,7 +219,9 @@ def set_verification(request, expense_pk):
         raise Http404("Utlägget finns inte")
 
     if not request.user.profile.may_account(expense=expense):
-        return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+        return render(request, '403.html', {
+            'exception': 'Du har inte rättigheter att bokföra det här'
+        })
     if expense.reimbursement is None:
         return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
 
@@ -242,7 +248,9 @@ def invoice_set_verification(request, invoice_pk):
         raise Http404("Fakturan finns inte")
 
     if not request.user.profile.may_account(invoice=invoice):
-        return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
+        return render(request, '403.html', {
+            'exception': 'Du har inte rättigheter att bokföra det här'
+        })
     if invoice.payed_by is None:
         return HttpResponseBadRequest("Du kan inte bokföra den här fakturan än")
 

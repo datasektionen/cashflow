@@ -1,0 +1,31 @@
+{% extends './main.html' %}
+
+{% block app %}
+<header>
+    <div class="header-inner">
+        <div class="row">
+            <div class="header-left col-md-2">
+            </div>
+            <div class="col-md-8">
+                <h2>403: Förbjuden</h2>
+            </div>
+            <div class="header-right col-md-2">
+                
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+</header>
+<div id="content">
+    {% if exception %}
+        <h1>{{ exception }}</h1>
+    {% else %}
+        <h1>Du har inte behörighet att se denna sida</h1>
+    {% endif %}
+    <p>Om du tror att något är fel, kontakta <a href="mailto:kassor@d.kth.se" target="_blank" rel="noopener noreferrer">kassör</a> eller <a href="mailto:d-sys@d.kth.se" target="_blank" rel="noopener noreferrer">systemansvarig</a>.</p>
+    {% if details %}
+        <p>{{ details }}</p>
+    {% endif %}
+    <p><a href="/">Hem</a></p>
+</div>
+{% endblock %}
