@@ -17,6 +17,12 @@
     </div>
 </header>
 <div id="content">
-    <p>{{ exception }}</p>
+    {% if exception %}
+        <h1>{{ exception }}</h1>
+    {% else %}
+        <h1>Sidan finns ej</h1>
+    {% endif %}
+    <p>Kanske stavade du fel i adressen, eller så är sidan borta. Om du tror att detta är fel, kontakta <a href="https://ior.slack.com" target="_blank" rel="noopener noreferrer">IOR</a>, <a href="mailto:d-sys@d.kth.se" target="_blank" rel="noopener noreferrer">systemansvarig</a> eller skapa en issue på <a href="https://github.com/datasektionen/cashflow/issues/new" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    <p><a href="/">Hem</a></p>
 </div>
 {% endblock %}

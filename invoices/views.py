@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime
@@ -90,7 +90,10 @@ Shows one expense.
 @login_required
 def get_invoice(request, pk):
     try: invoice = Invoice.objects.get(pk=int(pk))
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    except ObjectDoesNotExist:
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte.'
+        })
 
     if not request.user.profile.may_view_invoice(invoice): return render(request, '403.html')
 
@@ -108,7 +111,10 @@ Adds new comment to invoice.
 @login_required
 def new_comment(request, invoice_pk):
     try: invoice = Invoice.objects.get(pk=int(invoice_pk))
-    except ObjectDoesNotExist: raise Http404("Utlägget finns inte")
+    except ObjectDoesNotExist:
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte.'
+        })
 
     if not request.user.profile.may_view_invoice(invoice): return render(request, '403.html')
     if re.match('^\s*$', request.POST['content']): return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice_pk}))
@@ -130,7 +136,9 @@ def delete_invoice(request, pk):
     try:
         invoice = Invoice.objects.get(pk=pk)
     except ObjectDoesNotExist:
-        raise Http404("Fakturan finns inte")
+        return render(request, '404.html', {
+            'exception': 'Fakturan finns inte.'
+        })
 
     may_delete_invoice = request.user.profile.may_delete_invoice(invoice)
 

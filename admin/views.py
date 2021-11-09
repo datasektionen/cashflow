@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -51,7 +51,9 @@ def attest_expense_part(request, pk):
     try:
         expense_part = ExpensePart.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
-        raise Http404("Kvittodelen finns inte")
+        return render(request, '404.html', {
+            'exception': 'Kvittodelen finns inte'
+        })
 
     if not request.user.profile.may_attest(expense_part):
         messages.error(request, 'Du får inte attestera denna kvittodel')
@@ -75,7 +77,9 @@ def attest_invoice_part(request, pk):
     try:
         invoice_part = InvoicePart.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
-        raise Http404("Fakturadelen finns inte")
+        return render(request, '404.html', {
+            'exception': 'Fakturadelen finns inte'
+        })
 
     if not request.user.profile.may_attest(invoice_part):
         messages.error(request, 'Du får inte attestera denna fakturadel')
@@ -123,7 +127,9 @@ def invoice_pay(request, pk):
     try:
         invoice = Invoice.objects.get(pk=pk)
     except ObjectDoesNotExist:
-        raise Http404("Fakturan finns inte")
+        return render(request, '404.html', {
+            'exception': 'Fakturan finns inte'
+        })
 
     if not invoice.is_payable():
         messages.error(request, 'Fakturan är inte attesterad än.')
@@ -154,7 +160,9 @@ def edit_expense_verification(request, pk):
     try:
         expense = Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if not request.user.profile.may_account(expense=expense):
         return render(request, '403.html', {
@@ -204,9 +212,11 @@ def confirm_expense(request, pk):
 
             return HttpResponseRedirect(reverse('admin-confirm'))
         except ObjectDoesNotExist:
-            raise Http404("Utlägget finns inte")
+            return render(request, '404.html', {
+                'exception': 'Utlägget finns inte'
+            })
     else:
-        raise Http404()
+        return render(request, '404.html')
 
 
 @require_POST
@@ -216,7 +226,9 @@ def set_verification(request, expense_pk):
     try:
         expense = Expense.objects.get(pk=expense_pk)
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if not request.user.profile.may_account(expense=expense):
         return render(request, '403.html', {
@@ -245,7 +257,9 @@ def invoice_set_verification(request, invoice_pk):
     try:
         invoice = Invoice.objects.get(pk=invoice_pk)
     except ObjectDoesNotExist:
-        raise Http404("Fakturan finns inte")
+        return render(request, '404.html', {
+            'exception': 'Fakturan finns inte'
+        })
 
     if not request.user.profile.may_account(invoice=invoice):
         return render(request, '403.html', {

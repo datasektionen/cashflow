@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required, user_passes_test

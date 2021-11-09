@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render
 from datetime import datetime
 from django.contrib import messages
@@ -101,7 +101,9 @@ def edit_expense(request, pk):
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if expense.reimbursement:
         messages.error(request, 'Kan inte ändra utlägg som har blivit utbetald')
@@ -168,7 +170,9 @@ def delete_expense(request, pk):
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if not request.user.profile.may_delete(expense):
         return render(request, '403.html', {
@@ -197,7 +201,9 @@ def get_expense(request, pk):
     try:
         expense = models.Expense.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if not request.user.profile.may_view_expense(expense):
         return render(request, '403.html')
@@ -217,7 +223,9 @@ def new_comment(request, expense_pk):
     try:
         expense = models.Expense.objects.get(pk=int(expense_pk))
     except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utlägget finns inte'
+        })
 
     if not request.user.profile.may_view_expense(expense):
         return render(request, '403.html')
@@ -248,7 +256,9 @@ def get_payment(request, pk):
             'payment': payment
         })
     except ObjectDoesNotExist:
-        raise Http404("Utbetalningen finns inte")
+        return render(request, '404.html', {
+            'exception': 'Utbetalningen finns inte'
+        })
 
 
 @login_required
@@ -261,7 +271,9 @@ def new_payment(request):
     try:
         expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
     except ObjectDoesNotExist:
-        raise Http404("Ett av utläggen finns inte.")
+        return render(request, '404.html', {
+            'exception': 'Ett av utläggen finns inte.'
+        })
 
     expense_owner = expenses[0].owner
     for expense in expenses:
@@ -298,7 +310,9 @@ def api_new_payment(request):
     try:
         expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
     except ObjectDoesNotExist:
-        raise Http404("Ett av utläggen finns inte.")
+        return render(request, '404.html', {
+            'exception': 'Ett av utläggen finns inte.'
+        })
         
     expense_owner = expenses[0].owner
     for expense in expenses:

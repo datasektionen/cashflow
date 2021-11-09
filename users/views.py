@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, \
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, \
     HttpResponseServerError
 from django.shortcuts import render
 from django.core import serializers
@@ -24,7 +24,10 @@ Shows one user.
 @login_required
 def get_user(request, username):
     try: user = models.User.objects.get_by_natural_key(username)
-    except ObjectDoesNotExist: raise Http404("Användaren finns inte")
+    except ObjectDoesNotExist:
+        return render(request, '404.html', {
+            'exception': 'Användaren finns inte'
+        })
 
     if not user.profile.may_be_viewed_by(request.user): return render(request, '403.html')
 
@@ -40,7 +43,10 @@ Shows one user's receipts.
 @login_required
 def get_user_receipts(request, username):
     try: user = models.User.objects.get_by_natural_key(username)
-    except ObjectDoesNotExist: raise Http404("Användaren finns inte")
+    except ObjectDoesNotExist:
+        return render(request, '404.html', {
+            'exception': 'Användaren finns inte'
+        })
 
     if not user.profile.may_be_viewed_by(request.user): return render(request, '403.html')
 
@@ -75,7 +81,10 @@ def edit_user(request, username):
     # noinspection PyPep8Naming
     UserForm = modelform_factory(models.Profile, fields=('bank_account', 'sorting_number', 'bank_name', 'default_account'))
     try: user = models.User.objects.get_by_natural_key(username)
-    except ObjectDoesNotExist: raise Http404("Användaren finns inte")
+    except ObjectDoesNotExist:
+        return render(request, '404.html', {
+            'exception': 'Användaren finns inte'
+        })
 
     if username != request.user.username:
         return render(request, '403.html')
