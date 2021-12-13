@@ -6,11 +6,13 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 Cashflow uses Python 3.6.2
 
-`pipenv install`
+- Install PostgreSQL
 
-`pipenv run ./manage.py migrate`
+- `pipenv install`
 
-`pipenv run ./manage.py runserver`
+- `pipenv run ./manage.py migrate`
+
+- `pipenv run ./manage.py runserver`
 
 The server will restart on file changes.
 
