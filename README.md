@@ -40,3 +40,10 @@ The following environment variables are required to run the project:
 They can be put in an .env-file in root. They will be loaded automatically by `pipenv`.
 
 Check out [.env.example](.env.example) for an example.
+
+## Protip
+The default max upload size in nginx is 1 MB. To allow larger file uploads, set the max size of file uploads to for example 100 MB.
+
+```bash
+echo "client_max_body_size 100M;" > /home/dokku/cashflow/nginx.conf.d/max_size.conf
+```
