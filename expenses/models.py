@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 
 from cashflow import dauth
 from cashflow import settings
+from cashflow import email
 from invoices.models import Invoice
 
 
@@ -439,10 +440,7 @@ def send_mail(sender, instance, created, *args, **kwargs):
     owner = instance.expense.owner if instance.expense else instance.invoice.owner
     if sender == Comment:
         if created and instance.author != owner:
-            requests.post(settings.SPAM_URL + '/api/sendmail', json={
-                'from': 'no-reply@datasektionen.se',
-                'to': owner.user.email,
-                'subject': str(instance.author) + ' har lagt till en kommentar på ditt utlägg.',
-                'content': render_to_string('email.html', {'comment': instance, 'receiver': owner}),
-                'key': settings.SPAM_API_KEY
-            })
+            recipient = owner.user.email
+            subject = str(instance.author) + ' har lagt till en kommentar på ditt utlägg.'
+            content = render_to_string('email.html', {'comment': instance, 'receiver': owner})
+            email.send_mail(recipient, subject, content)
