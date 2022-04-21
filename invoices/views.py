@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import render_to_string
 from cashflow import settings
+from cashflow import email
 
 import re
 
@@ -144,11 +145,8 @@ def delete_invoice(request, pk):
         if request.user != invoice.owner.user:
             receiver_name = invoice.owner.user.first_name + ' ' + invoice.owner.user.last_name
             deleter_name = request.user.first_name + ' ' + request.user.last_name
-            requests.post("https://spam.datasektionen.se/api/sendmail", json={
-                'from': 'no-reply@datasektionen.se',
-                'to': invoice.owner.user.email,
-                'subject': deleter_name + ' har tagit bort din faktura',
-                'content': render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description}),
-                'key': settings.SPAM_API_KEY
-            })
+            recipient = invoice.owner.user.email
+            subject = deleter_name + ' har tagit bort din faktura'
+            content = render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description})
+            email.send_mail(recipient, subject, content)
         return HttpResponseRedirect(reverse('expenses-index'))
