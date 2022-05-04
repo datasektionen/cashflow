@@ -267,7 +267,7 @@ def expense_overview(request):
     Lists all expenses.
     """
     committee = request.GET.get('committee')
-    expenses_list = Expense.objects.order_by('-id', '-expense_date')
+    expenses_list = Expense.objects.order_by('-id', '-expense_date').distinct()
     if committee is not None and committee != '':
         expenses_list = expenses_list.filter(expensepart__committee_name=committee)
     expenses_list = expenses_list.all()
@@ -319,7 +319,7 @@ def invoice_overview(request):
     Lists all invoices.
     """
     committee = request.GET.get('committee')
-    invoices_list = Invoice.objects.order_by('-id')
+    invoices_list = Invoice.objects.order_by('-id').distinct()
     if committee is not None and committee != '':
         invoices_list = invoices_list.filter(invoicepart__committee_name=committee)
     invoices_list = invoices_list.all()
