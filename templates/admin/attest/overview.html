@@ -18,6 +18,7 @@
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
+                <th class="left">ID</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Nämnder</th>
@@ -25,6 +26,7 @@
             </tr>
         </thead>
         <tr v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
+            <td class="left" v-html="expense.id"></td>
             <td><a :href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-html="expense.committees.join(', ')"></td>
@@ -37,6 +39,7 @@
     <table v-if="invoices.length > 0">
         <thead>
             <tr>
+                <th class="left">ID</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Nämnder</th>
@@ -44,6 +47,7 @@
             </tr>
         </thead>
         <tr v-for="invoice in invoices" v-if="committee == false || invoice.committees.indexOf(committee) > -1">
+            <td class="left" v-html="invoice.id"></td>
             <td><a :href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
             <td><a :href="'/users/' + invoice.owner_username" v-html="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
             <td v-html="invoice.committees.join(', ')"></td>

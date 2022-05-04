@@ -17,6 +17,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Verifikat</th>
                     <th>Beskrivning</th>
                     <th>Ägare</th>
@@ -26,6 +27,7 @@
             </thead>
             {% for invoice in invoices %}
                 <tr>
+                    <td class="no-wrap">{{ invoice.id }}</td>
                     <td class="no-wrap"><a href="{% url 'invoices-show' invoice.id %}">{{ invoice.status }}</a></td>
                     <td><a href="{% url 'invoices-show' invoice.id %}">{{ invoice.description|capfirst }}</a></td>
                     <td class="no-wrap"><a href="{% url 'user-show' invoice.owner.user.username %}">{{ invoice.owner }}</a></td>
