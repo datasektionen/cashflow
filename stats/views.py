@@ -13,7 +13,7 @@ def index(request):
         .aggregate(sum=Coalesce(Sum('expensepart__amount'), 0))['sum']
 
     highscore = models.Profile.objects \
-        .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=20000) \
+        .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=10000) \
         .annotate(total_amount=Sum('expense__expensepart__amount')) \
         .annotate(receipts=Count('expense__expensepart')) \
         .filter(total_amount__gte=0)
