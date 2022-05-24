@@ -169,7 +169,7 @@
             <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
         </a>
         {% else %}
-        <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;"></iframe>
+        <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;" sandbox></iframe>
         {% endif %}
         <br>
         {% endfor %}
