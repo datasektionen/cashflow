@@ -163,9 +163,9 @@
     <div class="col-sm-6 col-lg-6" style="padding-right: 0;">
         <h2>Filer</h2>
         {% for file in invoice.file_set.all %}
-        <a href="{{ file.file.url }}">{{ file.file.name }}</a>:<br>
+        <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
         {% if  file.is_image %}
-        <a href="{{ file.file.url }}" target="_blank">
+        <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">
             <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
         </a>
         {% else %}
