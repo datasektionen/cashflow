@@ -642,6 +642,7 @@ ul.comments li.own .comment {
     color:#fff;
     margin-right: 60px;
     margin-left: auto;
+    word-break: break-all;
 }
 ul.comments li.new .comment {
     padding: 0;
