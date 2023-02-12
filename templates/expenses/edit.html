@@ -14,7 +14,7 @@
                         <div class="uploaded-file" v-for="file in files" style="text-align: center">
                             <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
                                 <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
-                            </div> 
+                            </div>
                             <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
                             <span v-else class="name" v-html="file.name"></span>
                             <span class="delete" v-on:click="deleteFile(file)">
@@ -72,7 +72,7 @@
                     <th>Nämnd</th>
                     <th>Sek. resultatställe</th>
                     <th>Budgetpost</th>
-                    <th>Summa</th> 
+                    <th>Summa</th>
                 </tr>
             </thead>
             <tr v-for="(expense_part, i) in expense_parts" :key="i">
@@ -86,8 +86,19 @@
                     <div class="input">
                         <div class="select">
                             <select name="committee[]" v-model="expense_part.committeeId" required>
-                                <option value="0">- Välj -</option>
-                                <option v-for="committee in committees" :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              <option value="0">- Välj -</option>
+                              <optgroup label="Nämnder">
+                                <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
+                              <optgroup label="Projekt">
+                                <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
+                              <optgroup label="Övrigt">
+                                <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
                             </select>
                         </div>
                     </div>
@@ -152,7 +163,7 @@
 
 <script type="text/javascript">
     new Vue({
-        el: '#form', 
+        el: '#form',
         data: function () {
             return {
                 committees: [],
@@ -186,7 +197,7 @@
             fetch('https://budget.datasektionen.se/api/committees?verbose')
                 .then(res => res.json())
                 .then(res => {
-                    this.committees = res
+                    this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
                 })
         },
         computed: {
@@ -198,6 +209,9 @@
             }
         },
         methods: {
+            activeCommittees: function() {
+                return this.committees.filter(c => !c.inactive);
+            },
             deleteFile: function(file) {
                 fetch('/api/files/' + file.id + '/delete/', {
                     method: 'POST',
@@ -210,13 +224,13 @@
             },
             upload: function(formData, file) {
                 this.files.push({
-                    name: file.name, 
-                    file: file, 
+                    name: file.name,
+                    file: file,
                     status: 0
                 })
 
                 fetch('/api/files/new/?expense={{ expense.id }}', {
-                    method: 'POST', 
+                    method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
                 })
@@ -228,7 +242,7 @@
                             f.status = 1
                             f.url = x.files[0].url
                             f.id = x.files[0].id
-                            f.isImg = f.url.endsWith('.jpg') 
+                            f.isImg = f.url.endsWith('.jpg')
                                 || f.url.endsWith('.png')
                                 || f.url.endsWith('.jpeg')
                                 || f.url.endsWith('.gif')
