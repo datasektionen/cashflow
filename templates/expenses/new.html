@@ -200,7 +200,6 @@
                 .then(res => res.json())
                 .then(res => {
                     this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
-                    console.log(this.committees);
                 })
         },
         computed: {
@@ -231,7 +230,7 @@
                     credentials: 'same-origin'
                 })
                     .then(x => x.json())
-                    .catch(x => console.log("Error", x))
+                    .catch(x => console.error("Error", x))
                     .then(x => {
                         this.files = this.files.map(f => {
                             if (f.file === file) {
@@ -243,11 +242,11 @@
                                        || f.url.endsWith('.jpeg')
                                        || f.url.endsWith('.gif')
                             }
-                            console.log(f)
+                            console.error(f)
                             return f
                         })
                     })
-                    .catch(x => console.log("Error", x))
+                    .catch(x => console.error("Error", x))
             },
             uploadFiles: function(droppedFiles) {
                 Array.prototype.forEach.call(droppedFiles, (file) => {
