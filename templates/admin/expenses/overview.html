@@ -8,7 +8,7 @@
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="committee" v-on:change="move">
             <option :value="''">Filtrera på nämnd (visa alla)</option>
-            <option v-for="committee in committees" v-html="committee" :value="committee"></option>
+            <option v-for="committee in committees.sort((a, b) => a.name.localeCompare(b.name))" v-html="committee" :value="committee"></option>
         </select>
     </div>
     <div class="clearfix"></div>
@@ -81,7 +81,7 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
     new Vue({
-        el: '#app', 
+        el: '#app',
         data: function () {
             return {
                 committees: {% autoescape off %}{{ committees }}{% endautoescape %},
@@ -94,7 +94,7 @@
             }
         },
         created: function() {
-            
+
         }
     })
 </script>
