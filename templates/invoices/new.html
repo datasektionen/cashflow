@@ -140,24 +140,24 @@
         <div class="clearfix"></div>
         <div v-if="payed === 'yes-i-have'">
             <p style="text-align: center;margin: 50px;">
-                Då räknas fakturan som ett eget utlägg. Lägg in den 
-                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
-                tillsammans med ett kontoutdrag istället. <br />
-                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+                Då räknas fakturan som ett eget utlägg. Lägg in den
+              <a href="{% url 'expenses-new' %}">som ett sådant</a>
+              tillsammans med ett kontoutdrag istället. <br />
+              <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
             </p>
         </div>
         <div v-if="payed === 'no-i-will'">
             <p style="text-align: center;margin: 50px;">
-                Då räknas fakturan som ett eget utlägg. Lägg in den 
-                <a href="{% url 'expenses-new' %}">som ett sådant</a> 
-                tillsammans med ett kontoutdrag istället. Notera att det måste göras efter att fakturan är betald.<br />
-                <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
+                Då räknas fakturan som ett eget utlägg. Lägg in den
+              <a href="{% url 'expenses-new' %}">som ett sådant</a>
+              tillsammans med ett kontoutdrag istället. Notera att det måste göras efter att fakturan är betald.<br />
+              <a href="{% url 'expenses-new' %}" class="button theme-color btn-color" style="color:#fff;margin-top:50px;">Registrera utlägg</a>
             </p>
         </div>
         <div v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
             <h2>Fakturadelar</h2>
             <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
-            
+
             <div id="expense_parts">
                 <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
                     <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
@@ -174,7 +174,18 @@
                             <div class="select">
                                 <select name="committee[]" v-model="expense_part.committeeId" required>
                                     <option value="0">- Välj -</option>
-                                    <option v-for="committee in committees" :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                    <optgroup label="Nämnder">
+                                      <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
+                                              :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                    </optgroup>
+                                    <optgroup label="Projekt">
+                                      <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
+                                              :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                    </optgroup>
+                                    <optgroup label="Övrigt">
+                                      <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
+                                              :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -269,7 +280,7 @@
 
 
     new Vue({
-        el: '#form', 
+        el: '#form',
         data: function () {
             return {
                 payed: '',
@@ -289,10 +300,13 @@
             fetch('https://budget.datasektionen.se/api/committees?verbose')
             .then(res => res.json())
             .then(res => {
-                this.committees = res
+                this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
             })
         },
         methods: {
+            activeCommittees: function() {
+                return this.committees.filter(c => !c.inactive);
+            },
             addPart: function () {
                 this.expense_parts.push({
                     committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
