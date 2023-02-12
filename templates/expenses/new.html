@@ -22,7 +22,7 @@
                         <div class="uploaded-file" v-for="file in files" style="text-align: center">
                             <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
                                 <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
-                            </div> 
+                            </div>
                             <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
                             <span v-else class="name" v-html="file.name"></span>
                             <span class="delete" v-on:click="deleteFile(file)">
@@ -76,7 +76,7 @@
 
         <h2>Kvittodelar</h2>
         <p>Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.</p>
-        
+
         <table class="card">
             <thead>
                 <tr>
@@ -84,7 +84,7 @@
                     <th>Nämnd</th>
                     <th>Sek. resultatställe</th>
                     <th>Budgetpost</th>
-                    <th>Summa</th> 
+                    <th>Summa</th>
                 </tr>
             </thead>
             <tr v-for="(expense_part, i) in expense_parts" :key="i">
@@ -98,8 +98,19 @@
                     <div class="input">
                         <div class="select">
                             <select name="committee[]" v-model="expense_part.committeeId" required>
-                                <option value="0">- Välj -</option>
-                                <option v-for="committee in committees" :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              <option value="0">- Välj -</option>
+                              <optgroup label="Nämnder">
+                                <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
+                              <optgroup label="Projekt">
+                                <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
+                              <optgroup label="Övrigt">
+                                <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
+                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                              </optgroup>
                             </select>
                         </div>
                     </div>
@@ -155,7 +166,7 @@
         <button type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || !validateBudgetLines()">
             <div v-if="files.length === 0 || files.some(x => x.status === 0) || !validateBudgetLines()" class="icon spin" style="display: inline-block">
                 <i class="fa fa-spinner"></i>
-            </div> 
+            </div>
             Spara och registrera kvitto
         </button>
     </form>
@@ -168,7 +179,7 @@
     }();
 
     new Vue({
-        el: '#form', 
+        el: '#form',
         data: function () {
             return {
                 committees: [],
@@ -186,10 +197,11 @@
         },
         created: function () {
             fetch('https://budget.datasektionen.se/api/committees?verbose')
-            .then(res => res.json())
-            .then(res => {
-                this.committees = res
-            })
+                .then(res => res.json())
+                .then(res => {
+                    this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
+                    console.log(this.committees);
+                })
         },
         computed: {
             isWaiting: function() {
@@ -200,39 +212,42 @@
             }
         },
         methods: {
+            activeCommittees: function() {
+                return this.committees.filter(c => !c.inactive);
+            },
             deleteFile: function(file) {
                 this.files = this.files.filter(f => f !== file)
             },
             upload: function(formData, file) {
                 this.files.push({
-                    name: file.name, 
-                    file: file, 
+                    name: file.name,
+                    file: file,
                     status: 0
                 })
 
                 fetch('/api/files/new/', {
-                    method: 'POST', 
+                    method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
                 })
-                .then(x => x.json())
-                .catch(x => console.log("Error", x))
-                .then(x => {
-                    this.files = this.files.map(f => {
-                        if (f.file === file) {
-                            f.status = 1
-                            f.url = x.files[0].url
-                            f.id = x.files[0].id
-                            f.isImg = f.url.endsWith('.jpg') 
-                                || f.url.endsWith('.png')
-                                || f.url.endsWith('.jpeg')
-                                || f.url.endsWith('.gif')
-                        }
-                        console.log(f)
-                        return f
+                    .then(x => x.json())
+                    .catch(x => console.log("Error", x))
+                    .then(x => {
+                        this.files = this.files.map(f => {
+                            if (f.file === file) {
+                                f.status = 1
+                                f.url = x.files[0].url
+                                f.id = x.files[0].id
+                                f.isImg = f.url.endsWith('.jpg')
+                                       || f.url.endsWith('.png')
+                                       || f.url.endsWith('.jpeg')
+                                       || f.url.endsWith('.gif')
+                            }
+                            console.log(f)
+                            return f
+                        })
                     })
-                })
-                .catch(x => console.log("Error", x))
+                    .catch(x => console.log("Error", x))
             },
             uploadFiles: function(droppedFiles) {
                 Array.prototype.forEach.call(droppedFiles, (file) => {
@@ -285,9 +300,9 @@
                 }
                 this.expense_parts.splice(i, 1)
             },
-	validateBudgetLines: function () {
-		return Array.prototype.filter.call((this.expense_parts), (budget => budget.budgetLineId > 0)).length == this.expense_parts.length
-	}
+	        validateBudgetLines: function () {
+		        return Array.prototype.filter.call((this.expense_parts), (budget => budget.budgetLineId > 0)).length == this.expense_parts.length
+	        }
         }
     })
 </script>
