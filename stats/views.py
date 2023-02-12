@@ -3,6 +3,10 @@ from datetime import datetime
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+import json
 
 from expenses import models
 
@@ -41,3 +45,44 @@ def index(request):
         'month_count': month_count,
         'month_sum': month_sum,
     })
+
+@csrf_exempt
+def summary(request):
+    if request.method == "POST":
+        body_data = json.loads(request.body)
+        # we tried getting it to work with ids, but it didn't,
+        # so we're using names for now
+
+        expense_parts = None
+
+        if "year" in body_data:
+             expense_parts = models.ExpensePart.objects.filter(
+                 budget_line_name=body_data['budget_line'],
+                 committee_name=body_data['committee'],
+                 cost_centre_name=body_data['cost_centre'],
+                 expense__expense_date__year=body_data['year'],
+            ).all()
+        else:
+            expense_parts = models.ExpensePart.objects.filter(
+                budget_line_name=body_data['budget_line'],
+                committee_name=body_data['committee'],
+                cost_centre_name=body_data['cost_centre'],
+            ).all()
+
+        print(body_data)
+
+        print(expense_parts)
+
+        sum_amount = 0
+
+        for expense_part in expense_parts:
+            sum_amount += expense_part.amount
+
+        return JsonResponse({
+            'name': body_data['committee'],
+            'costCentre': body_data['cost_centre'],
+            'budgetLine': body_data['budget_line'],
+            'year': body_data.get("year"),
+            'amount': sum_amount,
+        })
+    return Response(status=status.HTTP_404_NOT_FOUND)

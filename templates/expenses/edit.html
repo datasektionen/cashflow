@@ -213,9 +213,9 @@
                 return this.committees.filter(c => !c.inactive);
             },
             activeCostCentres: function (expense_part) {
-                let cost_centres = committees
-                    .find(x => x.id == expense_part.committeeId)
-                    .cost_centres;
+                let cost_centres = this.committees
+                                       .find(x => x.id == expense_part.committeeId)
+                                       .cost_centres;
                 cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
                 return cost_centres;
             },

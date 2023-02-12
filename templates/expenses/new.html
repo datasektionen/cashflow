@@ -95,24 +95,24 @@
                     <span class="info">Kvittodel <span v-html="i + 1"></span></span>
                 </td>
                 <td>
-                    <div class="input">
-                        <div class="select">
-                            <select name="committee[]" v-model="expense_part.committeeId" required>
-                              <option value="0">- Välj -</option>
-                              <optgroup label="Nämnder">
-                                <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
-                              </optgroup>
-                              <optgroup label="Projekt">
-                                <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
-                              </optgroup>
-                              <optgroup label="Övrigt">
-                                <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
-                              </optgroup>
-                            </select>
-                        </div>
+                  <div class="input">
+                    <div class="select">
+                      <select name="committee[]" v-model="expense_part.committeeId" required>
+                        <option value="0">- Välj -</option>
+                        <optgroup label="Nämnder">
+                          <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
+                                  :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                        </optgroup>
+                        <optgroup label="Projekt">
+                          <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
+                                  :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                        </optgroup>
+                        <optgroup label="Övrigt">
+                          <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
+                                  :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                        </optgroup>
+                      </select>
+                    </div>
                     </div>
                 </td>
                 <td>
@@ -147,7 +147,7 @@
                 </td>
                 <td>
                     <div class="input">
-                        <input type="number" placeholder="Fyll i summa" step="0.01" model="expense_part.amount" name="amount[]" required>
+                      <input type="number" placeholder="Fyll i summa" step="0.01" v-model="expense_part.amount" name="amount[]" required>
                     </div>
                 </div>
                 </td>
@@ -212,9 +212,9 @@
         },
         methods: {
             activeCostCentres: function (expense_part) {
-                let cost_centres = committees
-                    .find(x => x.id == expense_part.committeeId)
-                    .cost_centres;
+                let cost_centres = this.committees
+                                       .find(x => x.id == expense_part.committeeId)
+                                       .cost_centres;
                 cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
                 return cost_centres;
             },

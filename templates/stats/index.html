@@ -4,85 +4,229 @@
 {% block title %}Välkommen till Cashflow!{% endblock %}
 
 {% block app %}
+
+<style>
+ input:disabled {
+     color: #d3d3d3;
+ }
+</style>
 <div id="stats" style="text-align: center">
-    <header>
-        <div class="inner">
-            <span class="label">Utbetalt i år</span>
-            <h2>{{ year|intcomma }} kr</h2>
-        </div>
-    </header>
-    <div id="content">
-        <h2 v-if="selected == 'Total summa'">Mest Cashflowat</h2>
-        <h2 v-if="selected == 'Antal cashflows'">Flest Cashflows</h2>
-        <div style="padding: 0 0 25px;">
-            <button style="width: 170px;" v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
-        </div>
-        <div style="display: flex; justify-content: center;">
-            <table style="width: 600px;">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Namn</th>
-                        <th>Total summa</th>
-                        <th>Antal cashflows</th>
-                    </tr>
-                </thead>
-                <tbody v-if="selected == 'Total summa'">
-                        {% for user in highscore_amount %}
-                            <tr>
-                                <td style="width: 5%;">{{ forloop.counter }}</td>
-                                <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
-                                <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
-                                <td style="width: 25%;">{{ user.receipts }} st</td>
-                            </tr>
-                        {% endfor %}
-                </tbody>
-                <tbody v-if="selected == 'Antal cashflows'">
-                    {% for user in highscore_receipts %}
-                        <tr>
-                            <td style="width: 5%;">{{ forloop.counter }}</td>
-                            <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
-                            <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
-                            <td style="width: 25%;">{{ user.receipts }} st</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div style="padding-top: 15px;">OBS. Räknar bara med utlägg mindre än 10 000 kr</div>
-
-        <div class="divide"></div>
-
-        <h2>Antal inköp per månad</h2>
-        <canvas id="monthly" width="300" height="100"></canvas>
+  <header>
+    <div class="inner">
+      <span class="label">Utbetalt i år</span>
+      <h2>{{ year|intcomma }} kr</h2>
     </div>
+  </header>
+  <div id="content">
+    <h2 v-if="selected == 'Total summa'">Mest Cashflowat</h2>
+    <h2 v-if="selected == 'Antal cashflows'">Flest Cashflows</h2>
+    <div style="padding: 0 0 25px;">
+      <button style="width: 170px;" v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
+    </div>
+    <div style="display: flex; justify-content: center;">
+      <table style="width: 600px;">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Namn</th>
+            <th>Total summa</th>
+            <th>Antal cashflows</th>
+          </tr>
+        </thead>
+        <tbody v-if="selected == 'Total summa'">
+          {% for user in highscore_amount %}
+          <tr>
+            <td style="width: 5%;">{{ forloop.counter }}</td>
+            <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
+            <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
+            <td style="width: 25%;">{{ user.receipts }} st</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tbody v-if="selected == 'Antal cashflows'">
+          {% for user in highscore_receipts %}
+          <tr>
+            <td style="width: 5%;">{{ forloop.counter }}</td>
+            <td style="width: 45%;"><a href="{% url 'user-show' user.user.username %}">{{ user.user.get_full_name }}</a></td>
+            <td style="width: 25%;">{{ user.total_amount|intcomma }} kr</td>
+            <td style="width: 25%;">{{ user.receipts }} st</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="padding-top: 15px;">OBS. Räknar bara med utlägg mindre än 10 000 kr</div>
+
+    <div class="divide"></div>
+
+    <h2>Vad har spenderats på min budgetpost?</h2>
+    <table class="card">
+      <thead>
+        <tr>
+          <th>Nämnd</th>
+          <th>Sek. resultatställe</th>
+          <th>Budgetpost</th>
+          <th>År</th>
+          <th>Summa</th>
+        </tr>
+      </thead>
+      <tr>
+        <td>
+          <div class="input">
+            <div class="select">
+              <select name="committee[]" v-model="selectedCommittee.committeeId" required>
+                <option value="0">- Välj -</option>
+                <optgroup label="Nämnder">
+                  <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
+                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                </optgroup>
+                <optgroup label="Projekt">
+                  <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
+                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                </optgroup>
+                <optgroup label="Övrigt">
+                  <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
+                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="input">
+            <div class="select" v-if="selectedCommittee.committeeId > 0">
+              <select name="costCentre[]" v-model="selectedCommittee.costCentreId" required>
+                <option value="0">- Välj -</option>
+                <option v-for="costCentre in activeCostCentres()" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+              </select>
+            </div>
+            <div class="select disabled" v-else>
+              <select name="costCentre[]" required disabled>
+                <option value="0">- Välj nämnd först -</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="input">
+            <div class="select" v-if="selectedCommittee.committeeId > 0 && selectedCommittee.costCentreId > 0">
+              <select name="budgetLine[]" v-model="selectedCommittee.budgetLineId" required>
+                <option value="0">- Välj -</option>
+                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+              </select>
+            </div>
+            <div class="select disabled" v-else>
+              <select name="budgetLine[]" required disabled>
+                <option value="0">- Välj sek. resultatställe först -</option>
+              </select>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="input">
+            <input type="number" placeholder="År" step="1" min="2017" max="2099"
+                   v-bind:disabled="committeeType() == 'project'" v-model="selectedCommittee.year" name="year" required>
+          </div>
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="5">
+          <button type="button" v-tooltip="{ content: 'Lägger till en nämnd till resultatvyn.' }" style="color:#216C2A" v-on:click="addSummary()"><i class="fa fa-plus"></i></button>
+        </td>
+      </tr>
+      <tr v-for="summary in summaries">
+        <td v-html="summary.name"></td>
+        <td v-html="summary.costCentre"></td>
+        <td v-html="summary.budgetLine"></td>
+        <td v-html="summary.year"></td>
+        <td v-html="summary.amount"></td>
+      </tr>
+    </table>
+    <h2>Antal inköp per månad</h2>
+    <canvas id="monthly" width="300" height="100"></canvas>
+  </div>
 </div>
 <script type="text/javascript">
-    new Vue({
-        el: '#content',
-        data: function () {
-            return {
-                selected: "Total summa",
-            }
-        },
-        methods: {
-            click(e) {
-                if (this.selected === "Total summa") this.selected = "Antal cashflows"
-                else this.selected = "Total summa"
-            }
-        }
-    })
+ new Vue({
+     el: '#content',
+     data: function () {
+         return {
+             selected: "Total summa",
+             committees: [],
+             selectedCommittee: {
+                 committeeId: 0,
+                 costCentreId: 0,
+                 budgetLineId: 0,
+                 year: new Date().getFullYear(),
+             },
+             summaries: [],
+         }
+     },
+     created: function () {
+         fetch('https://budget.datasektionen.se/api/committees?verbose')
+             .then(res => res.json())
+             .then(res => {
+                 this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
+                 console.log("got committees");
+             })
+     },
+     methods: {
+         committeeType: function() {
+             let committee = this.committees.find(x => x.id == this.selectedCommittee.committeeId);
+             if (committee === undefined)
+                 return 'project';
+             else return committee.type;
+         },
+         activeCostCentres: function () {
+             let cost_centres = this.committees
+                                    .find(x => x.id == this.selectedCommittee.committeeId)
+                                    .cost_centres;
+             cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
+             return cost_centres;
+         },
+         activeCommittees: function() {
+             return this.committees.filter(c => !c.inactive);
+         },
+         click(e) {
+             if (this.selected === "Total summa") this.selected = "Antal cashflows"
+             else this.selected = "Total summa"
+         },
+         addSummary() {
+             let requestBody = {
+                 committee: this.committees.find(c => c.id == this.selectedCommittee.committeeId).name,
+                 cost_centre: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId).name,
+                 budget_line: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId)
+                                  .budget_lines
+                                  .find(bl => bl.id == this.selectedCommittee.budgetLineId).name,
+             };
+
+             if (this.committeeType() != 'project')
+                 requestBody.year = this.selectedCommittee.year;
+
+             console.log(requestBody);
+
+             fetch('/stats/summary/', {
+                 method: 'POST',
+                 credentials: 'same-origin',
+                 body: JSON.stringify(requestBody),
+             })
+                 .then(res => res.json())
+                 .then(res => this.summaries.push(res));
+         }
+     }
+ })
 </script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
 <script type="text/javascript">
-window.chartColors = {
-    red: 'rgb(255, 99, 132)',
-    orange: 'rgb(255, 159, 64)',
-    yellow: 'rgb(255, 205, 86)',
-    green: 'rgb(75, 192, 192)',
-    blue: 'rgb(54, 162, 235)',
-    purple: 'rgb(153, 102, 255)',
-    grey: 'rgb(201, 203, 207)'
+ window.chartColors = {
+     red: 'rgb(255, 99, 132)',
+     orange: 'rgb(255, 159, 64)',
+     yellow: 'rgb(255, 205, 86)',
+     green: 'rgb(75, 192, 192)',
+     blue: 'rgb(54, 162, 235)',
+     purple: 'rgb(153, 102, 255)',
+     grey: 'rgb(201, 203, 207)'
 };
 
 var config = {
@@ -133,9 +277,9 @@ var config = {
                 position: 'left',
               }, {
                 id: 'B',
-                type: 'linear',
-                position: 'right'
-              }]
+                  type: 'linear',
+                  position: 'right'
+            }]
         }
     }
 };

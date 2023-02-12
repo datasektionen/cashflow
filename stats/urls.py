@@ -5,4 +5,5 @@ import stats.views as views
 
 urlpatterns = [
     url(r'^$', views.index, name='stats-index'),
+    url(r'^summary/$', views.summary, name='stats-summary'),
 ]
