@@ -120,7 +120,7 @@
                         <div class="select" v-if="expense_part.committeeId > 0">
                             <select name="costCentre[]" v-model="expense_part.costCentreId" required>
                                 <option value="0">- Välj -</option>
-                                <option v-for="costCentre in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                                <option v-for="costCentre in activeCostCentres(expense_part)" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
                             </select>
                         </div>
                         <div class="select disabled" v-else>
@@ -211,6 +211,13 @@
             }
         },
         methods: {
+            activeCostCentres: function (expense_part) {
+                let cost_centres = committees
+                    .find(x => x.id == expense_part.committeeId)
+                    .cost_centres;
+                cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
+                return cost_centres;
+            },
             activeCommittees: function() {
                 return this.committees.filter(c => !c.inactive);
             },
