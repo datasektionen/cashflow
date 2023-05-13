@@ -72,7 +72,7 @@ class Invoice(models.Model):
     def is_payable(self):
         if self.payed_at:
             return False
-        for ip in self.invoicepart_set.all(): 
+        for ip in self.invoicepart_set.all():
             if ip.attested_by == None: return False
         return True
 
@@ -89,12 +89,12 @@ class Invoice(models.Model):
 
     @staticmethod
     def attestable(may_attest, user):
-        if '*' in may_attest:
-            return Invoice.objects.filter(invoicepart__attested_by=None).distinct()
-        return Invoice.objects.filter(
-            invoicepart__attested_by=None,
-            invoicepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
-        ).distinct()
+        filters = {
+            'invoicepart__attested_by': None,
+        }
+        if 'firmatecknare' not in may_attest:
+            filters['invoicepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
+        return Invoice.objects.filter(**filters).distinct()
 
     # TODO
     @staticmethod

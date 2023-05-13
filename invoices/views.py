@@ -95,8 +95,15 @@ def get_invoice(request, pk):
 
     if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
 
+    parts = []
+    for invoice_part in invoice.invoicepart_set.all():
+        part = invoice_part.to_dict()
+        part['attestable'] = request.user.profile.may_attest(invoice_part)
+        parts.append(part)
+
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
+        'parts': parts,
         'may_account': request.user.profile.may_account()
     })
 
