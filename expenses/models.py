@@ -99,7 +99,7 @@ class Profile(models.Model):
                 may_attest.append(permission[len("attest-"):].lower())
         if expense_part is None:
             return may_attest
-        return expense_part.committee_name.lower() in may_attest
+        return 'firmatecknare' in may_attest or expense_part.committee_name.lower() in may_attest
 
     # Returns a list of the committees that the user may pay for
     def may_pay(self):
@@ -302,10 +302,12 @@ class Expense(models.Model):
 
     @staticmethod
     def attestable(may_attest, user):
-        return Expense.objects.exclude(owner__user=user).filter(
-            expensepart__attested_by=None,
-            expensepart__committee_name__iregex=r'(' + '|'.join(may_attest) + ')'
-        ).distinct()
+        filters = {
+            'expensepart__attested_by': None,
+        }
+        if 'firmatecknare' not in may_attest:
+            filters['expensepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
+        return Expense.objects.exclude(owner__user=user).filter(**filters).distinct()
 
     @staticmethod
     def confirmable():
