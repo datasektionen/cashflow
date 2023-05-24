@@ -53,7 +53,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for invoice_part in parts %}
+        {% for invoice_part in invoice.invoicepart_set.all %}
             <tr>
                 <td>
                     <span class="value">{{ invoice_part.amount|intcomma }} kr</span>
@@ -75,7 +75,7 @@
                         {{ invoice_part.attested_by.user.get_full_name }} ({{ invoice_part.attest_date }})
                     </a>
                     {% else %}
-                        {% if invoice_part.attestable %}
+                        {% if invoice_part.id in attestable %}
                             <span style="display: block;">
                                 <form method="POST" action="{% url 'admin-invoicepart-attest' invoice_part.id %}">
                                     {% csrf_token %}

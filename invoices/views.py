@@ -95,15 +95,14 @@ def get_invoice(request, pk):
 
     if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
 
-    parts = []
+    attestable = []
     for invoice_part in invoice.invoicepart_set.all():
-        part = invoice_part.to_dict()
-        part['attestable'] = request.user.profile.may_attest(invoice_part)
-        parts.append(part)
+        if request.user.profile.may_attest(invoice_part):
+            attestable.append(invoice_part.id)
 
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
-        'parts': parts,
+        'attestable': attestable,
         'may_account': request.user.profile.may_account()
     })
 

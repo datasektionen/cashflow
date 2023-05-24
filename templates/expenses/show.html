@@ -44,7 +44,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for expense_part in parts %}
+        {% for expense_part in expense.expensepart_set.all %}
             <tr>
                 <td>
                     <span class="value">{{ expense_part.amount|intcomma }} kr</span>
@@ -66,7 +66,7 @@
                         {{ expense_part.attested_by.user.get_full_name }} ({{ expense_part.attest_date }})
                     </a>
                     {% else %}
-                        {% if expense.owner.user.username != user.username and expense_part.attestable %}
+                        {% if expense.owner.user.username != user.username and expense_part.id in attestable %}
                             <span style="display: block;">
                                 <form method="POST" action="{% url 'admin-expensepart-attest' expense_part.id %}">
                                     {% csrf_token %}
