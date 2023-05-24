@@ -197,15 +197,14 @@ def get_expense(request, pk):
     if not request.user.profile.may_view_expense(expense):
         return HttpResponseForbidden()
 
-    parts = []
+    attestable = []
     for expense_part in expense.expensepart_set.all():
-        part = expense_part.to_dict()
-        part['attestable'] = request.user.profile.may_attest(expense_part)
-        parts.append(part)
+        if request.user.profile.may_attest(expense_part):
+            attestable.append(expense_part.id)
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
-        'parts': parts,
+        'attestable': attestable,
         'may_account': request.user.profile.may_account()
     })
 
