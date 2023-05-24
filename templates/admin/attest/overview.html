@@ -11,7 +11,7 @@
     <div class="select" style="float:right">
         <select v-model="committee">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+            <option v-for="committee in committees" v-text="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
     <h2>Utlägg</h2>
@@ -26,11 +26,11 @@
             </tr>
         </thead>
         <tr v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
-            <td class="left" v-html="expense.id"></td>
-            <td><a :href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
-            <td><a :href="'/users/' + expense.owner_username" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
-            <td v-html="expense.committees.join(', ')"></td>
-            <td class="right" v-html="expense.amount + ' kr'"></td>
+            <td class="left" v-text="expense.id"></td>
+            <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a></td>
+            <td><a :href="'/users/' + expense.owner_username" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
+            <td v-text="expense.committees.join(', ')"></td>
+            <td class="right" v-text="expense.amount + ' kr'"></td>
         </tr>
     </table>
     <p v-else><b>Du har inga utlägg som kan attesteras! Bra jobbat!</b></p>
@@ -47,11 +47,11 @@
             </tr>
         </thead>
         <tr v-for="invoice in invoices" v-if="committee == false || invoice.committees.indexOf(committee) > -1">
-            <td class="left" v-html="invoice.id"></td>
-            <td><a :href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
-            <td><a :href="'/users/' + invoice.owner_username" v-html="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
-            <td v-html="invoice.committees.join(', ')"></td>
-            <td class="right" v-html="invoice.amount + ' kr'"></td>
+            <td class="left" v-text="invoice.id"></td>
+            <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
+            <td><a :href="'/users/' + invoice.owner_username" v-text="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
+            <td v-text="invoice.committees.join(', ')"></td>
+            <td class="right" v-text="invoice.amount + ' kr'"></td>
         </tr>
     </table>
     <p v-else><b>Du har inga fakturor som kan attesteras! Bra jobbat!</b></p>

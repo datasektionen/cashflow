@@ -8,7 +8,7 @@
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="committee" v-on:change="move">
             <option :value="''">Filtrera på nämnd (visa alla)</option>
-            <option v-for="committee in committees" v-html="committee" :value="committee"></option>
+            <option v-for="committee in committees" v-text="committee" :value="committee"></option>
         </select>
     </div>
     <div class="clearfix"></div>

@@ -7,8 +7,8 @@
 <div id="app">
     <input type="text" v-on:keyup="search" v-model="query" placeholder="Skriv ett verifikationsnummer att söka efter..." />
     <ul class="search-result">
-        <li v-for="invoice in invoices"><a :href="'/invoices/' + invoice.id" v-html="invoice.verification + ': Faktura ' + invoice.description"></a></li>
-        <li v-for="expense in expenses"><a :href="'/expenses/' + expense.id" v-html="expense.verification + ': Utlägg ' + expense.description"></a></li>
+        <li v-for="invoice in invoices"><a :href="'/invoices/' + invoice.id" v-text="invoice.verification + ': Faktura ' + invoice.description"></a></li>
+        <li v-for="expense in expenses"><a :href="'/expenses/' + expense.id" v-text="expense.verification + ': Utlägg ' + expense.description"></a></li>
     </ul>
 </div>
 <script type="text/javascript">

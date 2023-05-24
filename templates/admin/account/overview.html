@@ -11,7 +11,7 @@
     <div class="select" style="float:right">
         <select v-model="committee">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+            <option v-for="committee in committees" v-text="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
     <h2>Utlägg</h2>
@@ -26,10 +26,10 @@
         <tbody v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
             <tr>
                 <td>
-                    <a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a>
+                    <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     (<span v-text="expense.id"></span>)
                 </td>
-                <td v-html="expense.expense_date"></td>
+                <td v-text="expense.expense_date"></td>
 
                 <td class="right">
                     <div v-if="!expense.verification">
@@ -40,7 +40,7 @@
                         </form>
                     </div>
                     <div v-else>
-                        <span>Sparade: <span style="font-weight: bold;" v-html="expense.verification"></span>.</span>
+                        <span>Sparade: <span style="font-weight: bold;" v-text="expense.verification"></span>.</span>
                     </div>
                 </td>
             </tr>
@@ -48,12 +48,12 @@
                 <td colspan="3">
                     <table>
                         <tr v-for="expensePart in expense.expense_parts">
-                            <td style="text-align: right; width: 50%;" v-html="expensePart.committee_name + ' > ' + expensePart.cost_centre_name + ' > ' + expensePart.budget_line_name"></td>
-                            <td v-html="expensePart.amount + ' kr'"></td>
+                            <td style="text-align: right; width: 50%;" v-text="expensePart.committee_name + ' > ' + expensePart.cost_centre_name + ' > ' + expensePart.budget_line_name"></td>
+                            <td v-text="expensePart.amount + ' kr'"></td>
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
-                            <td><span v-html="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr</td>
+                            <td><span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr</td>
                         </tr>
                     </table>
                 </td>
@@ -75,9 +75,9 @@
         </thead>
         <tbody v-for="invoice in invoices" v-if="committee == false || invoice.committees.indexOf(committee) > -1">
             <tr>
-                <td><a v-bind:href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
-                <td v-html="invoice.invoice_date"></td>
-                
+                <td><a v-bind:href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
+                <td v-text="invoice.invoice_date"></td>
+
                 <td class="right">
                     <div v-if="!invoice.verification">
                         <form v-on:submit.prevent="saveInvoice(invoice)" method="POST" v-bind:action="'invoice/' + invoice.id + '/verification'">
@@ -87,7 +87,7 @@
                         </form>
                     </div>
                     <div v-else>
-                        <span>Sparade: <span style="font-weight: bold;" v-html="invoice.verification"></span>.</span>
+                        <span>Sparade: <span style="font-weight: bold;" v-text="invoice.verification"></span>.</span>
                     </div>
                 </td>
             </tr>
@@ -95,12 +95,12 @@
                 <td colspan="3">
                     <table>
                         <tr v-for="invoicePart in invoice.invoice_parts">
-                            <td style="text-align: right; width: 50%;" v-html="invoicePart.committee_name + ' > ' + invoicePart.cost_centre_name + ' > ' + invoicePart.budget_line_name"></td>
-                            <td v-html="invoicePart.amount + ' kr'"></td>
+                            <td style="text-align: right; width: 50%;" v-text="invoicePart.committee_name + ' > ' + invoicePart.cost_centre_name + ' > ' + invoicePart.budget_line_name"></td>
+                            <td v-text="invoicePart.amount + ' kr'"></td>
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
-                            <td><span v-html="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
+                            <td><span v-text="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
                         </tr>
                     </table>
                 </td>

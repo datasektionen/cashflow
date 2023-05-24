@@ -27,10 +27,10 @@
                 <td v-else>
                     Bekräftad
                 </td>
-                <td><a :href="'/expenses/' + expense.id + '/'" v-html="expense.id"></a></td>
-                <td><a :href="'/expenses/' + expense.id + '/'" v-html="expense.description"></a></td>
-                <td><a :href="'/users/' + expense.owner_username + '/'" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
-                <td v-html="expense.amount + ' kr'"></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
+                <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
+                <td v-text="expense.amount + ' kr'"></td>
             </tr>
         </table>
         <p v-else><b>Det finns inga icke-godkända kvitton i pärmen. Bra jobbat!</b></p>
