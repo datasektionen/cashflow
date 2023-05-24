@@ -21,7 +21,7 @@
     <h2 v-if="selected == 'Total summa'">Mest Cashflowat</h2>
     <h2 v-if="selected == 'Antal cashflows'">Flest Cashflows</h2>
     <div style="padding: 0 0 25px;">
-      <button style="width: 170px;" v-html="selected" v-on:click="click" class="btn-color theme-color"></button>
+      <button style="width: 170px;" v-text="selected" v-on:click="click" class="btn-color theme-color"></button>
     </div>
     <div style="display: flex; justify-content: center;">
       <table style="width: 600px;">
@@ -79,15 +79,15 @@
                 <option value="0">- Välj -</option>
                 <optgroup label="Nämnder">
                   <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
-                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                 </optgroup>
                 <optgroup label="Projekt">
                   <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
-                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                 </optgroup>
                 <optgroup label="Övrigt">
                   <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
-                          :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                 </optgroup>
               </select>
             </div>
@@ -98,7 +98,7 @@
             <div class="select" v-if="selectedCommittee.committeeId > 0">
               <select name="costCentre[]" v-model="selectedCommittee.costCentreId" required>
                 <option value="0">- Välj -</option>
-                <option v-for="costCentre in activeCostCentres()" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                <option v-for="costCentre in activeCostCentres()" v-text="costCentre.name" v-bind:value="costCentre.id"></option>
               </select>
             </div>
             <div class="select disabled" v-else>
@@ -113,7 +113,7 @@
             <div class="select" v-if="selectedCommittee.committeeId > 0 && selectedCommittee.costCentreId > 0">
               <select name="budgetLine[]" v-model="selectedCommittee.budgetLineId" required>
                 <option value="0">- Välj -</option>
-                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
               </select>
             </div>
             <div class="select disabled" v-else>
@@ -137,11 +137,11 @@
         </td>
       </tr>
       <tr v-for="summary in summaries">
-        <td v-html="summary.name"></td>
-        <td v-html="summary.costCentre"></td>
-        <td v-html="summary.budgetLine"></td>
-        <td v-html="summary.year"></td>
-        <td v-html="summary.amount"></td>
+        <td v-text="summary.name"></td>
+        <td v-text="summary.costCentre"></td>
+        <td v-text="summary.budgetLine"></td>
+        <td v-text="summary.year"></td>
+        <td v-text="summary.amount"></td>
       </tr>
     </table>
     <h2>Antal inköp per månad</h2>

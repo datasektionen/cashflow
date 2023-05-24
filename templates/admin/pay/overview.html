@@ -10,14 +10,14 @@
         <label style="float:left;margin-right: 10px; line-height: 40px;height:40px;display:inline-block;" for="account">Bankkonto:</label>
         <div class="select">
             <select id="main_account" v-model="account">
-                <option v-for="account in accounts" :value="account" :selected="account" v-html="account"></option>
+                <option v-for="account in accounts" :value="account" :selected="account" v-text="account"></option>
             </select>
         </div>
     </div>
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="committee">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-html="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+            <option v-for="committee in committees" v-text="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
         </select>
     </div>
     <div class="clearfix"></div>
@@ -25,14 +25,14 @@
     <h2>Utlägg</h2>
     <table v-if="expenses.length > 0" style="margin-top: 20px;">
         <tbody v-for="expense, idx in expenses" v-if="committee == false || expenses.filter(e => e.owner === expense.owner && e.committees.indexOf(committee) > -1).length > 0">
-            <tr class="title-row" v-if="idx == 0 || expenses[idx - 1].owner_username != expense.owner_username">   
-                <th colspan="3" v-html="expense.owner_first_name + ' ' + expense.owner_last_name"></th>
+            <tr class="title-row" v-if="idx == 0 || expenses[idx - 1].owner_username != expense.owner_username">
+                <th colspan="3" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></th>
                 <th><button class="btn theme-color pull-right" v-on:click="e => save(expense.owner, e)">Betala ut valda</button></th>
             </tr>
             <tr v-if="committee == false || expense.committees.indexOf(committee) > -1">
-                <td><a :href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
-                <td v-html="expense.committees.join(', ')"></td>
-                <td v-html="expense.amount + ' kr'"></td>
+                <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a></td>
+                <td v-text="expense.committees.join(', ')"></td>
+                <td v-text="expense.amount + ' kr'"></td>
                 <td>
                     <div style="float:right" class="checkbox">
                         <input :id="expense.id" class="select-expense" type="checkbox" :value="expense.id" :checked="expense.checked" name="expense" v-model="expense.checked">
@@ -42,7 +42,7 @@
             </tr>
             <tr class="footer-row" v-if="idx == expenses.length - 1 || expenses[idx + 1].owner_username != expense.owner_username">
                 <td colspan="2">Summa</td>
-                <td v-html="expenses.filter(e => e.owner == expense.owner && (committee == false || e.committees.indexOf(committee) > -1)).map(x => x.amount).reduce((a,b) => (a+b),0).toFixed(2) + ' kr'"></td>
+                <td v-text="expenses.filter(e => e.owner == expense.owner && (committee == false || e.committees.indexOf(committee) > -1)).map(x => x.amount).reduce((a,b) => (a+b),0).toFixed(2) + ' kr'"></td>
                 <td>
                     <div style="float:right" v-tooltip="{content:'Markera alla'}" class="checkbox">
                         <input :id="expense.owner" v-on:change="e => trim(expense.owner, e)" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense">
@@ -70,9 +70,9 @@
         </thead>
         <tbody v-for="invoice, idx in invoices" v-if="committee == false || invoices.filter(e => e.owner === invoice.owner && e.committees.indexOf(committee) > -1).length > 0">
             <tr v-if="committee == false || invoice.committees.indexOf(committee) > -1">
-                <td><a :href="'/invoices/' + invoice.id" v-html="invoice.description"></a></td>
-                <td v-html="invoice.committees.join(', ')"></td>
-                <td v-html="invoice.amount + ' kr'"></td>
+                <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
+                <td v-text="invoice.committees.join(', ')"></td>
+                <td v-text="invoice.amount + ' kr'"></td>
             </tr>
         </tbody>
     </table>
@@ -85,42 +85,42 @@
                 <tr>
                     <th style="text-align: right;">Mottagare</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.receiver.first_name + ' ' + payment.receiver.last_name"></div>
+                        <div v-text="payment.receiver.first_name + ' ' + payment.receiver.last_name"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.first_name + ' ' + payment.receiver.last_name)">📋</button>
                     </td>
                 </tr>
                 <tr>
                     <th style="text-align: right;">Bank</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.receiver.bank_info.bank_name"></div>
+                        <div v-text="payment.receiver.bank_info.bank_name"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.bank_name)">📋</button>
                     </td>
                 </tr>
                 <tr>
                     <th style="text-align: right;">Clearingnummer</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.receiver.bank_info.sorting_number"></div>
+                        <div v-text="payment.receiver.bank_info.sorting_number"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.sorting_number)">📋</button>
                     </td>
                 </tr>
                 <tr>
                     <th style="text-align: right;">Kontonummer</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.receiver.bank_info.bank_account"></div>
+                        <div v-text="payment.receiver.bank_info.bank_account"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.bank_account)">📋</button>
                     </td>
                 </tr>
                 <tr>
                     <th style="text-align: right;">Summa</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.amount"></div>
+                        <div v-text="payment.amount"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.amount)">📋</button>
                     </td>
                 </tr>
                 <tr>
                     <th style="text-align: right;">Meddelande</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
-                        <div v-html="payment.tag"></div>
+                        <div v-text="payment.tag"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.tag)">📋</button>
                     </td>
                 </tr>

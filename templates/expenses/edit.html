@@ -15,8 +15,8 @@
                             <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
                                 <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
                             </div>
-                            <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-html="file.name"></a>
-                            <span v-else class="name" v-html="file.name"></span>
+                            <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
+                            <span v-else class="name" v-text="file.name"></span>
                             <span class="delete" v-on:click="deleteFile(file)">
                                 <i class="fa fa-times"></i>
                             </span>
@@ -80,7 +80,7 @@
                     <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
                         <i class="fa fa-trash" aria-hidden="true"></i>
                     </button>
-                    <span class="info">Kvittodel <span v-html="i + 1"></span></span>
+                    <span class="info">Kvittodel <span v-text="i + 1"></span></span>
                 </td>
                 <td>
                     <div class="input">
@@ -89,15 +89,15 @@
                               <option value="0">- Välj -</option>
                               <optgroup label="Nämnder">
                                 <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                        :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                               </optgroup>
                               <optgroup label="Projekt">
                                 <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                        :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                               </optgroup>
                               <optgroup label="Övrigt">
                                 <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
-                                        :key="committee.id" v-html="committee.name" v-bind:value="committee.id"></option>
+                                        :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                               </optgroup>
                             </select>
                         </div>
@@ -108,7 +108,7 @@
                         <div class="select" v-if="expense_part.committeeId > 0">
                             <select name="costCentre[]" v-model="expense_part.costCentreId" required>
                                 <option value="0">- Välj -</option>
-                                <option v-for="costCentre in activeCostCentres(expense_part)" v-html="costCentre.name" v-bind:value="costCentre.id"></option>
+                                <option v-for="costCentre in activeCostCentres(expense_part)" v-text="costCentre.name" v-bind:value="costCentre.id"></option>
                             </select>
                         </div>
                         <div class="select disabled" v-else>
@@ -123,7 +123,13 @@
                         <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
                             <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
                                 <option value="0">- Välj -</option>
-                                <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId).length == 0 ? [] : committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-html="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                                <option v-for="budgetLine in committees.filter(x => x.id ==
+                                               expense_part.committeeId)[0].cost_centres.filter(x =>
+                                               x.id == expense_part.costCentreId).length == 0 ? [] :
+                                               committees.filter(x => x.id ==
+                                               expense_part.committeeId)[0].cost_centres.filter(x =>
+                                               x.id == expense_part.costCentreId)[0].budget_lines"
+                                        v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
                             </select>
                         </div>
                         <div class="select disabled" v-else>
