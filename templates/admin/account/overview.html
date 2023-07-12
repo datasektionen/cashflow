@@ -25,9 +25,12 @@
         </thead>
         <tbody v-for="expense in expenses" v-if="committee == false || expense.committees.indexOf(committee) > -1">
             <tr>
-                <td><a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a></td>
+                <td>
+                    <a v-bind:href="'/expenses/' + expense.id" v-html="expense.description"></a>
+                    (<span v-text="expense.id"></span>)
+                </td>
                 <td v-html="expense.expense_date"></td>
-                
+
                 <td class="right">
                     <div v-if="!expense.verification">
                         <form v-on:submit.prevent="save(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/verification'">
