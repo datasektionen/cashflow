@@ -30,7 +30,6 @@ SECRET_KEY = os.getenv('SECRET_KEY', '-01^^veefr*f_p=phew0w7ib37_738%=lwmp9n4bl_
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', 'False') == "True")
-print(DEBUG)
 
 GOOGLE_ANALYTICS_KEY = os.getenv('GOOGLE_ANALYTICS_KEY')
 
@@ -167,17 +166,20 @@ STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, 'staticfiles'),)
 
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
-
-AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')
-AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'xxxxxxxxxxxxxxxxxxxx')
-AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
-
-AWS_S3_HOST = os.getenv('S3_HOST', 's3.eu-central-1.amazonaws.com')
-AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
-
 MEDIAFILES_LOCATION = 'media'
-MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
-DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
+if DEBUG:
+    MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+    MEDIA_URL = '/media/'
+else:
+    AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')
+    AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'xxxxxxxxxxxxxxxxxxxx')
+    AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+
+    AWS_S3_HOST = os.getenv('S3_HOST', 's3.eu-central-1.amazonaws.com')
+    AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
+
+    MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
+    DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
 
 SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
                                          'pate, brandy and with a fried egg on top and spam.')
