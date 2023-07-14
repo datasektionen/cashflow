@@ -20,7 +20,6 @@ The server will restart on file changes.
 
 The following environment variables are required to run the project:
 
-
 | Variable             | Description                          | Default                        |
 | -------------------- | ------------------------------------ | ------------------------------ |
 | DATABASE_URL         | PostgreSQL server url                | ---                            |
@@ -37,6 +36,9 @@ The following environment variables are required to run the project:
 | PLS_URL              | URL to pls service                   | https://pls.datasektionen.se   |
 | LOGIN_URL            | URL to login service                 | https://login.datasektionen.se |
 | SEND_EMAILS          | If False, does not send emails       | True                           |
+
+(The variables beginning with `S3` are not used if `DEBUG` is true. Files are
+instead stored at `./media/`)
 
 They can be put in an .env-file in root. They will be loaded automatically by `pipenv`.
 
