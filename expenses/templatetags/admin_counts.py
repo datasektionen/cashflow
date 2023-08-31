@@ -4,7 +4,7 @@ from django.conf import settings
 register = template.Library()
 from expenses.models import *
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def counts(context):
     user = context['request'].user
     context['counts'] = {

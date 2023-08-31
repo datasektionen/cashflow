@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -64,7 +64,7 @@ class PaymentViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(payments.to_dict())
 
-    @list_route()
+    @action(detail=False)
     def ready_for_payment(self, request, **kwargs):
         expenses = []
 

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
@@ -136,7 +136,7 @@ class ExpenseViewSet(GenericViewSet):
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @detail_route()
+    @action(detail=True)
     def comments(self, request, pk, **kwargs):
         try:
             exp = Expense.objects.get(id=int(pk))
@@ -150,7 +150,7 @@ class ExpenseViewSet(GenericViewSet):
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @detail_route()
+    @action(detail=True)
     def files(self, request, pk, **kwargs):
         try:
             exp = Expense.objects.get(id=int(pk))

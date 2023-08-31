@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework import status
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -69,7 +69,7 @@ class UserViewSet(GenericViewSet):
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @list_route()
+    @action(detail=False)
     def current(self, request, **kwargs):
         """
         Returns a JSON representation of the current user

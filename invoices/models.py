@@ -9,14 +9,14 @@ class Invoice(models.Model):
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
-    confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    confirmed_by = models.ForeignKey(User, on_delete=models.deletion.CASCADE, blank=True, null=True)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey('expenses.Profile')
+    owner = models.ForeignKey('expenses.Profile', on_delete=models.deletion.CASCADE)
     description = models.TextField()
     file_is_original = models.BooleanField()
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
-    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")
+    payed_by = models.ForeignKey(User, on_delete=models.deletion.CASCADE, blank=True, null=True, default=None, related_name="payed")
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -126,7 +126,7 @@ class InvoicePart(models.Model):
     committee_name = models.TextField(blank=True)
     committee_id = models.IntegerField(default=0)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True)
+    attested_by = models.ForeignKey('expenses.Profile', on_delete=models.CASCADE, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model
