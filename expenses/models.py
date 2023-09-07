@@ -307,7 +307,7 @@ class Expense(models.Model):
         }
         if 'firmatecknare' not in may_attest:
             filters['expensepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Expense.objects.exclude(owner__user=user).filter(**filters).distinct()
+        return Expense.objects.order_by('-id', '-expense_date').exclude(owner__user=user).filter(**filters).distinct()
 
     @staticmethod
     def confirmable():
