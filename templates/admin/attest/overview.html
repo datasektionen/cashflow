@@ -70,6 +70,7 @@
         },
         created: function() {
             this.committees = Array.from(new Set([].concat.apply([], this.expenses.map(x => x.committees))))
+            this.committees.sort((a, b) => a.localeCompare(b, 'sv-SE'));
         },
         methods: {
 
