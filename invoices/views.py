@@ -29,6 +29,15 @@ def new_invoice(request):
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         return HttpResponseRedirect(reverse('invoices-new'))
 
+
+    if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
+        messages.error(request, 'Sluta fippla')
+        return HttpResponseRedirect(reverse('invoices-new'))
+
+    if len(request.POST.getlist('budgetLine[]')) == 0:
+        messages.error(request, 'Du måste lägga till minst en del på kvittot')
+        return HttpResponseRedirect(reverse('invoices-new'))
+
     # Create the invoice
     invoice = Invoice(
         owner=request.user.profile,
