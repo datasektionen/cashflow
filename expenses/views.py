@@ -34,6 +34,14 @@ def new_expense(request):
             messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
             return HttpResponseRedirect(reverse('expenses-new'))
 
+        if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
+            messages.error(request, 'Sluta fippla')
+            return HttpResponseRedirect(reverse('expenses-new'))
+
+        if len(request.POST.getlist('budgetLine[]')) == 0:
+            messages.error(request, 'Du måste lägga till minst en del på kvittot')
+            return HttpResponseRedirect(reverse('expenses-new'))
+
         # Create the expense
         expense = models.Expense(
             owner=request.user.profile,
