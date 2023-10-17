@@ -28,6 +28,8 @@
                 <td>
                     <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     (<span v-text="expense.id"></span>)
+                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                        v-on:click="copy(expense.description + ' (' + expense.id + ')')">📋</button>
                 </td>
                 <td v-text="expense.expense_date"></td>
 
@@ -53,7 +55,11 @@
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
-                            <td><span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr</td>
+                            <td>
+                                <span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr
+                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                                v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
+                            </td>
                         </tr>
                     </table>
                 </td>
@@ -169,6 +175,9 @@
                     this.invoices[idx].verification = invoice.verificationString
                 })
                 if (e) e.preventDefault()
+            },
+            copy(value) {
+                navigator.clipboard.writeText(value).catch(console.error)
             }
         },
         created: function() {
