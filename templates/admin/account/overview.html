@@ -51,9 +51,11 @@
                     <table>
                         <tr v-for="expensePart in expense.expense_parts">
                             <td style="text-align: right; width: 50%;" v-text="expensePart.committee_name + ' > ' + expensePart.cost_centre_name + ' > ' + expensePart.budget_line_name"></td>
-                            <td v-text="expensePart.amount + ' kr'"></td>
-                            <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                v-on:click="copy(expensePart.amount)">📋</button>
+                            <td>
+                                <span v-text="expensePart.amount + ' kr'"></span>
+                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                                    v-on:click="copy(expensePart.amount)">📋</button>
+                            </td>
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
