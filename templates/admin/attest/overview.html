@@ -11,7 +11,7 @@
     <div class="select" style="float:right">
         <select v-model="committee">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-text="committee + ' (' + (expenses.filter(x => x.committees.indexOf(committee) > -1).length) + ')'" :value="committee"></option>
+            <option v-for="committee in committees" v-text="committee + ' (' + expenses.filter(x => x.committees.indexOf(committee) > -1).length + ' + ' + invoices.filter(x => x.committees.indexOf(committee) > -1).length + ')'" :value="committee"></option>
         </select>
     </div>
     <h2>Utlägg</h2>
