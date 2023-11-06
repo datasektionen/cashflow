@@ -10,7 +10,7 @@ def login(request):
     """
     if not request.user.is_authenticated:
         return HttpResponseRedirect(
-            settings.AUTH_URL + '/login?callback=' +
+            settings.PUBLIC_AUTH_URL + '/login?callback=' +
             request.scheme + '://' + request.get_host() + '/login/')
     else:
         return HttpResponseRedirect("/")

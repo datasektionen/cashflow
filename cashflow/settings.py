@@ -154,7 +154,8 @@ USE_L10N = True
 USE_TZ = True
 
 AUTH_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
-AUTH_URL = os.getenv('LOGIN_URL', 'https://login.datasektionen.se')
+PRIVATE_AUTH_URL = os.getenv('PRIVATE_LOGIN_URL', 'https://login.datasektionen.se')
+PUBLIC_AUTH_URL = os.getenv('PUBLIC_LOGIN_URL', 'https://login.datasektionen.se')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/

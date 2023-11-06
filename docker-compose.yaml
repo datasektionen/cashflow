@@ -1,0 +1,43 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    environment:
+      - DATABASE_URL=postgresql://cashflow:cashflow@postgres:5432/cashflow
+      - DEBUG=True
+      - LOGIN_KEY=super_secret
+      - SPAM_API_KEY=super_secret
+      - SEND_EMAILS=False
+      - PRIVATE_LOGIN_URL=http://login:7002
+      - PUBLIC_LOGIN_URL=http://localhost:7002
+      - PLS_URL=https://pls.datasektionen.se
+    init: true
+    ports:
+      - 8000:8000
+    depends_on:
+      - login
+      - postgres
+    volumes:
+      - ./admin:/app/admin
+      - ./cashflow:/app/cashflow
+      - ./expenses:/app/expenses
+      - ./file_api:/app/file_api
+      - ./invoices:/app/invoices
+      - ./manage.py:/app/manage.py
+      - ./staticfiles:/app/staticfiles
+      - ./stats:/app/stats
+      - ./templates:/app/templates
+      - ./users:/app/users
+  login:
+    image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
+    environment:
+      KTH_ID: mathm
+    ports:
+      - 7002:7002
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: cashflow
+      POSTGRES_USER: cashflow
+      POSTGRES_DB: cashflow
