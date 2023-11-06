@@ -4,6 +4,19 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 ## Developing locally
 
+### With docker
+
+Install docker
+
+```sh
+docker compose up
+```
+
+This will mount in the relevant directories so that you don't have to restart
+the containers every time code changes.
+
+### Without docker
+
 Cashflow uses Python 3.6.2
 
 - Install PostgreSQL
