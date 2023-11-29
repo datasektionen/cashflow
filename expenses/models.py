@@ -434,6 +434,9 @@ class Comment(models.Model):
         comment['author_last_name'] = self.author.user.last_name
         return comment
 
+    class Meta:
+        ordering = ['date']
+
 
 # Sends mail on comment
 # noinspection PyUnusedLocal
