@@ -123,6 +123,9 @@
                 <th>Bekräftat i pärmen:</th>
                 <td v-if="expense.confirmed">
                     [[expense.confirmed_by]]  ([[expense.confirmed_date]])
+                    {% if user.profile.may_confirm %}
+                        <button class="theme-color btn-color" v-on:click="unconfirm(expense)">[[expense.btn_message]]</button>
+                    {% endif %}
                 </td>
                 <td v-else>
                     {% if user.profile.may_confirm %}
@@ -130,9 +133,9 @@
                             {% csrf_token %}
                             <button class="theme-color btn-color" v-on:click="conf(expense, $event)">[[expense.btn_message]]</button>
                         </form>
-                        {% else %}
+                    {% else %}
                         Inte än
-                        {%endif%}
+                    {% endif %}
                 </td>
             </tr>
             <tr>
@@ -228,19 +231,20 @@
 
 <script type="text/javascript">
     new Vue({
-        el: '#app', 
+        el: '#app',
         delimiters: ['[[', ']]'],
         data: function () {
             return {
                 expense: {
-                    btn_message: "Bekräfta",
                     id: {{ expense.id }},
                     {% if expense.confirmed_by %}
                     confirmed: true,
                     confirmed_by: "{{ expense.confirmed_by.get_full_name }}",
-                    confirmed_date: "{{ expense.confirmed_at }}"
-                    {% else%}
-                    confirmed: false
+                    confirmed_date: "{{ expense.confirmed_at }}",
+                    btn_message: "Avbekräfta",
+                    {% else %}
+                    btn_message: "Bekräfta",
+                    confirmed: false,
                     {%endif%}
                 },
                 user: {
@@ -266,17 +270,40 @@
                     redirect: 'manual'
                 })
                 .then(res => {
-                    if(res.type === "opaqueredirect"){    
+                    if (res.type === "opaqueredirect"){
                         this.expense.confirmed = true;
                         this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
                         this.expense.confirmed_by = this.user.full_name;
+                        this.expense.btn_message = "Avbekräfta"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
-                    } 
+                    }
                     return res.text();
                 })
                 if (e) e.preventDefault()
-            } 
+            },
+            unconfirm: function (expense) {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+                fetch('/admin/expense/' + expense.id + '/unconfirm/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => {
+                    if (res.type === "opaqueredirect"){
+                        this.expense.confirmed = false;
+                        this.expense.confirmed_date = null;
+                        this.expense.confirmed_by = null;
+                        this.expense.btn_message = "Bekräfta"
+                    } else {
+                        this.expense.btn_message = "Error! Försök igen"
+                    }
+                    return res.text();
+                })
+            },
         },
         created() {
 

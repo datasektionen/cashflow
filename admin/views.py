@@ -179,30 +179,52 @@ def edit_expense_verification(request, pk):
         })
 
 
+@require_POST
 def confirm_expense(request, pk):
-    if request.method == 'POST':
-        try:
-            expense = Expense.objects.get(pk=pk)
+    try:
+        expense = Expense.objects.get(pk=pk)
 
-            if not dauth.has_permission('confirm', request):
-                return HttpResponseForbidden("Du har inte rättigheterna för att se den här sidan")
+        if not dauth.has_permission('confirm', request):
+            return HttpResponseForbidden("Du har inte rättigheterna för att bekräfta kvitton")
 
-            expense.confirmed_by = request.user
-            expense.confirmed_at = date.today()
-            expense.save()
+        expense.confirmed_by = request.user
+        expense.confirmed_at = date.today()
+        expense.save()
 
-            comment = Comment(
-                expense=expense,
-                author=request.user.profile,
-                content='Jag bekräftar att kvittot finns i pärmen.'
-            )
-            comment.save()
+        comment = Comment(
+            expense=expense,
+            author=request.user.profile,
+            content='Jag bekräftar att kvittot finns i pärmen.'
+        )
+        comment.save()
 
-            return HttpResponseRedirect(reverse('admin-confirm'))
-        except ObjectDoesNotExist:
-            raise Http404("Utlägget finns inte")
-    else:
-        raise Http404()
+        return HttpResponseRedirect(reverse('admin-confirm'))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+
+
+@require_POST
+def unconfirm_expense(request, pk):
+    try:
+        expense = Expense.objects.get(pk=pk)
+
+        if not dauth.has_permission('unconfirm', request):
+            return HttpResponseForbidden("Du har inte rättigheterna för att avbekräfta kvitton")
+
+        expense.confirmed_by = None
+        expense.confirmed_at = None
+        expense.save()
+
+        comment = Comment(
+            expense=expense,
+            author=request.user.profile,
+            content='Jag tar bort bekräftelse i pärmen.'
+        )
+        comment.save()
+
+        return HttpResponseRedirect(reverse('admin-confirm'))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
 
 
 @require_POST
