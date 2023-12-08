@@ -123,7 +123,7 @@
                 <th>Bekräftat i pärmen:</th>
                 <td v-if="expense.confirmed">
                     [[expense.confirmed_by]]  ([[expense.confirmed_date]])
-                    {% if user.profile.may_confirm %}
+                    {% if user.profile.may_unconfirm %}
                         <button class="theme-color btn-color" v-on:click="unconfirm(expense)">[[expense.btn_message]]</button>
                     {% endif %}
                 </td>

@@ -109,6 +109,10 @@ class Profile(models.Model):
     def may_confirm(self):
         return 'confirm' in dauth.get_permissions(self.user)
 
+    # Returns a list of the committees that the user may pay for
+    def may_unconfirm(self):
+        return 'unconfirm' in dauth.get_permissions(self.user)
+
     # Returns a list of the committees that the user may account for
     def may_account(self, expense=None, invoice=None):
         if 'accounting-*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
