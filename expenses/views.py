@@ -212,8 +212,9 @@ def get_expense(request, pk):
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
+        'may_account': request.user.profile.may_account(),
+        'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
         'attestable': attestable,
-        'may_account': request.user.profile.may_account()
     })
 
 
@@ -232,7 +233,7 @@ def new_comment(request, expense_pk):
         return HttpResponseForbidden()
     if re.match('^\s*$', request.POST['content']):
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
-    
+
     models.Comment(
         expense=expense,
         author=request.user.profile,
@@ -279,7 +280,7 @@ def new_payment(request):
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
         return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
-    
+
     payment = models.Payment(
         payer=request.user.profile,
         receiver=expense_owner,
@@ -308,7 +309,7 @@ def api_new_payment(request):
         expenses = [models.Expense.objects.get(id=int(expense_id)) for expense_id in request.POST.getlist('expense')]
     except ObjectDoesNotExist:
         raise Http404("Ett av utläggen finns inte.")
-        
+
     expense_owner = expenses[0].owner
     for expense in expenses:
         if expense.owner != expense_owner:
@@ -316,7 +317,7 @@ def api_new_payment(request):
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
         return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
-    
+
     payment = models.Payment(
         payer=request.user.profile,
         receiver=expense_owner,
@@ -335,6 +336,6 @@ def api_new_payment(request):
         ).save()
 
     return JsonResponse({
-        'payment': payment.to_dict(), 
+        'payment': payment.to_dict(),
         'expenses': [e.to_dict() for e in expenses]
     })
