@@ -178,6 +178,9 @@ class Profile(models.Model):
     def is_admin(self):
         return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account()
 
+    def may_unattest(self):
+        return 'attest-firmatecknare' in dauth.get_permissions(self.user)
+
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
 # noinspection PyUnusedLocal
@@ -395,6 +398,20 @@ class ExpensePart(models.Model):
             content="Attesterar kvittodelen ```" + str(self) + "```"
         )
         comment.save()
+
+    def unattest(self, user):
+        self.attested_by = None
+        self.attest_date = None
+
+        self.save()
+
+        comment = Comment(
+            author=user.profile,
+            expense=self.expense,
+            content="Avattesterar kvittodelen ```" + str(self) + "```"
+        )
+        comment.save()
+
 
     # Returns dict representation of the model
     def to_dict(self):

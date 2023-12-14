@@ -24,26 +24,26 @@
     {% endif %}
     <h2>Kvittodelar</h2>
     <table>
-        <thead>
-            <tr>
-                <th>
-                    Belopp
-                </th>
-                <th>
-                    Nämnd
-                </th>
-                <th>
-                    Sekundärt resultatställe
-                </th>
-                <th>
-                    Budgetpost
-                </th>
-                <th>
-                    Attesterad av
-                </th>
-            </tr>
-        </thead>
-        <tbody>
+      <thead>
+        <tr>
+          <th>
+            Belopp
+          </th>
+          <th>
+            Nämnd
+          </th>
+          <th>
+            Sekundärt resultatställe
+          </th>
+          <th>
+            Budgetpost
+          </th>
+          <th>
+            Attesterad av
+          </th>
+        </tr>
+      </thead>
+      <tbody>
         {% for expense_part in expense.expensepart_set.all %}
             <tr>
                 <td>
@@ -81,7 +81,7 @@
                 </td>
             </tr>
         {% endfor %}
-        </tbody>
+      </tbody>
     </table>
     <div class="clear" style="height:50px;"></div>
 
@@ -155,30 +155,37 @@
                 <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
             </tr>
             <tr>
-                <td colspan="2">
-                    <a href="{% url 'expenses-delete' expense.id %}">
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash"></i> Ta bort kvitto
-                        </button>
-                    </a>
-                </td>
+              <td colspan="2">
+                <a href="{% url 'expenses-delete' expense.id %}">
+                  <button type="button" class="btn btn-danger">
+                    <i class="fa fa-trash"></i> Ta bort kvitto
+                  </button>
+
+                </a>
+                {% if may_unattest %}
+                <form method="POST" action="{% url 'admin-expense-unattest' expense.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-danger" type="submit">Avattestera</button>
+                </form>
+                {% endif %}
+              </td>
             </tr>
         </table>
     </div>
 
     <div class="col-sm-6 col-lg-6" style="padding-right: 0;">
-        <h2>Filer</h2>
-        {% for file in expense.file_set.all %}
-        <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
-        {% if file.is_image %}
-        <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">
-            <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
-        </a>
-        {% else %}
-        <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;" sandbox></iframe>
-        {% endif %}
-        <br>
-        {% endfor %}
+      <h2>Filer</h2>
+      {% for file in expense.file_set.all %}
+      <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
+      {% if file.is_image %}
+      <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">
+        <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
+      </a>
+      {% else %}
+      <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;" sandbox></iframe>
+      {% endif %}
+      <br>
+      {% endfor %}
     </div>
 
 
@@ -194,7 +201,7 @@
                     <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/users/{{ comment.author.user.username }}"></a>
                     <span class="name">
                         <a href="{% url 'user-show' comment.author.user.username %}">
-                            
+
                         </a>
                     </span>
                 </div>
@@ -270,7 +277,7 @@
                     redirect: 'manual'
                 })
                 .then(res => {
-                    if (res.type === "opaqueredirect"){
+                    if (res.type === "opaqueredirect") {
                         this.expense.confirmed = true;
                         this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
                         this.expense.confirmed_by = this.user.full_name;
