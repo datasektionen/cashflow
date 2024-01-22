@@ -287,7 +287,6 @@ class Expense(models.Model):
 
     # Returns the committees belonging to the expense as a list [{ committee_name: 'Name' }, ...]
     def is_attested(self):
-        print(self.expensepart_set.filter(attested_by__isnull=True).count())
         return self.expensepart_set.filter(attested_by__isnull=True).count() == 0
 
     # Returns a dict representation of the model

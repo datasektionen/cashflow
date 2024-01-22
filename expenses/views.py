@@ -11,7 +11,6 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 
 from expenses import models
 
-
 @require_http_methods(["GET", "POST"])
 @login_required
 def new_expense(request):
@@ -26,7 +25,6 @@ def new_expense(request):
             return HttpResponseRedirect(reverse('expenses-new'))
 
         if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
-            print("Felaktigt datum")
             messages.error(request, 'Du har angivit ett datum i framtiden')
             return HttpResponseRedirect(reverse('expenses-new'))
 
@@ -61,9 +59,6 @@ def new_expense(request):
             file = models.File.objects.get(pk=int(pre_uploaded_file_id))
             if file.expense is None:
                 file.expense = expense
-                print("None")
-            else:
-                print("Inte none")
             file.save()
 
         # Add the expenseparts
