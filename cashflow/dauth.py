@@ -19,7 +19,7 @@ class DAuth(object):
         Do the authentication via the login system.
         Save user in database if did not exist before.
         """
-        url = settings.AUTH_URL + '/verify/' + str(token) + '.json?api_key=' + settings.AUTH_API_KEY
+        url = settings.LOGIN_API_URL + '/verify/' + str(token) + '.json?api_key=' + settings.LOGIN_API_KEY
 
         req = requests.get(url)
         if req.status_code == 200:
@@ -37,7 +37,7 @@ class DAuth(object):
                 user.save()
             return user
         else:
-            print(req)
+            print("Response from login:", req)
 
     @staticmethod
     def get_user(user_id):

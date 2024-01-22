@@ -16,6 +16,12 @@ Cashflow uses Python 3.6.2
 
 The server will restart on file changes.
 
+### Getting data from production
+
+1. Get a database dump: `ssh hermes dokku postgres:export cashflow > cashflow.sql`
+2. Shove it into a local database: `pg_restore -h localhost -U cashflow -d cashflow --no-owner < cashflow.sql`
+3. Copy files from s3 to local: `aws s3 cp --recursive s3://dsekt-cashflow-2/media/ media/` (warning: you need a fair bit of free disk space for this. todo: how does one easily download only new files?)
+
 ## Environment variables
 
 The following environment variables are required to run the project:
@@ -34,7 +40,8 @@ The following environment variables are required to run the project:
 | SPAM_API_KEY         | API key for the spam mail system     | ---                            |
 | SPAM_URL             | URL to spam service                  | https://spam.datasektionen.se  |
 | PLS_URL              | URL to pls service                   | https://pls.datasektionen.se   |
-| LOGIN_URL            | URL to login service                 | https://login.datasektionen.se |
+| LOGIN_API_URL        | URL to login service api             | https://login.datasektionen.se |
+| LOGIN_FRONTEND_URL   | URL to login service frontend        | https://login.datasektionen.se |
 | SEND_EMAILS          | If False, does not send emails       | True                           |
 
 (The variables beginning with `S3` are not used if `DEBUG` is true. Files are
