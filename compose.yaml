@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
+      DEBUG: "True"
+      LOGIN_KEY: super_secret
+      SPAM_API_KEY: super_secret
+      SEND_EMAILS: "False"
+      PLS_URL: https://pls.datasektionen.se
+      LOGIN_API_URL: http://login:7002
+      LOGIN_FRONTEND_URL: http://localhost:7002
+      PYTHONUNBUFFERED: 1
+    init: true
+    ports:
+      - 8000:8000
+    volumes:
+      - ./media:/app/media
+    develop:
+      watch:
+        - path: .
+          target: /app
+          action: sync
+        - path: Pipfile
+          action: rebuild
+    command: sh -c "pipenv run ./manage.py migrate && pipenv run ./manage.py runserver 0.0.0.0:8000"
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: cashflow
+      POSTGRES_PASSWORD: cashflow
+      POSTGRES_DB: cashflow
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cashflow"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+  login:
+    image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
+    ports:
+      - 7002:7002
+    environment:
+      # Since we're using the real pls, it's nice to use some user with a lot of priveleges. Putting
+      # mine here since I'm d-sys at the time of writing.
+      KTH_ID: mathm
+
