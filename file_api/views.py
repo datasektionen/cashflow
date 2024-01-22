@@ -58,8 +58,6 @@ def new_file(request):
 
         files.append(file)
 
-    print(files)
-
     return JsonResponse({'message':'File uploaded.', 'files':[file.to_dict() for file in files]})
 
 @require_http_methods(["POST"])

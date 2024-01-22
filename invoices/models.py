@@ -60,7 +60,6 @@ class Invoice(models.Model):
 
     # Returns the committees belonging to the invoice as a list [{ committee_name: 'Name' }, ...]
     def is_attested(self):
-        print(self.invoicepart_set.filter(attested_by__isnull=True).count())
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
 
     def is_payed(self):

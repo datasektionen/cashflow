@@ -69,10 +69,6 @@ def summary(request):
                 cost_centre_name=body_data['cost_centre'],
             ).all()
 
-        print(body_data)
-
-        print(expense_parts)
-
         sum_amount = 0
 
         for expense_part in expense_parts:
