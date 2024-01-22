@@ -6,12 +6,17 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from pi_heif import register_heif_opener
+from io import BytesIO
 
 import re
 
 from expenses.models import File
 from expenses.models import Expense
 
+register_heif_opener()
 
 def pretty_request(request):
     headers = ''
@@ -53,6 +58,19 @@ def new_file(request):
     # Upload the file
     files = []
     for uploaded_file in request.FILES.getlist('files'):
+        if uploaded_file.content_type == 'image/heif':
+            img = BytesIO()
+            with Image.open(uploaded_file) as im:
+                im.save(img, format="jpeg")
+            uploaded_file = InMemoryUploadedFile(
+                img,
+                None,
+                uploaded_file.name.lower().replace(".heic", ".jpeg"),
+                "image/jpeg",
+                img.getbuffer().nbytes,
+                "binary"
+            )
+
         file = File(file=uploaded_file, expense=expense)
         file.save()
 
