@@ -155,13 +155,15 @@
                 <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
             </tr>
             <tr>
+              {% if may_delete or may_unattest %}
               <td colspan="2">
+                {% if may_delete %}
                 <a href="{% url 'expenses-delete' expense.id %}">
                   <button type="button" class="btn btn-danger">
                     <i class="fa fa-trash"></i> Ta bort kvitto
                   </button>
-
                 </a>
+                {% endif %}
                 {% if may_unattest %}
                 <form method="POST" action="{% url 'admin-expense-unattest' expense.id %}">
                   {% csrf_token %}
@@ -169,6 +171,7 @@
                 </form>
                 {% endif %}
               </td>
+              {% endif %}
             </tr>
         </table>
     </div>
