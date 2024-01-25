@@ -29,17 +29,17 @@ def index(request):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_attest())
+@user_passes_test(lambda u: u.profile.may_view_attest())
 def attest_overview(request):
     """
     Displays the attest overview list.
     """
     return render(request, 'admin/attest/overview.html', {
         'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.attestable(request.user.profile.may_attest(), request.user)],
+            [expense.to_dict() for expense in Expense.view_attestable(request.user.profile.may_view_attest(), request.user)],
             default=json_serial),
         'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.attestable(request.user.profile.may_attest(), request.user)],
+            [invoice.to_dict() for invoice in Invoice.view_attestable(request.user.profile.may_view_attest(), request.user)],
             default=json_serial)
     })
 
@@ -67,6 +67,30 @@ def attest_expense_part(request, pk):
         return HttpResponseRedirect(reverse('admin-attest'))
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
 
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
+def unattest_expense(request, pk):
+    try:
+        expense = Expense.objects.get(pk=int(pk))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+    if expense.reimbursement:
+        # This shouldn't be a 404 but i couldn't import Http400 and I don't care
+        raise Http404("Utlägget har redan betalats ut")
+    try:
+        expense_parts = ExpensePart.objects.filter(expense_id=int(pk))
+
+        if not request.user.profile.is_admin():
+            return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
+
+        for part in expense_parts:
+            part.unattest(request.user)
+    except ObjectDoesNotExist:
+        raise Http404("Kvittodelarna finns inte")
+
+    return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
+
 
 @require_POST
 @login_required
@@ -90,7 +114,7 @@ def attest_invoice_part(request, pk):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_confirm())
+@user_passes_test(lambda u: u.profile.may_view_confirm())
 def confirm_overview(request):
     """
     Shows a list of confirmable receipts and lets user confirm them.
@@ -104,7 +128,7 @@ def confirm_overview(request):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_pay())
+@user_passes_test(lambda u: u.profile.may_view_pay())
 def pay_overview(request):
     """
     Shows a list of all payable expenses and lets user pay them.
@@ -135,14 +159,14 @@ def invoice_pay(request, pk):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_account())
+@user_passes_test(lambda u: u.profile.may_view_account())
 def account_overview(request):
     return render(request, 'admin/account/overview.html', {
         'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.accountable(request.user.profile.may_account())],
+            [expense.to_dict() for expense in Expense.view_accountable(request.user.profile.may_view_account())],
             default=json_serial),
         'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.accountable(request.user.profile.may_account())],
+            [invoice.to_dict() for invoice in Invoice.view_accountable(request.user.profile.may_view_account())],
             default=json_serial)
     })
 

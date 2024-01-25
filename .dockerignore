@@ -1,3 +1,7 @@
+media/
+Dockerfile
+compose.yaml
+
 cashflow.sql
 
 ### Node, React, etc ###

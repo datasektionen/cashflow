@@ -1,13 +1,18 @@
 {% extends "../detail.html" %}
 {% load widget_tweaks %}
 
-{% block title %}Sätt in kvittot i pärmen{% endblock %}
+{% block title %}{% if expense.is_digital %}Digitalt kvitto uppladdat{% else %}Sätt in kvittot i pärmen{% endif %}{% endblock %}
 
 {% block full_content %}
     <div>
-        <p>Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
-        <p>Märk kvittomallen med id:t <b>{{ expense.pk }}</b>. Du hittar det på din sida igen om du glömmer bort det.</p>
-        <p>Kvittopärmen <b>ska</b> vara sorterad efter Cashflow-ID i stigande ordning. Om du sätter in ditt kvitto fel riskerar du att det inte blir utbetalt.</p>
+        {% if expense.is_digital %}
+            <p>Eftersom du markerade kvittot som digitalt behöver du inte sätta in det i pärmen.</p>
+            <p>Om detta var fel - kontakta sektionens kassör, annars riskerar du att kvittot inte blir utbetalt.</p>
+        {% else %}
+            <p>Sätt in ditt kvitto i kvittopärmen i META på en <u><a href="/static/kvittomall.pdf">kvittomall</a></u>.</p>
+            <p>Märk kvittomallen med id:t <b>{{ expense.pk }}</b>. Du hittar det på din sida igen om du glömmer bort det.</p>
+            <p>Kvittopärmen <b>ska</b> vara sorterad efter Cashflow-ID i stigande ordning. Om du sätter in ditt kvitto fel riskerar du att det inte blir utbetalt.</p>
+        {% endif %}
         <a href="{% url "expenses-show" expense.pk %}" class="button primary-action btn-color theme-color" style="color:#fff">Gå vidare</a>
     </div>
 {% endblock %}

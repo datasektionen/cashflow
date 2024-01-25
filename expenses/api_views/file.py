@@ -63,7 +63,6 @@ class FileViewSet(GenericViewSet):
                 file = File(expense=exp, file=data)
                 file.save()
                 return JsonResponse({'file': file.to_dict()})
-            print(request.POST['file'])
             return JsonResponse({'error': 'Json object is missing the field ' + str(e)}, status=400)
         except ValueError as e:
             return JsonResponse({'error': str(e) + ' is not a valid expense id'}, status=400)

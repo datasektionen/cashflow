@@ -60,7 +60,6 @@ class Invoice(models.Model):
 
     # Returns the committees belonging to the invoice as a list [{ committee_name: 'Name' }, ...]
     def is_attested(self):
-        print(self.invoicepart_set.filter(attested_by__isnull=True).count())
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
 
     def is_payed(self):
@@ -88,13 +87,13 @@ class Invoice(models.Model):
         return exp
 
     @staticmethod
-    def attestable(may_attest, user):
+    def view_attestable(may_attest, user):
         filters = {
             'invoicepart__attested_by': None,
         }
         if 'firmatecknare' not in may_attest:
             filters['invoicepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Invoice.objects.filter(**filters).distinct()
+        return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
 
     # TODO
     @staticmethod
@@ -106,7 +105,7 @@ class Invoice(models.Model):
 
     # TODO
     @staticmethod
-    def accountable(may_account):
+    def view_accountable(may_account):
         if '*' in may_account:
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
         return Invoice.objects.exclude(payed_at__isnull=True).filter(
