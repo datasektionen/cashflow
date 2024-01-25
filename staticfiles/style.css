@@ -290,10 +290,6 @@ table .checkbox {
 .checkbox input[type=checkbox]:checked + label {
     color: #278032;
 }
-input[type=checkbox] {
-    visibility: hidden;
-}
-
 
 
 span.notification {

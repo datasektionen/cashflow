@@ -269,6 +269,7 @@ class Expense(models.Model):
     description = models.TextField()
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
     verification = models.CharField(max_length=7, blank=True)
+    is_digital = models.NullBooleanField()
 
     # Returns a string representation of the expense
     def __str__(self):

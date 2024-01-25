@@ -45,7 +45,8 @@ def new_expense(request):
             owner=request.user.profile,
             expense_date=request.POST['expense-date'],
             description=request.POST['expense-description'],
-            confirmed_by=None
+            confirmed_by=None,
+            is_digital='is-digital' in request.POST,
         )
         expense.save()
 
