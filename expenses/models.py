@@ -118,6 +118,10 @@ class Profile(models.Model):
     def may_confirm(self):
         return 'confirm' in dauth.get_permissions(self.user)
 
+    # Returns a list of the committees that the user may pay for
+    def may_unconfirm(self):
+        return 'unconfirm' in dauth.get_permissions(self.user)
+
     # Returns whether the user may view confirmable expenses
     def may_view_confirm(self):
         return self.may_view_all() or self.may_confirm()
