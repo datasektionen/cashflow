@@ -87,13 +87,13 @@ class Invoice(models.Model):
         return exp
 
     @staticmethod
-    def attestable(may_attest, user):
+    def view_attestable(may_attest, user):
         filters = {
             'invoicepart__attested_by': None,
         }
         if 'firmatecknare' not in may_attest:
             filters['invoicepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Invoice.objects.filter(**filters).distinct()
+        return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
 
     # TODO
     @staticmethod
@@ -105,7 +105,7 @@ class Invoice(models.Model):
 
     # TODO
     @staticmethod
-    def accountable(may_account):
+    def view_accountable(may_account):
         if '*' in may_account:
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
         return Invoice.objects.exclude(payed_at__isnull=True).filter(

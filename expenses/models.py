@@ -101,13 +101,26 @@ class Profile(models.Model):
             return may_attest
         return 'firmatecknare' in may_attest or expense_part.committee_name.lower() in may_attest
 
-    # Returns a list of the committees that the user may pay for
+    def may_view_attest(self):
+        if self.may_view_all():
+            return ['.*']
+        return self.may_attest()
+
+    # Returns whether the user is allowed to make reimbursements
     def may_pay(self):
         return 'pay' in dauth.get_permissions(self.user)
 
-    # Returns a list of the committees that the user may pay for
+    # Returns whether the user may view payable expenses
+    def may_view_pay(self):
+        return self.may_view_all() or self.may_pay()
+
+    # Returns whether the user may confirm expenses
     def may_confirm(self):
         return 'confirm' in dauth.get_permissions(self.user)
+
+    # Returns whether the user may view confirmable expenses
+    def may_view_confirm(self):
+        return self.may_view_all() or self.may_confirm()
 
     # Returns a list of the committees that the user may account for
     def may_account(self, expense=None, invoice=None):
@@ -130,6 +143,11 @@ class Profile(models.Model):
                 if ip.committee_name.lower() in may_account:
                     return True
         return False
+
+    def may_view_account(self):
+        if self.may_view_all():
+            return ['.*']
+        return self.may_account()
 
     def may_delete(self, expense):
         if expense.reimbursement:
@@ -158,7 +176,7 @@ class Profile(models.Model):
         return user.username == self.user.username or user.profile.is_admin()
 
     def may_view_expense(self, expense):
-        if expense.owner.user.username == self.user.username or self.may_pay():
+        if expense.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
             return True
         for committee in expense.committees():
             if committee['committee_name'].lower() in self.may_account() or committee['committee_name'].lower() in self.may_attest():
@@ -175,8 +193,11 @@ class Profile(models.Model):
 
         return False
 
+    def may_view_all(self):
+        return 'view-all' in dauth.get_permissions(self.user)
+
     def is_admin(self):
-        return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account()
+        return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account() or self.may_view_all()
 
     def may_unattest(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
@@ -303,13 +324,13 @@ class Expense(models.Model):
         return exp
 
     @staticmethod
-    def attestable(may_attest, user):
+    def view_attestable(may_attest, user):
         filters = {
             'expensepart__attested_by': None,
         }
         if 'firmatecknare' not in may_attest:
             filters['expensepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Expense.objects.order_by('-id', '-expense_date').exclude(owner__user=user).filter(**filters).distinct()
+        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).distinct()
 
     @staticmethod
     def confirmable():
@@ -324,7 +345,7 @@ class Expense(models.Model):
             order_by('owner__user__username')
 
     @staticmethod
-    def accountable(may_account):
+    def view_accountable(may_account):
         if '*' in may_account:
             return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by(
                 'expense_date')

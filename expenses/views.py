@@ -210,6 +210,7 @@ def get_expense(request, pk):
         'may_account': request.user.profile.may_account(),
         'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
         'attestable': attestable,
+        'may_delete': request.user.profile.may_delete(expense),
     })
 
 

@@ -24,6 +24,7 @@ media_urls = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if se
 
 urlpatterns = [
     url(r'^$', views.index, name='expenses-index'),
+    url(r'^accounts/login/$', login, name='login'),
     url(r'^login/$', login, name='login'),
     url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
