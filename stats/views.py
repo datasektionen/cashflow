@@ -4,7 +4,8 @@ from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse, HttpResponseBadRequest
 
 import json
 
@@ -25,23 +26,14 @@ def index(request):
     highscore_amount = highscore.order_by('-total_amount')[:10]
     highscore_receipts = highscore.order_by('-receipts', '-total_amount')[:10]
 
-    months = models.Expense.objects \
-        .filter(expense_date__year=datetime.now().year) \
-        .annotate(date=TruncMonth('expense_date')) \
-        .values('date') \
-        .annotate(count=Count('id', distinct=True), sum=Sum('expensepart__amount')) \
-        .order_by('date') \
-        .all()
-
-    months = [months.filter(date__month=i) for i in range(1, 13)]
-
-    values = [(0, 0) if m.count() == 0 else (m.get()['count'], float(m.get()['sum'])) for m in months]
-    month_count, month_sum = [list(v) for v in zip(*values)]
+    month_year = datetime.now().year
+    month_count, month_sum = monthly_chart_data(month_year)
 
     return render(request, 'stats/index.html', {
         'year': year,
         'highscore_amount': highscore_amount,
         'highscore_receipts': highscore_receipts,
+        'month_year': month_year,
         'month_count': month_count,
         'month_sum': month_sum,
     })
@@ -82,3 +74,37 @@ def summary(request):
             'amount': sum_amount,
         })
     return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@require_GET
+def monthly(_request, year):
+    try:
+        year = int(year)
+        month_count, month_sum = monthly_chart_data(year)
+        
+        return JsonResponse({
+                'month_count': month_count,
+                'month_sum': month_sum,
+        })
+    except ValueError:
+        return HttpResponseBadRequest
+
+
+def monthly_chart_data(year):
+    if not isinstance(year, int) or year < 2000 or year > 3000:
+        raise ValueError
+
+    months = models.Expense.objects.filter(expense_date__year=year) \
+        .annotate(date=TruncMonth('expense_date')) \
+        .values('date') \
+        .annotate(count=Count('id', distinct=True), sum=Sum('expensepart__amount')) \
+        .order_by('date') \
+        .all()
+
+    months = [months.filter(date__month=i) for i in range(1, 13)]
+
+    values = [
+        (0, 0) if m.count() == 0 else (m.get()['count'], float(m.get()['sum']))
+        for m in months
+    ]
+    return [list(v) for v in zip(*values)]
