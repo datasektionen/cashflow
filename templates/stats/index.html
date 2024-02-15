@@ -145,6 +145,12 @@
       </tr>
     </table>
     <h2>Antal inköp per månad</h2>
+    <div>
+      <input type="number" placeholder="År" step="1" min="2017" max="2099" v-model="monthlyYear" style="max-width: 6em" />
+      <button type="button" @click="updateMonthlyChart" style="background-color: #216C2A">
+        <i class="fa fa-arrow-right" style="color: white"></i>
+      </button>
+    </div>
     <canvas id="monthly" width="300" height="100"></canvas>
   </div>
 </div>
@@ -162,6 +168,7 @@
                  year: new Date().getFullYear(),
              },
              summaries: [],
+             monthlyYear: {{ month_year }},
          }
      },
      created: function () {
@@ -214,6 +221,17 @@
              })
                  .then(res => res.json())
                  .then(res => this.summaries.push(res));
+         },
+         updateMonthlyChart() {
+             fetch(`/stats/monthly/${this.monthlyYear}/`)
+                 .then(res => res.json())
+                 .then(res => {
+                     if (window.monthlyChart) {
+                         window.monthlyChart.data.datasets[0].data = res.month_count;
+                         window.monthlyChart.data.datasets[1].data = res.month_sum;
+                         window.monthlyChart.update();
+                     }
+                 });
          }
      }
  })
@@ -286,6 +304,6 @@ var config = {
 };
 
 var ctx = document.getElementById("monthly").getContext("2d");
-window.myLine = new Chart(ctx, config);
+window.monthlyChart = new Chart(ctx, config);
 </script>
 {% endblock %}
