@@ -36,6 +36,8 @@ def index(request):
         'month_year': month_year,
         'month_count': month_count,
         'month_sum': month_sum,
+        'month_count_total': sum(month_count),
+        'month_sum_total': str(sum(month_sum)), # prevent django from formatting decimal as , in JS
     })
 
 @csrf_exempt
@@ -83,6 +85,7 @@ def monthly(_request, year):
         month_count, month_sum = monthly_chart_data(year)
         
         return JsonResponse({
+                'year': year,
                 'month_count': month_count,
                 'month_sum': month_sum,
         })
