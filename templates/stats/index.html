@@ -151,10 +151,16 @@
         <i class="fa fa-arrow-right" style="color: white"></i>
       </button>
     </div>
+      <div style="margin-top: 1em">
+        {% verbatim %}
+        <strong>Totalt i {{ curMonthlyYear }}:</strong> {{ curMonthlyCount }} utlägg ({{ formatMoney(curMonthlySum) }})
+        {% endverbatim %}
+      </div>
     <canvas id="monthly" width="300" height="100"></canvas>
   </div>
 </div>
 <script type="text/javascript">
+ let krFormatter =  new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK" });
  new Vue({
      el: '#content',
      data: function () {
@@ -169,6 +175,9 @@
              },
              summaries: [],
              monthlyYear: {{ month_year }},
+             curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
+             curMonthlyCount: {{ month_count_total }},
+             curMonthlySum: {{ month_sum_total }},
          }
      },
      created: function () {
@@ -230,8 +239,14 @@
                          window.monthlyChart.data.datasets[0].data = res.month_count;
                          window.monthlyChart.data.datasets[1].data = res.month_sum;
                          window.monthlyChart.update();
+                         this.curMonthlyYear = res.year;
+                         this.curMonthlyCount = res.month_count.reduce((a, b) => a + b);
+                         this.curMonthlySum = res.month_sum.reduce((a, b) => a + b);
                      }
                  });
+         },
+         formatMoney(val) {
+           return krFormatter.format(val);
          }
      }
  })
