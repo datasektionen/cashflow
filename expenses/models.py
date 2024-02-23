@@ -189,7 +189,7 @@ class Profile(models.Model):
         return False
 
     def may_view_invoice(self, invoice):
-        if invoice.owner.user.username == self.user.username or self.may_pay():
+        if invoice.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
             return True
         for committee in invoice.committees():
             if committee['committee_name'].lower() in self.may_account() or committee['committee_name'].lower() in self.may_attest():
