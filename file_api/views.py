@@ -58,7 +58,7 @@ def new_file(request):
     # Upload the file
     files = []
     for uploaded_file in request.FILES.getlist('files'):
-        if uploaded_file.content_type == 'image/heif':
+        if uploaded_file.content_type in ['image/heif', 'image/heic'] :
             img = BytesIO()
             with Image.open(uploaded_file) as im:
                 im.save(img, format="jpeg")
