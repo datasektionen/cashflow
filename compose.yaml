@@ -40,7 +40,7 @@ services:
     ports:
       - 7002:7002
     environment:
-      # Since we're using the real pls, it's nice to use some user with a lot of priveleges. Putting
-      # mine here since I'm d-sys at the time of writing.
-      KTH_ID: mathm
+      # Since we're using the real pls, it's nice to use some user with a lot of privileges. Putting
+      # Melvin here since he's treasurer at the time of writing.
+      KTH_ID: melvinj
 
