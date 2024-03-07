@@ -307,6 +307,10 @@ def api_new_payment(request):
     except ObjectDoesNotExist:
         raise Http404("Ett av utläggen finns inte.")
 
+    for expense in expenses:
+        if expense.reimbursement:
+            raise HttpResponseBadRequest("Något utlägg är redan utbetalat")
+
     expense_owner = expenses[0].owner
     for expense in expenses:
         if expense.owner != expense_owner:
