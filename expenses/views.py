@@ -309,7 +309,7 @@ def api_new_payment(request):
 
     for expense in expenses:
         if expense.reimbursement:
-            raise HttpResponseBadRequest("Något utlägg är redan utbetalat")
+            return HttpResponseBadRequest("Något utlägg är redan utbetalat")
 
     expense_owner = expenses[0].owner
     for expense in expenses:
