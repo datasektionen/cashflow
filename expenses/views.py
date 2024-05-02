@@ -44,7 +44,7 @@ def new_expense(request):
         expense = models.Expense(
             owner=request.user.profile,
             expense_date=request.POST['expense-date'],
-            description=request.POST['expense-description'],
+            description=request.POST['expense-description'].strip(),
             confirmed_by=None,
             is_digital='is-digital' in request.POST,
         )
