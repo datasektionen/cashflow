@@ -8,6 +8,7 @@ import requests
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.conf import settings
 
 from expenses import models
 
@@ -18,7 +19,7 @@ def new_expense(request):
     Add a new expense.
     """
     if request.method == 'GET':
-        return render(request, 'expenses/new.html')
+        return render(request, 'expenses/new.html', {'budget_url': settings.BUDGET_URL})
     elif request.method == 'POST':
         if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
             messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
@@ -64,7 +65,7 @@ def new_expense(request):
 
         # Add the expenseparts
         for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-            response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
+            response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
             budget_line = response.json()
             models.ExpensePart(
                 expense=expense,
@@ -119,7 +120,8 @@ def edit_expense(request, pk):
     if request.method == 'GET':
         return render(request, 'expenses/edit.html', {
             "expense": expense,
-            "expenseparts": expense.expensepart_set.all()
+            "expenseparts": expense.expensepart_set.all(),
+            "budget_url": settings.BUDGET_URL,
         })
 
     expense.description = request.POST['description']
@@ -136,7 +138,7 @@ def edit_expense(request, pk):
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
             continue
 
-        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
+        response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
         budget_line = response.json()
 
         expense_part = models.ExpensePart(

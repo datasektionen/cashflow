@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse, HttpResponseBadRequest
+from django.conf import settings
 
 import json
 
@@ -38,6 +39,7 @@ def index(request):
         'month_sum': month_sum,
         'month_count_total': sum(month_count),
         'month_sum_total': str(sum(month_sum)), # prevent django from formatting decimal as , in JS
+        'budget_url': settings.BUDGET_URL,
     })
 
 @csrf_exempt

@@ -16,7 +16,7 @@ from invoices.models import *
 
 @require_http_methods(["GET", "POST"])
 def new_invoice(request):
-    if request.method == 'GET': return render(request, 'invoices/new.html')
+    if request.method == 'GET': return render(request, 'invoices/new.html', {'budget_url': settings.BUDGET_URL})
     # Validate
     if len((request.FILES.getlist('files'))) < 1:
         messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
@@ -63,7 +63,7 @@ def new_invoice(request):
 
     # Add the expenseparts
     for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-        response = requests.get("https://budget.datasektionen.se/api/budget-lines/{}".format(budgetLineId))
+        response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
         budgetLine = response.json()
         InvoicePart(
             invoice=invoice,
@@ -112,7 +112,8 @@ def get_invoice(request, pk):
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
         'attestable': attestable,
-        'may_account': request.user.profile.may_account()
+        'may_account': request.user.profile.may_account(),
+        'budget_url': settings.BUDGET_URL,
     })
 
 

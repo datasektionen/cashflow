@@ -50,7 +50,7 @@
                     <span class="value">{{ expense_part.amount|intcomma }} kr</span>
                 </td>
                 <td>
-                    <a class="value" href="https://budget.datasektionen.se/committees/{{ expense_part.committee_id }}">
+                    <a class="value" href="{{ budget_url }}/committees/{{ expense_part.committee_id }}">
                         {{ expense_part.committee_name }}
                     </a>
                 </td>

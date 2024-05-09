@@ -200,7 +200,7 @@
             }
         },
         created: function () {
-            fetch('https://budget.datasektionen.se/api/committees?verbose')
+            fetch('{{ budget_url }}/api/committees?verbose')
                 .then(res => res.json())
                 .then(res => {
                     this.committees = res.sort((a, b) => a.name.localeCompare(b.name));

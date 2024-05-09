@@ -59,7 +59,7 @@
                     <span class="value">{{ invoice_part.amount|intcomma }} kr</span>
                 </td>
                 <td>
-                    <a class="value" href="https://budget.datasektionen.se/committees/{{ invoice_part.committee_id }}">
+                    <a class="value" href="{{ budget_url }}/committees/{{ invoice_part.committee_id }}">
                         {{ invoice_part.committee_name }}
                     </a>
                 </td>
