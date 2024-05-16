@@ -394,12 +394,9 @@ class ExpensePart(models.Model):
     Defines an expense part, which is a specification of a part of an expense.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    budget_line_id = models.IntegerField(default=0)
-    budget_line_name = models.TextField(blank=True)
-    cost_centre_name = models.TextField(blank=True)
-    cost_centre_id = models.IntegerField(default=0)
-    committee_name = models.TextField(blank=True)
-    committee_id = models.IntegerField(default=0)
+    cost_centre = models.TextField(blank=True)
+    secondary_cost_centre = models.TextField(blank=True)
+    budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
