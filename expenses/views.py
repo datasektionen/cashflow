@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.conf import settings
+from django.db import transaction
 
 from expenses import models
 
@@ -41,42 +42,43 @@ def new_expense(request):
             messages.error(request, 'Du måste lägga till minst en del på kvittot')
             return HttpResponseRedirect(reverse('expenses-new'))
 
-        # Create the expense
-        expense = models.Expense(
-            owner=request.user.profile,
-            expense_date=request.POST['expense-date'],
-            description=request.POST['expense-description'].strip(),
-            confirmed_by=None,
-            is_digital='is-digital' in request.POST,
-        )
-        expense.save()
+        with transaction.atomic():
+            # Create the expense
+            expense = models.Expense(
+                owner=request.user.profile,
+                expense_date=request.POST['expense-date'],
+                description=request.POST['expense-description'].strip(),
+                confirmed_by=None,
+                is_digital='is-digital' in request.POST,
+            )
+            expense.save()
 
-        # Add the files submitted
-        for posted_file in request.FILES.getlist('files'):
-            file = models.File(expense=expense, file=posted_file)
-            file.save()
+            # Add the files submitted
+            for posted_file in request.FILES.getlist('files'):
+                file = models.File(expense=expense, file=posted_file)
+                file.save()
 
-        # Add the files submitted to the javascript upload
-        for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
-            file = models.File.objects.get(pk=int(pre_uploaded_file_id))
-            if file.expense is None:
-                file.expense = expense
-            file.save()
+            # Add the files submitted to the javascript upload
+            for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
+                file = models.File.objects.get(pk=int(pre_uploaded_file_id))
+                if file.expense is None:
+                    file.expense = expense
+                file.save()
 
-        # Add the expenseparts
-        for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-            response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
-            budget_line = response.json()
-            models.ExpensePart(
-                expense=expense,
-                budget_line_id=budget_line['id'],
-                budget_line_name=budget_line['name'],
-                cost_centre_name=budget_line['cost_centre']['name'],
-                cost_centre_id=budget_line['cost_centre']['id'],
-                committee_name=budget_line['cost_centre']['committee']['name'],
-                committee_id=budget_line['cost_centre']['committee']['id'],
-                amount=request.POST.getlist('amount[]')[idx]
-            ).save()
+            # Add the expenseparts
+            for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
+                response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
+                budget_line = response.json()
+                models.ExpensePart(
+                    expense=expense,
+                    budget_line_id=budget_line['id'],
+                    budget_line_name=budget_line['name'],
+                    cost_centre_name=budget_line['cost_centre']['name'],
+                    cost_centre_id=budget_line['cost_centre']['id'],
+                    committee_name=budget_line['cost_centre']['committee']['name'],
+                    committee_id=budget_line['cost_centre']['committee']['id'],
+                    amount=request.POST.getlist('amount[]')[idx]
+                ).save()
 
         return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
 
