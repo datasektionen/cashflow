@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^(?P<pk>\d+)/edit/$', views.edit_expense, name='expenses-edit'),
     url(r'^(?P<pk>\d+)/delete/$', views.delete_expense, name='expenses-delete'),
     url(r'^(?P<expense_pk>\d+)/comment/$', views.new_comment, name='expenses-comment'),
-    
+
     url(r'^api/payment/new/$', views.api_new_payment, name='expenses-api-payment-new'),
     url(r'^payment/new/$', views.new_payment, name='expenses-payment-new'),
     url(r'^payment/(?P<pk>\d+)/$', views.get_payment, name='expenses-payment'),
