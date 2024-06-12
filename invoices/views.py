@@ -19,28 +19,33 @@ def new_invoice(request):
     if request.method == 'GET':
         return render(request, 'invoices/new.html', {'budget_url': settings.BUDGET_URL})
 
-    
-    if len((request.FILES.getlist('files'))) < 1:
-        messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
-        return HttpResponseRedirect(reverse('invoices-new'))
-
     invdate = request.POST['invoice-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-date']) else None
     duedate = request.POST['invoice-due-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-due-date']) else None
 
+    # Beneficial to not return per check, because then several errors can be reported at once
+    valid = True
+    
+    if len((request.FILES.getlist('files'))) < 1:
+        messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
+        valid = False
+
     if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
-        return HttpResponseRedirect(reverse('invoices-new'))
+        valid = False
 
     if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
         messages.error(request, 'Sluta fippla')
-        return HttpResponseRedirect(reverse('invoices-new'))
+        valid = False
 
     if len(request.POST.getlist('budgetLine[]')) == 0:
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
-        return HttpResponseRedirect(reverse('invoices-new'))
+        valid = False
 
     if invdate > duedate:
         messages.error(request, 'Fakturadatumet är efter förfallodatumet')
+        valid = False
+
+    if not valid:
         return HttpResponseRedirect(reverse('invoices-new'))
 
 
@@ -89,7 +94,9 @@ Shows a confirmation of the new invoice and tells user to put invoice into binde
 @require_GET
 @login_required
 def invoice_new_confirmation(request, pk):
-    try: invoice = Invoice.objects.get(pk=int(pk))
+    try:
+        invoice = Invoice.objects.get(pk=int(pk))
+
     except ObjectDoesNotExist:
         messages.error(request, 'Ett fel uppstod och kvittot skapades inte.')
         return HttpResponseRedirect(reverse('invoices-new'))
