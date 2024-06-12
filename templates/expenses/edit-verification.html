@@ -19,9 +19,9 @@
             </thead>
         {% for expense_part in expense_parts %}
             <tr>
-                <td>{{ expense_part.committee_name }}</td>
-                <td>{{ expense_part.cost_centre_name }}</td>
-                <td>{{ expense_part.budget_line_name }}</td>
+                <td>{{ expense_part.cost_centre }}</td>
+                <td>{{ expense_part.secondary_cost_centre }}</td>
+                <td>{{ expense_part.budget_line }}</td>
                 <td>{{ expense_part.amount }}</td>
             </tr>
         {% endfor %}

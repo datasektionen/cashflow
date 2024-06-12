@@ -193,7 +193,7 @@
 
                     <div class="form-entry">
                         <span class="description">
-                            <label for="expense_part-cost_centre">
+                            <label for="expense_part-secondary_secondary_secondary_secondary_cost_centre">
                                 Sekundärt resultatställe:
                             </label>
                         </span>
@@ -346,8 +346,8 @@
             },
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
-                    costCentreId: 0,
+                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
+                    secondaryCostCentreId: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentreId,
                     budgetLineId: 0,
                     amount: 0
                 })

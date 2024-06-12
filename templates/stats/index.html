@@ -59,8 +59,16 @@
 
     <div class="divide"></div>
 
+
     <h2>Vad har spenderats på min budgetpost?</h2>
-    <div style="padding-top: 15px;">OBS. Räknar ej med fakturor</div>
+    <table class="card">
+      <p>
+        Hoppsan, den här funktionaliteten försvann tydligen!
+        <br>
+        Du får gärna omimplementera den, se <a href="https://github.com/datasektionen/cashflow/issues/194">detta issue på github</a>!
+      </p>
+    </table>
+    <!--div style="padding-top: 15px;">OBS. Räknar ej med fakturor</div>
     <table class="card">
       <thead>
         <tr>
@@ -113,7 +121,7 @@
             <div class="select" v-if="selectedCommittee.committeeId > 0 && selectedCommittee.costCentreId > 0">
               <select name="budgetLine[]" v-model="selectedCommittee.budgetLineId" required>
                 <option value="0">- Välj -</option>
-                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].secondary_cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].secondary_cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
               </select>
             </div>
             <div class="select disabled" v-else>
@@ -143,7 +151,7 @@
         <td v-text="summary.year"></td>
         <td v-text="summary.amount"></td>
       </tr>
-    </table>
+    </table-->
     <h2>Antal inköp per månad</h2>
     <div>
       <input type="number" placeholder="År" step="1" min="2017" max="2099" v-model="monthlyYear" style="max-width: 6em" />
@@ -195,11 +203,11 @@
              else return committee.type;
          },
          activeCostCentres: function () {
-             let cost_centres = this.committees
+             let secondary_cost_centres = this.committees
                                     .find(x => x.id == this.selectedCommittee.committeeId)
-                                    .cost_centres;
-             cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
-             return cost_centres;
+                                    .secondary_cost_centres;
+             secondary_cost_centres = secondary_cost_centres.filter(cc => cc.budget_lines.length != 0);
+             return secondary_cost_centres;
          },
          activeCommittees: function() {
              return this.committees.filter(c => !c.inactive);
@@ -211,7 +219,7 @@
          addSummary() {
              let requestBody = {
                  committee: this.committees.find(c => c.id == this.selectedCommittee.committeeId).name,
-                 cost_centre: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId).name,
+                 secondary_cost_centre: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId).name,
                  budget_line: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId)
                                   .budget_lines
                                   .find(bl => bl.id == this.selectedCommittee.budgetLineId).name,

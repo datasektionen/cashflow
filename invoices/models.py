@@ -54,11 +54,10 @@ class Invoice(models.Model):
             total += part.amount
         return total
 
-    # Returns the committees belonging to the invoice as a list [{ committee_name: 'Name' }, ...]
-    def committees(self):
-        return self.invoicepart_set.order_by('committee_name').values('committee_name').distinct()
+    # Returns the cost centres belonging to the invoice as a list [{ cost_centre: 'Name' }, ...]
+    def cost_centres(self):
+        return self.invoicepart_set.order_by('cost_centre').values('cost_centre').distinct()
 
-    # Returns the committees belonging to the invoice as a list [{ committee_name: 'Name' }, ...]
     def is_attested(self):
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
 
@@ -83,7 +82,7 @@ class Invoice(models.Model):
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
-        exp['committees'] = [committee['committee_name'] for committee in self.committees()]
+        exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
         return exp
 
     @staticmethod
@@ -92,7 +91,7 @@ class Invoice(models.Model):
             'invoicepart__attested_by': None,
         }
         if 'firmatecknare' not in may_attest:
-            filters['invoicepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
+            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
         return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
 
     # TODO
@@ -110,7 +109,7 @@ class Invoice(models.Model):
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
         return Invoice.objects.exclude(payed_at__isnull=True).filter(
             verification='',
-            invoicepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+            invoicepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct()
 
 """

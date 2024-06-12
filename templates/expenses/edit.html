@@ -275,7 +275,6 @@
                             console.log(part.secondaryCostCentre, this.budgetLines.get(part.secondaryCostCentre));
                         }
                     }
-                    console.log(this.expense_parts)
                 });
             });
         },
@@ -403,8 +402,8 @@
             },
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
-                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
+                    costCentre: this.expense_parts[this.expense_parts.length - 1].costCentre,
+                    secondaryCostCentre: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentre,
                     budgetLineId: 0,
                     amount: 0
                 })
