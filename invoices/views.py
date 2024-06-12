@@ -16,8 +16,10 @@ from invoices.models import *
 
 @require_http_methods(["GET", "POST"])
 def new_invoice(request):
-    if request.method == 'GET': return render(request, 'invoices/new.html', {'budget_url': settings.BUDGET_URL})
-    # Validate
+    if request.method == 'GET':
+        return render(request, 'invoices/new.html', {'budget_url': settings.BUDGET_URL})
+
+    
     if len((request.FILES.getlist('files'))) < 1:
         messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
         return HttpResponseRedirect(reverse('invoices-new'))
@@ -29,7 +31,6 @@ def new_invoice(request):
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         return HttpResponseRedirect(reverse('invoices-new'))
 
-
     if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
         messages.error(request, 'Sluta fippla')
         return HttpResponseRedirect(reverse('invoices-new'))
@@ -38,7 +39,11 @@ def new_invoice(request):
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
         return HttpResponseRedirect(reverse('invoices-new'))
 
-    # Create the invoice
+    if invdate > duedate:
+        messages.error(request, 'Fakturadatumet är efter förfallodatumet')
+        return HttpResponseRedirect(reverse('invoices-new'))
+
+
     invoice = Invoice(
         owner=request.user.profile,
         invoice_date=invdate,
