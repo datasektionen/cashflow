@@ -15,23 +15,23 @@
         </div>
     </div>
     <div class="select" style="margin-left: 10px;float:right">
-        <select v-model="committee">
+        <select v-model="cost_centre">
             <option :value="false">Filtrera på nämnd</option>
-            <option v-for="committee in committees" v-text="committee + ' (' + expenses.filter(x => x.committees.indexOf(committee) > -1).length + ' + ' + invoices.filter(x => x.committees.indexOf(committee) > -1).length + ')'" :value="committee"></option>
+            <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
         </select>
     </div>
     <div class="clearfix"></div>
 
     <h2>Utlägg</h2>
     <table v-if="expenses.length > 0" style="margin-top: 20px;">
-        <tbody v-for="expense, idx in expenses" v-if="committee == false || expenses.filter(e => e.owner === expense.owner && e.committees.indexOf(committee) > -1).length > 0">
+        <tbody v-for="expense, idx in expenses" v-if="cost_centre == false || expenses.filter(e => e.owner === expense.owner && e.cost_centres.indexOf(cost_centre) > -1).length > 0">
             <tr class="title-row" v-if="idx == 0 || expenses[idx - 1].owner_username != expense.owner_username">
                 <th colspan="3" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></th>
                 <th><button class="btn theme-color pull-right" v-on:click="e => save(expense.owner, e)">Betala ut valda</button></th>
             </tr>
-            <tr v-if="committee == false || expense.committees.indexOf(committee) > -1">
+            <tr v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
                 <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a></td>
-                <td v-text="expense.committees.join(', ')"></td>
+                <td v-text="expense.cost_centres.join(', ')"></td>
                 <td v-text="expense.amount + ' kr'"></td>
                 <td>
                     <div style="float:right" class="checkbox">
@@ -42,7 +42,7 @@
             </tr>
             <tr class="footer-row" v-if="idx == expenses.length - 1 || expenses[idx + 1].owner_username != expense.owner_username">
                 <td colspan="2">Summa</td>
-                <td v-text="expenses.filter(e => e.owner == expense.owner && (committee == false || e.committees.indexOf(committee) > -1)).map(x => x.amount).reduce((a,b) => (a+b),0).toFixed(2) + ' kr'"></td>
+                <td v-text="expenses.filter(e => e.owner == expense.owner && (cost_centre == false || e.cost_centres.indexOf(cost_centre) > -1)).map(x => x.amount).reduce((a,b) => (a+b),0).toFixed(2) + ' kr'"></td>
                 <td>
                     <div style="float:right" v-tooltip="{content:'Markera alla'}" class="checkbox">
                         <input :id="expense.owner" v-on:change="e => trim(expense.owner, e)" class="select-expense" type="checkbox" value="{{ expense.id }}" name="expense">
@@ -68,10 +68,10 @@
                 <th>Belopp</th>
             </tr>
         </thead>
-        <tbody v-for="invoice, idx in invoices" v-if="committee == false || invoices.filter(e => e.owner === invoice.owner && e.committees.indexOf(committee) > -1).length > 0">
-            <tr v-if="committee == false || invoice.committees.indexOf(committee) > -1">
+        <tbody v-for="invoice, idx in invoices" v-if="cost_centre == false || invoices.filter(e => e.owner === invoice.owner && e.cost_centres.indexOf(cost_centre) > -1).length > 0">
+            <tr v-if="cost_centre == false || invoice.cost_centres.indexOf(cost_centre) > -1">
                 <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
-                <td v-text="invoice.committees.join(', ')"></td>
+                <td v-text="invoice.cost_centres.join(', ')"></td>
                 <td v-text="invoice.amount + ' kr'"></td>
             </tr>
         </tbody>
@@ -136,8 +136,8 @@
         el: '#app', 
         data: function () {
             return {
-                committee: false,
-                committees: [],
+                cost_centre: false,
+                cost_centres: [],
                 expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
                 invoices: {% autoescape off %}{{ invoices }}{% endautoescape %},
                 accounts: {% autoescape off %}{{ accounts }}{% endautoescape %},
@@ -147,7 +147,7 @@
         },
         methods: {
             save: function (user, e) {
-                let exps = this.expenses.filter(x => x.checked && x.owner == user && (this.committee == false || x.committees.indexOf(this.committee) > -1))
+                let exps = this.expenses.filter(x => x.checked && x.owner == user && (this.cost_centre == false || x.cost_centres.indexOf(this.cost_centre) > -1))
                 if (exps.length < 1) {
                     console.log('Not enough expenses')
                     return
@@ -181,7 +181,7 @@
             },
             trim(id, event) {
                 this.expenses = this.expenses.map(e => {
-                    if (e.owner == id && (this.committee == false || e.committees.indexOf(this.committee) > -1)) {
+                    if (e.owner == id && (this.cost_centre == false || e.cost_centres.indexOf(this.cost_centre) > -1)) {
                         e.checked = event.target.checked
                     }
                     return e
@@ -193,11 +193,11 @@
             },
         },
         created: function() {
-            this.committees = Array.from(new Set([
-                ...this.expenses.flatMap(x => x.committees),
-                ...this.invoices.flatMap(x => x.committees),
+            this.cost_centres = Array.from(new Set([
+                ...this.expenses.flatMap(x => x.cost_centres),
+                ...this.invoices.flatMap(x => x.cost_centres),
             ]))
-            this.committees.sort((a, b) => a.localeCompare(b, 'sv-SE'))
+            this.cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))
             document.getElementById('cover').style.display = 'flex'
 
             document.addEventListener('keyup', (e) => {

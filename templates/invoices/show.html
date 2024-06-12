@@ -59,12 +59,10 @@
                     <span class="value">{{ invoice_part.amount|intcomma }} kr</span>
                 </td>
                 <td>
-                    <a class="value" href="{{ budget_url }}/committees/{{ invoice_part.committee_id }}">
-                        {{ invoice_part.committee_name }}
-                    </a>
+                    {{ invoice_part.secondary_cost_centre }}
                 </td>
                 <td>
-                    <span class="value">{{ invoice_part.cost_centre_name }}</span>
+                    <span class="value">{{ invoice_part.secondary_secondary_cost_centre }}</span>
                 </td>
                 <td>
                     <span class="value">{{ invoice_part.budget_line_name }}</span>

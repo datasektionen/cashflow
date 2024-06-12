@@ -20,65 +20,61 @@ def new_expense(request):
     """
     if request.method == 'GET':
         return render(request, 'expenses/new.html', {'budget_url': settings.BUDGET_URL})
-    elif request.method == 'POST':
-        if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
-            messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
-            return HttpResponseRedirect(reverse('expenses-new'))
 
-        if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
-            messages.error(request, 'Du har angivit ett datum i framtiden')
-            return HttpResponseRedirect(reverse('expenses-new'))
+    if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
+        messages.error(request, 'Du måste ladda upp minst en fil som verifikat')
+        return HttpResponseRedirect(reverse('expenses-new'))
 
-        if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
-            messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
-            return HttpResponseRedirect(reverse('expenses-new'))
+    if datetime.now() < datetime.strptime(request.POST['expense-date'], '%Y-%m-%d'):
+        messages.error(request, 'Du har angivit ett datum i framtiden')
+        return HttpResponseRedirect(reverse('expenses-new'))
 
-        if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
-            messages.error(request, 'Sluta fippla')
-            return HttpResponseRedirect(reverse('expenses-new'))
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
+        messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
+        return HttpResponseRedirect(reverse('expenses-new'))
 
-        if len(request.POST.getlist('budgetLine[]')) == 0:
-            messages.error(request, 'Du måste lägga till minst en del på kvittot')
-            return HttpResponseRedirect(reverse('expenses-new'))
+    if len(request.POST.getlist('amounts[]')) == 0:
+        messages.error(request, 'Du måste lägga till minst en del på kvittot')
+        return HttpResponseRedirect(reverse('expenses-new'))
 
-        # Create the expense
-        expense = models.Expense(
-            owner=request.user.profile,
-            expense_date=request.POST['expense-date'],
-            description=request.POST['expense-description'].strip(),
-            confirmed_by=None,
-            is_digital='is-digital' in request.POST,
-        )
-        expense.save()
+    # Create the expense
+    expense = models.Expense(
+        owner=request.user.profile,
+        expense_date=request.POST['expense-date'],
+        description=request.POST['expense-description'].strip(),
+        confirmed_by=None,
+        is_digital='is-digital' in request.POST,
+    )
+    expense.save()
 
-        # Add the files submitted
-        for posted_file in request.FILES.getlist('files'):
-            file = models.File(expense=expense, file=posted_file)
-            file.save()
+    # Add the files submitted
+    for posted_file in request.FILES.getlist('files'):
+        file = models.File(expense=expense, file=posted_file)
+        file.save()
 
-        # Add the files submitted to the javascript upload
-        for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
-            file = models.File.objects.get(pk=int(pre_uploaded_file_id))
-            if file.expense is None:
-                file.expense = expense
-            file.save()
+    # Add the files submitted to the javascript upload
+    for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
+        file = models.File.objects.get(pk=int(pre_uploaded_file_id))
+        if file.expense is None:
+            file.expense = expense
+        file.save()
 
-        # Add the expenseparts
-        for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-            response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
-            budget_line = response.json()
-            models.ExpensePart(
-                expense=expense,
-                budget_line_id=budget_line['id'],
-                budget_line_name=budget_line['name'],
-                cost_centre_name=budget_line['cost_centre']['name'],
-                cost_centre_id=budget_line['cost_centre']['id'],
-                committee_name=budget_line['cost_centre']['committee']['name'],
-                committee_id=budget_line['cost_centre']['committee']['id'],
-                amount=request.POST.getlist('amount[]')[idx]
-            ).save()
+    # Add the expense parts
+    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+        request.POST.getlist("costCentres[]"),
+        request.POST.getlist("secondaryCostCentres[]"),
+        request.POST.getlist("budgetLines[]"),
+        request.POST.getlist("amounts[]"),
+    ):
+        models.ExpensePart(
+            expense=expense,
+            cost_centre=cost_centre.split(",")[1],
+            secondary_cost_centre=secondary_cost_centre.split(",")[1],
+            budget_line=budget_line.split(",")[1],
+            amount=amount,
+        ).save()
 
-        return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
+    return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
 
 
 @require_GET
@@ -130,26 +126,22 @@ def edit_expense(request, pk):
 
     new_ids = []
 
-    for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-
-        amount = request.POST.getlist('amount[]')[idx]
-
+    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+        request.POST.getlist("costCentres[]"),
+        request.POST.getlist("secondaryCostCentres[]"),
+        request.POST.getlist("budgetLines[]"),
+        request.POST.getlist("amounts[]"),
+    ):
         if float(amount) < 1:
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
             continue
 
-        response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
-        budget_line = response.json()
-
         expense_part = models.ExpensePart(
             expense=expense,
-            budget_line_id=budget_line['id'],
-            budget_line_name=budget_line['name'],
-            cost_centre_name=budget_line['cost_centre']['name'],
-            cost_centre_id=budget_line['cost_centre']['id'],
-            committee_name=budget_line['cost_centre']['committee']['name'],
-            committee_id=budget_line['cost_centre']['committee']['id'],
-            amount=amount
+            cost_centre=cost_centre,
+            secondary_cost_centre=secondary_cost_centre,
+            budget_line=budget_line,
+            amount=amount,
         )
         expense_part.save()
         new_ids.append(expense_part.id)

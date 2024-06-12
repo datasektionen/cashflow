@@ -54,15 +54,15 @@ def summary(request):
         if "year" in body_data:
              expense_parts = models.ExpensePart.objects.filter(
                  budget_line_name=body_data['budget_line'],
-                 committee_name=body_data['committee'],
-                 cost_centre_name=body_data['cost_centre'],
+                 cost_centre=body_data['cost_centre'],
+                 secondary_cost_centre=body_data['cost_centre'],
                  expense__expense_date__year=body_data['year'],
             ).all()
         else:
             expense_parts = models.ExpensePart.objects.filter(
                 budget_line_name=body_data['budget_line'],
-                committee_name=body_data['committee'],
-                cost_centre_name=body_data['cost_centre'],
+                cost_centre=body_data['cost_centre'],
+                secondary_cost_centre=body_data['cost_centre'],
             ).all()
 
         sum_amount = 0
@@ -71,7 +71,7 @@ def summary(request):
             sum_amount += expense_part.amount
 
         return JsonResponse({
-            'name': body_data['committee'],
+            'name': body_data['cost_centre'],
             'costCentre': body_data['cost_centre'],
             'budgetLine': body_data['budget_line'],
             'year': body_data.get("year"),

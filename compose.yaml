@@ -11,6 +11,7 @@ services:
       LOGIN_API_URL: http://login:7002
       LOGIN_FRONTEND_URL: http://localhost:7002
       PYTHONUNBUFFERED: 1
+      BUDGET_URL: https://budget.betasektionen.se
     init: true
     ports:
       - 8000:8000

@@ -50,15 +50,13 @@
                     <span class="value">{{ expense_part.amount|intcomma }} kr</span>
                 </td>
                 <td>
-                    <a class="value" href="{{ budget_url }}/committees/{{ expense_part.committee_id }}">
-                        {{ expense_part.committee_name }}
-                    </a>
+                    {{ expense_part.secondary_cost_centre }}
                 </td>
                 <td>
-                    <span class="value">{{ expense_part.cost_centre_name }}</span>
+                    <span class="value">{{ expense_part.secondary_secondary_cost_centre }}</span>
                 </td>
                 <td>
-                    <span class="value">{{ expense_part.budget_line_name }}</span>
+                    <span class="value">{{ expense_part.budget_line }}</span>
                 </td>
                 <td>
                     {% if expense_part.attested_by %}
