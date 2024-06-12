@@ -87,6 +87,8 @@
                         <div class="select">
                             <select name="costCentres[]" v-model="expense_part.costCentre" required v-on:change="updateSecondaryCostCentres()">
                                 <option value="0">- Välj -</option>
+                                <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
+                                        :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 <optgroup label="Nämnder">
                                     <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
@@ -96,7 +98,7 @@
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
                                 <optgroup label="Övrigt">
-                                    <option v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.type != 'project')"
+                                    <option v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'project' && c.CostCentreType != 'old')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
                             </select>
@@ -130,7 +132,7 @@
                                 <option
                                     v-for="budgetLine in budgetLines.get(expense_part.secondaryCostCentre)"
                                     v-text="budgetLine.BudgetLineName"
-                                    v-bind:value="budgetLine.BudgetLineID"
+                                    v-bind:value="budgetLine.BudgetLineID+','+budgetLine.BudgetLineName"
                                 ></option>
                             </select>
                         </div>
@@ -179,9 +181,6 @@
                 expense_parts: [{% for expense_part in expenseparts %}
                     {
                         expense: '',
-                        origCostCentre: ',{{ expense_part.cost_centre }}',
-                        origSecondaryCostCentre: ',{{ expense_part.secondary_cost_centre }}',
-                        origBudgetLine: ',{{ expense_part.budget_line }}',
                         costCentre: ',{{ expense_part.cost_centre }}',
                         secondaryCostCentre: ',{{ expense_part.secondary_cost_centre }}',
                         budgetLine: ',{{ expense_part.budget_line }}',
@@ -203,49 +202,127 @@
                 ]
             }
         },
-        created: function () {
-            fetch('{{ budget_url }}/api/CostCentres')
-                .then(res => res.json())
-                .then(res => {
-                    this.costCentres = res.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
-                })
+        created: async function () {
+            let res = await fetch('{{ budget_url }}/api/CostCentres');
+            let body = await res.json();
+            this.costCentres = body.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
+            let costCenreNames = [{% for expense_part in expenseparts %} '{{ expense_part.cost_centre }}', {% endfor %}];
+            let secondaryCostCenreNames = [{% for expense_part in expenseparts %} '{{ expense_part.secondary_cost_centre }}', {% endfor %}];
+            let budgetLineNames = [{% for expense_part in expenseparts %} '{{ expense_part.budget_line }}', {% endfor %}];
+            let costCentreIdByName = new Map();
+            for (let name of costCenreNames) {
+                for (let constCenre of body) {
+                    if (constCenre.CostCentreName == name) {
+                        costCentreIdByName.set(name, constCenre.CostCentreID);
+                    }
+                }
+            }
+            for (let part of this.expense_parts) {
+                let [id, name] = part.costCentre.split(/,(.*)/);
+                if (costCentreIdByName.has(name)) {
+                    part.costCentre = costCentreIdByName.get(name)+","+name;
+                } else {
+                    this.costCentres.unshift({ CostCentreID: "", CostCentreName: name, CostCentreType: "old" });
+                }
+            }
+            let secondaryCostCentreByName = new Map();
+            let costCentre = new Map();
+            for (let id of costCentreIdByName.values()) {
+                if (id == "") continue;
+                let res = await fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + id);
+                let body = await res.json();
+                for (let name of secondaryCostCenreNames) {
+                    for (let secondaryCostCentre of body) {
+                        if (secondaryCostCentre.SecondaryCostCentreName == name) {
+                            secondaryCostCentreByName.set(name, secondaryCostCentre);
+                        }
+                    }
+                }
+            }
+            this.updateSecondaryCostCentres().then(async () => {
+                for (let part of this.expense_parts) {
+                    let [id, name] = part.secondaryCostCentre.split(/,(.*)/);
+                    if (secondaryCostCentreByName.has(name)) {
+                        part.secondaryCostCentre = secondaryCostCentreByName.get(name).SecondaryCostCentreID+","+name;
+                    } else {
+                        if (!this.secondaryCostCentres.has(part.costCentre))
+                            this.secondaryCostCentres.set(part.costCentre, []);
+                        this.secondaryCostCentres.get(part.costCentre).unshift({ SecondaryCostCentreID: "", SecondaryCostCentreName: name });
+                    }
+                }
+                let budgetLineIdByName = new Map();
+                for (let scc of secondaryCostCentreByName.values()) {
+                    let res = await fetch('{{ budget_url }}/api/BudgetLines?id=' + scc.SecondaryCostCentreID);
+                    let body = await res.json();
+                    for (let name of budgetLineNames) {
+                        for (let budgetLine of body) {
+                            if (budgetLine.BudgetLineName == name) {
+                                budgetLineIdByName.set(name, budgetLine.BudgetLineID);
+                            }
+                        }
+                    }
+                }
+                this.updateBudgetLines().then(() => {
+                    for (let part of this.expense_parts) {
+                        let [id, name] = part.budgetLine.split(/,(.*)/);
+                        if (budgetLineIdByName.has(name)) {
+                            part.budgetLine = budgetLineIdByName.get(name)+","+name;
+                        } else {
+                            if (!this.budgetLines.has(part.secondaryCostCentre))
+                                this.budgetLines.set(part.secondaryCostCentre, []);
+                            this.budgetLines.get(part.secondaryCostCentre).unshift({ BudgetLineID: "", BudgetLineName: name });
+                            this.budgetLines = new Map(this.budgetLines);
+                            console.log(part.secondaryCostCentre, this.budgetLines.get(part.secondaryCostCentre));
+                        }
+                    }
+                    console.log(this.expense_parts)
+                });
+            });
         },
         computed: {
             isWaiting: function() {
-                return this.dragStatus === 0
+                return this.dragStatus === 0;
             },
             isDragging: function() {
-                return this.dragStatus === 1
+                return this.dragStatus === 1;
             }
         },
         methods: {
             updateSecondaryCostCentres: function () {
+                let promises = [];
                 for (const part of this.expense_parts) {
                     if (part.costCentre == '') continue;
                     if (!this.secondaryCostCentres.has(part.costCentre)) {
-                        fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + part.costCentre.split(',')[0])
+                        let id = part.costCentre.split(',')[0];
+                        if (id == "") continue;
+                        promises.push(fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + id)
                             .then(res => res.json())
                             .then(res => {
                                 this.secondaryCostCentres.set(part.costCentre, res);
                                 // Make vue understand that secondaryCostCentres has changed
                                 this.secondaryCostCentres = new Map(this.secondaryCostCentres);
-                            })
+                            }));
                     }
                 }
+                return Promise.all(promises);
             },
             updateBudgetLines: function () {
+                let promises = [];
                 for (const part of this.expense_parts) {
                     if (part.secondaryCostCentre == '') continue;
                     if (!this.budgetLines.has(part.secondaryCostCentre)) {
-                        fetch('{{ budget_url }}/api/BudgetLines?id=' + part.secondaryCostCentre.split(',')[0])
+                        let id = part.secondaryCostCentre.split(',')[0];
+                        if (id == "") continue;
+                        promises.push(fetch('{{ budget_url }}/api/BudgetLines?id=' + id)
                             .then(res => res.json())
                             .then(res => {
                                 this.budgetLines.set(part.secondaryCostCentre, res);
                                 // Make vue understand that budgetLines has changed
                                 this.budgetLines = new Map(this.budgetLines);
-                            })
+                            }));
                     }
                 }
+                return Promise.all(promises);
             },
             deleteFile: function(file) {
                 fetch('/api/files/' + file.id + '/delete/', {
@@ -270,7 +347,7 @@
                     credentials: 'same-origin'
                 })
                 .then(x => x.json())
-                .catch(x => console.log("Error", x))
+                .catch(x => console.error("Error", x))
                 .then(x => {
                     this.files = this.files.map(f => {
                         if (f.file === file) {
@@ -282,11 +359,10 @@
                                 || f.url.endsWith('.jpeg')
                                 || f.url.endsWith('.gif')
                         }
-                        console.log(f)
                         return f
                     })
                 })
-                .catch(x => console.log("Error", x))
+                .catch(x => console.error("Error", x))
             },
             uploadFiles: function(droppedFiles) {
                 Array.prototype.forEach.call(droppedFiles, (file) => {
