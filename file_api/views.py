@@ -44,9 +44,6 @@ def pretty_request(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def new_file(request):
-    if len((request.FILES.getlist('files'))) < 1:
-        return JsonResponse({'message':'No file specified.','explanation':'Upload at least one file.'}, status=400)
-
     eId = int(request.GET.get('expense', '0'))
     expense = None
     if eId > 0:
@@ -55,28 +52,24 @@ def new_file(request):
         expense.confirmed_at = None
         expense.save()
 
-    # Upload the file
-    files = []
-    for uploaded_file in request.FILES.getlist('files'):
-        if uploaded_file.content_type in ['image/heif', 'image/heic'] :
-            img = BytesIO()
-            with Image.open(uploaded_file) as im:
-                im.save(img, format="jpeg")
-            uploaded_file = InMemoryUploadedFile(
-                img,
-                None,
-                uploaded_file.name.lower().replace(".heic", ".jpeg"),
-                "image/jpeg",
-                img.getbuffer().nbytes,
-                "binary"
-            )
+    uploaded_file = request.FILES["file"]
+    if uploaded_file.content_type in ['image/heif', 'image/heic'] :
+        img = BytesIO()
+        with Image.open(uploaded_file) as im:
+            im.save(img, format="jpeg")
+        uploaded_file = InMemoryUploadedFile(
+            img,
+            None,
+            uploaded_file.name.lower().replace(".heic", ".jpeg"),
+            "image/jpeg",
+            img.getbuffer().nbytes,
+            "binary"
+        )
 
-        file = File(file=uploaded_file, expense=expense)
-        file.save()
+    file = File(file=uploaded_file, expense=expense)
+    file.save()
 
-        files.append(file)
-
-    return JsonResponse({'message':'File uploaded.', 'files':[file.to_dict() for file in files]})
+    return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
 
 @require_http_methods(["POST"])
 @csrf_exempt
