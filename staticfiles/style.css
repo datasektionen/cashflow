@@ -1021,7 +1021,7 @@ table.card button {
         border-bottom: none !important;
     }
     
-    table.card td:nth-of-type(2):before { content: "Nämnd"; }
+    table.card td:nth-of-type(2):before { content: "Resultatställe"; }
     table.card td:nth-of-type(3):before { content: "Sek. resultatställe"; }
     table.card td:nth-of-type(4):before { content: "Budgetpost"; }
     table.card td:nth-of-type(5):before { content: "Summa"; }

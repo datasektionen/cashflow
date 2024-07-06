@@ -112,7 +112,7 @@
                     <div class="select">
                       <select name="costCentres[]" v-model="expense_part.costCentre" required v-on:change="updateSecondaryCostCentres()">
                         <option value="">- Välj -</option>
-                        <optgroup label="Nämnder">
+                        <optgroup label="Resultatställen">
                           <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                   :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                         </optgroup>
@@ -142,7 +142,7 @@
                         </div>
                         <div class="select disabled" v-else>
                             <select name="secondaryCostCentres[]" required disabled>
-                                <option value="0">- Välj nämnd först -</option>
+                                <option value="0">- Välj resultatställe först -</option>
                             </select>
                         </div>
                     </div>

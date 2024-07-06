@@ -72,7 +72,7 @@
     <table class="card">
       <thead>
         <tr>
-          <th>Nämnd</th>
+          <th>Resultatställe</th>
           <th>Sek. resultatställe</th>
           <th>Budgetpost</th>
           <th>År</th>
@@ -85,7 +85,7 @@
             <div class="select">
               <select name="committee[]" v-model="selectedCommittee.committeeId" required>
                 <option value="0">- Välj -</option>
-                <optgroup label="Nämnder">
+                <optgroup label="Resultatställe">
                   <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
                           :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
                 </optgroup>
@@ -111,7 +111,7 @@
             </div>
             <div class="select disabled" v-else>
               <select name="costCentre[]" required disabled>
-                <option value="0">- Välj nämnd först -</option>
+                <option value="0">- Välj resultatställe först -</option>
               </select>
             </div>
           </div>
@@ -141,7 +141,7 @@
       </tr>
       <tr>
         <td colspan="5">
-          <button type="button" v-tooltip="{ content: 'Lägger till en nämnd till resultatvyn.' }" style="color:#216C2A" v-on:click="addSummary()"><i class="fa fa-plus"></i></button>
+          <button type="button" v-tooltip="{ content: 'Lägger till en resultatställe till resultatvyn.' }" style="color:#216C2A" v-on:click="addSummary()"><i class="fa fa-plus"></i></button>
         </td>
       </tr>
       <tr v-for="summary in summaries">

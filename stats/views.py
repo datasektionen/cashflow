@@ -53,14 +53,14 @@ def summary(request):
 
         if "year" in body_data:
              expense_parts = models.ExpensePart.objects.filter(
-                 budget_line_name=body_data['budget_line'],
+                 budget_line=body_data['budget_line'],
                  cost_centre=body_data['cost_centre'],
                  secondary_cost_centre=body_data['cost_centre'],
                  expense__expense_date__year=body_data['year'],
             ).all()
         else:
             expense_parts = models.ExpensePart.objects.filter(
-                budget_line_name=body_data['budget_line'],
+                budget_line=body_data['budget_line'],
                 cost_centre=body_data['cost_centre'],
                 secondary_cost_centre=body_data['cost_centre'],
             ).all()

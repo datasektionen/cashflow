@@ -10,7 +10,7 @@
     </p>
     <div class="select" style="float:right">
         <select v-model="cost_centre">
-            <option :value="false">Filtrera på nämnd</option>
+            <option :value="false">Filtrera på resultatställe</option>
             <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
         </select>
     </div>
@@ -21,7 +21,7 @@
                 <th class="left">ID</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
-                <th>Nämnder</th>
+                <th>Resultatställen</th>
                 <th class="right">Belopp</th>
             </tr>
         </thead>
@@ -42,7 +42,7 @@
                 <th class="left">ID</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
-                <th>Nämnder</th>
+                <th>Resultatställen</th>
                 <th class="right">Belopp</th>
             </tr>
         </thead>

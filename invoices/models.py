@@ -126,11 +126,11 @@ class InvoicePart(models.Model):
 
     # Returns string representation of the model
     def __str__(self):
-        return self.invoice.__str__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
+        return self.invoice.__str__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
 
     # Returns unicode representation of the model
     def __unicode__(self):
-        return self.invoice.__unicode__() + " (" + self.budget_line_name + ": " + str(self.amount) + " kr)"
+        return self.invoice.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
 
     def attest(self, user):
         self.attested_by = user.profile

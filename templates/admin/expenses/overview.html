@@ -7,7 +7,7 @@
 <div id="app">
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="cost_centre" v-on:change="move">
-            <option :value="''">Filtrera på nämnd (visa alla)</option>
+            <option :value="''">Filtrera på resultatställe (visa alla)</option>
             <option v-for="cost_centre in cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))" v-text="cost_centre" :value="cost_centre"></option>
         </select>
     </div>
@@ -21,7 +21,7 @@
                     <th>Verifikat</th>
                     <th>Beskrivning</th>
                     <th>Ägare</th>
-                    <th>Nämnder</th>
+                    <th>Resultatställen</th>
                     <th class="right">Belopp</th>
                     <th class="right">Transaktionsdatum</th>
                 </tr>

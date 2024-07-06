@@ -5,12 +5,12 @@
 {% block content %}
 <div id="data">
     <p>
-        Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika nämnder så prata med bokföringsansvarig för den andra nämnden).
+        Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika resultatställen så prata med bokföringsansvarig för den andra nämnden).
     </p>
 
     <div class="select" style="float:right">
         <select v-model="cost_centre">
-            <option :value="false">Filtrera på nämnd</option>
+            <option :value="false">Filtrera på resultatställe</option>
             <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
         </select>
     </div>
@@ -105,7 +105,7 @@
                 <td colspan="3">
                     <table>
                         <tr v-for="invoicePart in invoice.invoice_parts">
-                            <td style="text-align: right; width: 50%;" v-text="invoicePart.cost_centre + ' > ' + invoicePart.secondary_cost_centre + ' > ' + invoicePart.budget_line_name"></td>
+                            <td style="text-align: right; width: 50%;" v-text="invoicePart.cost_centre + ' > ' + invoicePart.secondary_cost_centre + ' > ' + invoicePart.budget_line"></td>
                             <td v-text="invoicePart.amount + ' kr'"></td>
                         </tr>
                         <tr style="font-weight: bold;">
