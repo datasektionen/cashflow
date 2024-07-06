@@ -312,10 +312,10 @@ def expense_overview(request):
     """
     Lists all expenses.
     """
-    committee = request.GET.get('committee')
+    cost_centre = request.GET.get('cost_centre')
     expenses_list = Expense.objects.order_by('-id', '-expense_date').distinct()
-    if committee is not None and committee != '':
-        expenses_list = expenses_list.filter(expensepart__committee_name=committee)
+    if cost_centre is not None and cost_centre != '':
+        expenses_list = expenses_list.filter(expensepart__cost_centre=cost_centre)
     expenses_list = expenses_list.all()
     paginator = Paginator(expenses_list, 25)
     page = request.GET.get('page')
@@ -329,9 +329,9 @@ def expense_overview(request):
 
     return render(request, 'admin/expenses/overview.html', {
         'expenses': expenses,
-        'committees': json.dumps(
-            [x['committee_name'] for x in ExpensePart.objects.values('committee_name').distinct()]),
-        'committee': committee if committee is not None else ''
+        'cost_centres': json.dumps(
+            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
+        'cost_centre': cost_centre if cost_centre is not None else ''
     })
 
 
@@ -364,10 +364,10 @@ def invoice_overview(request):
     """
     Lists all invoices.
     """
-    committee = request.GET.get('committee')
+    cost_centre = request.GET.get('cost_centre')
     invoices_list = Invoice.objects.order_by('-id').distinct()
-    if committee is not None and committee != '':
-        invoices_list = invoices_list.filter(invoicepart__committee_name=committee)
+    if cost_centre is not None and cost_centre != '':
+        invoices_list = invoices_list.filter(invoicepart__cost_centre=cost_centre)
     invoices_list = invoices_list.all()
     paginator = Paginator(invoices_list, 25)
     page = request.GET.get('page')
@@ -381,9 +381,9 @@ def invoice_overview(request):
 
     return render(request, 'admin/invoices/overview.html', {
         'invoices': invoices,
-        'committees': json.dumps(
-            [x['committee_name'] for x in ExpensePart.objects.values('committee_name').distinct()]),
-        'committee': committee if committee is not None else ''
+        'cost_centres': json.dumps(
+            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
+        'cost_centre': cost_centre if cost_centre is not None else ''
     })
 
 

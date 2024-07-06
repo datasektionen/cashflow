@@ -29,11 +29,11 @@ def new_invoice(request):
         messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
         valid = False
 
-    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         valid = False
 
-    if len(request.POST.getlist('amount[]')) != len(request.POST.getlist('budgetLine[]')):
+    if len(request.POST.getlist('amounts[]')) != len(request.POST.getlist('budgetLine[]')):
         messages.error(request, 'Sluta fippla')
         valid = False
 
@@ -72,18 +72,18 @@ def new_invoice(request):
         file.save()
 
     # Add the expenseparts
-    for idx, budgetLineId in enumerate(request.POST.getlist('budgetLine[]')):
-        response = requests.get("{}/api/budget-lines/{}".format(settings.BUDGET_URL, budgetLineId))
-        budgetLine = response.json()
+    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+        request.POST.getlist("costCentres[]"),
+        request.POST.getlist("secondaryCostCentres[]"),
+        request.POST.getlist("budgetLines[]"),
+        request.POST.getlist("amounts[]"),
+    ):
         InvoicePart(
             invoice=invoice,
-            budget_line_id=budgetLine['id'],
-            budget_line_name=budgetLine['name'],
-            cost_centre_name=budgetLine['cost_centre']['name'],
-            cost_centre_id=budgetLine['cost_centre']['id'],
-            committee_name=budgetLine['cost_centre']['committee']['name'],
-            committee_id=budgetLine['cost_centre']['committee']['id'],
-            amount=request.POST.getlist('amount[]')[idx]
+            cost_centre=cost_centre,
+            secondary_cost_centre=secondary_cost_centre,
+            budget_line=budget_line,
+            amount=amount,
         ).save()
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))

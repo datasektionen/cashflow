@@ -167,24 +167,24 @@
                     <div class="form-entry">
                         <span class="description">
                             <label for="expense_part-committee">
-                                Nämnd:
+                                Resultatställe:
                             </label>
                         </span>
                         <div class="input">
                             <div class="select">
-                                <select name="committee[]" v-model="expense_part.committeeId" required>
+                                <select name="costCentres[]" v-model="expense_part.costCentreId" required v-on:change="updateSecondaryCostCentres()">
                                     <option value="0">- Välj -</option>
                                     <optgroup label="Nämnder">
-                                      <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
-                                              :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
+                                      <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
+                                              :key="costCentre.CostCentreID" v-text="costCentre.CostCentreName" v-bind:value="costCentre.CostCentreID"></option>
                                     </optgroup>
                                     <optgroup label="Projekt">
-                                      <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
-                                              :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
+                                      <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'project')"
+                                              :key="costCentre.CostCentreID" v-text="costCentre.CostCentreName" v-bind:value="costCentre.CostCentreID"></option>
                                     </optgroup>
                                     <optgroup label="Övrigt">
-                                      <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
-                                              :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
+                                      <option v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'project')"
+                                              :key="costCentre.CostCentreID" v-text="costCentre.CostCentreName" v-bind:value="costCentre.CostCentreID"></option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -193,19 +193,23 @@
 
                     <div class="form-entry">
                         <span class="description">
-                            <label for="expense_part-cost_centre">
+                            <label for="expense_part-secondary_secondary_secondary_secondary_cost_centre">
                                 Sekundärt resultatställe:
                             </label>
                         </span>
                         <div class="input">
-                            <div class="select" v-if="expense_part.committeeId > 0">
-                                <select name="costCentre[]" v-model="expense_part.costCentreId" required>
+                            <div class="select" v-if="expense_part.costCentreId > 0">
+                                <select name="secondaryCostCentres[]" v-model="expense_part.secondaryCostCentreId" required v-on:change="updateBudgetLines()">
                                     <option value="0">- Välj -</option>
-                                    <option v-for="costCentre in activeCostCentres(expense_part)" v-text="costCentre.name" v-bind:value="costCentre.id"></option>
+                                    <option
+                                        v-for="secondaryCostCentre in secondaryCostCentres.get(expense_part.costCentreId)"
+                                        v-text="secondaryCostCentre.SecondaryCostCentreName"
+                                        v-bind:value="secondaryCostCentre.SecondaryCostCentreID"
+                                    ></option>
                                 </select>
                             </div>
                             <div class="select disabled" v-else>
-                                <select name="costCentre[]" required disabled></select>
+                                <select name="secondaryCostCentres[]" required disabled></select>
                             </div>
                         </div>
                     </div>
@@ -217,14 +221,18 @@
                             </label>
                         </span>
                         <div class="input">
-                            <div class="select" v-if="expense_part.committeeId > 0 && expense_part.costCentreId > 0">
-                                <select name="budgetLine[]" v-model="expense_part.budgetLineId" required>
+                            <div class="select" v-if="expense_part.costCentreId > 0 && expense_part.secondaryCostCentreId > 0">
+                                <select name="budgetLines[]" v-model="expense_part.budgetLineId" required>
                                     <option value="0">- Välj -</option>
-                                    <option v-for="budgetLine in committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId).length == 0 ? [] : committees.filter(x => x.id == expense_part.committeeId)[0].cost_centres.filter(x => x.id == expense_part.costCentreId)[0].budget_lines" v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
+                                    <option
+                                        v-for="budgetLine in budgetLines.get(expense_part.secondaryCostCentreId)"
+                                        v-text="budgetLine.BudgetLineName"
+                                        v-bind:value="budgetLine.BudgetLineID"
+                                    ></option>
                                 </select>
                             </div>
                             <div class="select disabled" v-else>
-                                <select name="budgetLine[]" required disabled></select>
+                                <select name="budgetLines[]" required disabled></select>
                             </div>
                         </div>
                     </div>
@@ -236,7 +244,7 @@
                             </label>
                         </span>
                         <div class="input">
-                            <input type="number" step="0.01" model="expense_part.amount" name="amount[]" required>
+                            <input type="number" step="0.01" model="expense_part.amount" name="amounts[]" required>
                         </div>
                     </div>
 
@@ -285,39 +293,61 @@
             return {
                 payed: '',
                 accounted: '',
-                committees: [],
-                expense_parts: [
-                    {
-                        committeeId: 0,
-                        costCentreId: 0,
-                        budgetLineId: 0,
-                        amount: 0
-                    }
-                ]
+                costCentres: [],
+                secondaryCostCentres: new Map(),
+                budgetLines: new Map(),
+                expense_parts: [{
+                    costCentreId: 0,
+                    secondaryCostCentreId: 0,
+                    budgetLineId: 0,
+                    amount: 0,
+                }],
             }
         },
         created: function () {
-            fetch('{{ budget_url }}/api/committees?verbose')
-            .then(res => res.json())
-            .then(res => {
-                this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
-            })
+            fetch('{{ budget_url }}/api/CostCentres')
+                .then(res => res.json())
+                .then(res => {
+                    this.costCentres = res.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
+                })
         },
         methods: {
-            activeCommittees: function() {
-                return this.committees.filter(c => !c.inactive);
+            updateSecondaryCostCentres: function () {
+                for (const part of this.expense_parts) {
+                    if (part.costCentreId == 0) continue;
+                    if (!this.secondaryCostCentres.has(part.costCentreId)) {
+                        fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + part.costCentreId)
+                            .then(res => res.json())
+                            .then(res => {
+                                this.secondaryCostCentres.set(part.costCentreId, res);
+                                // Make vue understand that secondaryCostCentres has changed
+                                this.secondaryCostCentres = new Map(this.secondaryCostCentres);
+                            })
+                    }
+                }
             },
-            activeCostCentres: function (expense_part) {
-                let cost_centres = this.committees
-                                       .find(x => x.id == expense_part.committeeId)
-                                       .cost_centres;
-                cost_centres = cost_centres.filter(cc => cc.budget_lines.length != 0);
-                return cost_centres;
+            updateBudgetLines: function () {
+                for (const part of this.expense_parts) {
+                    if (part.secondaryCostCentreId == 0) continue;
+                    if (!this.budgetLines.has(part.secondaryCostCentreId)) {
+                        fetch('{{ budget_url }}/api/BudgetLines?id=' + part.secondaryCostCentreId)
+                            .then(res => res.json())
+                            .then(res => {
+                                this.budgetLines.set(part.secondaryCostCentreId, res);
+                                // Make vue understand that budgetLines has changed
+                                this.budgetLines = new Map(this.budgetLines);
+                            })
+                    }
+                }
+            },
+            secondaryConstCentre: function(id) {
+                console.log("getting", id, this.secondaryCostCentres);
+                return this.secondaryCostCentres.get(id);
             },
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
-                    costCentreId: 0,
+                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
+                    secondaryCostCentreId: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentreId,
                     budgetLineId: 0,
                     amount: 0
                 })

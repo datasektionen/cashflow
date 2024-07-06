@@ -91,7 +91,7 @@ class Profile(models.Model):
             }
         }
 
-    # Returns a list of the committees that the user may attest
+    # Returns a list of the cost centres that the user may attest
     def may_attest(self, expense_part=None):
         may_attest = []
         for permission in dauth.get_permissions(self.user):
@@ -99,7 +99,7 @@ class Profile(models.Model):
                 may_attest.append(permission[len("attest-"):].lower())
         if expense_part is None:
             return may_attest
-        return 'firmatecknare' in may_attest or expense_part.committee_name.lower() in may_attest
+        return 'firmatecknare' in may_attest or expense_part.cost_centre.lower() in may_attest
 
     def may_view_attest(self):
         if self.may_view_all():
@@ -118,7 +118,7 @@ class Profile(models.Model):
     def may_confirm(self):
         return 'confirm' in dauth.get_permissions(self.user)
 
-    # Returns a list of the committees that the user may pay for
+    # Returns a list of the cost centres that the user may pay for
     def may_unconfirm(self):
         return 'unconfirm' in dauth.get_permissions(self.user)
 
@@ -126,7 +126,7 @@ class Profile(models.Model):
     def may_view_confirm(self):
         return self.may_view_all() or self.may_confirm()
 
-    # Returns a list of the committees that the user may account for
+    # Returns a list of the cost centres that the user may account for
     def may_account(self, expense=None, invoice=None):
         if 'accounting-*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
             return True
@@ -140,11 +140,11 @@ class Profile(models.Model):
 
         if expense is not None:
             for ep in expense.expensepart_set.all():
-                if ep.committee_name.lower() in may_account:
+                if ep.cost_centre.lower() in may_account:
                     return True
         else:
             for ip in invoice.invoicepart_set.all():
-                if ip.committee_name.lower() in may_account:
+                if ip.cost_centre.lower() in may_account:
                     return True
         return False
 
@@ -182,8 +182,8 @@ class Profile(models.Model):
     def may_view_expense(self, expense):
         if expense.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
             return True
-        for committee in expense.committees():
-            if committee['committee_name'].lower() in self.may_account() or committee['committee_name'].lower() in self.may_attest():
+        for cost_centre in expense.cost_centres():
+            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
                 return True
 
         return False
@@ -191,8 +191,8 @@ class Profile(models.Model):
     def may_view_invoice(self, invoice):
         if invoice.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
             return True
-        for committee in invoice.committees():
-            if committee['committee_name'].lower() in self.may_account() or committee['committee_name'].lower() in self.may_attest():
+        for cost_centre in invoice.cost_centres():
+            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
                 return True
 
         return False
@@ -307,11 +307,10 @@ class Expense(models.Model):
             total += part.amount
         return total
 
-    # Returns the committees belonging to the expense as a list [{ committee_name: 'Name' }, ...]
-    def committees(self):
-        return self.expensepart_set.order_by('committee_name').values('committee_name').distinct()
+    # Returns the cost_centres belonging to the expense as a list [{ cost_centres: 'Name' }, ...]
+    def cost_centres(self):
+        return self.expensepart_set.order_by('cost_centre').values('cost_centre').distinct()
 
-    # Returns the committees belonging to the expense as a list [{ committee_name: 'Name' }, ...]
     def is_attested(self):
         return self.expensepart_set.filter(attested_by__isnull=True).count() == 0
 
@@ -323,7 +322,7 @@ class Expense(models.Model):
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
-        exp['committees'] = [committee['committee_name'] for committee in self.committees()]
+        exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
@@ -334,7 +333,7 @@ class Expense(models.Model):
             'expensepart__attested_by': None,
         }
         if 'firmatecknare' not in may_attest:
-            filters['expensepart__committee_name__iregex'] = r'(' + '|'.join(may_attest) + ')'
+            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
         return Expense.objects.order_by('-id', '-expense_date').filter(**filters).distinct()
 
     @staticmethod
@@ -356,7 +355,7 @@ class Expense(models.Model):
                 'expense_date')
         return Expense.objects.exclude(reimbursement=None).filter(
             verification='',
-            expensepart__committee_name__iregex=r'(' + '|'.join(may_account) + ')'
+            expensepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct().order_by('expense_date')
 
 
@@ -394,12 +393,9 @@ class ExpensePart(models.Model):
     Defines an expense part, which is a specification of a part of an expense.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    budget_line_id = models.IntegerField(default=0)
-    budget_line_name = models.TextField(blank=True)
-    cost_centre_name = models.TextField(blank=True)
-    cost_centre_id = models.IntegerField(default=0)
-    committee_name = models.TextField(blank=True)
-    committee_id = models.IntegerField(default=0)
+    cost_centre = models.TextField(blank=True)
+    secondary_cost_centre = models.TextField(blank=True)
+    budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True)
     attest_date = models.DateField(blank=True, null=True)
