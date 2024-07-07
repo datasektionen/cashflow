@@ -1,5 +1,6 @@
 FROM python:3.6.15-alpine
 
+ENV TZ=Europe/Stockholm
 RUN pip install pipenv
 
 RUN apk --no-cache add gcc libc-dev libffi-dev zlib-dev jpeg-dev py3-psycopg2 postgresql14-dev

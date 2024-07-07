@@ -89,7 +89,7 @@
                                 <option value="0">- Välj -</option>
                                 <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
                                         :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
-                                <optgroup label="Resultatställen">
+                                <optgroup label="Nämnder">
                                     <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
@@ -106,8 +106,8 @@
                     </div>
                 </td>
                 <td>
-                    <div class="input">
-                        <div class="select" v-if="expense_part.costCentre != ''">
+                    <div class="input" style="min-width: 220px">
+                        <div class="select" v-if="expense_part.costCentre != ''" style="width: 100%">
                             <select name="secondaryCostCentres[]" v-model="expense_part.secondaryCostCentre" required v-on:change="updateBudgetLines()">
                                 <option value="0">- Välj -</option>
                                 <option
@@ -117,7 +117,7 @@
                                 ></option>
                             </select>
                         </div>
-                        <div class="select disabled" v-else>
+                        <div class="select disabled" v-else style="width: 100%">
                             <select name="secondaryCostCentres[]" required disabled>
                                 <option value="0">- Välj resultatställe först -</option>
                             </select>
@@ -125,8 +125,8 @@
                     </div>
                 </td>
                 <td>
-                    <div class="input">
-                        <div class="select" v-if="expense_part.costCentre != '' && expense_part.secondaryCostCentre != ''">
+                    <div class="input" style="min-width: 220px">
+                        <div class="select" v-if="expense_part.costCentre != '' && expense_part.secondaryCostCentre != ''" style="width: 100%">
                             <select name="budgetLines[]" v-model="expense_part.budgetLine" required>
                                 <option value="0">- Välj -</option>
                                 <option
@@ -136,7 +136,7 @@
                                 ></option>
                             </select>
                         </div>
-                        <div class="select disabled" v-else>
+                        <div class="select disabled" v-else style="width: 100%">
                             <select name="budgetLines[]" required disabled>
                                 <option value="0">- Välj sek. resultatställe först -</option>
                             </select>
