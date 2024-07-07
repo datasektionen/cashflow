@@ -89,7 +89,7 @@
                                 <option value="0">- Välj -</option>
                                 <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
                                         :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
-                                <optgroup label="Resultatställen">
+                                <optgroup label="Nämnder">
                                     <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
