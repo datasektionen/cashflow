@@ -263,41 +263,45 @@
             deleteFile: function(file) {
                 this.files = this.files.filter(f => f !== file)
             },
-            upload: function(formData, file) {
-                this.files.push({
+            upload: async function(formData, file) {
+                const fileThing = {
                     name: file.name,
                     file: file,
                     status: 0
-                })
+                };
+                this.files.push(fileThing);
 
-                fetch('/api/files/new/', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin'
-                })
-                    .then(x => x.json())
-                    .catch(x => console.error("Error", x))
-                    .then(x => {
-                        this.files = this.files.map(f => {
-                            if (f.file === file) {
-                                f.status = 1
-                                f.url = x.files[0].url
-                                f.id = x.files[0].id
-                                f.isImg = f.url.endsWith('.jpg')
-                                       || f.url.endsWith('.png')
-                                       || f.url.endsWith('.jpeg')
-                                       || f.url.endsWith('.gif')
-                            }
-                            console.error(f)
-                            return f
-                        })
-                    })
-                    .catch(x => console.error("Error", x))
+                try {
+                    const res = await fetch('/api/files/new/', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+                    if (res.status === 413) { // "Request Entity Too Large"
+                        const index = this.files.findIndex(f => f == fileThing);
+                        this.files.splice(index, 1);
+                        // Of course MiB is the superior measurement, but nginx
+                        // is only configurable in mega, not mibi according to
+                        // the documentation, but that may of course be a lie.
+                        alert(`The provided file is ${Math.ceil(formData.get("files").size / 1000 / 1000)}MB. The maximum allowed size is 100MB`);
+                        return;
+                    }
+                    const json = await res.json();
+                    fileThing.status = 1;
+                    fileThing.url = json.file.url;
+                    fileThing.id = json.file.id;
+                    fileThing.isImg = json.file.url.endsWith(".jpg")
+                                   || json.file.url.endsWith(".png")
+                                   || json.file.url.endsWith(".jpeg")
+                                   || json.file.url.endsWith(".gif");
+                } catch (err) {
+                    console.error(err);
+                }
             },
             uploadFiles: function(droppedFiles) {
                 Array.prototype.forEach.call(droppedFiles, (file) => {
                     const formData = new FormData()
-                    formData.append('files', file, file.name)
+                    formData.set("file", file, file.name)
                     this.upload(formData, file)
                 })
             },
