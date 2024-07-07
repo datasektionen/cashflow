@@ -129,8 +129,8 @@
                     </div>
                 </td>
                 <td>
-                    <div class="input">
-                        <div class="select" v-if="expense_part.costCentre != ''">
+                    <div class="input" style="min-width: 220px">
+                        <div class="select" v-if="expense_part.costCentre != ''" style="width: 100%">
                             <select name="secondaryCostCentres[]" v-model="expense_part.secondaryCostCentre" required v-on:change="updateBudgetLines()">
                                 <option value="">- Välj -</option>
                                 <option
@@ -140,7 +140,7 @@
                                 ></option>
                             </select>
                         </div>
-                        <div class="select disabled" v-else>
+                        <div class="select disabled" v-else style="width: 100%">
                             <select name="secondaryCostCentres[]" required disabled>
                                 <option value="0">- Välj resultatställe först -</option>
                             </select>
@@ -148,8 +148,8 @@
                     </div>
                 </td>
                 <td>
-                    <div class="input">
-                        <div class="select" v-if="expense_part.costCentre != '' && expense_part.secondaryCostCentre != ''">
+                    <div class="input" style="min-width: 220px">
+                        <div class="select" v-if="expense_part.costCentre != '' && expense_part.secondaryCostCentre != ''" style="width: 100%">
                             <select name="budgetLines[]" v-model="expense_part.budgetLine" required>
                                 <option value="">- Välj -</option>
                                 <option
@@ -159,7 +159,7 @@
                                 ></option>
                             </select>
                         </div>
-                        <div class="select disabled" v-else>
+                        <div class="select disabled" v-else style="width: 100%">
                             <select name="budgetLines[]" required disabled>
                                 <option value="0">- Välj sek. resultatställe först -</option>
                             </select>
@@ -168,7 +168,7 @@
                 </td>
                 <td>
                     <div class="input">
-                      <input type="number" placeholder="Fyll i summa" step="0.01" v-model="expense_part.amount" name="amounts[]" required>
+                        <input type="number" placeholder="Fyll i summa" step="0.01" v-model="expense_part.amount" name="amounts[]" required>
                     </div>
                 </div>
                 </td>
