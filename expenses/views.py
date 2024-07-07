@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.conf import settings
+from django.db import transaction
 
 from expenses import models
 
@@ -37,42 +38,43 @@ def new_expense(request):
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
         return HttpResponseRedirect(reverse('expenses-new'))
 
-    # Create the expense
-    expense = models.Expense(
-        owner=request.user.profile,
-        expense_date=request.POST['expense-date'],
-        description=request.POST['expense-description'].strip(),
-        confirmed_by=None,
-        is_digital='is-digital' in request.POST,
-    )
-    expense.save()
+    with transaction.atomic():
+        # Create the expense
+        expense = models.Expense(
+            owner=request.user.profile,
+            expense_date=request.POST['expense-date'],
+            description=request.POST['expense-description'].strip(),
+            confirmed_by=None,
+            is_digital='is-digital' in request.POST,
+        )
+        expense.save()
 
-    # Add the files submitted
-    for posted_file in request.FILES.getlist('files'):
-        file = models.File(expense=expense, file=posted_file)
-        file.save()
+        # Add the files submitted
+        for posted_file in request.FILES.getlist('files'):
+            file = models.File(expense=expense, file=posted_file)
+            file.save()
 
-    # Add the files submitted to the javascript upload
-    for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
-        file = models.File.objects.get(pk=int(pre_uploaded_file_id))
-        if file.expense is None:
-            file.expense = expense
-        file.save()
+        # Add the files submitted to the javascript upload
+        for pre_uploaded_file_id in request.POST.getlist('fileIds[]'):
+            file = models.File.objects.get(pk=int(pre_uploaded_file_id))
+            if file.expense is None:
+                file.expense = expense
+            file.save()
 
-    # Add the expense parts
-    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-        request.POST.getlist("costCentres[]"),
-        request.POST.getlist("secondaryCostCentres[]"),
-        request.POST.getlist("budgetLines[]"),
-        request.POST.getlist("amounts[]"),
-    ):
-        models.ExpensePart(
-            expense=expense,
-            cost_centre=cost_centre.split(",")[1],
-            secondary_cost_centre=secondary_cost_centre.split(",")[1],
-            budget_line=budget_line.split(",")[1],
-            amount=amount,
-        ).save()
+        # Add the expense parts
+        for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+            request.POST.getlist("costCentres[]"),
+            request.POST.getlist("secondaryCostCentres[]"),
+            request.POST.getlist("budgetLines[]"),
+            request.POST.getlist("amounts[]"),
+        ):
+            models.ExpensePart(
+                expense=expense,
+                cost_centre=cost_centre.split(",")[1],
+                secondary_cost_centre=secondary_cost_centre.split(",")[1],
+                budget_line=budget_line.split(",")[1],
+                amount=amount,
+            ).save()
 
     return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
 
