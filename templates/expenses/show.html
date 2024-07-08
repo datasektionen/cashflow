@@ -26,41 +26,23 @@
     <table>
       <thead>
         <tr>
-          <th>
-            Belopp
-          </th>
-          <th>
-            Resultatställe
-          </th>
-          <th>
-            Sekundärt resultatställe
-          </th>
-          <th>
-            Budgetpost
-          </th>
-          <th>
-            Attesterad av
-          </th>
+            <th>Belopp</th>
+            <th>Resultatställe</th>
+            <th>Sekundärt resultatställe</th>
+            <th>Budgetpost</th>
+            <th>Attesterad av</th>
         </tr>
       </thead>
       <tbody>
         {% for expense_part in expense.expensepart_set.all %}
             <tr>
-                <td>
-                    <span class="value">{{ expense_part.amount|intcomma }} kr</span>
-                </td>
-                <td>
-                    {{ expense_part.secondary_cost_centre }}
-                </td>
-                <td>
-                    <span class="value">{{ expense_part.secondary_cost_centre }}</span>
-                </td>
-                <td>
-                    <span class="value">{{ expense_part.budget_line }}</span>
-                </td>
+                <td>{{ expense_part.amount|intcomma }} kr</td>
+                <td>{{ expense_part.cost_centre }}</td>
+                <td>{{ expense_part.secondary_cost_centre }}</td>
+                <td>{{ expense_part.budget_line }}</td>
                 <td>
                     {% if expense_part.attested_by %}
-                    <a class="value" href="{% url 'user-show' expense_part.attested_by.user.username %}">
+                    <a href="{% url 'user-show' expense_part.attested_by.user.username %}">
                         {{ expense_part.attested_by.user.get_full_name }} ({{ expense_part.attest_date }})
                     </a>
                     {% else %}
@@ -73,7 +55,7 @@
                                 </form>
                             </span>
                         {% else %}
-                            <span class="value">Ej attesterad</span>
+                            Ej attesterad
                         {% endif %}
                     {% endif %}
                 </td>
