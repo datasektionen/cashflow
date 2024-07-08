@@ -30,11 +30,11 @@ def new_expense(request):
         messages.error(request, 'Du har angivit ett datum i framtiden')
         return HttpResponseRedirect(reverse('expenses-new'))
 
-    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
         return HttpResponseRedirect(reverse('expenses-new'))
 
-    if len(request.POST.getlist('amounts[]')) == 0:
+    if len(request.POST.getlist('amount[]')) == 0:
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
         return HttpResponseRedirect(reverse('expenses-new'))
 
@@ -66,7 +66,7 @@ def new_expense(request):
             request.POST.getlist("costCentres[]"),
             request.POST.getlist("secondaryCostCentres[]"),
             request.POST.getlist("budgetLines[]"),
-            request.POST.getlist("amounts[]"),
+            request.POST.getlist("amount[]"),
         ):
             models.ExpensePart(
                 expense=expense,
@@ -132,7 +132,7 @@ def edit_expense(request, pk):
         request.POST.getlist("costCentres[]"),
         request.POST.getlist("secondaryCostCentres[]"),
         request.POST.getlist("budgetLines[]"),
-        request.POST.getlist("amounts[]"),
+        request.POST.getlist("amount[]"),
     ):
         if float(amount) < 1:
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
@@ -148,7 +148,7 @@ def edit_expense(request, pk):
         expense_part.save()
         new_ids.append(expense_part.id)
 
-    if (len(new_ids) < 1):
+    if len(new_ids) < 1:
         messages.warning(request, 'Något gick fel med inladdning av budgetposterna')
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
 
