@@ -337,21 +337,19 @@
             },
             addPart: function () {
                 this.expense_parts.push({
-                    committeeId: this.expense_parts[this.expense_parts.length - 1].committeeId,
-                    costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
-                    budgetLineId: 0,
-                    amount: 0
-                })
+                    costCentre: this.expense_parts[this.expense_parts.length - 1].costCentre,
+                    secondaryCostCentre: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentre,
+                    budgetLine: '',
+                    amount: 0,
+                });
             },
             removePart: function (i) {
-                if (this.expense_parts <= 2) {
-                    return
-                }
-                this.expense_parts.splice(i, 1)
+                if (this.expense_parts.length > 1)
+                    this.expense_parts.splice(i, 1)
             },
-	        validateBudgetLines: function () {
-		        return Array.prototype.filter.call((this.expense_parts), (budget => budget.budgetLine != '')).length == this.expense_parts.length
-	        }
+            validateBudgetLines: function () {
+                return Array.prototype.filter.call(this.expense_parts, budget => budget.budgetLine != '').length == this.expense_parts.length
+            }
         }
     })
 </script>

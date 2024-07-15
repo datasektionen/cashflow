@@ -173,7 +173,7 @@
                         <div class="input">
                             <div class="select">
                                 <select name="costCentres[]" v-model="expense_part.costCentreId" required v-on:change="updateSecondaryCostCentres()">
-                                    <option value="0">- Välj -</option>
+                                    <option value="">- Välj -</option>
                                     <optgroup label="Nämnder">
                                       <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                               :key="costCentre.CostCentreID" v-text="costCentre.CostCentreName" v-bind:value="costCentre.CostCentreID"></option>
@@ -198,9 +198,9 @@
                             </label>
                         </span>
                         <div class="input">
-                            <div class="select" v-if="expense_part.costCentreId > 0">
+                            <div class="select" v-if="expense_part.costCentreId !== ''">
                                 <select name="secondaryCostCentres[]" v-model="expense_part.secondaryCostCentreId" required v-on:change="updateBudgetLines()">
-                                    <option value="0">- Välj -</option>
+                                    <option value="">- Välj -</option>
                                     <option
                                         v-for="secondaryCostCentre in secondaryCostCentres.get(expense_part.costCentreId)"
                                         v-text="secondaryCostCentre.SecondaryCostCentreName"
@@ -221,9 +221,9 @@
                             </label>
                         </span>
                         <div class="input">
-                            <div class="select" v-if="expense_part.costCentreId > 0 && expense_part.secondaryCostCentreId > 0">
+                            <div class="select" v-if="expense_part.costCentreId !== '' && expense_part.secondaryCostCentreId !== ''">
                                 <select name="budgetLines[]" v-model="expense_part.budgetLineId" required>
-                                    <option value="0">- Välj -</option>
+                                    <option value="">- Välj -</option>
                                     <option
                                         v-for="budgetLine in budgetLines.get(expense_part.secondaryCostCentreId)"
                                         v-text="budgetLine.BudgetLineName"
@@ -297,9 +297,9 @@
                 secondaryCostCentres: new Map(),
                 budgetLines: new Map(),
                 expense_parts: [{
-                    costCentreId: 0,
-                    secondaryCostCentreId: 0,
-                    budgetLineId: 0,
+                    costCentreId: '',
+                    secondaryCostCentreId: '',
+                    budgetLineId: '',
                     amount: 0,
                 }],
             }
@@ -313,8 +313,9 @@
         },
         methods: {
             updateSecondaryCostCentres: function () {
+                console.log(this.expense_parts);
                 for (const part of this.expense_parts) {
-                    if (part.costCentreId == 0) continue;
+                    if (part.costCentreId === '') continue;
                     if (!this.secondaryCostCentres.has(part.costCentreId)) {
                         fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + part.costCentreId)
                             .then(res => res.json())
@@ -328,7 +329,7 @@
             },
             updateBudgetLines: function () {
                 for (const part of this.expense_parts) {
-                    if (part.secondaryCostCentreId == 0) continue;
+                    if (part.secondaryCostCentreId === '') continue;
                     if (!this.budgetLines.has(part.secondaryCostCentreId)) {
                         fetch('{{ budget_url }}/api/BudgetLines?id=' + part.secondaryCostCentreId)
                             .then(res => res.json())
@@ -340,23 +341,17 @@
                     }
                 }
             },
-            secondaryConstCentre: function(id) {
-                console.log("getting", id, this.secondaryCostCentres);
-                return this.secondaryCostCentres.get(id);
-            },
             addPart: function () {
                 this.expense_parts.push({
                     costCentreId: this.expense_parts[this.expense_parts.length - 1].costCentreId,
                     secondaryCostCentreId: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentreId,
-                    budgetLineId: 0,
-                    amount: 0
-                })
+                    budgetLineId: '',
+                    amount: 0,
+                });
             },
             removePart: function (i) {
-                if (this.expense_parts <= 2) {
-                    return
-                }
-                this.expense_parts.splice(i, 1)
+                if (this.expense_parts.length > 1)
+                    this.expense_parts.splice(i, 1)
             }
         }
     })
