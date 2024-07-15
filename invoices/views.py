@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from datetime import date, datetime
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
@@ -33,11 +34,7 @@ def new_invoice(request):
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         valid = False
 
-    if len(request.POST.getlist('amounts[]')) != len(request.POST.getlist('budgetLine[]')):
-        messages.error(request, 'Sluta fippla')
-        valid = False
-
-    if len(request.POST.getlist('budgetLine[]')) == 0:
+    if len(request.POST.getlist('budgetLines[]')) == 0:
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
         valid = False
 

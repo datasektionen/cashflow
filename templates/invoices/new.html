@@ -5,6 +5,14 @@
 
 {% block full_content %}
 <div id="form">
+    {% if messages %}
+        <ul class="messages" style="margin: 20px 0 0;">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
         <p>Ladda endast upp en faktura i taget.</p>
         <div class="form">
