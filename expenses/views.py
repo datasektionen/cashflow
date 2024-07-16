@@ -1,15 +1,16 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
-from django.shortcuts import render
 from datetime import datetime
-from django.contrib import messages
 import re
 import requests
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+
 from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.shortcuts import render
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from expenses import models
 
@@ -30,16 +31,15 @@ def new_expense(request):
         messages.error(request, 'Du har angivit ett datum i framtiden')
         return HttpResponseRedirect(reverse('expenses-new'))
 
-    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amount[]'))) > 0:
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av kvittodelarna')
         return HttpResponseRedirect(reverse('expenses-new'))
 
-    if len(request.POST.getlist('amount[]')) == 0:
+    if len(request.POST.getlist('amounts[]')) == 0:
         messages.error(request, 'Du måste lägga till minst en del på kvittot')
         return HttpResponseRedirect(reverse('expenses-new'))
 
     with transaction.atomic():
-        # Create the expense
         expense = models.Expense(
             owner=request.user.profile,
             expense_date=request.POST['expense-date'],
@@ -66,7 +66,7 @@ def new_expense(request):
             request.POST.getlist("costCentres[]"),
             request.POST.getlist("secondaryCostCentres[]"),
             request.POST.getlist("budgetLines[]"),
-            request.POST.getlist("amount[]"),
+            request.POST.getlist("amounts[]"),
         ):
             models.ExpensePart(
                 expense=expense,
@@ -132,7 +132,7 @@ def edit_expense(request, pk):
         request.POST.getlist("costCentres[]"),
         request.POST.getlist("secondaryCostCentres[]"),
         request.POST.getlist("budgetLines[]"),
-        request.POST.getlist("amount[]"),
+        request.POST.getlist("amounts[]"),
     ):
         if float(amount) < 1:
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
@@ -140,9 +140,9 @@ def edit_expense(request, pk):
 
         expense_part = models.ExpensePart(
             expense=expense,
-            cost_centre=cost_centre,
-            secondary_cost_centre=secondary_cost_centre,
-            budget_line=budget_line,
+            cost_centre=cost_centre.split(",")[1],
+            secondary_cost_centre=secondary_cost_centre.split(",")[1],
+            budget_line=budget_line.split(",")[1],
             amount=amount,
         )
         expense_part.save()

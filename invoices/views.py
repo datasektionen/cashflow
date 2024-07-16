@@ -1,17 +1,18 @@
-from django.shortcuts import render
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+import re
+from datetime import date, datetime
+
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from datetime import date, datetime
-from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from cashflow import settings
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
+
 from cashflow import email
-
-import re
-
+from cashflow import settings
 from expenses.models import *
 from invoices.models import *
 
@@ -45,43 +46,43 @@ def new_invoice(request):
     if not valid:
         return HttpResponseRedirect(reverse('invoices-new'))
 
-
-    invoice = Invoice(
-        owner=request.user.profile,
-        invoice_date=invdate,
-        due_date=duedate,
-        file_is_original=(request.POST['invoice-original'] == "yes"),
-        description=request.POST['invoice-description'],
-    )
-    invoice.save()
-
-    if request.POST['payed'] != 'no-chapter-will':
-        invoice.payed_by = request.user
-        invoice.payed_at = date.today()
-        if request.POST['accounted'] == 'accounted-yes':
-            invoice.verification = request.POST['verification']
+    with transaction.atomic():
+        invoice = Invoice(
+            owner=request.user.profile,
+            invoice_date=invdate,
+            due_date=duedate,
+            file_is_original=(request.POST['invoice-original'] == "yes"),
+            description=request.POST['invoice-description'],
+        )
         invoice.save()
 
+        if request.POST['payed'] != 'no-chapter-will':
+            invoice.payed_by = request.user
+            invoice.payed_at = date.today()
+            if request.POST['accounted'] == 'accounted-yes':
+                invoice.verification = request.POST['verification']
+            invoice.save()
 
-    # Add the file
-    for uploaded_file in request.FILES.getlist('files'):
-        file = File(invoice=invoice, file=uploaded_file)
-        file.save()
 
-    # Add the expenseparts
-    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-        request.POST.getlist("costCentres[]"),
-        request.POST.getlist("secondaryCostCentres[]"),
-        request.POST.getlist("budgetLines[]"),
-        request.POST.getlist("amounts[]"),
-    ):
-        InvoicePart(
-            invoice=invoice,
-            cost_centre=cost_centre,
-            secondary_cost_centre=secondary_cost_centre,
-            budget_line=budget_line,
-            amount=amount,
-        ).save()
+        # Add the file
+        for uploaded_file in request.FILES.getlist('files'):
+            file = File(invoice=invoice, file=uploaded_file)
+            file.save()
+
+        # Add the expenseparts
+        for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+            request.POST.getlist("costCentres[]"),
+            request.POST.getlist("secondaryCostCentres[]"),
+            request.POST.getlist("budgetLines[]"),
+            request.POST.getlist("amounts[]"),
+        ):
+            InvoicePart(
+                invoice=invoice,
+                cost_centre=cost_centre.split(",")[1],
+                secondary_cost_centre=secondary_cost_centre.split(",")[1],
+                budget_line=budget_line.split(",")[1],
+                amount=amount,
+            ).save()
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
 
