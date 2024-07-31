@@ -24,11 +24,11 @@
             <td v-if="!expense.confirmed">
                 <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
                     {% csrf_token %}
-                    <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta</button>
+                    <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Godkänd kontroll</button>
                 </form>
             </td>
             <td v-else>
-                Bekräftad
+                Kontrollerad
             </td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a></td>
             <td v-if="!(digital || analog)"><p v-if="expense.is_digital">Ja</p><p v-else-if="expense.is_digital == false">Nej</p><p v-else>👻</p></td>

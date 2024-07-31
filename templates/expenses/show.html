@@ -236,9 +236,9 @@
                     confirmed: true,
                     confirmed_by: "{{ expense.confirmed_by.get_full_name }}",
                     confirmed_date: "{{ expense.confirmed_at }}",
-                    btn_message: "Avbekräfta",
+                    btn_message: "Ta bort kontroll",
                     {% else %}
-                    btn_message: "Bekräfta",
+                    btn_message: "Godkänd kontroll",
                     confirmed: false,
                     {%endif%}
                 },
@@ -269,7 +269,7 @@
                         this.expense.confirmed = true;
                         this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
                         this.expense.confirmed_by = this.user.full_name;
-                        this.expense.btn_message = "Avbekräfta"
+                        this.expense.btn_message = "Ta bort kontroll"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
                     }
@@ -292,7 +292,7 @@
                         this.expense.confirmed = false;
                         this.expense.confirmed_date = null;
                         this.expense.confirmed_by = null;
-                        this.expense.btn_message = "Bekräfta"
+                        this.expense.btn_message = "Godkänd kontroll"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
                     }
