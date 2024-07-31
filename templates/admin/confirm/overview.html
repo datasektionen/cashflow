@@ -1,12 +1,12 @@
 {% extends "../main.html" %}
 
-{% block title %}Bekräfta kvitton i pärmen{% endblock %}
+{% block title %}kontrollera kvitton{% endblock %}
 
 {% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
 <div id="data">
-    <p>Här kan du hitta alla kvitton som inte bekräftats finns i pärmen.</p>
+    <p>Här kan du hitta alla kvitton som inte kontrollerats.</p>
     <label for="digital" style="padding-right: 0.5em;">Visa endast digitala</label><input v-model="digital" type="checkbox" id="digital" /><br />
     <label for="analog" style="padding-right: 0.5em;">Visa endast analoga</label><input v-model="analog" type="checkbox" id="analog" />
     <table v-if="expenses.length > 0">
@@ -37,7 +37,7 @@
             <td v-text="expense.amount + ' kr'"></td>
         </tr>
     </table>
-    <p v-else><b>Det finns inga icke-godkända kvitton i pärmen. Bra jobbat!</b></p>
+    <p v-else><b>Det finns inga icke-godkända kvitton. Bra jobbat!</b></p>
 </div>
 
 <script type="text/javascript">

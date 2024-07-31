@@ -106,7 +106,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Bekräftat i pärmen:</th>
+                <th>Kontrollerat:</th>
                 <td v-if="expense.confirmed">
                     [[expense.confirmed_by]]  ([[expense.confirmed_date]])
                     {% if user.profile.may_unconfirm %}
@@ -212,7 +212,6 @@
             <li class="alternatives">
                 <h3>Eller skicka en färdig kommentar:</h3>
                 <ul>
-                    <li><a href="#" v-on:click="send">Jag kan inte hitta ditt utlägg i pärmen. Har du satt in det?</a></li>
                     <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
                     <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
                     <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>

@@ -295,9 +295,9 @@ class Expense(models.Model):
         if self.is_attested() and self.confirmed_by:
             return "Inväntar utbetalning"
         if self.is_attested() and not self.confirmed_by:
-            return "Attesterad men inte i pärmen"
+            return "Attesterad men inte kontrollerad av kassör"
         if not self.is_attested() and self.confirmed_by:
-            return "Inte attesterad men i pärmen"
+            return "Inte attesterad men kontrollerad av kassör"
         return "Inte attesterad"
 
     # Return the total amount of the expense parts
