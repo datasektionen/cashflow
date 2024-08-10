@@ -400,7 +400,7 @@
             fileSelected: function (e) {
                 Array.prototype.forEach.call(this.$refs.files.files, (file) => {
                     const formData = new FormData()
-                    formData.append('files', file, file.name)
+                    formData.set("file", file, file.name)
                     this.upload(formData, file)
                 })
                 this.$refs.files.value = ''
