@@ -238,7 +238,7 @@
                     confirmed_date: "{{ expense.confirmed_at }}",
                     btn_message: "Ta bort bekräftelse",
                     {% else %}
-                    btn_message: "Godkänd bekräftelse",
+                    btn_message: "Godkänn bekräftelse",
                     confirmed: false,
                     {%endif%}
                 },
@@ -292,7 +292,7 @@
                         this.expense.confirmed = false;
                         this.expense.confirmed_date = null;
                         this.expense.confirmed_by = null;
-                        this.expense.btn_message = "Godkänd bekräftelse"
+                        this.expense.btn_message = "Godkänn bekräftelse"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
                     }
