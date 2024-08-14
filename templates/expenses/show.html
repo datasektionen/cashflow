@@ -106,7 +106,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Bekräftat i pärmen:</th>
+                <th>Giltighet bekräftad:</th>
                 <td v-if="expense.confirmed">
                     [[expense.confirmed_by]]  ([[expense.confirmed_date]])
                     {% if user.profile.may_unconfirm %}
@@ -212,7 +212,6 @@
             <li class="alternatives">
                 <h3>Eller skicka en färdig kommentar:</h3>
                 <ul>
-                    <li><a href="#" v-on:click="send">Jag kan inte hitta ditt utlägg i pärmen. Har du satt in det?</a></li>
                     <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
                     <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
                     <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>
@@ -237,9 +236,9 @@
                     confirmed: true,
                     confirmed_by: "{{ expense.confirmed_by.get_full_name }}",
                     confirmed_date: "{{ expense.confirmed_at }}",
-                    btn_message: "Avbekräfta",
+                    btn_message: "Ta bort bekräftelse",
                     {% else %}
-                    btn_message: "Bekräfta",
+                    btn_message: "Godkänn bekräftelse",
                     confirmed: false,
                     {%endif%}
                 },
@@ -270,7 +269,7 @@
                         this.expense.confirmed = true;
                         this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
                         this.expense.confirmed_by = this.user.full_name;
-                        this.expense.btn_message = "Avbekräfta"
+                        this.expense.btn_message = "Ta bort bekräftelse"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
                     }
@@ -293,7 +292,7 @@
                         this.expense.confirmed = false;
                         this.expense.confirmed_date = null;
                         this.expense.confirmed_by = null;
-                        this.expense.btn_message = "Bekräfta"
+                        this.expense.btn_message = "Godkänn bekräftelse"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
                     }
