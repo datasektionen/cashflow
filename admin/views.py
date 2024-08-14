@@ -209,7 +209,7 @@ def confirm_expense(request, pk):
         expense = Expense.objects.get(pk=pk)
 
         if not dauth.has_permission('confirm', request):
-            return HttpResponseForbidden("Du har inte rättigheterna för att kontrollera kvitton")
+            return HttpResponseForbidden("Du har inte rättigheterna för att bekräfta kvitton")
 
         expense.confirmed_by = request.user
         expense.confirmed_at = date.today()
@@ -218,7 +218,7 @@ def confirm_expense(request, pk):
         comment = Comment(
             expense=expense,
             author=request.user.profile,
-            content='Jag har kontrollerat kvittot.'
+            content='Jag har bekräfta kvittots giltighet.'
         )
         comment.save()
 
@@ -233,7 +233,7 @@ def unconfirm_expense(request, pk):
         expense = Expense.objects.get(pk=pk)
 
         if not dauth.has_permission('unconfirm', request):
-            return HttpResponseForbidden("Du har inte rättigheterna för att avkontrollera kvitton")
+            return HttpResponseForbidden("Du har inte rättigheterna för att avbekräfta kvitton")
 
         expense.confirmed_by = None
         expense.confirmed_at = None
@@ -242,7 +242,7 @@ def unconfirm_expense(request, pk):
         comment = Comment(
             expense=expense,
             author=request.user.profile,
-            content='Jag tar bort kontrollen av kvittot.'
+            content='Jag tar bort bekräftelsen av kvittots giltighet.'
         )
         comment.save()
 
