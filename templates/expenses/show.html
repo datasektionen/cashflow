@@ -162,19 +162,26 @@
         </table>
     </div>
 
-    <div class="col-sm-6 col-lg-6" style="padding-right: 0;">
-      <h2>Filer</h2>
-      {% for file in expense.file_set.all %}
-      <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
-      {% if file.is_image %}
-      <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">
-        <img class="zoom center-block" style="width: 70%;" src="{{ file.file.url }}" />
-      </a>
-      {% else %}
-      <iframe src="{{ file.file.url }}" style="width:100%;height: 60vh;" sandbox></iframe>
-      {% endif %}
-      <br>
-      {% endfor %}
+    <div class="col-sm-6 col-lg-6 teal" style="padding-right: 0;">
+        <h2>Filer</h2>
+        {% for file in expense.file_set.all %}
+            <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
+            {% if file.is_image %}
+                <img class="zoom center-block" style="width: 100%" src="{{ file.file.url }}" onclick="document.querySelector('#img-{{ forloop.counter }}').showModal()" />
+                <dialog id="img-{{ forloop.counter }}" onclick="this.close()" style="padding: 0; border: none; width: 70vw">
+                    <img class="zoom center-block" style="width: 100%; max-height: 100%; object-fit: contain" src="{{ file.file.url }}" />
+                </dialog>
+            {% elif file.is_pdf %}
+                <button onclick="document.querySelector('#pdf-{{ forloop.counter }}').showModal()" class="btn-color theme-color">McBig</button>
+                <object data="{{ file.file.url }}" type="application/pdf" width="100%" height="400px"></object>
+                <dialog id="pdf-{{ forloop.counter }}" onclick="this.close()" style="padding: 0; border: none; width: 70vw">
+                    <object data="{{ file.file.url }}" type="application/pdf" style="width: 100%; height: 90vw"></object>
+                </dialog>
+            {% else %}
+                <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer" style="font-size: 5em">🧲</a>
+            {% endif %}
+            <br>
+        {% endfor %}
     </div>
 
 

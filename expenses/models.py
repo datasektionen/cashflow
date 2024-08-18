@@ -387,6 +387,9 @@ class File(models.Model):
         file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
         return file_regex.match(self.file.name)
 
+    def is_pdf(self):
+        return self.file.name.lower().endswith(".pdf")
+
 
 class ExpensePart(models.Model):
     """
