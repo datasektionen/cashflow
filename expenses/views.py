@@ -178,6 +178,12 @@ def delete_expense(request, pk):
     if request.method == 'GET':
         return render(request, 'expenses/delete.html', {"expense": expense})
     if request.method == 'POST':
+        # Will be removed, but sends an email
+        models.Comment(
+            author=request.user.profile,
+            expense=expense,
+            content="Raderade utlägg " + str(expense.id),
+        ).save()
         expense.delete()
         messages.success(request, 'Kvittot raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
