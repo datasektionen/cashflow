@@ -160,9 +160,6 @@ class Profile(models.Model):
             return True
         if expense.owner.user.username == self.user.username:
             return True
-        for expense_part in expense.expensepart_set.all():
-            if self.may_attest(expense_part):
-                return True
         return False
 
     def may_delete_invoice(self, invoice):
@@ -171,8 +168,6 @@ class Profile(models.Model):
         if 'attest-firmatecknare' in dauth.get_permissions(self.user):
             return True
         if invoice.owner.user.username == self.user.username:
-            return True
-        if all([self.may_attest(invoice_part) for invoice_part in invoice.invoicepart_set.all()]):
             return True
         return False
 
