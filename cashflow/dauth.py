@@ -54,23 +54,23 @@ def get_permissions(user):
     """
     Get permissions for user through the pls API.
     """
-    return json.loads(urllib.parse.unquote(requests.get(
-        settings.PLS_URL + '/api/user/' + user.username + '/cashflow/'
-    ).content.decode('utf-8')))
 
+    # Jag bryr mig inte om regler och om jag vill lägga saker i en godtycklig dict så gör jag det.
+
+    if 'cached_permissions' not in user.__dict__:
+        # Fetch permissions from pls and store timestamp
+        response = requests.get(settings.PLS_URL + '/api/user/' + user.username + '/cashflow/')
+        user.__dict__['cached_permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
+
+    return user.__dict__['cached_permissions']
 
 def has_permission(permission, request):
     """
     Check is user has permission to specific property.
-    Will always lookup the pls API.
     Gets user from request.
     """
-    if 'permissions' not in request.session:
-        # Fetch permissions from pls and store timestamp
-        response = requests.get(settings.PLS_URL + '/api/user/' + request.user.username + '/cashflow/')
-        request.session['permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
 
-    return permission in request.session['permissions']
+    return permission in get_permissions(request.user)
 
 
 class AuthRequiredMiddleware(object):
