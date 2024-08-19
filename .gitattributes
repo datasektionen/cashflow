@@ -1,1 +1,2 @@
 staticfiles/*.js linguist-vendored
+templates/**/*.html linguist-language=htmldjango
