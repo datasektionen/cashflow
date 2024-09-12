@@ -269,6 +269,7 @@ class Expense(models.Model):
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
     verification = models.CharField(max_length=7, blank=True)
     is_digital = models.NullBooleanField()
+    flagged = models.BooleanField(default=False)
 
     # Returns a string representation of the expense
     def __str__(self):

@@ -216,6 +216,9 @@
                     </form>
                 </div>
             </li>
+            <li>
+                <button class="theme-color btn-color" v-on:click="toggle_flag(expense)">[[expense.flag_btn_message]]</button>
+            </li>
             <li class="alternatives">
                 <h3>Eller skicka en färdig kommentar:</h3>
                 <ul>
@@ -248,6 +251,13 @@
                     btn_message: "Bekräfta giltighet",
                     confirmed: false,
                     {%endif%}
+                    {% if expense.flagged %}
+                    flag_btn_message: "Unflag",
+                    flagged: true,
+                    {% else %}
+                    flag_btn_message: "Flag",
+                    flagged: false,
+                    {% endif %}
                 },
                 user: {
                     full_name: "{{ user.first_name }} {{user.last_name}}"
@@ -302,6 +312,26 @@
                         this.expense.btn_message = "Bekräfta giltighet"
                     } else {
                         this.expense.btn_message = "Error! Försök igen"
+                    }
+                    return res.text();
+                })
+            },
+            toggle_flag: function (expense) {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+                fetch('/admin/expense/' + expense.id + '/toggle_flag/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => {
+                    if (res.type === "opaqueredirect"){
+                        this.expense.flagged = !this.expense.flagged;
+                        this.expense.flag_btn_message = this.expense.flagged ? "Unflag" : "Flag"
+                    } else {
+                        this.expense.flag_btn_message = "Error! Försök igen"
                     }
                     return res.text();
                 })

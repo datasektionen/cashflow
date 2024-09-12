@@ -252,6 +252,22 @@ def unconfirm_expense(request, pk):
 
 
 @require_POST
+def toggle_flag(request, pk):
+    try:
+        expense = Expense.objects.get(pk=pk)
+
+        #if not dauth.has_permission('flag', request):
+            #return HttpResponseForbidden("Du har inte rättigheterna för att flagga kvitton")
+
+        expense.flagged = not expense.flagged
+        expense.save()
+
+        return HttpResponseRedirect(reverse('admin-confirm'))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+
+
+@require_POST
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())
 def set_verification(request, expense_pk):
