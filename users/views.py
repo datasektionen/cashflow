@@ -30,7 +30,8 @@ def get_user(request, username):
 
     return render(request, 'users/information.html', {
         'showuser': user,
-        'total': models.ExpensePart.objects.filter(expense__owner=user.profile).aggregate(Sum('amount'))
+        'total': models.ExpensePart.objects.filter(expense__owner=user.profile).aggregate(Sum('amount')),
+        'numcashflows': models.ExpensePart.objects.filter(expense__owner=user.profile).count(),
     })
     
 """
