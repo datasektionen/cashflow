@@ -22,6 +22,27 @@
     </div>
     <div class="clearfix"></div>
 
+    <h2>Fakturor</h2>
+    <table v-if="invoices.length > 0" style="margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>Beskrivning</th>
+                <th>Resultatställen</th>
+                <th>Belopp</th>
+                <th>Förfallodatum</th>
+            </tr>
+        </thead>
+        <tbody v-for="invoice, idx in invoices" v-if="cost_centre == false || invoices.filter(e => e.owner === invoice.owner && e.cost_centres.indexOf(cost_centre) > -1).length > 0">
+            <tr v-if="cost_centre == false || invoice.cost_centres.indexOf(cost_centre) > -1">
+                <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
+                <td v-text="invoice.cost_centres.join(', ')"></td>
+                <td v-text="invoice.amount + ' kr'"></td>
+                <td v-text="invoice.due_date"></td>
+            </tr>
+        </tbody>
+    </table>
+    <p v-else><br><b>Du har inga fakturor att betala ut! Bra jobbat!</b></p>
+
     <h2>Utlägg</h2>
     <table v-if="expenses.length > 0" style="margin-top: 20px;">
         <tbody v-for="expense, idx in expenses" v-if="cost_centre == false || expenses.filter(e => e.owner === expense.owner && e.cost_centres.indexOf(cost_centre) > -1).length > 0">
@@ -56,27 +77,6 @@
         </tbody>
     </table>
     <p v-else><b>Du har inga utlägg att betala ut! Bra jobbat!</b></p>
-
-
-
-    <h2>Fakturor</h2>
-    <table v-if="invoices.length > 0" style="margin-top: 20px;">
-        <thead>
-            <tr>
-                <th>Beskrivning</th>
-                <th>Resultatställen</th>
-                <th>Belopp</th>
-            </tr>
-        </thead>
-        <tbody v-for="invoice, idx in invoices" v-if="cost_centre == false || invoices.filter(e => e.owner === invoice.owner && e.cost_centres.indexOf(cost_centre) > -1).length > 0">
-            <tr v-if="cost_centre == false || invoice.cost_centres.indexOf(cost_centre) > -1">
-                <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
-                <td v-text="invoice.cost_centres.join(', ')"></td>
-                <td v-text="invoice.amount + ' kr'"></td>
-            </tr>
-        </tbody>
-    </table>
-    <p v-else><br><b>Du har inga fakturor att betala ut! Bra jobbat!</b></p>
 
     <div id="cover" class="cover" v-on:click="payment = null" v-if="payment" style="display:none">
         <div class="dialog" v-on:click="e => e.stopPropagation()">

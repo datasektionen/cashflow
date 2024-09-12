@@ -100,7 +100,7 @@ class Invoice(models.Model):
         return Invoice.objects. \
             exclude(payed_at__isnull=False). \
             exclude(invoicepart__attested_by=None). \
-            order_by('owner__user__username')
+            order_by('due_date')
 
     # TODO
     @staticmethod

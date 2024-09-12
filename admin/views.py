@@ -134,9 +134,10 @@ def pay_overview(request):
     Shows a list of all payable expenses and lets user pay them.
     """
     return render(request, 'admin/pay/overview.html', {
-        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
         'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
         'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
+        
     })
 
 
