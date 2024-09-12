@@ -137,7 +137,6 @@ def pay_overview(request):
         'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
         'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
         'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
-        
     })
 
 
@@ -219,7 +218,7 @@ def confirm_expense(request, pk):
         comment = Comment(
             expense=expense,
             author=request.user.profile,
-            content='Jag har bekräftat kvittots giltighet.'
+            content='Jag har bekräftat kvittots giltighet. \n Oj, här blev det en ny rad!'
         )
         comment.save()
 
