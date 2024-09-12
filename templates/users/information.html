@@ -30,6 +30,10 @@
             <td>{{ total.amount__sum|intcomma }} kr</td>
             {% endif %}
         </tr>
+        <tr>
+            <th>Antal utlägg</th>
+            <td> {{ numcashflows }} st</td>
+        </tr>
         {% if showuser.profile.may_pay %}
         <tr>
             <th>Standardkonto för utbetalningar</th>
