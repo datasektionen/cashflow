@@ -603,6 +603,7 @@ ul.comments {
     list-style-type: none;
     padding: 0;
     margin: 0 auto;
+    white-space: pre-line;
 }
 ul.comments li {
     list-style-type: none;
