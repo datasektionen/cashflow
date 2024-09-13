@@ -178,9 +178,7 @@
                         </a>
                     </span>
                 </div>
-                <div class="comment" v-tooltip="{ content: 'Skapad {{ comment.date|date:'Y-m-d H:i' }}' }">
-                    {{ comment.content }}
-                </div>
+                <div class="comment" v-tooltip="{ content: 'Skapad {{ comment.date|date:'Y-m-d H:i' }}' }">{{ comment.content }}</div>
             </li>
             {% endfor %}
             <li class="new">

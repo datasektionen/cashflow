@@ -218,7 +218,7 @@ def confirm_expense(request, pk):
         comment = Comment(
             expense=expense,
             author=request.user.profile,
-            content='Jag har bekräftat kvittots giltighet. \n Oj, här blev det en ny rad!'
+            content='Jag har bekräftat kvittots giltighet.'
         )
         comment.save()
 
