@@ -124,6 +124,7 @@ def edit_expense(request, pk):
 
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
+    expense.flagged = False
     expense.save()
 
     new_ids = []
