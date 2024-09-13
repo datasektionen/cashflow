@@ -121,7 +121,7 @@ def confirm_overview(request):
     """
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
+            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None, flagged=False).order_by('id').distinct()],
             default=json_serial)
     })
 

@@ -327,6 +327,7 @@ class Expense(models.Model):
     def view_attestable(may_attest, user):
         filters = {
             'expensepart__attested_by': None,
+            'flagged': False
         }
         if 'firmatecknare' not in may_attest:
             filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
@@ -334,7 +335,7 @@ class Expense(models.Model):
 
     @staticmethod
     def confirmable():
-        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+        return Expense.objects.filter(confirmed_by__isnull=True, flagged=False).distinct()
 
     @staticmethod
     def payable():
