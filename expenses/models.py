@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 
 from cashflow import dauth
 from cashflow import settings
-from cashflow import email
+from cashflow import email_util
 from invoices.models import Invoice
 
 
@@ -201,6 +201,8 @@ class Profile(models.Model):
     def may_unattest(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
 
+    def may_firmatecknare(self):
+        return 'attest-firmatecknare' in dauth.get_permissions(self.user)
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
 # noinspection PyUnusedLocal
@@ -484,4 +486,4 @@ def send_mail(sender, instance, created, *args, **kwargs):
             recipient = owner.user.email
             subject = str(instance.author) + ' har lagt till en kommentar på ditt utlägg.'
             content = render_to_string('email.html', {'comment': instance, 'receiver': owner})
-            email.send_mail(recipient, subject, content)
+            email_util.send_mail(recipient, subject, content)
