@@ -487,3 +487,13 @@ def send_mail(sender, instance, created, *args, **kwargs):
             subject = str(instance.author) + ' har lagt till en kommentar på ditt utlägg.'
             content = render_to_string('email.html', {'comment': instance, 'receiver': owner})
             email_util.send_mail(recipient, subject, content)
+
+class FortnoxAuthToken(models.Model):
+    """
+    Represents an access token for Fortnox.
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    expires_at = models.DateTimeField()
+    
