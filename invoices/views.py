@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
-from cashflow import email
+from cashflow import email_util
 from cashflow import settings
 from expenses.models import *
 from invoices.models import *
@@ -174,5 +174,5 @@ def delete_invoice(request, pk):
             recipient = invoice.owner.user.email
             subject = deleter_name + ' har tagit bort din faktura'
             content = render_to_string("remove_invoice_email.html", {'deleter': deleter_name, 'receiver': receiver_name, 'description': invoice.description})
-            email.send_mail(recipient, subject, content)
+            email_util.send_mail(recipient, subject, content)
         return HttpResponseRedirect(reverse('expenses-index'))
