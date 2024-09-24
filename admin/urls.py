@@ -10,8 +10,8 @@ urlpatterns = [
     url(r'^pay/$', views.pay_overview, name='admin-pay'),
     url(r'^account/$', views.account_overview, name='admin-account'),
 
-    url(r'^account/auth$', views.fortnox_auth, name='admin-account-auth'),
-    url(r'^account/auth/complete$', views.fortnox_auth_complete, name='admin-account-auth-complete'),
+    url(r'^auth$', views.fortnox_auth, name='admin-auth'),
+    url(r'^auth/complete$', views.fortnox_auth_complete, name='admin-auth-complete'),
 
     url(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),
