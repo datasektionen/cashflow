@@ -192,3 +192,8 @@ PLS_URL = os.getenv('PLS_URL', 'https://pls.datasektionen.se')
 
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
+
+# Fortnox settings
+FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
+FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET', 'client_secret')
+FORTNOX_STATE = os.getenv('FORTNOX_STATE', 'state')
