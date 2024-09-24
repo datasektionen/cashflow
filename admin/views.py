@@ -1,6 +1,7 @@
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import *
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -13,7 +14,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from cashflow import dauth
-from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
+from cashflow import fortnox
+from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile, FortnoxAuthToken
 from invoices.models import Invoice, InvoicePart
 
 
@@ -170,6 +172,33 @@ def account_overview(request):
             default=json_serial)
     })
 
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.may_view_account())
+def fortnox_auth(request):
+    return HttpResponseRedirect(fortnox.FortnoxAPI.get_auth_code())
+
+@login_required
+@user_passes_test(lambda u: u.profile.may_firmatecknare())
+def fortnox_auth_complete(request):
+    auth_code = fortnox.FortnoxAPI.get_value_from_callback_url(request.get_full_path())
+    get_tokens = fortnox.FortnoxAPI.get_access_token(auth_code)
+    access_token = get_tokens['access_token']
+    refresh_token = get_tokens['refresh_token']
+    expires_in = get_tokens['expires_in']
+    token_parts = FortnoxAuthToken.objects.all().delete()
+    token_parts = FortnoxAuthToken(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_at=datetime.now() + timedelta(0, expires_in)
+    )   
+    token_parts.save()
+
+    return render(request, 'admin/auth/overview.html', {
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'expires_in': expires_in
+    })
 
 @require_http_methods(["GET", "POST"])
 @login_required
