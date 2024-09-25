@@ -6,13 +6,16 @@
 {% endblock %}
 
 {% block action %}
-{% comment "later" %}
-    {% if user.username == invoice.owner.user.username %}
+<!--{% comment "later" %}
+    {% if user.username == invoice.owner.user.username || true%}
         <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
             Redigera faktura
         </a>
     {% endif %}
-{% endcomment %}
+{% endcomment %}-->
+    <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
+        Redigera faktura
+    </a>
 {% endblock %}
 
 {% block full_content %}
