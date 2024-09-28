@@ -61,97 +61,130 @@
 
 
     <h2>Vad har spenderats på min budgetpost?</h2>
-    <table class="card">
-      <p>
-        Hoppsan, den här funktionaliteten försvann tydligen!
-        <br>
-        Du får gärna omimplementera den, se <a href="https://github.com/datasektionen/cashflow/issues/194">detta issue på github</a>!
-      </p>
-    </table>
-    <!--div style="padding-top: 15px;">OBS. Räknar ej med fakturor</div>
+
+
     <table class="card">
       <thead>
         <tr>
-          <th>Resultatställe</th>
-          <th>Sek. resultatställe</th>
-          <th>Budgetpost</th>
           <th>År</th>
+          <th> Nämnder </th>
+          <th> Sek. resultatställe </th>
+          <th> Budgetpost </th>
           <th>Summa</th>
         </tr>
       </thead>
-      <tr>
-        <td>
-          <div class="input">
-            <div class="select">
-              <select name="committee[]" v-model="selectedCommittee.committeeId" required>
-                <option value="0">- Välj -</option>
-                <optgroup label="Nämnder">
-                  <option v-for="committee in activeCommittees().filter(c => c.type == 'committee')"
-                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
-                </optgroup>
-                <optgroup label="Projekt">
-                  <option v-for="committee in activeCommittees().filter(c => c.type == 'project')"
-                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
-                </optgroup>
-                <optgroup label="Övrigt">
-                  <option v-for="committee in activeCommittees().filter(c => c.type != 'committee' && c.type != 'project')"
-                          :key="committee.id" v-text="committee.name" v-bind:value="committee.id"></option>
-                </optgroup>
+      <tbody>
+        <tr>
+          <!-- First Column for the Year Dropdown -->
+          <td>
+            <!-- Year Dropdown -->
+            <div class="select" style="width: 100%;">
+              <select 
+                v-model="selectedYear" 
+                @change="showDropdownN"
+                style="width: 100%;" 
+                :disabled="expense_parts.length > 1"
+              >
+                <option value="">- Year -</option>
+                <option v-for="year in years" :key="year" :value="year">
+                  {% verbatim %}
+                  {{ year }}
+                  {% endverbatim %}
+                </option>
               </select>
             </div>
-          </div>
-        </td>
-        <td>
-          <div class="input">
-            <div class="select" v-if="selectedCommittee.committeeId > 0">
-              <select name="costCentre[]" v-model="selectedCommittee.costCentreId" required>
-                <option value="0">- Välj -</option>
-                <option v-for="costCentre in activeCostCentres()" v-text="costCentre.name" v-bind:value="costCentre.id"></option>
+          </td>
+  
+          <!-- Second Column for the Cost Centre Dropdown -->
+          <td>
+            <!-- Cost Centre Dropdown (only visible if a year is selected) -->
+            <div class="select" style="width: 100%;">
+              <select 
+                name="costCentres[]" 
+                v-model="expense_parts[0].costCentre" 
+                required 
+                @change="costCentreHandler()"
+                style="width: 100%;"
+              >
+                <option value="">- Välj -</option>
+                <option
+                  v-for="(costCentre, index) in costCentres"
+                  :key="index"
+                  :value="costCentre"
+                >
+                {% verbatim %}
+                {{ costCentre }}
+                {% endverbatim %}
+                </option>
               </select>
             </div>
-            <div class="select disabled" v-else>
-              <select name="costCentre[]" required disabled>
-                <option value="0">- Välj resultatställe först -</option>
+          </td>
+          <td >
+            <!-- Secondary Cost Centre Dropdown (only visible if a year and Cost centre is selected) -->
+            <div class="select" style="width: 100%;">
+              <select 
+                name="secondaryCostCentres[]" 
+                v-model="expense_parts[0].secondaryCostCentre" 
+                required 
+                style="width: 100%;"
+                @change="secondaryCostCentreHandler()"
+
+              >
+                <option value="">- Välj -</option>
+                <option
+                  v-for="(secondaryCostCentre, index) in secondaryCostCentres"
+                  :key="index"
+                  :value="secondaryCostCentre"
+                >
+                {% verbatim %}
+                {{ secondaryCostCentre }}
+                {% endverbatim %}
+                </option>
               </select>
             </div>
-          </div>
-        </td>
-        <td>
-          <div class="input">
-            <div class="select" v-if="selectedCommittee.committeeId > 0 && selectedCommittee.costCentreId > 0">
-              <select name="budgetLine[]" v-model="selectedCommittee.budgetLineId" required>
-                <option value="0">- Välj -</option>
-                <option v-for="budgetLine in committees.filter(x => x.id == selectedCommittee.committeeId)[0].secondary_cost_centres.filter(x => x.id == selectedCommittee.costCentreId).length == 0 ? [] : committees.filter(x => x.id == selectedCommittee.committeeId)[0].secondary_cost_centres.filter(x => x.id == selectedCommittee.costCentreId)[0].budget_lines" v-text="budgetLine.name" v-bind:value="budgetLine.id"></option>
+          </td>
+          <td >
+            <!-- budget lines  Dropdown (only visible if a year and Cost centre and secondary Cost centre is selected) -->
+            <div class="select" style="width: 100%;">
+              <select 
+                name="budgetLines[]" 
+                v-model="expense_parts[0].budgetLine" 
+                required 
+                style="width: 100%;"
+                @change="budgetLineHandler()"
+              >
+                <option value="">- Välj -</option>
+                <option
+                  v-for="(budgetLine, index) in budgetLines"
+                  :key="index"
+                  :value="budgetLine"
+                >
+                {% verbatim %}
+                {{ budgetLine }}
+                {% endverbatim %}
+                </option>
               </select>
             </div>
-            <div class="select disabled" v-else>
-              <select name="budgetLine[]" required disabled>
-                <option value="0">- Välj sek. resultatställe först -</option>
-              </select>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="input">
-            <input type="number" placeholder="År" step="1" min="2017" max="2099"
-                   v-bind:disabled="committeeType() == 'project'" v-model="selectedCommittee.year" name="year" required>
-          </div>
-        </td>
-        <td></td>
+          </td>
+          <td>
+            <span v-if="totalSum !== null">                
+               {% verbatim %}
+               {{ formatMoney(totalSum) }} kr                 
+               {% endverbatim %}
+              </span>
+            <span v-else>-</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+          <!-- Placeholder for Additional Columns -->
+          <td></td>
+          <td></td>
+          <td></td>
       </tr>
-      <tr>
-        <td colspan="5">
-          <button type="button" v-tooltip="{ content: 'Lägger till ett resultatställe till resultatvyn.' }" style="color:#216C2A" v-on:click="addSummary()"><i class="fa fa-plus"></i></button>
-        </td>
-      </tr>
-      <tr v-for="summary in summaries">
-        <td v-text="summary.name"></td>
-        <td v-text="summary.costCentre"></td>
-        <td v-text="summary.budgetLine"></td>
-        <td v-text="summary.year"></td>
-        <td v-text="summary.amount"></td>
-      </tr>
-    </table-->
+      
+    </table>
+
     <h2>Antal inköp per månad</h2>
     <div>
       <input type="number" placeholder="År" step="1" min="2017" max="2099" v-model="monthlyYear" style="max-width: 6em" />
@@ -167,76 +200,78 @@
     <canvas id="monthly" width="300" height="100"></canvas>
   </div>
 </div>
+
+
+
 <script type="text/javascript">
  let krFormatter =  new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK" });
  new Vue({
-     el: '#content',
-     data: function () {
-         return {
-             selected: "Total summa",
-             committees: [],
-             selectedCommittee: {
-                 committeeId: 0,
-                 costCentreId: 0,
-                 budgetLineId: 0,
-                 year: new Date().getFullYear(),
-             },
-             summaries: [],
-             monthlyYear: {{ month_year }},
-             curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
-             curMonthlyCount: {{ month_count_total }},
-             curMonthlySum: {{ month_sum_total }},
-         }
-     },
-     created: function () {
-         fetch('{{ budget_url }}/api/committees?verbose')
-             .then(res => res.json())
-             .then(res => {
-                 this.committees = res.sort((a, b) => a.name.localeCompare(b.name));
-             })
-     },
-     methods: {
-         committeeType: function() {
-             let committee = this.committees.find(x => x.id == this.selectedCommittee.committeeId);
-             if (committee === undefined)
-                 return 'project';
-             else return committee.type;
-         },
-         activeCostCentres: function () {
-             let secondary_cost_centres = this.committees
-                                    .find(x => x.id == this.selectedCommittee.committeeId)
-                                    .secondary_cost_centres;
-             secondary_cost_centres = secondary_cost_centres.filter(cc => cc.budget_lines.length != 0);
-             return secondary_cost_centres;
-         },
-         activeCommittees: function() {
-             return this.committees.filter(c => !c.inactive);
-         },
+      el: '#content',
+      data: function() {
+            return {
+                years: [],      
+                selectedYear: '',
+                showCostCentreDropdown: false,  
+                showSecondaryCostCentreDropdown: false,  
+                showBudgetLineDropdown: false,
+                selectedCommittee: [],
+                costCentres: [],
+                secondaryCostCentres: [],
+                budgetLines: [],
+                expense_parts: [{
+                    costCentre: '',
+                    secondaryCostCentre: '',
+                    budgetLine: '',
+                    amount: 0,
+                }],
+                totalSum: null, 
+                dragStatus: 0,
+                files: [],
+                monthlyYear: {{ month_year }},
+                curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
+                curMonthlyCount: {{ month_count_total }},
+                curMonthlySum: {{ month_sum_total }},
+            }
+      },
+      created: function () {
+        this.years = Array.from({length: 2099 - 2017 + 1}, (v, i) => 2017 + i);
+        fetch('/stats/cost_centres')
+          .then(res => res.json())
+          .then(res => {
+                // Ensure that costCentres is populated correctly
+            this.costCentres = res.cost_centres;
+          })
+          .catch(error => {
+            console.error('Error fetching cost centres:', error);
+          });
+      },
+
+      methods: {
+        showDropdownN: function() {
+          // Show the cost centre dropdown when a year is selected
+          if (this.selectedYear) {
+            this.showCostCentreDropdown = true;
+          } else {
+            this.showCostCentreDropdown = false;
+          }
+        },
+        showDropdownS: function() {
+          if (this.selectedYear && this.showCostCentreDropdown ) {
+            this.showSecondaryCostCentreDropdown = true; 
+          } else {
+            this.showSecondaryCostCentreDropdown =  false;
+          }
+        },
+        showDropdownB: function() {
+          if (this.selectedYear && this.showCostCentreDropdown && this.showSecondaryCostCentreDropdown) {
+            this.showBudgetLineDropdown = true; 
+          } else {
+            this.showBudgetLineDropdown =  false;
+          }
+        },
          click(e) {
              if (this.selected === "Total summa") this.selected = "Antal cashflows"
              else this.selected = "Total summa"
-         },
-         addSummary() {
-             let requestBody = {
-                 committee: this.committees.find(c => c.id == this.selectedCommittee.committeeId).name,
-                 secondary_cost_centre: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId).name,
-                 budget_line: this.activeCostCentres().find(cc => cc.id == this.selectedCommittee.costCentreId)
-                                  .budget_lines
-                                  .find(bl => bl.id == this.selectedCommittee.budgetLineId).name,
-             };
-
-             if (this.committeeType() != 'project')
-                 requestBody.year = this.selectedCommittee.year;
-
-             console.log(requestBody);
-
-             fetch('/stats/summary/', {
-                 method: 'POST',
-                 credentials: 'same-origin',
-                 body: JSON.stringify(requestBody),
-             })
-                 .then(res => res.json())
-                 .then(res => this.summaries.push(res));
          },
          updateMonthlyChart() {
              fetch(`/stats/monthly/${this.monthlyYear}/`)
@@ -252,11 +287,99 @@
                      }
                  });
          },
-         formatMoney(val) {
-           return krFormatter.format(val);
-         }
-     }
- })
+        
+        costCentreHandler(){
+            //this.showDropdownS();
+            this.fetchSecondaryCostCentres();
+            this.fetchExpenseSummary();
+        },
+        secondaryCostCentreHandler(){
+            //this.showDropdownB();
+            this.fetchBudgetLines();
+            this.fetchExpenseSummary();
+        },
+        budgetLineHandler(){
+            this.fetchExpenseSummary();
+        },
+        fetchSecondaryCostCentres () {
+          this.secondaryCostCentres = [];
+          this.expense_parts[0].secondaryCostCentre = '';
+          const requestBody = {
+        year: this.selectedYear,
+        cost_centre: this.expense_parts[0].costCentre,
+      };
+        fetch('/stats/sec_cost_centres/',{
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+          .then(res => res.json())
+          .then(res => {
+            this.secondaryCostCentres = res.sec_cost_centres;
+          })
+          .catch(error => {
+            console.error('Error fetching cost centres:', error);
+          });
+      },
+      fetchBudgetLines () {
+        this.budgetLines = [];
+          this.expense_parts[0].budgetLine = '';
+          const requestBody = {
+        year: this.selectedYear,
+        cost_centre: this.expense_parts[0].costCentre,
+        secondary_cost_centre: this.expense_parts[0].secondaryCostCentre,
+      };
+        fetch('/stats/budget_lines/',{
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+          .then(res => res.json())
+          .then(res => {
+            this.budgetLines = res.budget_lines;
+          })
+          .catch(error => {
+            console.error('Error fetching cost centres:', error);
+          });
+      },
+         fetchExpenseSummary: function() {
+      // Make sure we have both year and cost centre selected
+      if (!this.selectedYear || !this.expense_parts[0].costCentre) return;
+      //this.showDropdownS();
+      const requestBody = {
+        year: this.selectedYear,
+        cost_centre: this.expense_parts[0].costCentre,
+        secondary_cost_centre: this.expense_parts[0].secondaryCostCentre,
+        budget_line: this.expense_parts[0].budgetLine
+      };
+
+      fetch('/stats/summary/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+        .then(res => res.json())
+        .then(res => {
+          this.totalSum = res.amount;
+        })
+        .catch(error => {
+          console.error('Error fetching expense summary:', error);
+        });
+    },
+    formatMoney(val) {
+      return krFormatter.format(val);
+    },
+  }
+})
 </script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
 <script type="text/javascript">
@@ -329,3 +452,4 @@ var ctx = document.getElementById("monthly").getContext("2d");
 window.monthlyChart = new Chart(ctx, config);
 </script>
 {% endblock %}
+
