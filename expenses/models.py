@@ -216,6 +216,7 @@ def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
 
+
 class Payment(models.Model):
     """
     Represents a payment from a chapter account to a member.

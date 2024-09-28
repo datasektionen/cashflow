@@ -17,6 +17,7 @@ services:
       - 8000:8000
     volumes:
       - ./media:/app/media
+      - ./templates:/app/templates
     develop:
       watch:
         - path: .
@@ -34,11 +35,16 @@ services:
       POSTGRES_USER: cashflow
       POSTGRES_PASSWORD: cashflow
       POSTGRES_DB: cashflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "cashflow"]
       interval: 2s
       timeout: 2s
       retries: 3
+    ports:
+      - 5432:5432
+
   login:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
     ports:
@@ -48,3 +54,5 @@ services:
       # Melvin here since he's treasurer at the time of writing.
       KTH_ID: melvinj
 
+volumes:
+  postgres_data:

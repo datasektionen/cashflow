@@ -46,29 +46,51 @@ def index(request):
 def summary(request):
     if request.method == "POST":
         body_data = json.loads(request.body)
-        # we tried getting it to work with ids, but it didn't,
-        # so we're using names for now
+        print("body = " , body_data)
 
         expense_parts = None
 
-        if "year" in body_data:
-             expense_parts = models.ExpensePart.objects.filter(
-                 budget_line=body_data['budget_line'],
-                 cost_centre=body_data['cost_centre'],
-                 secondary_cost_centre=body_data['cost_centre'],
-                 expense__expense_date__year=body_data['year'],
+        cost_centre = body_data.get('cost_centre')
+        year = body_data.get('year')
+        secondary_cost_centre = body_data.get('secondary_cost_centre')
+        budget_line = body_data.get('budget_line')
+
+        if not cost_centre or not year:
+            return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
+        if secondary_cost_centre == '':
+            # Filter ExpensePart by cost_centre and year
+            expense_parts = models.ExpensePart.objects.filter(
+                cost_centre=cost_centre,
+                expense__expense_date__year=year
+            ).all()
+        elif budget_line == '':
+            # Filter ExpensePart by cost_centre and year
+            expense_parts = models.ExpensePart.objects.filter(
+                cost_centre=cost_centre,
+                expense__expense_date__year=year,
+                secondary_cost_centre=secondary_cost_centre
             ).all()
         else:
+            # Filter ExpensePart by cost_centre and year
             expense_parts = models.ExpensePart.objects.filter(
-                budget_line=body_data['budget_line'],
-                cost_centre=body_data['cost_centre'],
-                secondary_cost_centre=body_data['cost_centre'],
+                cost_centre=cost_centre,
+                expense__expense_date__year=year,
+                secondary_cost_centre=secondary_cost_centre,
+                budget_line = budget_line
             ).all()
-
+        
         sum_amount = 0
+        expense_parts_list = []  # To store each expense part for debugging or detailed view
 
         for expense_part in expense_parts:
+            print(expense_part)  # Print for debugging
             sum_amount += expense_part.amount
+            # Optionally add the expense part details to the response
+            expense_parts_list.append({
+                'expense': str(expense_part.expense),  # String representation of the expense
+                'amount': float(expense_part.amount),  # Convert to float for JSON compatibility
+                'budget_line': expense_part.budget_line
+            })
 
         return JsonResponse({
             'name': body_data['cost_centre'],
@@ -78,6 +100,98 @@ def summary(request):
             'amount': sum_amount,
         })
     return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@csrf_exempt
+def sec_cost_centres(request):
+    if request.method == "POST":
+        body_data = json.loads(request.body)
+        print("body = " , body_data)
+        expense_parts = None
+
+        cost_centre = body_data.get('cost_centre')
+        year = body_data.get('year')
+        if not cost_centre or not year:
+            return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
+
+        # Filter ExpensePart by cost_centre and year
+        expense_parts = models.ExpensePart.objects.filter(
+            cost_centre=cost_centre,
+            expense__expense_date__year=year
+        ).all()
+        
+        sec_cost_centres = set()
+
+        for expense_part in expense_parts:
+            sec_cost_centres.add(expense_part.secondary_cost_centre)
+            # Optionally add the expense part details to the response
+    
+        print("sec cost centres = " ,sec_cost_centres)
+        sec_cost_centres_list = list(sec_cost_centres)
+
+        return JsonResponse({
+            'sec_cost_centres': sec_cost_centres_list
+        })
+    return Response(status=status.HTTP_404_NOT_FOUND)
+
+@csrf_exempt
+def budget_lines(request):
+    if request.method == "POST":
+        body_data = json.loads(request.body)
+        print("body = " , body_data)
+        expense_parts = None
+
+        cost_centre = body_data.get('cost_centre')
+        year = body_data.get('year')
+        secondary_cost_centre = body_data.get('secondary_cost_centre')
+        if not cost_centre or not year or not secondary_cost_centre:
+            return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
+
+        # Filter ExpensePart by cost_centre and year
+        expense_parts = models.ExpensePart.objects.filter(
+            cost_centre=cost_centre,
+            expense__expense_date__year=year,
+            secondary_cost_centre = secondary_cost_centre
+        ).all()
+        
+        budget_lines = set()
+
+        for expense_part in expense_parts:
+            budget_lines.add(expense_part.budget_line)
+    
+        budget_lines_list = list(budget_lines)
+
+        return JsonResponse({
+            'budget_lines': budget_lines_list
+        })
+    return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+@require_GET
+def cost_centres(request):
+    """
+    Returns the distinct cost centres (committees) from all expenses.
+    """
+    expense_queryset = models.Expense.objects.all()
+    # expense_queryset is a list of expenses 
+
+    print(expense_queryset)
+    
+    # Collecting cost centres from each expense
+    cost_centres = set()  # Use a set to avoid duplicates
+
+    for expense in expense_queryset:
+        for cost_centre in expense.cost_centres():
+            cost_centres.add(cost_centre['cost_centre'])
+
+    # Convert the set back to a list
+    cost_centres_list = list(cost_centres)
+
+    return JsonResponse({
+        'cost_centres': cost_centres_list
+    })
+
 
 
 @require_GET
