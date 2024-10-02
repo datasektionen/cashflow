@@ -46,7 +46,6 @@ def index(request):
 def summary(request):
     if request.method == "POST":
         body_data = json.loads(request.body)
-        print("body = " , body_data)
 
         expense_parts = None
 
@@ -78,7 +77,7 @@ def summary(request):
                 secondary_cost_centre=secondary_cost_centre,
                 budget_line = budget_line
             ).all()
-        
+
         sum_amount = 0
         expense_parts_list = []  # To store each expense part for debugging or detailed view
 
@@ -106,7 +105,6 @@ def summary(request):
 def sec_cost_centres(request):
     if request.method == "POST":
         body_data = json.loads(request.body)
-        print("body = " , body_data)
         expense_parts = None
 
         cost_centre = body_data.get('cost_centre')
@@ -126,7 +124,6 @@ def sec_cost_centres(request):
             sec_cost_centres.add(expense_part.secondary_cost_centre)
             # Optionally add the expense part details to the response
     
-        print("sec cost centres = " ,sec_cost_centres)
         sec_cost_centres_list = list(sec_cost_centres)
 
         return JsonResponse({
@@ -138,7 +135,6 @@ def sec_cost_centres(request):
 def budget_lines(request):
     if request.method == "POST":
         body_data = json.loads(request.body)
-        print("body = " , body_data)
         expense_parts = None
 
         cost_centre = body_data.get('cost_centre')
@@ -176,7 +172,6 @@ def cost_centres(request):
     expense_queryset = models.Expense.objects.all()
     # expense_queryset is a list of expenses 
 
-    print(expense_queryset)
     
     # Collecting cost centres from each expense
     cost_centres = set()  # Use a set to avoid duplicates
