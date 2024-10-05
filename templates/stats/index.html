@@ -67,7 +67,7 @@
       <thead>
         <tr>
           <th>År</th>
-          <th> Nämnder </th>
+          <th> Resultatställe </th>
           <th> Sek. resultatställe </th>
           <th> Budgetpost </th>
           <th>Summa</th>
@@ -86,10 +86,7 @@
                 :disabled="expense_parts.length > 1"
               >
                 <option value="">- Välj år -</option>
-                <option v-for="year in years" :key="year" :value="year">
-                  {% verbatim %}
-                  {{ year }}
-                  {% endverbatim %}
+                <option v-text="year" v-for="year in years" :key="year" :value="year"> 
                 </option>
               </select>
             </div>
@@ -108,13 +105,11 @@
               >
                 <option value="">- Välj -</option>
                 <option
+                  v-text="costCentre"
                   v-for="(costCentre, index) in costCentres"
                   :key="index"
                   :value="costCentre"
                 >
-                {% verbatim %}
-                {{ costCentre }}
-                {% endverbatim %}
                 </option>
               </select>
             </div>
@@ -132,13 +127,11 @@
               >
                 <option value="">- Välj -</option>
                 <option
+                  v-text="secondaryCostCentre"
                   v-for="(secondaryCostCentre, index) in secondaryCostCentres"
                   :key="index"
                   :value="secondaryCostCentre"
                 >
-                {% verbatim %}
-                {{ secondaryCostCentre }}
-                {% endverbatim %}
                 </option>
               </select>
             </div>
@@ -155,23 +148,18 @@
               >
                 <option value="">- Välj -</option>
                 <option
+                  v-text="budgetLine"
                   v-for="(budgetLine, index) in budgetLines"
                   :key="index"
                   :value="budgetLine"
                 >
-                {% verbatim %}
-                {{ budgetLine }}
-                {% endverbatim %}
                 </option>
               </select>
             </div>
           </td>
           <td>
-            <span v-if="totalSum !== null">                
-               {% verbatim %}
-               {{ formatMoney(totalSum) }} kr                 
-               {% endverbatim %}
-              </span>
+            <span v-text="formatMoney(totalSum)" v-if="totalSum !== null">                
+            </span>
             <span v-else>-</span>
           </td>
         </tr>
