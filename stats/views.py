@@ -42,17 +42,16 @@ def index(request):
         'budget_url': settings.BUDGET_URL,
     })
 
-@csrf_exempt
+@require_GET
 def summary(request):
-    if request.method == "POST":
-        body_data = json.loads(request.body)
+    if request.method == "GET":
 
         expense_parts = None
 
-        cost_centre = body_data.get('cost_centre')
-        year = body_data.get('year')
-        secondary_cost_centre = body_data.get('secondary_cost_centre')
-        budget_line = body_data.get('budget_line')
+        cost_centre = request.GET.get('cost_centre')
+        year = request.GET.get('year')
+        secondary_cost_centre = request.GET.get('secondary_cost_centre')
+        budget_line = request.GET.get('budget_line')
 
         if not cost_centre or not year:
             return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
@@ -82,7 +81,6 @@ def summary(request):
         expense_parts_list = []  # To store each expense part for debugging or detailed view
 
         for expense_part in expense_parts:
-            print(expense_part)  # Print for debugging
             sum_amount += expense_part.amount
             # Optionally add the expense part details to the response
             expense_parts_list.append({
@@ -92,23 +90,18 @@ def summary(request):
             })
 
         return JsonResponse({
-            'name': body_data['cost_centre'],
-            'costCentre': body_data['cost_centre'],
-            'budgetLine': body_data['budget_line'],
-            'year': body_data.get("year"),
             'amount': sum_amount,
         })
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-@csrf_exempt
+@require_GET
 def sec_cost_centres(request):
-    if request.method == "POST":
-        body_data = json.loads(request.body)
+    if request.method == "GET":
         expense_parts = None
 
-        cost_centre = body_data.get('cost_centre')
-        year = body_data.get('year')
+        cost_centre = request.GET.get('cost_centre')
+        year = request.GET.get('year')
         if not cost_centre or not year:
             return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
 
@@ -131,15 +124,14 @@ def sec_cost_centres(request):
         })
     return Response(status=status.HTTP_404_NOT_FOUND)
 
-@csrf_exempt
+@require_GET
 def budget_lines(request):
-    if request.method == "POST":
-        body_data = json.loads(request.body)
+    if request.method == "GET":
         expense_parts = None
 
-        cost_centre = body_data.get('cost_centre')
-        year = body_data.get('year')
-        secondary_cost_centre = body_data.get('secondary_cost_centre')
+        cost_centre = request.GET.get('cost_centre')
+        year = request.GET.get('year')
+        secondary_cost_centre = request.GET.get('secondary_cost_centre')
         if not cost_centre or not year or not secondary_cost_centre:
             return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
 
