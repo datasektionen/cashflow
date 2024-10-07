@@ -279,6 +279,8 @@
         costCentreHandler(){
             //this.showDropdownS();
             this.fetchSecondaryCostCentres();
+            this.budgetLines = [];
+            this.expense_parts[0].budgetLine = '';
             this.fetchExpenseSummary();
         },
         secondaryCostCentreHandler(){
@@ -292,17 +294,16 @@
         fetchSecondaryCostCentres () {
           this.secondaryCostCentres = [];
           this.expense_parts[0].secondaryCostCentre = '';
-          const requestBody = {
+          const params = new URLSearchParams ({
         year: this.selectedYear,
         cost_centre: this.expense_parts[0].costCentre,
-      };
-        fetch('/stats/sec_cost_centres/',{
-        method: 'POST',
+      });
+        fetch(`/stats/sec_cost_centres/?${params.toString()}`,{
+        method: 'GET',
         credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
       })
           .then(res => res.json())
           .then(res => {
@@ -314,19 +315,18 @@
       },
       fetchBudgetLines () {
         this.budgetLines = [];
-          this.expense_parts[0].budgetLine = '';
-          const requestBody = {
+        this.expense_parts[0].budgetLine = '';
+        const params = new URLSearchParams ({
         year: this.selectedYear,
         cost_centre: this.expense_parts[0].costCentre,
         secondary_cost_centre: this.expense_parts[0].secondaryCostCentre,
-      };
-        fetch('/stats/budget_lines/',{
-        method: 'POST',
+      });
+        fetch(`/stats/budget_lines/?${params.toString()}`,{
+        method: 'GET',
         credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
       })
           .then(res => res.json())
           .then(res => {
@@ -340,20 +340,19 @@
       // Make sure we have both year and cost centre selected
       if (!this.selectedYear || !this.expense_parts[0].costCentre) return;
       //this.showDropdownS();
-      const requestBody = {
+      const params = new URLSearchParams ({
         year: this.selectedYear,
         cost_centre: this.expense_parts[0].costCentre,
         secondary_cost_centre: this.expense_parts[0].secondaryCostCentre,
         budget_line: this.expense_parts[0].budgetLine
-      };
+      });
 
-      fetch('/stats/summary/', {
-        method: 'POST',
+      fetch(`/stats/summary/?${params.toString()}`, {
+        method: 'GET',
         credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
       })
         .then(res => res.json())
         .then(res => {
