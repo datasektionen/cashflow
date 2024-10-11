@@ -25,17 +25,17 @@
                 </span>
                 <div class="input">
                     <input type="text" name="description" value="{{ invoice.description }}" placeholder="Lägg till beskrivning" class="long" required />
-                    <!--<input type="text" name="invoice-description" required />-->
                 </div>
             </div>
             <div class="uploaded-file" v-for="file in files" style="text-align: center">
-                <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
+                <!--<div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
                     <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
                 </div>
                 <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
-                <span v-else class="name" v-text="file.name"></span>
+                <span v-else class="name" v-text="file.name"></span>-->
+                <a class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
                 <span class="delete" v-on:click="deleteFile(file)">
-                    <i class="fa fa-times"></i>
+                    <i class="fa fa-times" style="color:#b00000"></i>
                 </span>
                 <a v-if="file.isImg" target="_blank" v-bind:href="file.url">
                     <br />
@@ -92,7 +92,6 @@
         </div>
         <!--<div class="clearfix"></div>-->
         
-        <!--Kinda works to here-->
         <!--</div> <!--Nothing shows up without this, but I have no idea what it belongs to-->
         <div class="clear"></div>
         <h2>Fakturadelar</h2>
@@ -119,9 +118,9 @@
                         <div class="select">
                             <select name="costCentres[]" v-model="invoice_part.costCentre" required v-on:change="updateSecondaryCostCentres()">
                                 <option value="0">- Välj -</option>
-                                <optgroup v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
+                                <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
                                         :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
-                                <optgroup label="Nämnder">
+                                    <optgroup label="Nämnder">
                                     <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
@@ -236,75 +235,7 @@
 
     new Vue({
         el: '#form',
-        /*
-        data: function () {
-            return {
-                payed: '',
-                accounted: '',
-                costCentres: [],
-                secondaryCostCentres: new Map(),
-                budgetLines: new Map(),
-                expense_parts: [{
-                    costCentre: '',
-                    secondaryCostCentre: '',
-                    budgetLine: '',
-                    amount: 0,
-                }],
-            }
-        },
-
-        created: function () { //created: function () {
-            fetch('{{ budget_url }}/api/CostCentres')
-                .then(res => res.json())
-                .then(res => {
-                    this.costCentres = res.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
-                })
-        },
-        methods: {
-            updateSecondaryCostCentres: function () {
-                for (const part of this.expense_parts) {
-                    console.log(part, part.costCentre);
-                    if (part.costCentre === '') continue;
-                    if (!this.secondaryCostCentres.has(part.costCentre)) {
-                        fetch('{{ budget_url }}/api/SecondaryCostCentres?id=' + part.costCentre.split(',')[0])
-                            .then(res => res.json())
-                            .then(res => {
-                                this.secondaryCostCentres.set(part.costCentre, res);
-                                // Make vue understand that secondaryCostCentres has changed
-                                this.secondaryCostCentres = new Map(this.secondaryCostCentres);
-                            })
-                    }
-                }
-            },
-            updateBudgetLines: function () {
-                for (const part of this.expense_parts) {
-                    if (part.secondaryCostCentre === '') continue;
-                    if (!this.budgetLines.has(part.secondaryCostCentre)) {
-                        fetch('{{ budget_url }}/api/BudgetLines?id=' + part.secondaryCostCentre.split(',')[0])
-                            .then(res => res.json())
-                            .then(res => {
-                                this.budgetLines.set(part.secondaryCostCentre, res);
-                                // Make vue understand that budgetLines has changed
-                                this.budgetLines = new Map(this.budgetLines);
-                            })
-                    }
-                }
-            },
-            addPart: function () {
-                this.expense_parts.push({
-                    costCentre: this.expense_parts[this.expense_parts.length - 1].costCentre,
-                    secondaryCostCentre: this.expense_parts[this.expense_parts.length - 1].secondaryCostCentre,
-                    budgetLine: '',
-                    //budgetLineId: 0,
-                    amount: 0,
-                });
-            },
-            removePart: function (i) {
-                if (this.expense_parts.length > 1)
-                    this.expense_parts.splice(i, 1)
-            }
-        }
-        */
+        
         data: function () {
             return {
                 payed: '',
@@ -336,17 +267,7 @@
         },
         
         created: async function () {
-            //Error handling
-            try {
-                let res = await fetch('{{ budget_url }}/api/CostCentres');
-                if (!res.ok) throw new Error('Failed to fetch cost centres');
-                let body = await res.json();
-                this.costCentres = body.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
-            } catch (error) {
-                console.error(error);
-                alert('Error fetching cost centres. Please try again later.');
-            }
-
+            
             let res = await fetch('{{ budget_url }}/api/CostCentres');
             let body = await res.json();
             this.costCentres = body.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
@@ -479,6 +400,16 @@
                     return
                 }
                 this.invoice_parts.splice(i, 1)
+            },
+            deleteFile: function(file) {
+                fetch('/api/files/' + file.id + '/delete/', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                })
+                .then(x => x.json())
+                .then(x => {
+                    this.files = this.files.filter(f => f !== file)
+                })
             }
         }
     })

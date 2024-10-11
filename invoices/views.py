@@ -16,6 +16,7 @@ from cashflow import settings
 from expenses.models import *
 from invoices.models import *
 from invoices.models import Invoice
+from invoices.models import InvoicePart
 
 @require_http_methods(["GET", "POST"])
 def new_invoice(request):
@@ -77,13 +78,14 @@ def new_invoice(request):
             request.POST.getlist("budgetLines[]"),
             request.POST.getlist("amounts[]"),
         ):
-            InvoicePart(
+            invoice_part = InvoicePart(
                 invoice=invoice,
                 cost_centre=cost_centre.split(",")[1],
                 secondary_cost_centre=secondary_cost_centre.split(",")[1],
                 budget_line=budget_line.split(",")[1],
                 amount=amount,
-            ).save()
+            )
+            invoice_part.save()
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
 
@@ -136,7 +138,7 @@ def edit_invoice(request, pk):
         valid = False
 
     if len(request.POST.getlist('budgetLines[]')) == 0:
-        messages.error(request, 'Du måste lägga till minst en del på kvittot')
+        messages.error(request, 'Du måste lägga till minst en del på fakturan')
         valid = False
 
     if invdate > duedate:
@@ -145,96 +147,50 @@ def edit_invoice(request, pk):
 
     if not valid:
         return HttpResponseRedirect(reverse('invoices-new'))
-    with transaction.atomic():
-        invoice = Invoice(
-            owner=request.user.profile,
-            invoice_date=invdate,
-            due_date=duedate,
-            file_is_original=invoice.file_is_original,
-            description=invoice.description,
-        )
-        invoice.save()
-
-        # Add the file
-        for uploaded_file in request.FILES.getlist('files'):
-            file = File(invoice=invoice, file=uploaded_file)
-            file.save()
-
-        # Add the expenseparts
-        for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-            request.POST.getlist("costCentres[]"),
-            request.POST.getlist("secondaryCostCentres[]"),
-            request.POST.getlist("budgetLines[]"),
-            request.POST.getlist("amounts[]"),
-        ):
-            InvoicePart(
-                invoice=invoice,
-                cost_centre=cost_centre.split(",")[1],
-                secondary_cost_centre=secondary_cost_centre.split(",")[1],
-                budget_line=budget_line.split(",")[1],
-                amount=amount,
-            ).save()
-
-    return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
-
-    """
-    try:
-        invoice = Invoice.objects.get(pk=pk)
-    except ObjectDoesNotExist:
-        raise Http404("Fakturan finns inte")
-
-    #TODO
-    #Check if invoice has been paid
-
-    #Maybe change this so that certain users can edit invoices
-    if invoice.owner.user.username != request.user.username:
-        messages.error(request, 'Kan inte ändra på någon annans faktura')
-        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
-
-    # Show the form on GET, otherwise handle as POST
-    if request.method == 'GET':
-        return render(request, 'invoices/edit.html', {
-            "expense": invoice,
-            "expenseparts": invoice.expensepart_set.all(),
-            "budget_url": settings.BUDGET_URL,
-        })
-
-    invoice.description = request.POST['description']
-    invoice.expense_date = request.POST['expense_date']
+    #with transaction.atomic():
+    """invoice = Invoice(
+        owner=request.user.profile,
+        invoice_date=invdate,
+        due_date=duedate,
+        file_is_original=invoice.file_is_original,
+        description=invoice.description,
+    )
     invoice.save()
+    """
+    # Add the file
+    for uploaded_file in request.FILES.getlist('files'):
+        file = File(invoice=invoice, file=uploaded_file)
+        file.save()
 
     new_ids = []
 
+    # Add the expenseparts
     for cost_centre, secondary_cost_centre, budget_line, amount in zip(
         request.POST.getlist("costCentres[]"),
         request.POST.getlist("secondaryCostCentres[]"),
         request.POST.getlist("budgetLines[]"),
         request.POST.getlist("amounts[]"),
     ):
-        if float(amount) < 1:
-            messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
-            continue
-
-        expense_part = models.ExpensePart(
-            expense=invoice,
+        invoice_part = InvoicePart(
+            invoice=invoice,
             cost_centre=cost_centre.split(",")[1],
             secondary_cost_centre=secondary_cost_centre.split(",")[1],
             budget_line=budget_line.split(",")[1],
             amount=amount,
         )
-        expense_part.save()
-        new_ids.append(expense_part.id)
+        invoice_part.save()
+        new_ids.append(invoice_part.id)
+            
+    #InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids).delete()
+    part_to_delete = InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids)
+    #messages.error(message=part_to_delete)
+    part_to_delete.delete()
 
-    if len(new_ids) < 1:
-        messages.warning(request, 'Något gick fel med inladdning av budgetposterna')
-        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': pk}))
+    #Invoice.objects.get(pk=int(pk)).delete()
+    messages.success(request, 'Fakturan ändrades')
 
-    models.ExpensePart.objects.filter(expense=expense).exclude(id__in=new_ids).delete()
-
-    messages.success(request, 'Fakuran ändrades')
-
-    return HttpResponseRedirect(reverse('invoice-show', kwargs={'pk': pk}))
-    """
+    return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
+    #return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': int(pk)+1}))
 
 """
 Shows one expense.
