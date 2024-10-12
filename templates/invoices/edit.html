@@ -2,7 +2,7 @@
 {% extends "../detail.html" %}
 {% load widget_tweaks %}
 
-{% block title %}Ändra faktura{% endblock %}
+{% block title %}Redigera faktura{% endblock %}
 
 {% block full_content %}
 <div id="form" class="form" style="margin-top: -30px;">
@@ -92,7 +92,7 @@
         </div>
         <!--<div class="clearfix"></div>-->
         
-        <!--</div> <!--Nothing shows up without this, but I have no idea what it belongs to-->
+        <!--</div> <!--Removing this used to break everything-->
         <div class="clear"></div>
         <h2>Fakturadelar</h2>
         <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
