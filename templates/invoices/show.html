@@ -6,16 +6,11 @@
 {% endblock %}
 
 {% block action %}
-<!--{% comment "later" %}
-    {% if user.username == invoice.owner.user.username || true%}
-        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
+    {%if user.profile.may_delete_invoice %} <!--Doesn't seem to work, need more checks-->
+        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action" style="padding-top: 10px; padding-bottom: 8px; padding-left: 15px; padding-right: 15px;">
             Redigera faktura
         </a>
     {% endif %}
-{% endcomment %}-->
-    <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
-        Redigera faktura
-    </a>
 {% endblock %}
 
 {% block full_content %}

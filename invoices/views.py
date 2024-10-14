@@ -115,15 +115,15 @@ def edit_invoice(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Fakturan finns inte")
     
+    if not request.user.profile.may_delete_invoice(invoice):
+        return HttpResponseForbidden('Du har inte behörighet att redigera denna faktura.')
+    
     if request.method == 'GET':
         return render(request, 'invoices/edit.html', {
-            "invoice": invoice,                                 #Wasn't here before
-            "invoice_parts": invoice.invoicepart_set.all(),     #Wasn't here before
+            "invoice": invoice,
+            "invoice_parts": invoice.invoicepart_set.all(),
             "budget_url": settings.BUDGET_URL,
             })
-    
-    #invdate = request.POST['invoice-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-date']) else None
-    #duedate = request.POST['invoice-due-date'] if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', request.POST['invoice-due-date']) else None #Error
 
     invdate = invoice.invoice_date
     duedate = invoice.due_date
@@ -147,16 +147,7 @@ def edit_invoice(request, pk):
 
     if not valid:
         return HttpResponseRedirect(reverse('invoices-new'))
-    #with transaction.atomic():
-    """invoice = Invoice(
-        owner=request.user.profile,
-        invoice_date=invdate,
-        due_date=duedate,
-        file_is_original=invoice.file_is_original,
-        description=invoice.description,
-    )
-    invoice.save()
-    """
+    
     # Add the file
     for uploaded_file in request.FILES.getlist('files'):
         file = File(invoice=invoice, file=uploaded_file)
@@ -186,11 +177,9 @@ def edit_invoice(request, pk):
     #messages.error(message=part_to_delete)
     part_to_delete.delete()
 
-    #Invoice.objects.get(pk=int(pk)).delete()
     messages.success(request, 'Fakturan ändrades')
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
-    #return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': int(pk)+1}))
 
 """
 Shows one expense.
@@ -214,8 +203,6 @@ def get_invoice(request, pk):
         'may_account': request.user.profile.may_account(),
         'budget_url': settings.BUDGET_URL,
     })
-
-
 
 """
 Adds new comment to invoice.
