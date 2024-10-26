@@ -59,7 +59,6 @@
                 .then(res => res.json())
                 .then(res => {
                     this.accountarray = [];
-                    console.log("Response received:", res.accounts);
                     if (res.error) {
                         console.error("Error:", res.error);
                     } else {
@@ -68,7 +67,6 @@
                             Number: account.Number
                         })
                         );
-                        console.log(this.accountarray);
                     }
                 })
                 .catch(error => console.error('Error:', error));
