@@ -289,6 +289,28 @@ def fortnox_import_accounts_to_db(request):
         page_number += 1
     return HttpResponseRedirect(reverse('admin-auth-test'))
 
+@require_GET
+@login_required
+@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.may_firmatecknare())
+def fortnox_auth_search(request):
+    token = FortnoxAuthToken.objects.first()
+    if token is None:
+        return JsonResponse({'error': 'No token found'})
+
+    search_query = request.GET.get('search')
+    if not search_query:
+        return JsonResponse({'error': 'No search query provided'})
+
+    search_results = FortnoxAccounts.objects.filter(
+        Description__icontains=search_query
+    ) | FortnoxAccounts.objects.filter(Number__icontains=search_query)
+
+    results_list = list(search_results.values('Number', 'Description'))
+    return JsonResponse({'accounts': results_list})
+
+
 @require_http_methods(["GET", "POST"])
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())

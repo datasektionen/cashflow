@@ -7,7 +7,9 @@
     Company info:
     <textarea disabled>{{ company_info }}</textarea>
     <input type="text" v-on:keyup="search" v-model="query" placeholder="Skriv ett kontofakker" />
-    <textarea disabled>{{ accountarray }}</textarea>
+    <li v-for="acc in accountarray">
+        <span v-text="acc.Number"></span> - <span v-text="acc.Description"></span>
+    </li>       
     Accounts:
     <textarea disabled>{{ accounts }}</textarea>
     Account chart:
@@ -45,25 +47,31 @@
                 accountchart: {% autoescape off %}"{{ accountchart }}"{% endautoescape %},
                 query: '',
                 hoverIndex: 0,
-                accountarray: [],
+                accountarray: []
             }
         },
         methods: {
             search() {
-                let form = new FormData()
-                form.append('query', this.query)
-
-                fetch('/admin/auth/search/', {
-                    method: 'POST',
+                fetch(`/admin/auth/search?search=${encodeURIComponent(this.query)}`, {
+                    method: 'GET',
                     credentials: 'same-origin',
-                    body: form,
-                    redirect: 'manual'
-                })
+                    })
                 .then(res => res.json())
                 .then(res => {
-                    console.log(res)
-                    this.accountarray = res.accounts
+                    this.accountarray = [];
+                    console.log("Response received:", res.accounts);
+                    if (res.error) {
+                        console.error("Error:", res.error);
+                    } else {
+                        this.accountarray = res.accounts.map(account => ({
+                            Description: account.Description,
+                            Number: account.Number
+                        })
+                        );
+                        console.log(this.accountarray);
+                    }
                 })
+                .catch(error => console.error('Error:', error));
             }
         }
     })
