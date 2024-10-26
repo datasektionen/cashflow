@@ -29,7 +29,7 @@
                     <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     (<span v-text="expense.id"></span>)
                     <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                        v-on:click="copy(expense.description + ' (' + expense.id + ')')">📋</button>
+                        v-on:click="copy(' (' + expense.id + ')' + expense.description)">📋</button>
                 </td>
                 <td v-text="expense.expense_date"></td>
 

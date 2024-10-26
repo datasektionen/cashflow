@@ -15,9 +15,44 @@
         </ul>
     {% endif %}
     <form method="POST" action="" class="form-horizontal" enctype="multipart/form-data">
-        <p>Ladda endast upp en faktura i taget.</p>
         <div class="form">
             {% csrf_token %}
+            <div v-on:drag="dragStart" v-on:dragstart="dragStart" v-on:dragover="dragOver" v-on:dragenter="dragOver" v-on:dragend="dragLeave" v-on:dragleave="dragLeave" v-on:drop="dragDrop" class="form-entry">
+                <div class="input file">
+                    <div class="file-input">
+                        <div class="uploaded-file" v-for="file in files" style="text-align: center">
+                            <div v-bind:class="{ 'icon': true, 'spin': file.status === 0 }">
+                                <i v-bind:class="{ fa: true, 'fa-spinner': file.status === 0, 'fa-check': file.status === 1 }" style="color:#216C2A"></i>
+                            </div>
+                            <a v-if="file.status === 1" class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
+                            <span v-else class="name" v-text="file.name"></span>
+                            <span class="delete" v-on:click="deleteFile(file)">
+                                <i class="fa fa-times"></i>
+                            </span>
+                            <a v-if="file.isImg" target="_blank" v-bind:href="file.url">
+                                <br />
+                                <img v-bind:src="file.url" />
+                            </a>
+                        </div>
+                        <div class="file-inner">
+                            <label for="file">
+                                <input type="file" ref="files" name="files" id="file" multiple="multiple" v-on:change="fileSelected">
+                                <div class="icon"><i class="fa fa-upload"></i></div>
+                                <div class="status" v-if="isWaiting">
+                                    <b>Ladda upp</b> en bild/pdf av fakturan
+                                    <p>Du kan dra och släppa en fil här.</p>
+                                </div>
+                                <div class="status" v-if="isDragging">
+                                    <b>Släpp filen här för att ladda upp den</b>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            
+            <p>Ladda endast upp en faktura i taget.</p>
             <div class="form-entry">
                 <span class="description">
                     <label for="invoice-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning av innehållet:</label>
@@ -28,6 +63,7 @@
                 </div>
             </div>
             <div class="clearfix"></div>
+            <!--
             <div class="uploaded-file" v-for="file in files" style="text-align: center">
                 <a class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
                 <span class="delete" v-on:click="deleteFile(file)">
@@ -55,6 +91,7 @@
                     </div>
                 </div>
             </div>
+            -->
             <div class="clearfix"></div>
             <h2>Metadata</h2>
             <div class="form">
@@ -180,8 +217,13 @@
                 <tr>
                     <td colspan="5">
                         <!--<button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>-->
-                        <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
-                        <input type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+                        <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A; padding-left: 10px; padding-right: 10px;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
+                        <button type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right; padding-left: 10px; padding-right: 10px;" value="Spara och registrera faktura" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0">
+                            <div v-if="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0" class="icon spin" style="display: inline-block">
+                                <i class="fa fa-spinner"></i>
+                            </div>
+                            Spara och registrera faktura
+                        </button>
                     </td>
                 </tr>
             </tfoot>
@@ -200,6 +242,7 @@
         const label = input.nextElementSibling;
         const labelVal = label.innerHTML;
 
+        /*
         input.addEventListener('change', function(e) {
             let fileName = '';
             if (this.files && this.files.length > 1) {
@@ -214,6 +257,7 @@
                 label.innerHTML = labelVal;
             }
         });
+        */
     });
     }, true);
 
@@ -228,14 +272,16 @@
                 secondaryCostCentres: new Map(),
                 budgetLines: new Map(),
                 invoice_parts: [{% for invoice_part in invoice_parts %}
-                {
-                    costCentre: ',{{ invoice_part.cost_centre }}',
-                    secondaryCostCentre: ',{{ invoice_part.secondary_cost_centre }}',
-                    budgetLine: ',{{ invoice_part.budget_line }}',
-                    amount: parseFloat('{{ invoice_part.amount }}'.replace(',', '.')),
-                    id: {{ invoice_part.id }},
-                },
+                    {
+                        invoice: '', /*Try removing*/
+                        costCentre: ',{{ invoice_part.cost_centre }}',
+                        secondaryCostCentre: ',{{ invoice_part.secondary_cost_centre }}',
+                        budgetLine: ',{{ invoice_part.budget_line }}',
+                        amount: parseFloat('{{ invoice_part.amount }}'.replace(',', '.')),
+                        id: {{ invoice_part.id }},
+                    },
                 {% endfor %}],
+                dragStatus: 0,
                 files: [
                 {% for file in invoice.file_set.all %}
                     {
@@ -394,6 +440,75 @@
                 .then(x => {
                     this.files = this.files.filter(f => f !== file)
                 })
+            },
+            upload: async function(formData, file) {
+                const fileThing = {
+                    name: file.name,
+                    file: file,
+                    status: 0
+                };
+                this.files.push(fileThing);
+
+                try {
+                    const res = await fetch('/api/files/new/?invoice={{ invoice.id }}', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+                    if (res.status === 413) { // "Request Entity Too Large"
+                        const index = this.files.findIndex(f => f == fileThing);
+                        this.files.splice(index, 1);
+                        alert(`The provided file is ${Math.ceil(formData.get("files").size / 1000 / 1000)}MB. The maximum allowed size is 100MB`);
+                        return;
+                    }
+                    const json = await res.json();
+                    fileThing.status = 1;
+                    fileThing.url = json.file.url;
+                    fileThing.id = json.file.id;
+                    fileThing.isImg = json.file.url.endsWith(".jpg")
+                                   || json.file.url.endsWith(".png")
+                                   || json.file.url.endsWith(".jpeg")
+                                   || json.file.url.endsWith(".gif");
+                } catch (err) {
+                    console.error(err);
+                }
+            },
+            uploadFiles: function(droppedFiles) {
+                Array.prototype.forEach.call(droppedFiles, (file) => {
+                    const formData = new FormData()
+                    formData.set("file", file, file.name)
+                    this.upload(formData, file)
+                })
+            },
+            dragStart: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
+            },
+            dragOver: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 1
+            },
+            dragLeave: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
+            },
+            dragDrop: function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                this.dragStatus = 0
+                const droppedFiles = e.dataTransfer.files;
+                this.uploadFiles(droppedFiles)
+            },
+            fileSelected: function (e) {
+                Array.prototype.forEach.call(this.$refs.files.files, (file) => {
+                    const formData = new FormData()
+                    formData.append("file", file, file.name)
+                    this.upload(formData, file)
+                })
+                this.$refs.files.value = ''
             }
         }
     })

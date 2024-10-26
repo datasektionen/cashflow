@@ -30,7 +30,7 @@ def new_invoice(request):
     valid = True
     
     if len((request.FILES.getlist('files'))) < 1:
-        messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
+        messages.error(request, 'Du måste ladda upp en fil med fakturan')
         valid = False
 
     if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
@@ -38,7 +38,7 @@ def new_invoice(request):
         valid = False
 
     if len(request.POST.getlist('budgetLines[]')) == 0:
-        messages.error(request, 'Du måste lägga till minst en del på kvittot')
+        messages.error(request, 'Du måste lägga till minst en del på fakturan')
         valid = False
 
     if invdate > duedate:
@@ -129,10 +129,11 @@ def edit_invoice(request, pk):
     duedate = invoice.due_date
     # Beneficial to not return per check, because then several errors can be reported at once
     valid = True
+    """
     if len((request.FILES.getlist('files'))) < 1:
-        messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
+        messages.error(request, 'Du måste ladda upp en fil med fakturan')
         valid = False
-
+    """
     if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         valid = False
@@ -146,7 +147,7 @@ def edit_invoice(request, pk):
         valid = False
 
     if not valid:
-        return HttpResponseRedirect(reverse('invoices-new'))
+        return HttpResponseRedirect(reverse('invoices-edit', kwargs={'pk': pk}))
     
     # Add the file
     for uploaded_file in request.FILES.getlist('files'):
@@ -172,10 +173,9 @@ def edit_invoice(request, pk):
         invoice_part.save()
         new_ids.append(invoice_part.id)
             
-    #InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids).delete()
-    part_to_delete = InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids)
-    #messages.error(message=part_to_delete)
-    part_to_delete.delete()
+    InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids).delete()
+    #part_to_delete = InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids)
+    #part_to_delete.delete()
 
     messages.success(request, 'Fakturan ändrades')
 
