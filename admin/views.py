@@ -195,9 +195,61 @@ def fortnox_auth_complete(request):
     token_parts.save()
 
     return render(request, 'admin/auth/overview.html', {
-        'access_token': access_token,
+        'access_token': json.dumps(access_token, indent=4),
         'refresh_token': refresh_token,
         'expires_in': expires_in
+    })
+
+@login_required
+def fortnox_auth_refresh(request):
+    token = FortnoxAuthToken.objects.all().first()
+    new_token = fortnox.FortnoxAPI.get_access_token_from_refresh_token(token.refresh_token)
+    token = FortnoxAuthToken.objects.all().delete()
+    token = FortnoxAuthToken(
+        access_token=new_token['access_token'],
+        refresh_token=new_token['refresh_token'],
+        expires_at=datetime.now() + timedelta(0, new_token['expires_in'])
+    )
+    token.save()
+
+@login_required
+@user_passes_test(lambda u: u.profile.may_firmatecknare())
+def fortnox_auth_search(request):
+    token = FortnoxAuthToken.objects.all().first()
+    if token is None:
+        return HttpResponseBadRequest("No token found")
+    search = request.GET.get('search')
+    if search is None:
+        return JsonResponse({'error': 'No search query provided'})
+    search = urlencode({'search': search})
+    search_results = fortnox.FortnoxAPI.get_api_request(token.access_token, 'customers?' + search)
+    return JsonResponse(search_results)
+
+#@require_GET
+@login_required
+@user_passes_test(lambda u: u.profile.may_firmatecknare())
+def fortnox_auth_test(request):
+    token = FortnoxAuthToken.objects.all().first()
+    if token is None:
+        return HttpResponseBadRequest("No token found")
+    company_info = fortnox.FortnoxAPI.get_company_info(token.access_token)
+    # If company_info returns {'message': 'unauthorized'} then the token is invalid
+    accounts = fortnox.FortnoxAPI.get_accounts(token.access_token)
+    accountchart = fortnox.FortnoxAPI.get_api_request(token.access_token, 'accountcharts')
+    voucher_series = fortnox.FortnoxAPI.get_voucher_series(token.access_token)
+    cost_centers = fortnox.FortnoxAPI.get_cost_centers(token.access_token)
+    expenses = fortnox.FortnoxAPI.get_api_request(token.access_token, 'expenses')
+    labels = fortnox.FortnoxAPI.get_api_request(token.access_token, 'labels')
+    predefined_accounts = fortnox.FortnoxAPI.get_api_request(token.access_token, 'predefinedaccounts')
+    return render(request, 'admin/auth/test.html', {
+        'company_info': company_info,
+        'accounts': accounts,
+        'accountchart': accountchart,
+        'voucher_series': voucher_series,
+        'cost_centers': cost_centers,
+        'expenses': expenses,
+        'labels': labels,
+        'predefined_accounts': predefined_accounts
     })
 
 @require_http_methods(["GET", "POST"])
