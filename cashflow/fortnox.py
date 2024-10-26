@@ -72,8 +72,8 @@ class FortnoxAPI(object):
         response = requests.get(company_info_url, headers=headers)
         return response.json()
     
-    def get_accounts(access_token):
-        account_url = 'https://api.fortnox.se/3/accounts?page=0'
+    def get_accounts(access_token, page):
+        account_url = 'https://api.fortnox.se/3/accounts?page=' + str(page)
         headers = {
             'Authorization': f'Bearer {access_token}'
         }
@@ -97,3 +97,5 @@ class FortnoxAPI(object):
         response = requests.get(cost_centers_url, headers=headers)
 
     # https://api.fortnox.se/3/expenses
+
+

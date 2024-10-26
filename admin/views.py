@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
+from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -15,7 +16,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 
 from cashflow import dauth
 from cashflow import fortnox
-from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile, FortnoxAuthToken
+from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile, FortnoxAuthToken, FortnoxAccounts
 from invoices.models import Invoice, InvoicePart
 
 
@@ -234,7 +235,7 @@ def fortnox_auth_test(request):
         return HttpResponseBadRequest("No token found")
     company_info = fortnox.FortnoxAPI.get_company_info(token.access_token)
     # If company_info returns {'message': 'unauthorized'} then the token is invalid
-    accounts = fortnox.FortnoxAPI.get_accounts(token.access_token)
+    accounts = fortnox.FortnoxAPI.get_accounts(token.access_token, 13)
     accountchart = fortnox.FortnoxAPI.get_api_request(token.access_token, 'accountcharts')
     voucher_series = fortnox.FortnoxAPI.get_voucher_series(token.access_token)
     cost_centers = fortnox.FortnoxAPI.get_cost_centers(token.access_token)
@@ -251,6 +252,42 @@ def fortnox_auth_test(request):
         'labels': labels,
         'predefined_accounts': predefined_accounts
     })
+
+@login_required
+@user_passes_test(lambda u: u.profile.may_firmatecknare())
+def fortnox_import_accounts_to_db(request):
+    token = FortnoxAuthToken.objects.all().first()
+    if token is None:
+        return HttpResponseBadRequest("No token found")
+    # Get all accounts from Fortnox thru all pages and save them to the database
+    page_number = 0
+    
+    FortnoxAccounts.objects.all().delete()
+    with connection.cursor() as cursor:
+        cursor.execute("TRUNCATE TABLE expenses_fortnoxaccounts RESTART IDENTITY;")
+    
+    while True:
+        accounts = fortnox.FortnoxAPI.get_accounts(token.access_token, page_number)
+        if page_number > accounts.get('MetaInformation', {}).get('@TotalPages', 0):
+            break
+        for account in accounts['Accounts']:
+            account_db = FortnoxAccounts(
+                URL="None" if account.get('@url') is None else account.get('@url'),
+                Active="None" if account.get('Active') is None else account.get('Active'),
+                BalanceBroughtForward=0 if account.get('BalanceBroughtForward') is None else account.get('BalanceBroughtForward'),
+                CostCenter="None" if account.get('CostCenter') is None else account.get('CostCenter'),
+                CostCenterSettings="None" if account.get('CostCenterSettings') is None else account.get('CostCenterSettings'),
+                Description="None" if account.get('Description') is None else account.get('Description'),
+                Number=account.get('Number'),
+                Project="None" if account.get('Project') is None else account.get('Project'),
+                ProjectSettings="None" if account.get('ProjectSettings') is None else account.get('ProjectSettings'),
+                SRU=0 if account.get('SRU') is None else account.get('SRU'),
+                VATCode="None" if account.get('VATCode') is None else account.get('VATCode'),
+                Year=0 if account.get('Year') is None else account.get('Year')
+            )
+            account_db.save()
+        page_number += 1
+    return HttpResponseRedirect(reverse('admin-auth-test'))
 
 @require_http_methods(["GET", "POST"])
 @login_required
