@@ -12,6 +12,9 @@ urlpatterns = [
 
     url(r'^auth$', views.fortnox_auth, name='admin-auth'),
     url(r'^auth/complete$', views.fortnox_auth_complete, name='admin-auth-complete'),
+    url(r'^auth/test$', views.fortnox_auth_test, name='admin-auth-test'),
+    url(r'^auth/search$', views.fortnox_auth_search, name='admin-auth-search'),
+    url(r'^auth/refresh$', views.fortnox_auth_refresh, name='admin-auth-refresh'),
 
     url(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),
