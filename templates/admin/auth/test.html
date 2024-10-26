@@ -1,0 +1,66 @@
+{% extends "../main.html" %}
+
+{% block title %}Detta är en testsida, haha gör vad du vill. NOT!{% endblock %}
+
+{% block content %}
+<div id="data" style="">
+    Company info:
+    <textarea disabled>{{ company_info }}</textarea>
+    <input type="text" v-on:keyup="search" v-model="query" placeholder="Skriv ett kontofakker" />
+    <textarea disabled>{{ accountarray }}</textarea>
+    Accounts:
+    <textarea disabled>{{ accounts }}</textarea>
+    Account chart:
+    <textarea disabled>{{ accountchart }}</textarea>
+    Voucher series:
+    <textarea disabled>{{ voucher_series }}</textarea>
+    Cost centers:
+    <textarea disabled>{{ cost_centers }}</textarea>
+    Expenses:
+    <textarea disabled>{{ expenses }}</textarea>
+    Labels:
+    <textarea disabled>{{ labels }}</textarea>
+    Predefined accounts:
+    <textarea disabled>{{ predefined_accounts }}</textarea>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#data',
+        data: function () {
+            return {
+                company_info: {% autoescape off %}"{{ company_info }}"{% endautoescape %}, 
+                accounts: {% autoescape off %}"{{ accounts }}"{% endautoescape %},   
+                voucher_series: {% autoescape off %}"{{ voucher_series }}"{% endautoescape %},
+                cost_centers: {% autoescape off %}"{{ cost_centers }}"{% endautoescape %},
+                expenses: {% autoescape off %}"{{ expenses }}"{% endautoescape %},
+                labels: {% autoescape off %}"{{ labels }}"{% endautoescape %},
+                predefined_accounts: {% autoescape off %}"{{ predefined_accounts }}"{% endautoescape %},
+                accountchart: {% autoescape off %}"{{ accountchart }}"{% endautoescape %},
+                query: '',
+                hoverIndex: 0,
+                accountarray: [],
+            }
+        },
+        methods: {
+            search() {
+                let form = new FormData()
+                form.append('query', this.query)
+
+                fetch('/admin/auth/search/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => res.json())
+                .then(res => {
+                    console.log(res)
+                    this.accountarray = res.accounts
+                })
+            }
+        }
+    })
+</script>
+
+{% endblock %}
