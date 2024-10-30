@@ -50,4 +50,3 @@ services:
       # Since we're using the real pls, it's nice to use some user with a lot of privileges. Putting
       # Melvin here since he's treasurer at the time of writing.
       KTH_ID: melvinj
-  

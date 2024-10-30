@@ -194,34 +194,34 @@
 <script type="text/javascript">
  let krFormatter =  new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK" });
  new Vue({
-      el: '#content',
-      data: function() {
-            return {
-                years: [],      
-                selectedYear: '',
-                showCostCentreDropdown: false,  
-                showSecondaryCostCentreDropdown: false,  
-                showBudgetLineDropdown: false,
-                selectedCommittee: [],
-                costCentres: [],
-                secondaryCostCentres: [],
-                budgetLines: [],
-                expense_parts: [{
-                    costCentre: '',
-                    secondaryCostCentre: '',
-                    budgetLine: '',
-                    amount: 0,
-                }],
-                totalSum: null, 
-                dragStatus: 0,
-                files: [],
-                monthlyYear: {{ month_year }},
-                curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
-                curMonthlyCount: {{ month_count_total }},
-                curMonthlySum: {{ month_sum_total }},
-            }
-      },
-      created: function () {
+     el: '#content',
+     data: function() {
+         return {
+             years: [],       
+             selectedYear: '' ,
+             showCostCentreDropdown: false,   
+             showSecondaryCostCentreDropdown: false,   
+             showBudgetLineDropdown: false ,
+             selectedCommittee: [] ,
+             costCentres: [] ,
+             secondaryCostCentres: [] ,
+             budgetLines: [] ,
+             expense_parts: [ {
+                 costCentre: '',
+                 secondaryCostCentre: '',
+                 budgetLine: '',
+                 amount: 0,
+             }],
+             totalSum: null, 
+             dragStatus: 0,
+             files: [],
+             monthlyYear: {{ month_year }},
+             curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
+             curMonthlyCount: {{ month_count_total }},
+             curMonthlySum: {{ month_sum_total }},
+         }
+     },
+     created: function () {
         this.years = Array.from({length: 2099 - 2017 + 1}, (v, i) => 2017 + i);
         fetch('/stats/cost_centres')
           .then(res => res.json())

@@ -44,8 +44,6 @@ def index(request):
 
 @require_GET
 def summary(request):
-    if request.method == "GET":
-
         expense_parts = None
 
         cost_centre = request.GET.get('cost_centre')
@@ -92,12 +90,10 @@ def summary(request):
         return JsonResponse({
             'amount': sum_amount,
         })
-    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 @require_GET
 def sec_cost_centres(request):
-    if request.method == "GET":
         expense_parts = None
 
         cost_centre = request.GET.get('cost_centre')
@@ -122,11 +118,9 @@ def sec_cost_centres(request):
         return JsonResponse({
             'sec_cost_centres': sec_cost_centres_list
         })
-    return Response(status=status.HTTP_404_NOT_FOUND)
 
 @require_GET
 def budget_lines(request):
-    if request.method == "GET":
         expense_parts = None
 
         cost_centre = request.GET.get('cost_centre')
@@ -152,7 +146,6 @@ def budget_lines(request):
         return JsonResponse({
             'budget_lines': budget_lines_list
         })
-    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 
