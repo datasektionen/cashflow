@@ -12,6 +12,9 @@ services:
       LOGIN_FRONTEND_URL: http://localhost:7002
       PYTHONUNBUFFERED: 1
       BUDGET_URL: https://budget.datasektionen.se
+      FORTNOX_CLIENT_ID: SECRET
+      FORTNOX_CLIENT_SECRET: SEEEECRET
+      FORTNOX_STATE: WHATISSTATE
     init: true
     ports:
       - 8000:8000
