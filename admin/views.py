@@ -213,18 +213,6 @@ def fortnox_auth_refresh(request):
     )
     token.save()
 
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_search(request):
-    token = FortnoxAuthToken.objects.all().first()
-    if token is None:
-        return HttpResponseBadRequest("No token found")
-    search = request.GET.get('search')
-    if search is None:
-        return JsonResponse({'error': 'No search query provided'})
-    search = urlencode({'search': search})
-    search_results = fortnox.FortnoxAPI.get_api_request(token.access_token, 'customers?' + search)
-    return JsonResponse(search_results)
 
 #@require_GET
 @login_required
@@ -300,9 +288,7 @@ def fortnox_auth_search(request):
         return JsonResponse({'error': 'No token found'})
 
     search_query = request.GET.get('search')
-    if not search_query:
-        return JsonResponse({'error': 'No search query provided'})
-
+    
     search_results = FortnoxAccounts.objects.filter(
         Description__icontains=search_query
     ) | FortnoxAccounts.objects.filter(Number__icontains=search_query)
