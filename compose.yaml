@@ -17,6 +17,7 @@ services:
       - 8000:8000
     volumes:
       - ./media:/app/media
+      - ./templates:/app/templates
     develop:
       watch:
         - path: .
@@ -39,6 +40,8 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+    ports:
+      - 5432:5432
   login:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
     ports:
@@ -47,4 +50,3 @@ services:
       # Since we're using the real pls, it's nice to use some user with a lot of privileges. Putting
       # Melvin here since he's treasurer at the time of writing.
       KTH_ID: melvinj
-
