@@ -17,7 +17,6 @@ services:
       - 8000:8000
     volumes:
       - ./media:/app/media
-      - ./templates:/app/templates
     develop:
       watch:
         - path: .
@@ -40,8 +39,6 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
-    ports:
-      - 5432:5432
   login:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
     ports:
