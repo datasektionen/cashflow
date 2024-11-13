@@ -51,8 +51,6 @@
                 </div>
             </div>
             <div class="clearfix"></div>
-            
-            <!--<p>Ladda endast upp en faktura i taget.</p>-->
             <div class="form-entry">
                 <span class="description">
                     <label for="invoice-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning av innehållet:</label>
@@ -62,36 +60,6 @@
                     <input type="text" name="description" value="{{ invoice.description }}" placeholder="Lägg till beskrivning" class="long" required />
                 </div>
             </div>
-            <div class="clearfix"></div>
-            <!--
-            <div class="uploaded-file" v-for="file in files" style="text-align: center">
-                <a class="name" v-bind:href="file.url" target="_blank" v-text="file.name"></a>
-                <span class="delete" v-on:click="deleteFile(file)">
-                    <i class="fa fa-times" style="color:#b00000"></i>
-                </span>
-                <a v-if="file.isImg" target="_blank" v-bind:href="file.url">
-                    <br />
-                    <img v-bind:src="file.url" />
-                </a>
-            </div>
-            <div class="form-entry">
-                <span class="description">
-                    <label for="files" v-tooltip="{ content: 'Ladda upp fakturan. Om den är på papper, ladda upp en tydlig bild och sätt in fakturan i pärmen.' }">
-                        Bild/pdf av fakturan:
-                    </label>
-                    <span class="desc">Obligatoriskt</span>
-                </span>
-                <div class="input">
-                    <div style="padding: 8px 0;">
-                        <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
-                        <label for="file" class="file">
-                            <span class="icon theme-color"><i class="fa fa-upload"></i></span>
-                            <span class="val">Välj filer</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            -->
             <div class="clearfix"></div>
             <h2>Metadata</h2>
             <div class="form">
@@ -123,8 +91,6 @@
                 <div class="clearfix"></div>
             </div>
         </div>
-        <!--<div class="clearfix"></div>-->
-        <!--</div> Removing this used to break everything-->
         <div class="clear"></div>
         <h2>Fakturadelar</h2>
         <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
@@ -210,13 +176,11 @@
                     <div class="input">
                         <input type="number" placeholder="Fyll i summa" step="0.01" v-model="invoice_part.amount" name="amounts[]" required>
                     </div>
-                <!--</div><!--??-->
                 </td>
             </tr>
             <tfoot>
                 <tr>
                     <td colspan="5">
-                        <!--<button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>-->
                         <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A; padding-left: 10px; padding-right: 10px;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
                     </td>
                 </tr>
@@ -243,23 +207,6 @@
         Array.prototype.forEach.call(inputs, function(input) {
         const label = input.nextElementSibling;
         const labelVal = label.innerHTML;
-
-        /*
-        input.addEventListener('change', function(e) {
-            let fileName = '';
-            if (this.files && this.files.length > 1) {
-                fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
-            } else {
-                fileName = e.target.value.split('\\').pop();
-            }
-
-            if (fileName) {
-                label.querySelector('span.val').innerHTML = fileName;
-            } else {
-                label.innerHTML = labelVal;
-            }
-        });
-        */
     });
     }, true);
 

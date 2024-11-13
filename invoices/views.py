@@ -179,9 +179,7 @@ def edit_invoice(request, pk):
         new_ids.append(invoice_part.id)
             
     InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids).delete()
-    #part_to_delete = InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids)
-    #part_to_delete.delete()
-
+    
     messages.success(request, 'Fakturan ändrades')
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
