@@ -52,7 +52,7 @@
             </div>
             <div class="clearfix"></div>
             
-            <p>Ladda endast upp en faktura i taget.</p>
+            <!--<p>Ladda endast upp en faktura i taget.</p>-->
             <div class="form-entry">
                 <span class="description">
                     <label for="invoice-description" v-tooltip="{ content: 'En beskrivning av innehållet och varför det köptes' }">Beskrivning av innehållet:</label>
@@ -124,7 +124,7 @@
             </div>
         </div>
         <!--<div class="clearfix"></div>-->
-        <!--</div> <!--Removing this used to break everything-->
+        <!--</div> Removing this used to break everything-->
         <div class="clear"></div>
         <h2>Fakturadelar</h2>
         <p>Här anger du hur stor andel av fakturan som köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.</p>
@@ -218,16 +218,18 @@
                     <td colspan="5">
                         <!--<button type="button" v-tooltip="{ content: 'Lägger till en kvittodel. Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost.' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i></button>-->
                         <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A; padding-left: 10px; padding-right: 10px;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
-                        <button type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right; padding-left: 10px; padding-right: 10px;" value="Spara och registrera faktura" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0">
-                            <div v-if="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0" class="icon spin" style="display: inline-block">
-                                <i class="fa fa-spinner"></i>
-                            </div>
-                            Spara och registrera faktura
-                        </button>
                     </td>
                 </tr>
             </tfoot>
         </table>
+        <br />
+        <input v-for="file in files" v-if="file.status === 1" type="hidden" name="fileIds[]" v-model="file.id" />
+        <button type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right; padding-left: 10px; padding-right: 10px;" value="Spara och registrera faktura" class="button primary-action theme-color btn-color" v-bind:disabled="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0">
+            <div v-if="files.length === 0 || files.some(x => x.status === 0) || costCentres.length == 0" class="icon spin" style="display: inline-block">
+                <i class="fa fa-spinner"></i>
+            </div>
+            Spara och registrera faktura
+        </button>
     </form>
     <div class="clearfix"></div>
 </div>
@@ -273,7 +275,6 @@
                 budgetLines: new Map(),
                 invoice_parts: [{% for invoice_part in invoice_parts %}
                     {
-                        invoice: '', /*Try removing*/
                         costCentre: ',{{ invoice_part.cost_centre }}',
                         secondaryCostCentre: ',{{ invoice_part.secondary_cost_centre }}',
                         budgetLine: ',{{ invoice_part.budget_line }}',

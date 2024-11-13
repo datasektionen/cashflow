@@ -124,9 +124,14 @@ def edit_invoice(request, pk):
             "invoice_parts": invoice.invoicepart_set.all(),
             "budget_url": settings.BUDGET_URL,
             })
-
+    
+    invoice.description = request.POST['description']
+    invoice.invoice_date = request.POST['invoice-date']
+    invoice.due_date = request.POST['due-date']
     invdate = invoice.invoice_date
     duedate = invoice.due_date
+    invoice.save()  #Saves the change to invoice_date and due_date
+    
     # Beneficial to not return per check, because then several errors can be reported at once
     valid = True
     """
@@ -149,7 +154,7 @@ def edit_invoice(request, pk):
     if not valid:
         return HttpResponseRedirect(reverse('invoices-edit', kwargs={'pk': pk}))
     
-    # Add the file
+    # Add the file, kommer vara tom och funkar inte
     for uploaded_file in request.FILES.getlist('files'):
         file = File(invoice=invoice, file=uploaded_file)
         file.save()

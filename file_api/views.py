@@ -15,6 +15,7 @@ import re
 
 from expenses.models import File
 from expenses.models import Expense
+from invoices.models import Invoice
 
 register_heif_opener()
 
@@ -44,6 +45,13 @@ def pretty_request(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def new_file(request):
+    if int(request.GET.get('expense', '0')) > int(request.GET.get('invoice', '0')):
+        return new_expense_file(request)
+    return new_invoice_file(request)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def new_expense_file(request):
     eId = int(request.GET.get('expense', '0'))
     expense = None
     if eId > 0:
@@ -67,6 +75,36 @@ def new_file(request):
         )
 
     file = File(file=uploaded_file, expense=expense)
+    file.save()
+
+    return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def new_invoice_file(request):
+    eId = int(request.GET.get('invoice', '0'))
+    invoice = None
+    if eId > 0:
+        invoice = Invoice.objects.get(pk=eId)
+        invoice.confirmed_by = None
+        invoice.confirmed_at = None
+        invoice.save()
+
+    uploaded_file = request.FILES["file"]
+    if uploaded_file.content_type in ['image/heif', 'image/heic'] :
+        img = BytesIO()
+        with Image.open(uploaded_file) as im:
+            im.save(img, format="jpeg")
+        uploaded_file = InMemoryUploadedFile(
+            img,
+            None,
+            uploaded_file.name.lower().replace(".heic", ".jpeg"),
+            "image/jpeg",
+            img.getbuffer().nbytes,
+            "binary"
+        )
+
+    file = File(file=uploaded_file, invoice=invoice)
     file.save()
 
     return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
