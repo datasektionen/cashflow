@@ -117,17 +117,17 @@
             </div>
             <div class="clearfix"></div>
             <h2 v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Metadata</h2>
-            <p v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Frivilligt, men ju mer desto bättre. Förfallodatum kan hjälpa den som betalar att betala ut i tid.</p>
             <div class="form" v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
                 <div class="form-entry">
                     <span class="description">
                         <label for="invoice-date" v-tooltip="{ content: 'Det datum fakturan utfärdades (står på fakturan)' }">
                             Fakturadatum:
                         </label>
+                        <span class="desc">Obligatoriskt</span>
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-date" />
+                        <input type="date" name="invoice-date" required/>
                     </div>
                 </div>
 
@@ -136,10 +136,11 @@
                         <label for="invoice-due-date" v-tooltip="{ content: 'Det datum fakturan senast ska vara betald (står på fakturan)' }">
                             Förfallodatum:
                         </label>
+                        <span class="desc">Obligatoriskt</span>
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-due-date" />
+                        <input type="date" name="invoice-due-date" required/>
                     </div>
                 </div>
                 <div class="clearfix"></div>
