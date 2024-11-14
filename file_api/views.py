@@ -49,8 +49,6 @@ def new_file(request):
         return new_expense_file(request)
     return new_invoice_file(request)
 
-@require_http_methods(["POST"])
-@csrf_exempt
 def new_expense_file(request):
     eId = int(request.GET.get('expense', '0'))
     expense = None
@@ -79,8 +77,6 @@ def new_expense_file(request):
 
     return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
 
-@require_http_methods(["POST"])
-@csrf_exempt
 def new_invoice_file(request):
     eId = int(request.GET.get('invoice', '0'))
     invoice = None
@@ -114,13 +110,13 @@ def new_invoice_file(request):
 def delete_file(request, pk):
     file = File.objects.get(pk=int(pk))
 
-    if not file.expense == None:
+    if file.expense != None:
         if not request.user.profile.may_delete(file.expense):
             return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
         file.expense.confirmed_by = None
         file.expense.confirmed_at = None
         file.expense = None
-    elif not file.invoice == None:
+    elif file.invoice != None:
         if not request.user.profile.may_delete_invoice(file.invoice):
             return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
         file.invoice.confirmed_by = None
