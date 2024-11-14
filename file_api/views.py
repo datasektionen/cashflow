@@ -77,8 +77,6 @@ def new_expense_file(request):
 
     return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
 
-@require_http_methods(["POST"])
-@csrf_exempt
 def new_invoice_file(request):
     eId = int(request.GET.get('invoice', '0'))
     invoice = None
