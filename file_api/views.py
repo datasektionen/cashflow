@@ -114,7 +114,7 @@ def new_invoice_file(request):
 def delete_file(request, pk):
     file = File.objects.get(pk=int(pk))
 
-    if not file.expense == None:
+    if file.expense != None:
         if not request.user.profile.may_delete(file.expense):
             return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
         file.expense.confirmed_by = None
