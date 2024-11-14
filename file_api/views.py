@@ -49,8 +49,6 @@ def new_file(request):
         return new_expense_file(request)
     return new_invoice_file(request)
 
-@require_http_methods(["POST"])
-@csrf_exempt
 def new_expense_file(request):
     eId = int(request.GET.get('expense', '0'))
     expense = None
