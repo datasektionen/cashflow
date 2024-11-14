@@ -96,20 +96,28 @@
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.bank_name)">📋</button>
                     </td>
                 </tr>
-                <tr>
+                <!--<tr>
                     <th style="text-align: right;">Clearingnummer</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
                         <div v-text="payment.receiver.bank_info.sorting_number"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.sorting_number)">📋</button>
                     </td>
-                </tr>
+                </tr>> 
                 <tr>
                     <th style="text-align: right;">Kontonummer</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
                         <div v-text="payment.receiver.bank_info.bank_account"></div>
                         <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.bank_account)">📋</button>
                     </td>
+                </tr> !-->
+                <tr>
+                    <th style="text-align: right;">Clearingnummer + Kontonummer</th>
+                    <td style="color:#000 !important; display: flex; align-items: center">
+                        <div v-text="payment.receiver.bank_info.sorting_number + ' + ' + payment.receiver.bank_info.bank_account"></div>
+                        <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" v-on:click="copy(payment.receiver.bank_info.sorting_number + payment.receiver.bank_info.bank_account)">📋</button>
+                    </td>
                 </tr>
+
                 <tr>
                     <th style="text-align: right;">Summa</th>
                     <td style="color:#000 !important; display: flex; align-items: center">
