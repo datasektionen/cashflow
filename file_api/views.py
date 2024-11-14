@@ -120,7 +120,7 @@ def delete_file(request, pk):
         file.expense.confirmed_by = None
         file.expense.confirmed_at = None
         file.expense = None
-    elif not file.invoice == None:
+    elif file.invoice != None:
         if not request.user.profile.may_delete_invoice(file.invoice):
             return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
         file.invoice.confirmed_by = None
