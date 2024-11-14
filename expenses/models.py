@@ -166,6 +166,15 @@ class Profile(models.Model):
         if 'attest-firmatecknare' in dauth.get_permissions(self.user):
             return True
 
+    def may_delete_invoice(self, invoice):
+        if invoice is None or invoice.is_payed():
+            return False
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
+            return True
+        if invoice.owner.user.username == self.user.username:
+            return True
+        return False
+
     def may_be_viewed_by(self, user):
         return user.username == self.user.username or user.profile.is_admin()
 
