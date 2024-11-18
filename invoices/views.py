@@ -15,6 +15,8 @@ from cashflow import email
 from cashflow import settings
 from expenses.models import *
 from invoices.models import *
+from invoices.models import Invoice
+from invoices.models import InvoicePart
 
 @require_http_methods(["GET", "POST"])
 def new_invoice(request):
@@ -28,7 +30,7 @@ def new_invoice(request):
     valid = True
     
     if len((request.FILES.getlist('files'))) < 1:
-        messages.error(request, 'Du måste ladda upp minst en fil med fakturan')
+        messages.error(request, 'Du måste ladda upp en fil med fakturan')
         valid = False
 
     if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
@@ -36,7 +38,7 @@ def new_invoice(request):
         valid = False
 
     if len(request.POST.getlist('budgetLines[]')) == 0:
-        messages.error(request, 'Du måste lägga till minst en del på kvittot')
+        messages.error(request, 'Du måste lägga till minst en del på fakturan')
         valid = False
 
     if invdate > duedate:
@@ -76,13 +78,14 @@ def new_invoice(request):
             request.POST.getlist("budgetLines[]"),
             request.POST.getlist("amounts[]"),
         ):
-            InvoicePart(
+            invoice_part = InvoicePart(
                 invoice=invoice,
                 cost_centre=cost_centre.split(",")[1],
                 secondary_cost_centre=secondary_cost_centre.split(",")[1],
                 budget_line=budget_line.split(",")[1],
                 amount=amount,
-            ).save()
+            )
+            invoice_part.save()
 
     return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
 
@@ -96,12 +99,90 @@ def invoice_new_confirmation(request, pk):
         invoice = Invoice.objects.get(pk=int(pk))
 
     except ObjectDoesNotExist:
-        messages.error(request, 'Ett fel uppstod och kvittot skapades inte.')
+        messages.error(request, 'Ett fel uppstod och fakturan skapades inte.')
         return HttpResponseRedirect(reverse('invoices-new'))
 
     return render(request, 'invoices/confirmation.html', {'invoice': invoice})
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_invoice(request, pk):
+    """
+    Shows form for editing invoices.
+    """
+    try:
+        invoice = Invoice.objects.get(pk=int(pk))
+    except ObjectDoesNotExist:
+        raise Http404("Fakturan finns inte")
+    
+    if not request.user.profile.may_delete_invoice(invoice):
+        return HttpResponseForbidden('Du har inte behörighet att redigera denna faktura.')
+    
+    if request.method == 'GET':
+        return render(request, 'invoices/edit.html', {
+            "invoice": invoice,
+            "invoice_parts": invoice.invoicepart_set.all(),
+            "budget_url": settings.BUDGET_URL,
+            })
+    
+    invoice.description = request.POST['description']
+    invoice.invoice_date = request.POST['invoice-date']
+    invoice.due_date = request.POST['due-date']
+    invdate = invoice.invoice_date
+    duedate = invoice.due_date
+    invoice.save()  #Saves the change to invoice_date and due_date
+    
+    # Beneficial to not return per check, because then several errors can be reported at once
+    valid = True
+    
+    if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
+        messages.error(request, 'Du måste ladda upp en fil med fakturan')
+        valid = False
+    
+    if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
+        messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
+        valid = False
 
+    if len(request.POST.getlist('budgetLines[]')) == 0:
+        messages.error(request, 'Du måste lägga till minst en del på fakturan')
+        valid = False
+
+    if invdate > duedate:
+        messages.error(request, 'Fakturadatumet är efter förfallodatumet')
+        valid = False
+
+    if not valid:
+        return HttpResponseRedirect(reverse('invoices-edit', kwargs={'pk': pk}))
+    
+    # Add the file, kommer vara tom och funkar inte
+    for uploaded_file in request.FILES.getlist('files'):
+        file = File(invoice=invoice, file=uploaded_file)
+        file.save()
+
+    new_ids = []
+
+    # Add the expenseparts
+    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
+        request.POST.getlist("costCentres[]"),
+        request.POST.getlist("secondaryCostCentres[]"),
+        request.POST.getlist("budgetLines[]"),
+        request.POST.getlist("amounts[]"),
+    ):
+        invoice_part = InvoicePart(
+            invoice=invoice,
+            cost_centre=cost_centre.split(",")[1],
+            secondary_cost_centre=secondary_cost_centre.split(",")[1],
+            budget_line=budget_line.split(",")[1],
+            amount=amount,
+        )
+        invoice_part.save()
+        new_ids.append(invoice_part.id)
+            
+    InvoicePart.objects.filter(invoice=invoice).exclude(id__in=new_ids).delete()
+    
+    messages.success(request, 'Fakturan ändrades')
+
+    return HttpResponseRedirect(reverse('invoices-new-confirmation', kwargs={'pk': invoice.id}))
 
 """
 Shows one expense.
@@ -125,8 +206,6 @@ def get_invoice(request, pk):
         'may_account': request.user.profile.may_account(),
         'budget_url': settings.BUDGET_URL,
     })
-
-
 
 """
 Adds new comment to invoice.

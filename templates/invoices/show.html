@@ -6,13 +6,11 @@
 {% endblock %}
 
 {% block action %}
-{% comment "later" %}
-    {% if user.username == invoice.owner.user.username %}
-        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
+    {% if user.username == invoice.owner.user.username or user.profile.firmatecknare %} 
+        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action" style="padding-top: 10px; padding-bottom: 8px; padding-left: 15px; padding-right: 15px;">
             Redigera faktura
         </a>
     {% endif %}
-{% endcomment %}
 {% endblock %}
 
 {% block full_content %}

@@ -161,6 +161,10 @@ class Profile(models.Model):
         if expense.owner.user.username == self.user.username:
             return True
         return False
+    
+    def firmatecknare(self):
+        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
+            return True
 
     def may_delete_invoice(self, invoice):
         if invoice is None or invoice.is_payed():

@@ -54,7 +54,7 @@
 
                 <div class="form-entry">
                     <span class="description">
-                        <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
+                        <label for="files" v-tooltip="{ content: 'Ladda upp fakturan. Om den är på papper, ladda upp en tydlig bild och sätt in fakturan i pärmen.' }">
                             Bild/pdf av fakturan:
                         </label>
                         <span class="desc">Obligatoriskt</span>
@@ -169,7 +169,7 @@
 
             <div id="expense_parts">
                 <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
-                    <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                    <button type="button" v-tooltip="{ content: 'Ta bort den här fakturadelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
                         <i class="fa fa-trash" aria-hidden="true"></i>
                     </button>
 
@@ -272,8 +272,9 @@
                     <div class="clearfix"></div>
                 </div>
 
-                <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
-                <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+                <!--<button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>-->
+                <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
+                <input type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
             </div>
             <div class="clearfix"></div>
         </div>
@@ -306,7 +307,6 @@
         });
     });
     }, true);
-
 
     new Vue({
         el: '#form',

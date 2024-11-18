@@ -15,6 +15,7 @@ import re
 
 from expenses.models import File
 from expenses.models import Expense
+from invoices.models import Invoice
 
 register_heif_opener()
 
@@ -44,16 +45,25 @@ def pretty_request(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def new_file(request):
-    eId = int(request.GET.get('expense', '0'))
     expense = None
-    if eId > 0:
-        expense = Expense.objects.get(pk=eId)
+    eId = request.GET.get('expense')
+    if eId != None:
+        expense = Expense.objects.get(pk=int(eId))
         expense.confirmed_by = None
         expense.confirmed_at = None
         expense.save()
+    invoice = None
+    iId = request.GET.get('invoice')
+    if iId != None:
+        if eId != None:
+            return JsonResponse({'message':'Kan ej ange både expense och invoice'}, status=403)
+        invoice = Invoice.objects.get(pk=int(iId))
+        invoice.confirmed_by = None
+        invoice.confirmed_at = None
+        invoice.save()
 
     uploaded_file = request.FILES["file"]
-    if uploaded_file.content_type in ['image/heif', 'image/heic'] :
+    if uploaded_file.content_type in ['image/heif', 'image/heic']:
         img = BytesIO()
         with Image.open(uploaded_file) as im:
             im.save(img, format="jpeg")
@@ -66,7 +76,7 @@ def new_file(request):
             "binary"
         )
 
-    file = File(file=uploaded_file, expense=expense)
+    file = File(file=uploaded_file, expense=expense, invoice=invoice)
     file.save()
 
     return JsonResponse({"message": "File uploaded", "file": file.to_dict()})
@@ -75,11 +85,21 @@ def new_file(request):
 @csrf_exempt
 def delete_file(request, pk):
     file = File.objects.get(pk=int(pk))
-    if not file.expense == None and not request.user.profile.may_delete(file.expense):
-        return JsonResponse({'Du har inte behörighet att ta bort denna bild.'}, 403)
-    file.expense.confirmed_by = None
-    file.expense.confirmed_at = None
-    file.expense = None
+
+    if file.expense != None:
+        if not request.user.profile.may_delete(file.expense):
+            return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
+        file.expense.confirmed_by = None
+        file.expense.confirmed_at = None
+        file.expense = None
+    elif file.invoice != None:
+        if not request.user.profile.may_delete_invoice(file.invoice):
+            return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
+        file.invoice.confirmed_by = None
+        file.invoice.confirmed_at = None
+        file.invoice = None
+    else:
+        return JsonResponse({'message':'Not found'}, status=404)
     file.save()
 
     return JsonResponse({'message':'File deleted.'})
