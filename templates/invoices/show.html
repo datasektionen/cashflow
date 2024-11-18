@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block action %}
-    {% if user.username == invoice.owner.user.username or user.profile.firmatecknare %} <!--Doesn't seem to work, need more checks-->
+    {% if user.username == invoice.owner.user.username or user.profile.firmatecknare %} 
         <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action" style="padding-top: 10px; padding-bottom: 8px; padding-left: 15px; padding-right: 15px;">
             Redigera faktura
         </a>
