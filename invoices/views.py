@@ -134,11 +134,11 @@ def edit_invoice(request, pk):
     
     # Beneficial to not return per check, because then several errors can be reported at once
     valid = True
-    """
-    if len((request.FILES.getlist('files'))) < 1:
+    
+    if len((request.FILES.getlist('files'))) < 1 and len((request.POST.getlist('fileIds[]'))) < 1:
         messages.error(request, 'Du måste ladda upp en fil med fakturan')
         valid = False
-    """
+    
     if any(map(lambda x: float(x) <= 0, request.POST.getlist('amounts[]'))) > 0:
         messages.error(request, 'Du har angivit en icke-positiv summa i någon av fakturadelarna')
         valid = False
