@@ -56,7 +56,7 @@ def new_file(request):
     iId = request.GET.get('invoice')
     if iId != None:
         if eId != None:
-            return JsonResponse({'message':'Kan ej ange påde expense och invoice'}, status=403)
+            return JsonResponse({'message':'Kan ej ange både expense och invoice'}, status=403)
         invoice = Invoice.objects.get(pk=int(iId))
         invoice.confirmed_by = None
         invoice.confirmed_at = None
