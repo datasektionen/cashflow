@@ -11,7 +11,7 @@ def login(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect(
             settings.LOGIN_FRONTEND_URL + '/login?callback=' +
-            request.scheme + '://' + request.get_host() + '/login/')
+            (request.scheme if settings.DEBUG else "https") + '://' + request.get_host() + '/login/')
     else:
         return HttpResponseRedirect("/")
 
