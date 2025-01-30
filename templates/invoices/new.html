@@ -127,7 +127,7 @@
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-date" required/>
+                        <input type="date" name="invoice-date" id="invoice-date"  required onchange="dateChanged(event)"/>
                     </div>
                 </div>
 
@@ -140,7 +140,7 @@
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-due-date" required/>
+                        <input type="date" name="invoice-due-date" id="invoice-due-date" required onchange="dateChanged(event)"/>
                     </div>
                 </div>
                 <div class="clearfix"></div>
@@ -274,7 +274,10 @@
 
                 <!--<button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>-->
                 <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
-                <input type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+                <div style="float: right">
+                    <input id="submitBtn" type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+                    <p id="invalidDates" style="visibility: hidden">Ogiltiga datum!</p>
+                </div>
             </div>
             <div class="clearfix"></div>
         </div>
@@ -375,6 +378,29 @@
                     this.expense_parts.splice(i, 1)
             }
         }
-    })
+    });
+
+    function dateChanged(e) {
+        let btn = document.getElementById("submitBtn");
+        let date = document.getElementById("invoice-date").value;
+        let dueDate = document.getElementById("invoice-due-date").value;
+        let text = document.getElementById("invalidDates");
+        if (dueDate < date) {
+            btn.disabled = true;
+            text.style.visibility = "visible";
+        } else {
+            btn.disabled = false;
+            text.style.visibility = "hidden";
+        }
+    }
 </script>
+
+<style>
+input.button.theme-color:disabled {
+    background: #ccc;
+}
+input.button.theme-color:disabled:hover {
+    background: #ddd !important;
+}
+</style>
 {% endblock %}
