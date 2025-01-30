@@ -78,17 +78,16 @@
         <table>
             <tr>
                 <th>Faktura-id:
-                    <button style="
-                    font-size: 17px;
+                    <button id="fakturabutton" 
+                    style="font-size: 17px;
                     margin-left: 10px;
-                    padding-top: 10px;
+                    padding-top: 10px; 
                     padding-left: 30px; 
                     padding-bottom: 8px;
-                    padding-right: 30px;
-                    " onclick="copyToClipboard('{{ invoice.id }}')"
-                    >
+                    padding-right: 30px;" 
+                    onclick="copyToClipboard('{{ invoice.id }}', 'fakturabutton')"
+                    onmouseout="resetFakturaButton('fakturabutton')">
                     Kopiera</button>
-                    
                 </th>
                 <td>{{ invoice.id }}</td>
             </tr>
@@ -239,15 +238,33 @@
     })
 </script>
 <script>
-function copyToClipboard(text) {
+function copyToClipboard(text, id) {
     const tempInput = document.createElement('input');
     tempInput.value = text;
     document.body.appendChild(tempInput);
     tempInput.select();
     document.execCommand('copy');
     document.body.removeChild(tempInput);
-    const tooltip = document.getElementById("myTooltip");
-    tooltip.innerHTML = "Copied: " + copyText.value;
+    const button = document.getElementById(id); 
+    button.style="font-size: 17px;" +
+                    "margin-left: 10px;" +
+                    "padding-top: 10px;" +
+                    "padding-left: 30px;" +
+                    "padding-bottom: 8px;" +
+                    "padding-right: 30px;" + //someone put this as a selector in css
+                    "background-color: #0f9131;" +
+                    "color: white"
+    }
+function resetFakturaButton(id) {
+    const button = document.getElementById(id)
+    button.style="font-size: 17px;" +
+                    "margin-left: 10px;" +
+                    "padding-top: 10px;" +
+                    "padding-left: 30px;" +
+                    "padding-bottom: 8px;" +
+                    "padding-right: 30px;" + //someone put this as a selector in css
+                    "background-color: white;" +
+                    "color: black"
 }
 </script>
 {% endblock %}
