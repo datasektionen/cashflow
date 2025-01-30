@@ -77,7 +77,19 @@
         <h2>Information</h2>
         <table>
             <tr>
-                <th>Faktura-id:</th>
+                <th>Faktura-id:
+                    <button style="
+                    font-size: 17px;
+                    margin-left: 10px;
+                    padding-top: 10px;
+                    padding-left: 30px; 
+                    padding-bottom: 8px;
+                    padding-right: 30px;
+                    " onclick="copyToClipboard('{{ invoice.id }}')"
+                    >
+                    Kopiera</button>
+                    
+                </th>
                 <td>{{ invoice.id }}</td>
             </tr>
             <tr>
@@ -225,5 +237,17 @@
 
         }
     })
+</script>
+<script>
+function copyToClipboard(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    const tooltip = document.getElementById("myTooltip");
+    tooltip.innerHTML = "Copied: " + copyText.value;
+}
 </script>
 {% endblock %}
