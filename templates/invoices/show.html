@@ -77,17 +77,13 @@
         <h2>Information</h2>
         <table>
             <tr>
+               
                 <th>Faktura-id:
-                    <button id="fakturabutton" 
-                    style="font-size: 17px;
-                    margin-left: 10px;
-                    padding-top: 10px; 
-                    padding-left: 30px; 
-                    padding-bottom: 8px;
-                    padding-right: 30px;" 
-                    onclick="copyToClipboard('{{ invoice.id }}', 'fakturabutton')"
-                    onmouseout="resetFakturaButton('fakturabutton')">
-                    Kopiera</button>
+                     <button style="padding-left: 30px;
+                     padding-right: 30px;
+                     border-left-width: 0px;border-left-style: solid;
+                     margin-left: 30px;" 
+                     v-on:click="copy( '{{ invoice.id }}')">📋</button>
                 </th>
                 <td>{{ invoice.id }}</td>
             </tr>
@@ -230,41 +226,14 @@
                 console.log(e.target.innerHTML)
                 document.getElementById('content-field').value = e.target.innerHTML
                 document.getElementById('new').submit()
+            },            
+            async copy(value) {
+                await navigator.clipboard.writeText(value).catch(console.error)
             }
         },
         created() {
 
         }
     })
-</script>
-<script>
-function copyToClipboard(text, id) {
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-    const button = document.getElementById(id); 
-    button.style="font-size: 17px;" +
-                    "margin-left: 10px;" +
-                    "padding-top: 10px;" +
-                    "padding-left: 30px;" +
-                    "padding-bottom: 8px;" +
-                    "padding-right: 30px;" + //someone put this as a selector in css
-                    "background-color: #0f9131;" +
-                    "color: white"
-    }
-function resetFakturaButton(id) {
-    const button = document.getElementById(id)
-    button.style="font-size: 17px;" +
-                    "margin-left: 10px;" +
-                    "padding-top: 10px;" +
-                    "padding-left: 30px;" +
-                    "padding-bottom: 8px;" +
-                    "padding-right: 30px;" + //someone put this as a selector in css
-                    "background-color: white;" +
-                    "color: black"
-}
 </script>
 {% endblock %}
