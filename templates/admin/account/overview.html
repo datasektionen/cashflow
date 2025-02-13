@@ -149,13 +149,13 @@
                 })
                 .then(res => {
                     if (!res.ok){
-                        alert("Det uppstod ett fel i att spara utlägget. HTTP Kod: " + res.status)
-                        return  
+                        alert("Det uppstod ett fel i att spara utlägget. HTTP Statuskod: " + res.status)
+                        return
                     }
-                    console.log(res)
                     return res.text()
                 })
                 .then(res => {
+                    console.log(res)
                     this.expenses[idx].verification = expense.verificationString
                 })
                 if (e) e.preventDefault()
