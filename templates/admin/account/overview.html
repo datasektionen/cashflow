@@ -148,6 +148,10 @@
                     body: form
                 })
                 .then(res => {
+                    if (!res.ok){
+                        alert("Det gick inte att spara utlägget. HTTP statuskod: " + res.status); 
+                        return
+                    }
                     console.log(res)
                     return res.text()
                 })
