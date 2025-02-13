@@ -61,12 +61,12 @@
                     </span>
                     <div class="input">
                         <div style="padding: 8px 0;">
-                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required" onchange="document.getElementById('filename').innerText = this.value.split('\\').pop()">
+                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required" onchange="uploadFile(this.value)">
                             <label for="file" class="file">
                                 <span class="icon theme-color"><i class="fa fa-upload"></i></span>
                                 <span class="val">Välj filer</span>
                             </label>
-                            <span id="filename" style="margin-left:1em">test</span>
+                            <span id="filename" style="margin-left:1em"></span>
                         </div>
                     </div>
                 </div>
@@ -376,6 +376,10 @@
                     this.expense_parts.splice(i, 1)
             }
         }
-    })
+    });
+
+    function uploadFile (filename) {
+        document.getElementById('filename').innerText = filename.split('\\').pop();
+    }
 </script>
 {% endblock %}
