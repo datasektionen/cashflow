@@ -77,8 +77,12 @@
         <h2>Information</h2>
         <table>
             <tr>
-                <th>Faktura-id:</th>
-                <td>{{ invoice.id }}</td>
+                <th>Faktura-id:
+                </th>
+                <td>{{ invoice.id }}
+                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" 
+                     v-on:click="copy('cf {{ invoice.id }}')">📋</button>
+                </td>
             </tr>
             <tr>
                 <th>Skapad av:</th>
@@ -219,6 +223,9 @@
                 console.log(e.target.innerHTML)
                 document.getElementById('content-field').value = e.target.innerHTML
                 document.getElementById('new').submit()
+            },            
+            async copy(value) {
+                await navigator.clipboard.writeText(value).catch(console.error)
             }
         },
         created() {
