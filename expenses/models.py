@@ -357,6 +357,20 @@ class Expense(models.Model):
             verification='',
             expensepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct().order_by('expense_date')
+    ##TODO define function for flagging, similar to how you can unattest in expensePart
+    
+    @staticmethod
+    def flag(self, user):
+        self.is_flagged = True
+        self.save()
+
+        comment = Comment(
+            author=user.profile,
+            expense=self.expense,
+            content="Flaggar kvittodelen ```" + str(self) + "```"
+        )
+        comment.save()
+
 
 
 class File(models.Model):

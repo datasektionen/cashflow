@@ -37,7 +37,7 @@ def attest_overview(request):
     return render(request, 'admin/attest/overview.html', {
         'expenses': json.dumps(
             [expense.to_dict() for expense in Expense.view_attestable(request.user.profile.may_view_attest(), request.user)],
-            default=json_serial),
+            default=json_serial), ##TODO Exclude flagged expenses
         'invoices': json.dumps(
             [invoice.to_dict() for invoice in Invoice.view_attestable(request.user.profile.may_view_attest(), request.user)],
             default=json_serial)
@@ -121,9 +121,9 @@ def confirm_overview(request):
     """
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
-            default=json_serial)
-    })
+            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None, is_flagged=None).order_by('id').distinct()],
+            default=json_serial) ##TODO make sure to exclude is_flagged properly
+    }) #TODO also figure out where this chungus is supposed to go
 
 
 @require_GET
@@ -250,6 +250,30 @@ def unconfirm_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
+@require_POST
+@login_required
+def flag_expense(request, pk):
+    try:
+        expense = Expense.objects.get(pk=pk)
+
+        #if not dauth.has_permission('unconfirm', request):
+        #    return HttpResponseForbidden("Du har inte rättigheterna för att ta bort bekräftelse av kvittons giltighet")
+
+        expense.confirmed_by = None
+        expense.confirmed_at = None
+        expense.save()
+
+        comment = Comment(
+            expense=expense,
+            author=request.user.profile,
+            content='Jag tar bort bekräftelsen av kvittots giltighet.'
+        )
+        comment.save()
+
+        return HttpResponseRedirect(reverse('admin-confirm'))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+    return
 
 @require_POST
 @login_required

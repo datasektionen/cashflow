@@ -126,7 +126,7 @@ def edit_expense(request, pk):
     expense.expense_date = request.POST['expense_date']
     expense.is_digital = 'is-digital' in request.POST
     expense.save()
-
+    #TODO also change "flagged" attribute to "false" if previously false or "has_changed" if previously "true" or "has_changed"
     new_ids = []
 
     for cost_centre, secondary_cost_centre, budget_line, amount in zip(
