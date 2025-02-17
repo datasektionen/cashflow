@@ -77,15 +77,12 @@
         <h2>Information</h2>
         <table>
             <tr>
-               
                 <th>Faktura-id:
-                     <button style="padding-left: 30px;
-                     padding-right: 30px;
-                     border-left-width: 0px;border-left-style: solid;
-                     margin-left: 30px;" 
-                     v-on:click="copy('cf {{ invoice.id }}')">📋</button>
                 </th>
-                <td>{{ invoice.id }}</td>
+                <td>{{ invoice.id }}
+                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" 
+                     v-on:click="copy('cf {{ invoice.id }}')">📋</button>
+                </td>
             </tr>
             <tr>
                 <th>Skapad av:</th>
