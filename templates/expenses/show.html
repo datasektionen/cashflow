@@ -160,7 +160,7 @@
                     {% csrf_token %}
                     <button class="btn btn-danger" type="submit" >
                       <i class="fa fa-flag"></i> Flagga kvitto
-                    </button> <!--TODO gör samma som avattestera fast coolare-->
+                    </button> 
                 </form>
               </td>
               {% endif %}
@@ -216,6 +216,7 @@
                         {% csrf_token %}
                         <textarea id="content-field" name="content" rows="3" style="width: 100%;border:none;" placeholder="Skriv en kommentar"></textarea>
                         <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
+                        <button class="button btn-danger" type="submit">Kommentera och flagga</button>
                         <div class="clearfix"></div>
                     </form>
                 </div>

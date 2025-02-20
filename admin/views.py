@@ -37,7 +37,7 @@ def attest_overview(request):
     return render(request, 'admin/attest/overview.html', {
         'expenses': json.dumps(
             [expense.to_dict() for expense in Expense.view_attestable(request.user.profile.may_view_attest(), request.user)],
-            default=json_serial), ##TODO Exclude flagged expenses
+            default=json_serial),
         'invoices': json.dumps(
             [invoice.to_dict() for invoice in Invoice.view_attestable(request.user.profile.may_view_attest(), request.user)],
             default=json_serial)
@@ -122,8 +122,8 @@ def confirm_overview(request):
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
             [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).exclude(is_flagged=True).order_by('id').distinct()],
-            default=json_serial) ##TODO make sure to exclude is_flagged properly
-    }) #TODO also figure out where this chungus is supposed to go
+            default=json_serial) 
+    }) 
 
 
 @require_GET

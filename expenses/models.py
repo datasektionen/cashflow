@@ -337,7 +337,7 @@ class Expense(models.Model):
         return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
-    def confirmable(): #TODO is_flagged check
+    def confirmable(): 
         return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod

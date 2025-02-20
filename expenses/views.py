@@ -125,8 +125,8 @@ def edit_expense(request, pk):
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
     expense.is_digital = 'is-digital' in request.POST
+    expense.is_flagged = False
     expense.save()
-    #TODO also change "flagged" attribute to "false" if previously false or "has_changed" if previously "true" or "has_changed"
     new_ids = []
 
     for cost_centre, secondary_cost_centre, budget_line, amount in zip(
@@ -190,20 +190,19 @@ def delete_expense(request, pk):
         return HttpResponseRedirect(reverse('expenses-index'))
 
 @require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.is_admin())
 def flag_expense(request, pk):
     """
-    Should. Do. Stuff.
-    """ #Should be similar to delete_expense where it gets a page with a confirmation that you want to flag before doing stuff
-    #or just sends some confirmation. probably.
+    Flag a problematic expense
+    """ 
     try:
         expense = models.Expense.objects.get(pk=pk)
-        #if not dauth.has_permission('flag', request):
-            #return HttpResponseForbidden("Du har inte rättigheterna för att flagga kvitton")
-        expense.is_flagged = True
-        expense.save()
-        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
+    expense.is_flagged = True
+    expense.save()
+    return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
     
 
 @require_GET
