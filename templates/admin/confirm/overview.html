@@ -18,6 +18,7 @@
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Belopp</th>
+                <th></th>
             </tr>
         </thead>
         <tr v-for="expense in expenses" v-if="!(digital && expense.is_digital !== true || analog && expense.is_digital !== false)">
@@ -32,11 +33,12 @@
             <td v-else>
                 Bekräftad
             </td>
-            <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a> <span class="icon"><i class="fa fa-flag" v-if="expense.is_flagged == false"></i></span></td>
+            <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a> </td>
             <td v-if="!(digital || analog)"><p v-if="expense.is_digital">Ja</p><p v-else-if="expense.is_digital == false">Nej</p><p v-else>👻</p></td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.amount + ' kr'"></td>
+            <td><span class="icon"><i class="fa fa-flag" v-if="expense.is_flagged == false"></i></span></td>
         </tr>
     </table>
     <p v-else><b>Det finns inga icke-godkända kvitton. Bra jobbat!</b></p>
