@@ -189,6 +189,22 @@ def delete_expense(request, pk):
         messages.success(request, 'Kvittot raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
 
+@require_POST
+def flag_expense(request, pk):
+    """
+    Should. Do. Stuff.
+    """ #Should be similar to delete_expense where it gets a page with a confirmation that you want to flag before doing stuff
+    #or just sends some confirmation. probably.
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+        #if not dauth.has_permission('flag', request):
+            #return HttpResponseForbidden("Du har inte rättigheterna för att flagga kvitton")
+        expense.is_flagged = True
+        expense.save()
+        return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+    
 
 @require_GET
 @login_required
