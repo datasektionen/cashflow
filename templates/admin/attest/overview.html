@@ -27,7 +27,7 @@
         </thead>
         <tr v-for="expense in expenses" v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
             <td class="left" v-text="expense.id"></td>
-            <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a></td>
+            <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a><i class="fa fa-flag" v-if="expense.is_flagged == false"></i></td>
             <td><a :href="'/users/' + expense.owner_username" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.cost_centres.join(', ')"></td>
             <td class="right" v-text="expense.amount + ' kr'"></td>
