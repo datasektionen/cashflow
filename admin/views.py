@@ -121,7 +121,7 @@ def confirm_overview(request):
     """
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None, is_flagged=None).order_by('id').distinct()],
+            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).exclude(is_flagged=True).order_by('id').distinct()],
             default=json_serial) ##TODO make sure to exclude is_flagged properly
     }) #TODO also figure out where this chungus is supposed to go
 
@@ -249,31 +249,6 @@ def unconfirm_expense(request, pk):
         return HttpResponseRedirect(reverse('admin-confirm'))
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
-
-@require_POST
-@login_required
-def flag_expense(request, pk):
-    try:
-        expense = Expense.objects.get(pk=pk)
-
-        #if not dauth.has_permission('unconfirm', request):
-        #    return HttpResponseForbidden("Du har inte rättigheterna för att ta bort bekräftelse av kvittons giltighet")
-
-        expense.confirmed_by = None
-        expense.confirmed_at = None
-        expense.save()
-
-        comment = Comment(
-            expense=expense,
-            author=request.user.profile,
-            content='Jag tar bort bekräftelsen av kvittots giltighet.'
-        )
-        comment.save()
-
-        return HttpResponseRedirect(reverse('admin-confirm'))
-    except ObjectDoesNotExist:
-        raise Http404("Utlägget finns inte")
-    return
 
 @require_POST
 @login_required

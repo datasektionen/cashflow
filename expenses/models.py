@@ -334,11 +334,11 @@ class Expense(models.Model):
         }
         if 'firmatecknare' not in may_attest:
             filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).distinct()
+        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
-    def confirmable():
-        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+    def confirmable(): #TODO is_flagged check
+        return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def payable():
@@ -357,20 +357,6 @@ class Expense(models.Model):
             verification='',
             expensepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
         ).distinct().order_by('expense_date')
-    ##TODO define function for flagging, similar to how you can unattest in expensePart
-    
-    @staticmethod
-    def flag(self, user):
-        self.is_flagged = True
-        self.save()
-
-        comment = Comment(
-            author=user.profile,
-            expense=self.expense,
-            content="Flaggar kvittodelen ```" + str(self) + "```"
-        )
-        comment.save()
-
 
 
 class File(models.Model):
