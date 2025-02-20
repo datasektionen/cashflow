@@ -157,10 +157,10 @@
                 </form>
                 {% endif %}
                 <form method="POST" action="{% url 'expenses-flag' expense.id %}">
-                    {% csrf_token %}
-                    <button class="btn btn-danger" type="submit" >
-                      <i class="fa fa-flag"></i> Flagga kvitto
-                    </button> 
+                  {% csrf_token %}
+                  <button class="btn btn-danger" type="submit" >
+                    <span class="icon"><i class="fa fa-flag"></i></span> Flagga kvitto
+                  </button> 
                 </form>
               </td>
               {% endif %}
@@ -216,7 +216,6 @@
                         {% csrf_token %}
                         <textarea id="content-field" name="content" rows="3" style="width: 100%;border:none;" placeholder="Skriv en kommentar"></textarea>
                         <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
-                        <button class="button btn-danger" type="submit">Kommentera och flagga</button>
                         <div class="clearfix"></div>
                     </form>
                 </div>

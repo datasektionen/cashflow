@@ -14,7 +14,7 @@
     <div class="clearfix"></div>
     <br />
     {% if expenses %}
-        <table>
+        <table><!--TODO visa problematiska ruta-->
             <thead>
                 <tr>
                     <th>ID</th>
@@ -31,9 +31,9 @@
                     <td class="no-wrap">{{ expense.id }}</td>
                     <td class="no-wrap"><a href="{% url 'expenses-show' expense.id %}">{{ expense.status }} </a>
                         {%if expense.is_flagged %}
-                        <i class="fa fa-flag" style="color: red"></i>
+                        <span class="icon"><i class="fa fa-flag" style="color: red"></i></span>
                         {%elif expense.is_flagged == False %}
-                        <i class="fa fa-flag"></i>
+                        <span class="icon"><i class="fa fa-flag"></i></span>
                         {%endif%} 
                     </td>
                     
