@@ -156,11 +156,12 @@
                   <button class="btn btn-danger" type="submit">Avattestera</button>
                 </form>
                 {% endif %}
-                <a href="{% url 'expenses-delete' expense.id %}">
-                    <button type="button" class="btn btn-danger">
+                <form method="POST" action="{% url 'expenses-flag' expense.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger" type="submit" >
                       <i class="fa fa-flag"></i> Flagga kvitto
                     </button> <!--TODO gör samma som avattestera fast coolare-->
-                  </a>
+                </form>
               </td>
               {% endif %}
             </tr>
