@@ -378,9 +378,6 @@
         }
     });
 
-    //function uploadFile (filename) {
-    //    document.getElementById('filename').innerText = filename.split('\\').pop();
-    //}
     function updateUploaded() {
     	const files = [...document.getElementById('file').files];
         document.getElementById('filename').innerText = files.map(f => f.name).join(', ');
