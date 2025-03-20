@@ -61,7 +61,7 @@
                     </span>
                     <div class="input">
                         <div style="padding: 8px 0;">
-                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required" onchange="uploadFile(this.value)">
+                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required" onchange="updateUploaded()">
                             <label for="file" class="file">
                                 <span class="icon theme-color"><i class="fa fa-upload"></i></span>
                                 <span class="val">Välj filer</span>
@@ -378,8 +378,12 @@
         }
     });
 
-    function uploadFile (filename) {
-        document.getElementById('filename').innerText = filename.split('\\').pop();
+    //function uploadFile (filename) {
+    //    document.getElementById('filename').innerText = filename.split('\\').pop();
+    //}
+    function updateUploaded() {
+    	const files = [...document.getElementById('file').files];
+        document.getElementById('filename').innerText = files.map(f => f.name).join(', ');
     }
 </script>
 {% endblock %}
