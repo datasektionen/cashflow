@@ -323,6 +323,7 @@ class Expense(models.Model):
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
         exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
+        exp['status'] = self.status()
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
