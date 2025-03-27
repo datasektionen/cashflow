@@ -29,11 +29,14 @@
         </thead>
         <tr v-for="expense in expenses">
                 <td class="no-wrap" v-text="expense.id"></td>
-                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td>
-                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
+                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.verification"></a></td> 
+                {% comment %} vafan ska vara för Verifikat? {% endcomment %}
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
                 {% comment %} TODO, what is capfirst? {% endcomment %}
                 <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
-                
+                <td class="no-wrap">
+                    <span class="no-wrap" v-for="cost_centre in expense.cost_centres" v-text="cost_centre + ', '"/></span>
+                </td>
                 <td class="right no-wrap">
                     <span v-text="total_amount(expense.expense_parts)"></span> <!--TODO lägg till komman-->
                     {% comment %} {% if not forloop.last %}, {% endif %} {% endcomment %}
@@ -102,7 +105,6 @@
                 for (let i = 0; i < expense_parts.length; i++){
                     sum += expense_parts[i].amount
                 }
-                console.log(expense_parts)
                 return sum
             },
         },
