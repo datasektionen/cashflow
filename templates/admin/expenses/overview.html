@@ -27,9 +27,9 @@
                 <th class="right">Transaktionsdatum</th>
             </tr>
         </thead>
-        <tr v-for="expense in expenses">
+        <tr v-for="expense in expenses" v-if="(!flagged || expense.is_flagged === true)">
                 <td class="no-wrap" v-text="expense.id"></td>
-                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.verification"></a></td> 
+                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="status(expense)"></a></td> 
                 {% comment %} vafan ska vara för Verifikat? {% endcomment %}
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
                 {% comment %} TODO, what is capfirst? {% endcomment %}
@@ -107,6 +107,10 @@
                 }
                 return sum
             },
+            status(expense){
+                //im bad at coding
+                return expense.status
+            }
         },
         computed: {
             filteredExpenses() {
