@@ -33,7 +33,7 @@
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
                 {% comment %} TODO, what is capfirst? {% endcomment %}
                 <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
-                <td v-text="fence_post_comma(expense.cost_centres)"></td>
+                <td v-text="expense.cost_centres.join(', ')"></td>
                 <td class="right no-wrap">
                     <span v-text="total_amount(expense.expense_parts)"></span> 
                     kr</td>
@@ -102,17 +102,6 @@
                     sum += expense_parts[i].amount
                 }
                 return sum
-            },
-            fence_post_comma(cost_centres) {
-                res = ""
-                for (let i = 0; i < cost_centres.length - 1; i++) {
-                    const cost_centre = cost_centres[i]
-                    console.log(cost_centre)
-
-                    res += cost_centre + ", "
-                }
-                res += cost_centres[cost_centres.length - 1]
-                return res
             },
         },
 
