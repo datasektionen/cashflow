@@ -29,17 +29,13 @@
         </thead>
         <tr v-for="expense in expenses" v-if="(!flagged || expense.is_flagged === true)">
                 <td class="no-wrap" v-text="expense.id"></td>
-                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="status(expense)"></a></td> 
-                {% comment %} vafan ska vara för Verifikat? {% endcomment %}
+                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td> 
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
                 {% comment %} TODO, what is capfirst? {% endcomment %}
                 <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
-                <td class="no-wrap">
-                    <span class="no-wrap" v-for="cost_centre in expense.cost_centres" v-text="cost_centre + ', '"/></span>
-                </td>
+                <td v-text="fence_post_comma(expense.cost_centres)"></td>
                 <td class="right no-wrap">
-                    <span v-text="total_amount(expense.expense_parts)"></span> <!--TODO lägg till komman-->
-                    {% comment %} {% if not forloop.last %}, {% endif %} {% endcomment %}
+                    <span v-text="total_amount(expense.expense_parts)"></span> 
                     kr</td>
                 <td class="right no-wrap" v-text="expense.expense_date"></td>
                 <td class="right no-wrap">
@@ -52,7 +48,7 @@
                 <tr>
                     <td class="right" colspan="5">
                         <span class="current">
-                            Sida {{ expenses.number }} av {{ expenses.paginator.num_pages }}.
+                            Sida {{ expenses.number }} av {{ expenses.paginator.num_pages }}. 
                         </span>
                     </td>
                 </tr>
@@ -107,16 +103,17 @@
                 }
                 return sum
             },
-            status(expense){
-                //im bad at coding
-                return expense.status
-            }
-        },
-        computed: {
-            filteredExpenses() {
-                //computation
-                return ["hej"] 
-            }
+            fence_post_comma(cost_centres) {
+                res = ""
+                for (let i = 0; i < cost_centres.length - 1; i++) {
+                    const cost_centre = cost_centres[i]
+                    console.log(cost_centre)
+
+                    res += cost_centre + ", "
+                }
+                res += cost_centres[cost_centres.length - 1]
+                return res
+            },
         },
 
         created: function() {
