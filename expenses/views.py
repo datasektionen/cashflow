@@ -125,7 +125,8 @@ def edit_expense(request, pk):
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
     expense.is_digital = 'is-digital' in request.POST
-    expense.is_flagged = False #TODO, såklart så ska inte något flaggas om något inte redan är flaggad
+    if (expense.is_flagged != None):
+        expense.is_flagged = False
     expense.save()
     new_ids = []
 
