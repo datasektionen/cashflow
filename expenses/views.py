@@ -125,7 +125,7 @@ def edit_expense(request, pk):
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
     expense.is_digital = 'is-digital' in request.POST
-    expense.is_flagged = False
+    expense.is_flagged = False #TODO, såklart så ska inte något flaggas om något inte redan är flaggad
     expense.save()
     new_ids = []
 
@@ -194,7 +194,9 @@ def delete_expense(request, pk):
 @user_passes_test(lambda u: u.profile.is_admin())
 def flag_expense(request, pk):
     """
-    Flag a problematic expense
+    Flag a problematic expense TODO ta bort detta, just nu kan personer inte flagga sina egna utlägg, borde kanske vara fallet.
+    Notera att vanliga personer ändå inte kan se varandras utlägg, så inte som att de kan flagga. Dock skulle de har perms, som kanske 
+    känns väldigt cross-site aktigt
     """ 
     try:
         expense = models.Expense.objects.get(pk=pk)

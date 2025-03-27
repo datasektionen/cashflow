@@ -188,3 +188,4 @@ tags
 .vscode/
 
 # End of https://www.gitignore.io/api/django,pycharm,python,vim
+shell.nix

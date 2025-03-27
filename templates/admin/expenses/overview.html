@@ -10,49 +10,41 @@
             <option :value="''">Filtrera på resultatställe (visa alla)</option>
             <option v-for="cost_centre in cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))" v-text="cost_centre" :value="cost_centre"></option>
         </select>
-    </div>
+    </div> 
     <label for="flagged" style="padding-right: 0.5em;">Visa endast flaggade</label><input v-model="flagged" type="checkbox" id="flagged" /><br />
     <div class="clearfix"></div>
     <br />
-    {% if expenses %}
-        <table><!--TODO visa problematiska ruta-->
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Verifikat</th>
-                    <th>Beskrivning</th>
-                    <th>Ägare</th>
-                    <th>Resultatställen</th>
-                    <th class="right">Belopp</th>
-                    <th class="right">Transaktionsdatum</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <!--TODO Göra så att checkboxen filtrerar ordentligt-->
-            <!--<tr v-for="expense in expenses" v-if="!(flagged && expense.is_flagged !== true)">-->
-            {% for expense in expenses %}
-                <tr>
-                    <td class="no-wrap">{{ expense.id }}</td>
-                    <td class="no-wrap"><a href="{% url 'expenses-show' expense.id %}">{{ expense.status }} </a>
-                    </td>
-                    
-                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
-                    <td class="no-wrap"><a href="{% url 'user-show' expense.owner.user.username %}">{{ expense.owner }}</a></td>
-                    <td>{% for cost_centre in expense.cost_centres %}
-                        {{ cost_centre.cost_centre }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                    </td>
-                    <td class="right no-wrap">{{ expense.total_amount|intcomma }} kr</td>
-                    <td class="right no-wrap">{{ expense.expense_date }}</td>
-                    <td class="right no-wrap">
-                        {%if expense.is_flagged %}
-                        <span class="icon"><i class="fa fa-flag" style="color: red"></i></span>
-                        {%elif expense.is_flagged == False %}
-                        <span class="icon"><i class="fa fa-flag"></i></span>
-                        {%endif%} <!--TODO decide where to put the flags-->
-                    </td>
-                </tr>
-            {% endfor %}
+    <span v-for="expense in expenses"></span>
+    <table v-if="expenses.length > 0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Verifikat</th>
+                <th>Beskrivning</th>
+                <th>Ägare</th>
+                <th>Resultatställen</th>
+                <th class="right">Belopp</th>
+                <th class="right">Transaktionsdatum</th>
+            </tr>
+        </thead>
+        <tr v-for="expense in expenses">
+                <td class="no-wrap" v-text="expense.id"></td>
+                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
+                {% comment %} TODO, what is capfirst? {% endcomment %}
+                <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
+                
+                <td class="right no-wrap">
+                    <span v-text="total_amount(expense.expense_parts)"></span> <!--TODO lägg till komman-->
+                    {% comment %} {% if not forloop.last %}, {% endif %} {% endcomment %}
+                    kr</td>
+                <td class="right no-wrap" v-text="expense.expense_date"></td>
+                <td class="right no-wrap">
+                    <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
+                    <span class="icon" v-if="expense.is_flagged===false"><i class="fa fa-flag"></i></span>
+                </td>
+        </tr>
+
             <tfoot>
                 <tr>
                     <td class="right" colspan="5">
@@ -79,9 +71,7 @@
                 {% endif %}
             </span>
         </div>
-    {% else %}
-        Det finns inga kvitton.
-    {% endif %}
+    {% comment %} <p v-else>Det finns inga kvitton.</p> {% endcomment %}
 </div>
 <script type="text/javascript">
     let getParameterByName = (name, url) => {
@@ -97,15 +87,32 @@
         el: '#app',
         data: function () {
             return {
+                flagged: false,
                 cost_centres: {% autoescape off %}{{ cost_centres }}{% endautoescape %},
-                cost_centre: '{% autoescape off %}{{ cost_centre }}{% endautoescape %}'
+                cost_centre: '{% autoescape off %}{{ cost_centre }}{% endautoescape %}',
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %} 
             }
         },
         methods: {
             move() {
                 window.location.href = '?page=' + getParameterByName('page') + '&cost_centre=' + this.cost_centre
+            },
+            total_amount(expense_parts) {
+                sum = 0
+                for (let i = 0; i < expense_parts.length; i++){
+                    sum += expense_parts[i].amount
+                }
+                console.log(expense_parts)
+                return sum
+            },
+        },
+        computed: {
+            filteredExpenses() {
+                //computation
+                return ["hej"] 
             }
         },
+
         created: function() {
 
         }
