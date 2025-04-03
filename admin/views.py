@@ -332,10 +332,19 @@ def expense_overview(request):
         expense_dict["status"] = expense.status()
         expenses_data.append(expense_dict)
 
+    pages = {
+        'number': expenses.number,
+        'previous_page_number': expenses.previous_page_number,
+        'next_page_number': expenses.next_page_number,
+        'page_range': expenses.paginator.page_range,
+        'num_pages': expenses.paginator.num_pages,
+        'has_next': expenses.has_next,
+    }
     return render(request, 'admin/expenses/overview.html', {
         'expenses': json.dumps(
             expenses_data, 
             default=json_serial),
+        'pages': pages,
         'cost_centres': json.dumps(
             [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
         'cost_centre': cost_centre if cost_centre is not None else ''

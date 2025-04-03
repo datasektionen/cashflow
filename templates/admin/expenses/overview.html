@@ -31,12 +31,10 @@
                 <td class="no-wrap" v-text="expense.id"></td>
                 <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td> 
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
-                {% comment %} TODO, what is capfirst? {% endcomment %}
                 <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
                 <td v-text="expense.cost_centres.join(', ')"></td>
                 <td class="right no-wrap">
-                    <span v-text="total_amount(expense.expense_parts)"></span> 
-                    kr</td>
+                    <span v-text="total_amount(expense.expense_parts)"></span> kr</td>
                 <td class="right no-wrap" v-text="expense.expense_date"></td>
                 <td class="right no-wrap">
                     <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
@@ -48,7 +46,7 @@
                 <tr>
                     <td class="right" colspan="5">
                         <span class="current">
-                            Sida {{ expenses.number }} av {{ expenses.paginator.num_pages }}. 
+                            Sida {{ pages.number }} av {{ pages.num_pages }}. 
                         </span>
                     </td>
                 </tr>
@@ -57,16 +55,16 @@
 
         <div class="pagination">
             <span class="step-links">
-                {% if expenses.has_previous %}
-                    <a :href="'?page={{ expenses.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
-                {% endif %}
+                {% if pages.has_previous %}
+                    <a :href="'?page={{ pages.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
+                {% endif %} <!--todo, fix pagination-->
 
-                {% for i in expenses.paginator.page_range %}
-                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == expenses.number %} class="active"{% endif %}>{{i}}</a>
+                {% for i in pages.page_range %}
+                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
                 {% endfor %}
 
-                {% if expenses.has_next %}
-                    <a :href="'?page={{ expenses.next_page_number }}&cost_centre=' + cost_centre">Nästa</a>
+                {% if pages.has_next %}
+                    <a :href="'?page={{ pages.next_page_number }}&cost_centre=' + cost_centre">Nästa</a>
                 {% endif %}
             </span>
         </div>
@@ -89,7 +87,7 @@
                 flagged: false,
                 cost_centres: {% autoescape off %}{{ cost_centres }}{% endautoescape %},
                 cost_centre: '{% autoescape off %}{{ cost_centre }}{% endautoescape %}',
-                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %} 
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %}
             }
         },
         methods: {
