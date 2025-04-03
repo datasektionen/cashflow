@@ -195,9 +195,7 @@ def delete_expense(request, pk):
 @user_passes_test(lambda u: u.profile.is_admin())
 def flag_expense(request, pk):
     """
-    Flag a problematic expense TODO ta bort detta, just nu kan personer inte flagga sina egna utlägg, borde kanske vara fallet.
-    Notera att vanliga personer ändå inte kan se varandras utlägg, så inte som att de kan flagga. Dock skulle de har perms, som kanske 
-    känns väldigt cross-site aktigt
+    Flag a problematic expense
     """ 
     try:
         expense = models.Expense.objects.get(pk=pk)

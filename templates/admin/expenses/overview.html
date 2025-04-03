@@ -57,7 +57,7 @@
             <span class="step-links">
                 {% if pages.has_previous %}
                     <a :href="'?page={{ pages.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
-                {% endif %} <!--todo, fix pagination-->
+                {% endif %} 
 
                 {% for i in pages.page_range %}
                     <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
@@ -68,7 +68,7 @@
                 {% endif %}
             </span>
         </div>
-    {% comment %} <p v-else>Det finns inga kvitton.</p> {% endcomment %}
+    <p v-else>Det finns inga kvitton.</p>
 </div>
 <script type="text/javascript">
     let getParameterByName = (name, url) => {
