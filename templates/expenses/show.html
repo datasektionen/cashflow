@@ -156,12 +156,15 @@
                   <button class="btn btn-danger" type="submit">Avattestera</button>
                 </form>
                 {% endif %}
+                {% if may_unattest %} <!--TODO, remporary fix. Ideally just someone with high enough privs should be able to do this-->
                 <form method="POST" action="{% url 'expenses-flag' expense.id %}">
                   {% csrf_token %}
                   <button class="btn btn-danger" type="submit" >
                     <span class="icon"><i class="fa fa-flag"></i></span> Flagga kvitto
                   </button> 
                 </form>
+                {% endif %}
+
               </td>
               {% endif %}
             </tr>
