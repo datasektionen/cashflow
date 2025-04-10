@@ -4,8 +4,6 @@
 {% block title %}{{ showuser.get_full_name }}{% endblock %}
 {% block content %}
 <div id="app">
-    {% comment %} {{non_attested_expenses}} {% endcomment %}
-
     <h2>Ej attesterade kvitton </h2>
     <label for="flagged" style="padding-right: 0.5em;">Visa endast flaggade</label><input v-model="flagged" type="checkbox" id="flagged" /><br />
         <table v-if="non_attested_expenses.length > 0">
@@ -24,29 +22,12 @@
                 <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.expense_date"></a></td>  
                 {% comment %} fixa datum {% endcomment %}
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.created_date"></a> </td>
-                <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a> </td>
-                {% comment %} capfirst {% endcomment %}
-                <td v-text="expense.amount"></td>
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="capFirst(expense.description)"></a> </td>
+                <td v-text="intcomma(expense.amount)"></td>
                 <td class="right no-wrap">
                     <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
                     <span class="icon" v-if="expense.is_flagged===false"><i class="fa fa-flag"></i></span>
                 </td>
-             {% comment %} {% for expense in non_attested_expenses %} 
-                <tr>
-                    <td class="left">{{ expense.id }}</td>
-                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.expense_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.created_date|date:"Y-m-d" }}</a></td>
-                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
-                    <td>{{ expense.total_amount|intcomma }} kr</td>
-                    <td>
-                        {%if expense.is_flagged %}
-                        <span class="icon"><i class="fa fa-flag" style="color: red"></i></span>
-                        {%elif expense.is_flagged == False %}
-                        <span class="icon"><i class="fa fa-flag"></i></span>
-                        {%endif%} 
-                    </td>
-                </tr>
-            {% endfor %}{% endcomment %}
         </table>
         <p v-else>Du har inga oattesterade kvitton!</p>
     <br /><br />
@@ -123,7 +104,12 @@
             }
         },
         methods: {
-
+            intcomma(text){
+                return parseInt(text).toLocaleString("en")
+            },
+            capFirst(val) {
+                return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+            },
         },
         created: function() {
 

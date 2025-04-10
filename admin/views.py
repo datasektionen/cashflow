@@ -250,6 +250,7 @@ def unconfirm_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
+
 @require_POST
 @login_required
 @user_passes_test(lambda u: u.profile.may_account())
@@ -326,12 +327,6 @@ def expense_overview(request):
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
     
-    expenses_data = []
-    for expense in expenses:
-        expense_dict = expense.to_dict()
-        expense_dict["status"] = expense.status()
-        expenses_data.append(expense_dict)
-
     pages = {
         'number': expenses.number,
         'previous_page_number': expenses.previous_page_number,
@@ -342,7 +337,7 @@ def expense_overview(request):
     }
     return render(request, 'admin/expenses/overview.html', {
         'expenses': json.dumps(
-            expenses_data, 
+            [x.to_dict() for x in expenses], 
             default=json_serial),
         'pages': pages,
         'cost_centres': json.dumps(
