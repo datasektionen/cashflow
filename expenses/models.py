@@ -317,6 +317,7 @@ class Expense(models.Model):
     # Returns a dict representation of the model
     def to_dict(self):
         exp = model_to_dict(self)
+        exp['created_date'] = self.created_date
         exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self)]
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
