@@ -14,7 +14,6 @@
     <label for="flagged" style="padding-right: 0.5em;">Visa endast flaggade</label><input v-model="flagged" type="checkbox" id="flagged" /><br />
     <div class="clearfix"></div>
     <br />
-    <span v-for="expense in expenses"></span>
     <table v-if="expenses.length > 0">
         <thead>
             <tr>

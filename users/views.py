@@ -64,7 +64,6 @@ def get_user_receipts(request, username):
         expenses_data.append(expense_dict)
 
     attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
-    print(non_attested_expenses)
     return render(request, 'users/receipts.html', {
         'showuser': user,
         'non_attested_expenses': json.dumps(
