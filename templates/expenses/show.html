@@ -150,13 +150,13 @@
                   </button>
                 </a>
                 {% endif %}
-                {% if may_unattest %}
+                {% if may_flag %}
                 <form method="POST" action="{% url 'admin-expense-unattest' expense.id %}">
                   {% csrf_token %}
                   <button class="btn btn-danger" type="submit">Avattestera</button>
                 </form>
                 {% endif %}
-                {% if may_unattest %} <!--TODO, remporary fix. Ideally just someone with high enough privs should be able to do this-->
+                {% if may_flag %} <!--TODO, temporary fix. Ideally just someone with high enough privileges should be able to flag expenses-->
                 <form method="POST" action="{% url 'expenses-flag' expense.id %}">
                   {% csrf_token %}
                   <button class="btn btn-danger" type="submit" >

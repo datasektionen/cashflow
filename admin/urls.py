@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),
     url(r'^expense/(?P<pk>\d+)/confirm/$', views.confirm_expense, name='admin-expense-confirm'),
     url(r'^expense/(?P<pk>\d+)/unconfirm/$', views.unconfirm_expense, name='admin-expense-unconfirm'),
-    
+
     url(r'^invoice/(?P<invoice_pk>\d+)/verification/$', views.invoice_set_verification, name='admin-invoice-verification'),
 
     url(r'^expense-part/(?P<pk>\d+)/attest/$', views.attest_expense_part, name='admin-expensepart-attest'),

@@ -17,16 +17,14 @@
                     <th></th>
                 </tr>
             </thead>
-            <tr v-for="expense in non_attested_expenses" v-if="(!flagged || expense.is_flagged === true)">
+            <tr v-for="expense in non_attested_expenses" v-if="!flagged || expense.is_flagged">
                 <td class="left" v-text="expense.id"></td>
                 <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.expense_date"></a></td>  
-                {% comment %} fixa datum {% endcomment %}
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.created_date"></a> </td>
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="capFirst(expense.description)"></a> </td>
                 <td v-text="intcomma(expense.amount)"></td>
                 <td class="right no-wrap">
                     <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
-                    <span class="icon" v-if="expense.is_flagged===false"><i class="fa fa-flag"></i></span>
                 </td>
         </table>
         <p v-else>Du har inga oattesterade kvitton!</p>
