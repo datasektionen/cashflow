@@ -58,10 +58,6 @@ def get_user_receipts(request, username):
         else: attested_expenses.append(expense) # inner loop didn't break
 
     non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
-    expenses_data = []
-    for expense in non_attested_expenses:
-        expense_dict = expense.to_dict()
-        expenses_data.append(expense_dict)
 
     attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
     return render(request, 'users/receipts.html', {

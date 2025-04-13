@@ -26,7 +26,7 @@
                 <th class="right">Transaktionsdatum</th>
             </tr>
         </thead>
-        <tr v-for="expense in expenses" v-if="(!flagged || expense.is_flagged === true)">
+        <tr v-for="expense in expenses" v-if="!flagged || expense.is_flagged">
                 <td class="no-wrap" v-text="expense.id"></td>
                 <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td> 
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="capFirst(expense.description)"></a> </td>
@@ -46,7 +46,7 @@
                 <tr>
                     <td class="right" colspan="5">
                         <span class="current">
-                            Sida {{ pages.number }} av {{ pages.num_pages }}. 
+                            Sida {{ pages.number }} av {{ pages.num_pages }}.
                         </span>
                     </td>
                 </tr>
