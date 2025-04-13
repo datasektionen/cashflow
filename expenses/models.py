@@ -204,6 +204,9 @@ class Profile(models.Model):
 
     def may_unattest(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
+    
+    def may_flag(self):
+        return self.may_attest() or self.may_pay()
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -325,6 +328,7 @@ class Expense(models.Model):
         exp['amount'] = self.total_amount()
         exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
         exp['status'] = self.status()
+        exp['is_flagged'] = self.is_flagged
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
@@ -339,7 +343,7 @@ class Expense(models.Model):
         return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
-    def confirmable(): 
+    def confirmable():
         return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod

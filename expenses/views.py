@@ -192,7 +192,7 @@ def delete_expense(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.is_admin())
+@user_passes_test(lambda u: u.profile.may_flag())
 def flag_expense(request, pk):
     """
     Flag a problematic expense
@@ -204,7 +204,7 @@ def flag_expense(request, pk):
     expense.is_flagged = True
     expense.save()
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
-    
+
 
 @require_GET
 @login_required
