@@ -128,6 +128,7 @@ def edit_expense(request, pk):
     if (expense.is_flagged != None):
         expense.is_flagged = False
     expense.save()
+    
     new_ids = []
 
     for cost_centre, secondary_cost_centre, budget_line, amount in zip(
