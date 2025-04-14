@@ -150,7 +150,7 @@
                   </button>
                 </a>
                 {% endif %}
-                {% if may_flag %}
+                {% if may_unattest%}
                 <form method="POST" action="{% url 'admin-expense-unattest' expense.id %}">
                   {% csrf_token %}
                   <button class="btn btn-danger" type="submit">Avattestera</button>
