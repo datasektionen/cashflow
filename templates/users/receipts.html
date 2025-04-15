@@ -24,7 +24,7 @@
                 <td><a :href="'/expenses/' + expense.id + '/'" v-text="capFirst(expense.description)"></a> </td>
                 <td v-text="intcomma(expense.amount)"></td>
                 <td class="right no-wrap">
-                    <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
+                    <span class="icon" v-if="expense.is_flagged===true" title="Flaggad"><i class="fa fa-flag" style="color: red"></i></span>
                 </td>
         </table>
         <p v-else>Du har inga oattesterade kvitton!</p>

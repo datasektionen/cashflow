@@ -37,8 +37,8 @@
                     <span v-text="intcomma(expense.amount)"></span> kr</td>
                 <td class="right no-wrap" v-text="expense.expense_date"></td>
                 <td class="right no-wrap">
-                    <span class="icon" v-if="expense.is_flagged===true"><i class="fa fa-flag" style="color: red"></i></span>
-                    <span class="icon" v-if="expense.is_flagged===false"><i class="fa fa-flag"></i></span>
+                    <span class="icon" v-if="expense.is_flagged===true" title="Flaggad"><i class="fa fa-flag" style="color: red"></i></span>
+                    <span class="icon" v-if="expense.is_flagged===false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span>
                 </td>
         </tr>
 
