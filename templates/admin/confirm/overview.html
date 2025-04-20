@@ -39,6 +39,7 @@
             <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.amount + ' kr'"></td>
             <td><span class="icon" v-if="expense.is_flagged === false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span></td>
+            {% comment %} Currently flagged expenses are filtered before rendering HTML {% endcomment %}
         </tr>
     </table>
     <p v-else><b>Det finns inga icke-godkända kvitton. Bra jobbat!</b></p>
