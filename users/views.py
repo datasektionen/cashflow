@@ -58,11 +58,13 @@ def get_user_receipts(request, username):
         else: attested_expenses.append(expense) # inner loop didn't break
 
     non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
-    attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
 
+    attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
     return render(request, 'users/receipts.html', {
         'showuser': user,
-        'non_attested_expenses': non_attested_expenses,
+        'non_attested_expenses': json.dumps(
+            [x.to_dict() for x in non_attested_expenses], default=json_serial,
+            ),
         'attested_expenses': attested_expenses,
         'reimbursements': user.profile.receiver.all()
     })
@@ -92,4 +94,18 @@ def edit_user(request, username):
         'showuser': user,
         'hide_edit': True
     })
+#copy some code teehee
+class FakeFloat(float):
+    # noinspection PyMissingConstructor
+    def __init__(self, value):
+        self._value = value
 
+    def __repr__(self):
+        return str(self._value)
+
+def json_serial(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return FakeFloat(obj)
+    raise TypeError("Type %s not serializable" % type(obj))

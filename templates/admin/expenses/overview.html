@@ -10,41 +10,43 @@
             <option :value="''">Filtrera på resultatställe (visa alla)</option>
             <option v-for="cost_centre in cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))" v-text="cost_centre" :value="cost_centre"></option>
         </select>
-    </div>
+    </div> 
+    <label for="flagged" style="padding-right: 0.5em;">Visa endast flaggade</label><input v-model="flagged" type="checkbox" id="flagged" /><br />
     <div class="clearfix"></div>
     <br />
-    {% if expenses %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Verifikat</th>
-                    <th>Beskrivning</th>
-                    <th>Ägare</th>
-                    <th>Resultatställen</th>
-                    <th class="right">Belopp</th>
-                    <th class="right">Transaktionsdatum</th>
-                </tr>
-            </thead>
-            {% for expense in expenses %}
-                <tr>
-                    <td class="no-wrap">{{ expense.id }}</td>
-                    <td class="no-wrap"><a href="{% url 'expenses-show' expense.id %}">{{ expense.status }}</a></td>
-                    <td><a href="{% url 'expenses-show' expense.id %}">{{ expense.description|capfirst }}</a></td>
-                    <td class="no-wrap"><a href="{% url 'user-show' expense.owner.user.username %}">{{ expense.owner }}</a></td>
-                    <td>{% for cost_centre in expense.cost_centres %}
-                        {{ cost_centre.cost_centre }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                    </td>
-                    <td class="right no-wrap">{{ expense.total_amount|intcomma }} kr</td>
-                    <td class="right no-wrap">{{ expense.expense_date }}</td>
-                </tr>
-            {% endfor %}
+    <table v-if="expenses.length > 0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Verifikat</th>
+                <th>Beskrivning</th>
+                <th>Ägare</th>
+                <th>Resultatställen</th>
+                <th class="right">Belopp</th>
+                <th class="right">Transaktionsdatum</th>
+            </tr>
+        </thead>
+        <tr v-for="expense in expenses" v-if="!flagged || expense.is_flagged">
+                <td class="no-wrap" v-text="expense.id"></td>
+                <td class="no-wrap"><a :href="'/expenses/' + expense.id + '/'" v-text="expense.status"></a></td> 
+                <td><a :href="'/expenses/' + expense.id + '/'" v-text="capFirst(expense.description)"></a> </td>
+                <td class="no-wrap"><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"> </a></td>
+                <td v-text="expense.cost_centres.join(', ')"></td>
+                <td class="right no-wrap">
+
+                    <span v-text="intcomma(expense.amount)"></span> kr</td>
+                <td class="right no-wrap" v-text="expense.expense_date"></td>
+                <td class="right no-wrap">
+                    <span class="icon" v-if="expense.is_flagged===true" title="Flaggad"><i class="fa fa-flag" style="color: red"></i></span>
+                    <span class="icon" v-if="expense.is_flagged===false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span>
+                </td>
+        </tr>
+
             <tfoot>
                 <tr>
                     <td class="right" colspan="5">
                         <span class="current">
-                            Sida {{ expenses.number }} av {{ expenses.paginator.num_pages }}.
+                            Sida {{ pages.number }} av {{ pages.num_pages }}.
                         </span>
                     </td>
                 </tr>
@@ -53,22 +55,20 @@
 
         <div class="pagination">
             <span class="step-links">
-                {% if expenses.has_previous %}
-                    <a :href="'?page={{ expenses.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
-                {% endif %}
+                {% if pages.has_previous %}
+                    <a :href="'?page={{ pages.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
+                {% endif %} 
 
-                {% for i in expenses.paginator.page_range %}
-                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == expenses.number %} class="active"{% endif %}>{{i}}</a>
+                {% for i in pages.page_range %}
+                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
                 {% endfor %}
 
-                {% if expenses.has_next %}
-                    <a :href="'?page={{ expenses.next_page_number }}&cost_centre=' + cost_centre">Nästa</a>
+                {% if pages.has_next %}
+                    <a :href="'?page={{ pages.next_page_number }}&cost_centre=' + cost_centre">Nästa</a>
                 {% endif %}
             </span>
         </div>
-    {% else %}
-        Det finns inga kvitton.
-    {% endif %}
+    <p v-else>Det finns inga kvitton.</p>
 </div>
 <script type="text/javascript">
     let getParameterByName = (name, url) => {
@@ -84,15 +84,24 @@
         el: '#app',
         data: function () {
             return {
+                flagged: false,
                 cost_centres: {% autoescape off %}{{ cost_centres }}{% endautoescape %},
-                cost_centre: '{% autoescape off %}{{ cost_centre }}{% endautoescape %}'
+                cost_centre: '{% autoescape off %}{{ cost_centre }}{% endautoescape %}',
+                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %}
             }
         },
         methods: {
             move() {
                 window.location.href = '?page=' + getParameterByName('page') + '&cost_centre=' + this.cost_centre
-            }
+            },
+            intcomma(text){
+                return parseInt(text).toLocaleString("en")
+            },
+            capFirst(val) {
+                return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+            },
         },
+
         created: function() {
 
         }

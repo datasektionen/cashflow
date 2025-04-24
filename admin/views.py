@@ -121,7 +121,7 @@ def confirm_overview(request):
     """
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
+            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).exclude(is_flagged=True).order_by('id').distinct()],
             default=json_serial)
     })
 
@@ -326,9 +326,20 @@ def expense_overview(request):
         expenses = paginator.page(1)
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
-
+    
+    pages = {
+        'number': expenses.number,
+        'previous_page_number': expenses.previous_page_number,
+        'next_page_number': expenses.next_page_number,
+        'page_range': expenses.paginator.page_range,
+        'num_pages': expenses.paginator.num_pages,
+        'has_next': expenses.has_next,
+    }
     return render(request, 'admin/expenses/overview.html', {
-        'expenses': expenses,
+        'expenses': json.dumps(
+            [x.to_dict() for x in expenses], 
+            default=json_serial),
+        'pages': pages,
         'cost_centres': json.dumps(
             [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
         'cost_centre': cost_centre if cost_centre is not None else ''

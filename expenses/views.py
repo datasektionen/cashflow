@@ -125,6 +125,9 @@ def edit_expense(request, pk):
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
     expense.is_digital = 'is-digital' in request.POST
+    if expense.is_flagged != None:
+        expense.is_flagged = False
+
     expense.save()
 
     new_ids = []
@@ -189,6 +192,21 @@ def delete_expense(request, pk):
         messages.success(request, 'Kvittot raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
 
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_flag())
+def flag_expense(request, pk):
+    """
+    Flag a problematic expense
+    """ 
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+    expense.is_flagged = True
+    expense.save()
+    return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
+
 
 @require_GET
 @login_required
@@ -213,6 +231,7 @@ def get_expense(request, pk):
         'expense': expense,
         'may_account': request.user.profile.may_account(),
         'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
+        'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,
         'may_delete': request.user.profile.may_delete(expense),
     })

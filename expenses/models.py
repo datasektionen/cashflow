@@ -204,6 +204,9 @@ class Profile(models.Model):
 
     def may_unattest(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
+    
+    def may_flag(self):
+        return self.may_attest() or self.may_pay()
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -273,6 +276,7 @@ class Expense(models.Model):
     reimbursement = models.ForeignKey(Payment, blank=True, null=True)
     verification = models.CharField(max_length=7, blank=True)
     is_digital = models.NullBooleanField()
+    is_flagged = models.NullBooleanField()
 
     # Returns a string representation of the expense
     def __str__(self):
@@ -316,12 +320,15 @@ class Expense(models.Model):
     # Returns a dict representation of the model
     def to_dict(self):
         exp = model_to_dict(self)
+        exp['created_date'] = self.created_date
         exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self)]
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
         exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
+        exp['status'] = self.status()
+        exp['is_flagged'] = self.is_flagged
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
@@ -333,11 +340,11 @@ class Expense(models.Model):
         }
         if 'firmatecknare' not in may_attest:
             filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).distinct()
+        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def confirmable():
-        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+        return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def payable():
