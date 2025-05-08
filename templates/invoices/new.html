@@ -128,7 +128,7 @@
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-date" required/>
+                        <input type="date" name="invoice-date" id="invoice-date"  required onchange="validateDate()"/>
                     </div>
                 </div>
 
@@ -141,7 +141,7 @@
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-due-date" required/>
+                        <input type="date" name="invoice-due-date" id="invoice-due-date" required onchange="validateDate()"/>
                     </div>
                 </div>
                 <div class="clearfix"></div>
@@ -377,6 +377,16 @@
             }
         }
     });
+
+    function validateDate() {
+        const date = document.getElementById("invoice-date");
+        const dueDate = document.getElementById("invoice-due-date");
+        if (dueDate.value < date.value) {
+            dueDate.setCustomValidity("Kan inte vara innan fakturadatum.");
+        } else {
+            dueDate.setCustomValidity("");
+        }
+    }
 
     function updateUploaded() {
         const files = [...document.getElementById('file').files];
