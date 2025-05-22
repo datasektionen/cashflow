@@ -8,21 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Git checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    # See the following link for documentation:
-    # https://github.com/marketplace/actions/dokku
-    - name: Push to hermes
-      uses: dokku/github-action@v1.4.0
-      with:
-        ssh_private_key: ${{ secrets.HERMES_GLOBAL_DEPLOY_KEY }}
-        git_remote_url: ssh://dokku@hermes.datasektionen.se/cashflow
-        # force might feel risky, but there is no good reason why the server
-        # should ever not be a mirror of the deploy branch. And the errors we
-        # could get otherwise would probably be nasty to deal with
-        git_push_flags: --force
+      - name: Deploy to Nomad
+        uses: datasektionen/nomad-deploy@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          nomad-token: ${{ secrets.NOMAD_TOKEN }}
+          nomad-addr: ${{ vars.NOMAD_ADDR }}
