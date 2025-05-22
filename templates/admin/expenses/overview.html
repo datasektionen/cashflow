@@ -72,6 +72,11 @@
                 {% endif %}
             </span>
         </div>
+        <form method="get">
+            <input type="hidden" name="cost_centre" value="{{ cost_centre }}">
+            <input type="number" name="page" min="1" max="{{ pages.paginator.num_pages }}" placeholder="Gå till sida" style="width:120px">
+            <button type="submit">Kör</button>
+        </form>
     <p v-else>Det finns inga kvitton.</p>
 </div>
 <script type="text/javascript">
