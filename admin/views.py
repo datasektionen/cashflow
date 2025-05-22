@@ -346,6 +346,7 @@ def expense_overview(request):
         'page_range': expenses.paginator.page_range,
         'custom_range': custom_page_range,
         'num_pages': expenses.paginator.num_pages,
+        'has_previous': expenses.has_previous,
         'has_next': expenses.has_next,
     }
     return render(request, 'admin/expenses/overview.html', {
