@@ -59,8 +59,12 @@
                     <a :href="'?page={{ pages.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
                 {% endif %} 
 
-                {% for i in pages.page_range %}
-                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
+                {% for i in pages.custom_range %}
+                    {% if i == '...' %}
+                        <span>...</span>
+                    {% else %}
+                        <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
+                    {% endif %}
                 {% endfor %}
 
                 {% if pages.has_next %}
