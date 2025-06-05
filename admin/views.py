@@ -317,7 +317,7 @@ def expense_overview(request):
     if cost_centre is not None and cost_centre != '':
         expenses_list = expenses_list.filter(expensepart__cost_centre=cost_centre)
     expenses_list = expenses_list.all()
-    paginator = Paginator(expenses_list, 1)
+    paginator = Paginator(expenses_list, 25)
     page = request.GET.get('page')
 
     try:
