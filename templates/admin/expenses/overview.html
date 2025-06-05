@@ -76,7 +76,7 @@
         </div>
         <form method="get">
             <input type="hidden" name="cost_centre" value="{{ cost_centre }}">
-            <input type="number" name="page" min="1" max="{{ pages.paginator.num_pages }}" placeholder="Gå till sida" style="width:120px">
+            <input type="number" name="page" min="1" max="{{ pages.num_pages }}" placeholder="Sida" style="width:80px">
             <button type="submit">Kör</button>
             <button type="button" v-on:click="goToRandomPage()" style="margin-left: 10px;">🎲 Slumpa</button>
         </form>
