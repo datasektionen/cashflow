@@ -337,7 +337,7 @@ def expense_overview(request):
     elif current_page >= total_pages - 3:
         custom_page_range = [1, '...', total_pages-4, total_pages-3, total_pages-2, total_pages-1, total_pages]
     else:
-        custom_page_range = [1, '...', current_page-1, current_page, current_page+1, '...', total_pages]
+        custom_page_range = [1, '...', current_page-2, current_page-1, current_page, current_page+1, current_page+2, '...', total_pages]
 
     pages = {
         'number': expenses.number,
