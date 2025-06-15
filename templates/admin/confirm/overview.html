@@ -7,14 +7,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
 <div id="data">
     <p>Här kan du hitta alla kvitton som inte bekräftats. Endast oflaggade kvitton förekommer.</p>
-    <label for="digital" style="padding-right: 0.5em;">Visa endast digitala</label><input v-model="digital" type="checkbox" id="digital" /><br />
-    <label for="analog" style="padding-right: 0.5em;">Visa endast analoga</label><input v-model="analog" type="checkbox" id="analog" />
+    <!--<label for="digital" style="padding-right: 0.5em;">Visa endast digitala</label><input v-model="digital" type="checkbox" id="digital" /><br />
+    <label for="analog" style="padding-right: 0.5em;">Visa endast analoga</label><input v-model="analog" type="checkbox" id="analog" />-->
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
                 <th></th>
                 <th>ID</th>
-                <th v-if="!(digital || analog)">Digitalt</th>
+                <!--<th v-if="!(digital || analog)">Digitalt</th>-->
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Belopp</th>
@@ -34,7 +34,7 @@
                 Bekräftad
             </td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a></td>
-            <td v-if="!(digital || analog)"><p v-if="expense.is_digital">Ja</p><p v-else-if="expense.is_digital == false">Nej</p><p v-else>👻</p></td>
+            <!--<td v-if="!(digital || analog)"><p v-if="expense.is_digital">Ja</p><p v-else-if="expense.is_digital == false">Nej</p><p v-else>👻</p></td>-->
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.amount + ' kr'"></td>
