@@ -45,7 +45,6 @@ def new_expense(request):
             expense_date=request.POST['expense-date'],
             description=request.POST['expense-description'].strip(),
             confirmed_by=None,
-            is_digital='is-digital' in request.POST,
         )
         expense.save()
 
@@ -124,7 +123,6 @@ def edit_expense(request, pk):
 
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
-    expense.is_digital = 'is-digital' in request.POST
     if expense.is_flagged != None:
         expense.is_flagged = False
 
