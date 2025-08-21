@@ -81,7 +81,7 @@
             <div class="select" style="width: 100%;">
               <select 
                 v-model="selectedYear" 
-                @change="showDropdownN"
+                @change="yearHandler()"
                 style="width: 100%;" 
                 :disabled="expense_parts.length > 1"
               >
@@ -222,40 +222,9 @@
      },
      created: function () {
         this.years = Array.from({length: 2099 - 2017 + 1}, (v, i) => 2017 + i);
-        fetch('/stats/cost_centres')
-          .then(res => res.json())
-          .then(res => {
-                // Ensure that costCentres is populated correctly
-            this.costCentres = res.cost_centres;
-          })
-          .catch(error => {
-            console.error('Error fetching cost centres:', error);
-          });
       },
 
       methods: {
-        showDropdownN: function() {
-          // Show the cost centre dropdown when a year is selected
-          if (this.selectedYear) {
-            this.showCostCentreDropdown = true;
-          } else {
-            this.showCostCentreDropdown = false;
-          }
-        },
-        showDropdownS: function() {
-          if (this.selectedYear && this.showCostCentreDropdown ) {
-            this.showSecondaryCostCentreDropdown = true; 
-          } else {
-            this.showSecondaryCostCentreDropdown =  false;
-          }
-        },
-        showDropdownB: function() {
-          if (this.selectedYear && this.showCostCentreDropdown && this.showSecondaryCostCentreDropdown) {
-            this.showBudgetLineDropdown = true; 
-          } else {
-            this.showBudgetLineDropdown =  false;
-          }
-        },
          click(e) {
              if (this.selected === "Total summa") this.selected = "Antal cashflows"
              else this.selected = "Total summa"
@@ -275,15 +244,36 @@
                  });
          },
         
+        yearHandler(){
+          this.costCentres = [];
+          this.expense_parts[0].costCentre = '';
+          const params = new URLSearchParams ({
+        year: this.selectedYear,
+      });
+        fetch(`/stats/cost_centres/?${params.toString()}`,{
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+          .then(res => res.json())
+          .then(res => {
+            res.cost_centres.sort((a, b) => a.localeCompare(b)); // sort in alphabetic order
+            this.costCentres = res.cost_centres;
+          })
+          .catch(error => {
+            console.error('Error fetching cost centres:', error);
+          });
+        },
+
         costCentreHandler(){
-            //this.showDropdownS();
             this.fetchSecondaryCostCentres();
             this.budgetLines = [];
             this.expense_parts[0].budgetLine = '';
             this.fetchExpenseSummary();
         },
         secondaryCostCentreHandler(){
-            //this.showDropdownB();
             this.fetchBudgetLines();
             this.fetchExpenseSummary();
         },
@@ -306,6 +296,7 @@
       })
           .then(res => res.json())
           .then(res => {
+            res.sec_cost_centres.sort((a, b) => a.localeCompare(b)); // sort in alphabetic order
             this.secondaryCostCentres = res.sec_cost_centres;
           })
           .catch(error => {
@@ -329,6 +320,7 @@
       })
           .then(res => res.json())
           .then(res => {
+            res.budget_lines.sort((a, b) => a.localeCompare(b)); // sort in alphabetic order
             this.budgetLines = res.budget_lines;
           })
           .catch(error => {
@@ -338,7 +330,6 @@
          fetchExpenseSummary: function() {
       // Make sure we have both year and cost centre selected
       if (!this.selectedYear || !this.expense_parts[0].costCentre) return;
-      //this.showDropdownS();
       const params = new URLSearchParams ({
         year: this.selectedYear,
         cost_centre: this.expense_parts[0].costCentre,

@@ -154,18 +154,20 @@ def cost_centres(request):
     """
     Returns the distinct cost centres (committees) from all expenses.
     """
-    expense_queryset = models.Expense.objects.all()
-    # expense_queryset is a list of expenses 
+    year = request.GET.get('year')
+    if not year:
+        return JsonResponse({'error': 'year is required'}, status=400)
 
-    
-    # Collecting cost centres from each expense
-    cost_centres = set()  # Use a set to avoid duplicates
+    # filter ExpensePart by year
+    expense_parts = models.ExpensePart.objects.filter(
+        expense__expense_date__year=year
+    ).all()
 
-    for expense in expense_queryset:
-        for cost_centre in expense.cost_centres():
-            cost_centres.add(cost_centre['cost_centre'])
+    cost_centres = set() 
 
-    # Convert the set back to a list
+    for expense_part in expense_parts:
+        cost_centres.add(expense_part.cost_centre)
+
     cost_centres_list = list(cost_centres)
 
     return JsonResponse({
