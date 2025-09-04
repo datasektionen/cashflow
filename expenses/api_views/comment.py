@@ -26,9 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.models import Comment
-from expenses.api_views.expense import may_view_expense
 
 
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
@@ -56,7 +54,7 @@ class CommentViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Ensure permission
-        if may_view_expense(c.expense, request):
+        if request.user.profile.may_view_expense(c.expense):
             return Response({'comment': c.to_dict()})
         return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -127,7 +125,7 @@ class CommentViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check if user is eligible to destroy it
-        if c.author is request.user or has_permission("admin", request):
+        if c.author is request.user or request.user.profile.may_delete_comment():
             c.delete()
             return Response(status=status.HTTP_200_OK)
 

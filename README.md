@@ -32,6 +32,7 @@ The following environment variables are required to run the project:
 | DEBUG                | Django debug mode. Set to True when developing locally. Never set to True in production.                     | False                          |
 | SECRET_KEY           | Django encryption key                | ---                            |
 | LOGIN_KEY            | Login API key for KTH authentication | ---                            |
+| HIVE_SECRET          | Hive API Token secret                | ---                            |
 | S3_BUCKET_NAME       | Amazon AWS s3 bucket name            | ---                            |
 | S3_ACCESS_KEY_ID     | Amazon AWS IAM access key id         | ---                            |
 | S3_SECRET_ACCESS_KEY | Amazon AWS IAM secret access key     | ---                            |
@@ -39,7 +40,7 @@ The following environment variables are required to run the project:
 | S3_HOST              | Url to s3 server                     | s3.eu-central-1.amazonaws.com  |
 | SPAM_API_KEY         | API key for the spam mail system     | ---                            |
 | SPAM_URL             | URL to spam service                  | https://spam.datasektionen.se  |
-| PLS_URL              | URL to pls service                   | https://pls.datasektionen.se   |
+| HIVE_URL             | URL to Hive service                  | https://hive.datasektionen.se  |
 | LOGIN_API_URL        | URL to login service api             | https://login.datasektionen.se |
 | LOGIN_FRONTEND_URL   | URL to login service frontend        | https://login.datasektionen.se |
 | SEND_EMAILS          | If False, does not send emails       | True                           |

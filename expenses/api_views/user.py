@@ -24,7 +24,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Profile, Payment
 
@@ -64,7 +63,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check permissions
-        if person.user.username == request.user.username or has_permission("pay", request):
+        if person.may_be_viewed_by(request.user):
             return Response({'user': person.to_dict()})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -116,7 +115,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def payments(self, request, username, **kwargs):
-        if request.user.username is username or has_permission("admin", request):
+        if request.user.username is username or request.user.profile.may_view_all_payments():
             return Response({
                 'payments': [payment.to_dict() for payment in Payment.objects.filter(receiver__user__username=username)]
             })

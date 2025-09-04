@@ -203,7 +203,7 @@ def get_invoice(request, pk):
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
         'attestable': attestable,
-        'may_account': request.user.profile.may_account(),
+        'may_bookkeep': request.user.profile.may_bookkeep(invoice=invoice),
         'budget_url': settings.BUDGET_URL,
     })
 

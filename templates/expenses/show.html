@@ -138,7 +138,7 @@
             </tr>
             <tr>
                 <th>Verifikationsnummer:</th>
-                <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
+                <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_bookkeep %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
             </tr>
             <tr>
               {% if may_delete or may_unattest %}

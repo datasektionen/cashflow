@@ -8,7 +8,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Expense, ExpensePart, Profile
 
@@ -26,7 +25,7 @@ class ExpenseViewSet(GenericViewSet):
         expenses_user_may_view = []
 
         for exp in Expense.objects.all():
-            if may_view_expense(exp, request):
+            if request.user.profile.may_view_expense(exp):
                 expenses_user_may_view.append(exp)
 
         return Response({'expenses': [exp.to_dict() for exp in expenses_user_may_view]})
@@ -130,7 +129,7 @@ class ExpenseViewSet(GenericViewSet):
         except ObjectDoesNotExist as e:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if request.user is exp.owner.user or has_permission("admin", request):
+        if request.user.profile.may_delete_expense(exp):
             exp.delete()
             return Response(status=status.HTTP_200_OK)
         else:
@@ -145,7 +144,7 @@ class ExpenseViewSet(GenericViewSet):
         except ObjectDoesNotExist as e:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if may_view_expense(exp, request):
+        if request.user.profile.may_view_expense(exp):
             return Response({'comments': [comment.to_dict() for comment in exp.comment_set.all()]})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -159,22 +158,8 @@ class ExpenseViewSet(GenericViewSet):
         except ObjectDoesNotExist as e:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if may_view_expense(exp, request):
+        if request.user.profile.may_view_expense(exp):
             # noinspection PyShadowingBuiltins
             return Response({'files': [file.to_dict() for file in exp.file_set.all()]})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-def may_view_expense(exp, request):
-    # Helper method
-    if request.user == exp.owner.user:
-        return True
-    if has_permission("attest-*", request):
-        return True
-
-    for part in exp.expensepart_set.all():
-        if has_permission("attest-" + part.budget_line.cost_centre.committee.name, request):
-            return True
-
-    return False

@@ -9,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.models import Expense, ExpensePart, Profile
 
 
@@ -23,7 +22,9 @@ class AttestViewSet(GenericViewSet):
 
         # Add all expenses that the user may attest
         for expense in Expense.objects.filter(expensepart__attested_by__isnull=True).distinct():
-            if may_attest_expense(expense, request):
+            parts = ExpensePart.objects.filter(expense=exp)
+
+            if any(request.user.profile.may_attest(ep) for ep in parts):
                 expenses__to_attest.append(expense.to_dict())
 
         return Response({'Expenses': expenses__to_attest})
@@ -44,9 +45,7 @@ class AttestViewSet(GenericViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if has_permission("attest-*", request) or \
-                    has_permission("attest-" + part.budget_line.cost_centre.committee.name, request):
-
+            if request.user.profile.may_attest(part):
                 if part.attested_by is None:
                     part.attested_by = Profile.objects.get(user=request.user)
                     part.attest_date = date.today()
@@ -60,15 +59,3 @@ class AttestViewSet(GenericViewSet):
             part.save()
 
         return Response(status=status.HTTP_200_OK)
-
-
-# Helper method
-def may_attest_expense(exp, request):
-    if has_permission("attest-*", request):
-        return True
-
-    for part in ExpensePart.objects.filter(expense=exp):
-        if has_permission("attest-" + part.budget_line.cost_centre.committee.name, request):
-            return True
-
-    return False

@@ -52,25 +52,63 @@ class DAuth(object):
 
 def get_permissions(user):
     """
-    Get permissions for user through the pls API.
+    Get permissions for user through the Hive API.
+
+    Result is a dictionary { perm_id => scope[] | True }
     """
 
     # Jag bryr mig inte om regler och om jag vill lägga saker i en godtycklig dict så gör jag det.
 
     if 'cached_permissions' not in user.__dict__:
-        # Fetch permissions from pls and store timestamp
-        response = requests.get(settings.PLS_URL + '/api/user/' + user.username + '/cashflow/')
-        user.__dict__['cached_permissions'] = json.loads(urllib.parse.unquote(response.content.decode('utf-8')))
+        # Fetch permissions from Hive
+        response = requests.get(
+            settings.HIVE_URL + '/api/v1/user/' + user.username,
+            headers={"Authorization": "Bearer " + settings.HIVE_SECRET}
+        )
+        perms = json.loads(response.content.decode('utf-8'))
+
+        if type(perms) != list:
+            raise TypeError(f"Invalid response: {perms}")
+
+        mapping = {}
+
+        for perm in perms:
+            perm_id, scope = perm["id"], perm["scope"]
+
+            if scope is None or scope == "*":
+                mapping[perm_id] = True
+            elif perm_id not in mapping:
+                mapping[perm_id] = [scope.lower()]
+            elif mapping[perm_id] is not True:
+                mapping[perm_id].append(scope.lower())
+            # else: don't overwrite an existing True (do nothing)
+
+        user.__dict__['cached_permissions'] = mapping
 
     return user.__dict__['cached_permissions']
 
-def has_permission(permission, request):
+def has_unscoped_permission(perm_id, user):
     """
-    Check is user has permission to specific property.
-    Gets user from request.
+    Check if user has a specific unscoped permission.
     """
 
-    return permission in get_permissions(request.user)
+    return get_permissions(user).get(perm_id) is True
+
+def has_scoped_permission(perm_id, scope, user):
+    """
+    Check if user has a specific scoped permission.
+    """
+
+    scopes = get_permissions(user).get(perm_id) or []
+
+    return scopes is True or scope.lower() in scopes
+
+def has_any_permission_scope(perm_id, user):
+    """
+    Check if user has any scope for a specific permission.
+    """
+
+    return perm_id in get_permissions(user)
 
 
 class AuthRequiredMiddleware(object):
