@@ -124,7 +124,7 @@ class Profile(models.Model):
         return self.may_view_all() or self.may_attest_some()
 
     def may_unattest(self):
-        return dauth.has_unscoped_permission("unattest")
+        return dauth.has_unscoped_permission("unattest", self.user)
 
     # Returns whether the user is allowed to make reimbursements
     def may_pay(self):
@@ -151,12 +151,12 @@ class Profile(models.Model):
     def may_bookkeep(self, expense=None, invoice=None):
         if expense is not None:
             for ep in expense.expensepart_set.all():
-                if dauth.has_scoped_permission("bookkeep", ep.cost_centre):
+                if dauth.has_scoped_permission("bookkeep", ep.cost_centre, self.user):
                     return True
 
         if invoice is not None:
             for ip in invoice.invoicepart_set.all():
-                if dauth.has_scoped_permission("bookkeep", ip.cost_centre):
+                if dauth.has_scoped_permission("bookkeep", ip.cost_centre, self.user):
                     return True
 
         return False
@@ -205,7 +205,7 @@ class Profile(models.Model):
         )
 
     def may_delete_comment(self):
-        return dauth.has_unscoped_permission("moderate-comments")
+        return dauth.has_unscoped_permission("moderate-comments", self.user)
 
     def is_admin(self):
         return (
