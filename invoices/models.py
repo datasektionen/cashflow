@@ -86,12 +86,14 @@ class Invoice(models.Model):
         return exp
 
     @staticmethod
-    def view_attestable(may_attest, user):
+    def view_attestable(user):
         filters = {
             'invoicepart__attested_by': None,
         }
-        if 'firmatecknare' not in may_attest:
-            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            escaped = [re.escape(cc) for cc in cost_centres]
+            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
         return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
 
     # TODO
@@ -104,12 +106,15 @@ class Invoice(models.Model):
 
     # TODO
     @staticmethod
-    def view_accountable(may_account):
-        if '*' in may_account:
+    def view_accountable(user):
+        cost_centres = user.profile.bookkeepable_cost_centres()
+        if cost_centres is True:
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
+
+        escaped = [re.escape(cc) for cc in cost_centres]
         return Invoice.objects.exclude(payed_at__isnull=True).filter(
             verification='',
-            invoicepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
+            invoicepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct()
 
 """

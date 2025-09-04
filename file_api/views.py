@@ -87,7 +87,7 @@ def delete_file(request, pk):
     file = File.objects.get(pk=int(pk))
 
     if file.expense != None:
-        if not request.user.profile.may_delete(file.expense):
+        if not request.user.profile.may_delete_expense(file.expense):
             return JsonResponse({'message':'Du har inte behörighet att ta bort denna bild.'}, status=403)
         file.expense.confirmed_by = None
         file.expense.confirmed_at = None

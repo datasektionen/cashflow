@@ -91,122 +91,153 @@ class Profile(models.Model):
             }
         }
 
-    # Returns a list of the cost centres that the user may attest
-    def may_attest(self, expense_part=None):
-        may_attest = []
-        for permission in dauth.get_permissions(self.user):
-            if permission.startswith("attest-"):
-                may_attest.append(permission[len("attest-"):].lower())
-        if expense_part is None:
-            return may_attest
-        return 'firmatecknare' in may_attest or expense_part.cost_centre.lower() in may_attest
+    def may_view_all(self):
+        return dauth.has_unscoped_permission("view-all", self.user)
 
-    def may_view_attest(self):
-        if self.may_view_all():
-            return ['.*']
-        return self.may_attest()
+    def may_view_all_payments(self):
+        return dauth.has_unscoped_permission("view-all-payments", self.user)
+
+    # Returns whether the user may attest an expense part's cost centre
+    def may_attest(self, expense_part):
+        return dauth.has_scoped_permission("attest", expense_part.cost_centre, self.user)
+
+    # Returns whether the user may attest for at least one cost centre
+    def may_attest_some(self):
+        return dauth.has_any_permission_scope("attest", self.user)
+
+    # Returns a list of known cost centres that the user may attest, or True
+    def attestable_cost_centres(self):
+        if dauth.get_permissions(self.user).get("attest") is True:
+            # don't filter
+            return True
+
+        return list(filter(
+            lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
+            [
+                ep['cost_centre']
+                for ep in ExpensePart.objects.values('cost_centre').distinct()
+            ]
+        ))
+
+    # Returns whether the user may view attestable expenses
+    def may_view_attestable(self):
+        return self.may_view_all() or self.may_attest_some()
+
+    def may_unattest(self):
+        return dauth.has_unscoped_permission("unattest")
 
     # Returns whether the user is allowed to make reimbursements
     def may_pay(self):
-        return 'pay' in dauth.get_permissions(self.user)
+        return dauth.has_unscoped_permission("pay", self.user)
 
     # Returns whether the user may view payable expenses
-    def may_view_pay(self):
+    def may_view_payable(self):
         return self.may_view_all() or self.may_pay()
 
     # Returns whether the user may confirm expenses
     def may_confirm(self):
-        return 'confirm' in dauth.get_permissions(self.user)
+        return dauth.has_unscoped_permission("confirm", self.user)
 
-    # Returns a list of the cost centres that the user may pay for
+    # Returns whether the user may unconfirm expenses
     def may_unconfirm(self):
-        return 'unconfirm' in dauth.get_permissions(self.user)
+        # until proven that a separate unconfirm perm is actually needed
+        return self.may_confirm()
 
     # Returns whether the user may view confirmable expenses
-    def may_view_confirm(self):
+    def may_view_confirmable(self):
         return self.may_view_all() or self.may_confirm()
 
-    # Returns a list of the cost centres that the user may account for
-    def may_account(self, expense=None, invoice=None):
-        if 'accounting-*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
-            return True
-
-        may_account = []
-        for permission in dauth.get_permissions(self.user):
-            if permission.startswith("accounting-"):
-                may_account.append(permission[len("accounting-"):].lower())
-        if expense is None and invoice is None:
-            return may_account
-
+    # Returns whether the user may bookkeep an expense or invoice cost centre
+    def may_bookkeep(self, expense=None, invoice=None):
         if expense is not None:
             for ep in expense.expensepart_set.all():
-                if ep.cost_centre.lower() in may_account:
+                if dauth.has_scoped_permission("bookkeep", ep.cost_centre):
                     return True
-        else:
+
+        if invoice is not None:
             for ip in invoice.invoicepart_set.all():
-                if ip.cost_centre.lower() in may_account:
+                if dauth.has_scoped_permission("bookkeep", ip.cost_centre):
                     return True
+
         return False
 
-    def may_view_account(self):
-        if self.may_view_all():
-            return ['.*']
-        return self.may_account()
+    # Returns whether the user may bookkeep for at least one cost centre
+    def may_bookkeep_some(self):
+        return dauth.has_any_permission_scope("bookkeep", self.user)
 
-    def may_delete(self, expense):
+    # Returns a list of known cost centres that the user may attest, or True
+    def bookkable_cost_centres(self):
+        if dauth.get_permissions(self.user).get("bookkeep") is True:
+            # don't filter
+            return True
+
+        return list(filter(
+            lambda cc: dauth.has_scoped_permission("bookkeep", cc, self.user),
+            [
+                ep['cost_centre']
+                for ep in ExpensePart.objects.values('cost_centre').distinct()
+            ]
+        ))
+
+    # Returns whether the user may view attestable expenses
+    def may_view_bookkeepable(self):
+        return self.may_view_all() or self.may_bookkeep_some()
+
+    def may_flag(self):
+        return self.may_attest_some() or self.may_pay()
+
+    def may_delete_expense(self, expense):
         if expense.reimbursement:
             return False
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and expense is not None:
-            return True
-        if expense.owner.user.username == self.user.username:
-            return True
-        return False
-    
-    def firmatecknare(self):
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
-            return True
+
+        return (
+            dauth.has_unscoped_permission("delete", self.user)
+            or expense.owner.user.username == self.user.username
+        )
 
     def may_delete_invoice(self, invoice):
-        if invoice is None or invoice.is_payed():
+        if invoice.is_payed():
             return False
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
-            return True
-        if invoice.owner.user.username == self.user.username:
-            return True
-        return False
+
+        return (
+            dauth.has_unscoped_permission("delete", self.user)
+            or invoice.owner.user.username == self.user.username
+        )
+
+    def may_delete_comment(self):
+        return dauth.has_unscoped_permission("moderate-comments")
+
+    def is_admin(self):
+        return (
+            self.may_attest_some()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_bookkeep_some()
+            or self.may_view_all()
+        )
 
     def may_be_viewed_by(self, user):
         return user.username == self.user.username or user.profile.is_admin()
 
     def may_view_expense(self, expense):
-        if expense.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
-            return True
-        for cost_centre in expense.cost_centres():
-            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
-                return True
-
-        return False
+        return (
+            expense.owner.user.username == self.user.username
+            or self.may_view_all()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_bookkeep(expense=expense)
+            or any(self.may_attest(ep) for ep in expense.expensepart_set.all())
+        )
 
     def may_view_invoice(self, invoice):
-        if invoice.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
-            return True
-        for cost_centre in invoice.cost_centres():
-            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
-                return True
-
-        return False
-
-    def may_view_all(self):
-        return 'view-all' in dauth.get_permissions(self.user)
-
-    def is_admin(self):
-        return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account() or self.may_view_all()
-
-    def may_unattest(self):
-        return 'attest-firmatecknare' in dauth.get_permissions(self.user)
-    
-    def may_flag(self):
-        return self.may_attest() or self.may_pay()
+        return (
+            invoice.owner.user.username == self.user.invoice
+            or self.may_view_all()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_bookkeep(invoice=invoice)
+            or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all())
+        )
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -334,12 +365,14 @@ class Expense(models.Model):
         return exp
 
     @staticmethod
-    def view_attestable(may_attest, user):
+    def view_attestable(user):
         filters = {
             'expensepart__attested_by': None,
         }
-        if 'firmatecknare' not in may_attest:
-            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            escaped = [re.escape(cc) for cc in cost_centres]
+            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
         return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
@@ -355,13 +388,16 @@ class Expense(models.Model):
             order_by('owner__user__username')
 
     @staticmethod
-    def view_accountable(may_account):
-        if '*' in may_account:
+    def view_accountable(user):
+        cost_centres = user.profile.bookkeepable_cost_centres()
+        if cost_centres is True:
             return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by(
                 'expense_date')
+
+        escaped = [re.escape(cc) for cc in cost_centres]
         return Expense.objects.exclude(reimbursement=None).filter(
             verification='',
-            expensepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
+            expensepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct().order_by('expense_date')
 
 

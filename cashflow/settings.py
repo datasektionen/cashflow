@@ -188,7 +188,7 @@ SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a M
                                          'pate, brandy and with a fried egg on top and spam.')
 SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
 
-PLS_URL = os.getenv('PLS_URL', 'https://pls.datasektionen.se')
+HIVE_URL = os.getenv('HIVE_URL', 'https://hive.datasektionen.se')
 
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')

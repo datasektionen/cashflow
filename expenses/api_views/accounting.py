@@ -6,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.models import Expense
 
 
@@ -23,7 +22,7 @@ class AccountingViewSet(GenericViewSet):
                         expensepart__attested_by__isnull=False,
                         reimbursement__isnull=False
                 ).distinct():
-            if may_account(expense, request):
+            if request.user.profile.may_bookkeep(expense=expense):
                 expenses__ready_for_accounting.append(expense.to_dict())
 
         return Response({'Expenses': expenses__ready_for_accounting})
@@ -34,7 +33,7 @@ class AccountingViewSet(GenericViewSet):
         try:
             exp = Expense.objects.get(id=int(json_arg['expense']))
 
-            if may_account(exp, request):
+            if request.user.profile.may_bookkeep(expense=expense):
                 exp.verification = json_arg['verification_number']
                 exp.save()
                 return Response({'status': 'Success!'})
@@ -44,14 +43,3 @@ class AccountingViewSet(GenericViewSet):
             return Response({'error': 'Json object is missing the field ' + str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except ValueError as e:
             return Response({'error': str(e) + ' is not a valid expense id'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Helper function
-def may_account(exp, request):
-    if has_permission("accounting-*", request):
-        return True
-    for part in exp.expensepart_set.all():
-        if has_permission("accounting-" + part.budget_line.cost_centre.committee.name, request):
-            return True
-
-    return False

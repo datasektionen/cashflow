@@ -174,7 +174,7 @@ def delete_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_delete(expense):
+    if not request.user.profile.may_delete_expense(expense):
         return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
     if expense.reimbursement is not None:
         return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
@@ -229,11 +229,11 @@ def get_expense(request, pk):
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
-        'may_account': request.user.profile.may_account(),
+        'may_bookkeep': request.user.profile.may_bookkeep(expense=expense),
         'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
         'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,
-        'may_delete': request.user.profile.may_delete(expense),
+        'may_delete': request.user.profile.may_delete_expense(expense),
     })
 
 

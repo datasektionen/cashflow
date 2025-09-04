@@ -128,7 +128,7 @@
             </tr>
             <tr>
                 <th>Verifikationsnummer:</th>
-                <td>{{ invoice.verification|default:"Ej bokförd" }} {% comment "if may_account" %}(<a href="{% url 'admin-invoice-edit-verification' invoice.id %}">Ändra</a>){% endcomment %}</td>
+                <td>{{ invoice.verification|default:"Ej bokförd" }} {% comment "if may_bookkeep" %}(<a href="{% url 'admin-invoice-edit-verification' invoice.id %}">Ändra</a>){% endcomment %}</td>
             </tr>
             <tr>
                 <td colspan="2">
