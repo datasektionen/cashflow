@@ -35,6 +35,7 @@ job "cashflow" {
 DATABASE_URL=postgres://cashflow:{{ .db_password }}@postgres.dsekt.internal:5432/cashflow
 SECRET_KEY={{ .secret_key }}
 LOGIN_KEY={{ .login_key }}
+HIVE_SECRET={{ .hive_api_token_secret }}
 SPAM_API_KEY={{ .spam_api_key }}
 S3_HOST={{ .s3_host }}
 S3_BUCKET_NAME={{ .s3_bucket }}

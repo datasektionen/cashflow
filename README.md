@@ -32,6 +32,7 @@ The following environment variables are required to run the project:
 | DEBUG                | Django debug mode. Set to True when developing locally. Never set to True in production.                     | False                          |
 | SECRET_KEY           | Django encryption key                | ---                            |
 | LOGIN_KEY            | Login API key for KTH authentication | ---                            |
+| HIVE_SECRET          | Hive API Token secret                | ---                            |
 | S3_BUCKET_NAME       | Amazon AWS s3 bucket name            | ---                            |
 | S3_ACCESS_KEY_ID     | Amazon AWS IAM access key id         | ---                            |
 | S3_SECRET_ACCESS_KEY | Amazon AWS IAM secret access key     | ---                            |
