@@ -62,7 +62,7 @@ def get_permissions(user):
     if 'cached_permissions' not in user.__dict__:
         # Fetch permissions from Hive
         response = requests.get(
-            settings.HIVE_URL + '/api/v1/user/' + user.username,
+            settings.HIVE_URL + '/api/v1/user/' + user.username + '/permissions',
             headers={"Authorization": "Bearer " + settings.HIVE_SECRET}
         )
         perms = json.loads(response.content.decode('utf-8'))
