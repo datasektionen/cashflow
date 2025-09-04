@@ -166,7 +166,7 @@ class Profile(models.Model):
         return dauth.has_any_permission_scope("bookkeep", self.user)
 
     # Returns a list of known cost centres that the user may attest, or True
-    def bookkable_cost_centres(self):
+    def bookkeepable_cost_centres(self):
         if dauth.get_permissions(self.user).get("bookkeep") is True:
             # don't filter
             return True
