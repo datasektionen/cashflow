@@ -107,7 +107,7 @@ class Invoice(models.Model):
     # TODO
     @staticmethod
     def view_accountable(user):
-        cost_centres = user.profile.bookkeepable_cost_centres()
+        cost_centres = user.profile.accountable_cost_centres()
         if cost_centres is True:
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
 

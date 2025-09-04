@@ -229,7 +229,7 @@ def get_expense(request, pk):
 
     return render(request, 'expenses/show.html', {
         'expense': expense,
-        'may_bookkeep': request.user.profile.may_bookkeep(expense=expense),
+        'may_account': request.user.profile.may_account(expense=expense),
         'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
         'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,

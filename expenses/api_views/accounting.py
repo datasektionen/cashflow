@@ -22,7 +22,7 @@ class AccountingViewSet(GenericViewSet):
                         expensepart__attested_by__isnull=False,
                         reimbursement__isnull=False
                 ).distinct():
-            if request.user.profile.may_bookkeep(expense=expense):
+            if request.user.profile.may_account(expense=expense):
                 expenses__ready_for_accounting.append(expense.to_dict())
 
         return Response({'Expenses': expenses__ready_for_accounting})
@@ -33,7 +33,7 @@ class AccountingViewSet(GenericViewSet):
         try:
             exp = Expense.objects.get(id=int(json_arg['expense']))
 
-            if request.user.profile.may_bookkeep(expense=expense):
+            if request.user.profile.may_account(expense=expense):
                 exp.verification = json_arg['verification_number']
                 exp.save()
                 return Response({'status': 'Success!'})

@@ -148,31 +148,31 @@ class Profile(models.Model):
         return self.may_view_all() or self.may_confirm()
 
     # Returns whether the user may bookkeep an expense or invoice cost centre
-    def may_bookkeep(self, expense=None, invoice=None):
+    def may_account(self, expense=None, invoice=None):
         if expense is not None:
             for ep in expense.expensepart_set.all():
-                if dauth.has_scoped_permission("bookkeep", ep.cost_centre, self.user):
+                if dauth.has_scoped_permission("accounting", ep.cost_centre, self.user):
                     return True
 
         if invoice is not None:
             for ip in invoice.invoicepart_set.all():
-                if dauth.has_scoped_permission("bookkeep", ip.cost_centre, self.user):
+                if dauth.has_scoped_permission("accounting", ip.cost_centre, self.user):
                     return True
 
         return False
 
     # Returns whether the user may bookkeep for at least one cost centre
-    def may_bookkeep_some(self):
-        return dauth.has_any_permission_scope("bookkeep", self.user)
+    def may_account_some(self):
+        return dauth.has_any_permission_scope("accounting", self.user)
 
-    # Returns a list of known cost centres that the user may attest, or True
-    def bookkeepable_cost_centres(self):
-        if dauth.get_permissions(self.user).get("bookkeep") is True:
+    # Returns a list of known cost centres that the user may bookkeep, or True
+    def accountable_cost_centres(self):
+        if dauth.get_permissions(self.user).get("accounting") is True:
             # don't filter
             return True
 
         return list(filter(
-            lambda cc: dauth.has_scoped_permission("bookkeep", cc, self.user),
+            lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
             [
                 ep['cost_centre']
                 for ep in ExpensePart.objects.values('cost_centre').distinct()
@@ -180,8 +180,8 @@ class Profile(models.Model):
         ))
 
     # Returns whether the user may view attestable expenses
-    def may_view_bookkeepable(self):
-        return self.may_view_all() or self.may_bookkeep_some()
+    def may_view_accountable(self):
+        return self.may_view_all() or self.may_account_some()
 
     def may_flag(self):
         return self.may_attest_some() or self.may_pay()
@@ -212,7 +212,7 @@ class Profile(models.Model):
             self.may_attest_some()
             or self.may_pay()
             or self.may_confirm()
-            or self.may_bookkeep_some()
+            or self.may_account_some()
             or self.may_view_all()
         )
 
@@ -225,7 +225,7 @@ class Profile(models.Model):
             or self.may_view_all()
             or self.may_pay()
             or self.may_confirm()
-            or self.may_bookkeep(expense=expense)
+            or self.may_account(expense=expense)
             or any(self.may_attest(ep) for ep in expense.expensepart_set.all())
         )
 
@@ -235,7 +235,7 @@ class Profile(models.Model):
             or self.may_view_all()
             or self.may_pay()
             or self.may_confirm()
-            or self.may_bookkeep(invoice=invoice)
+            or self.may_account(invoice=invoice)
             or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all())
         )
 
@@ -389,7 +389,7 @@ class Expense(models.Model):
 
     @staticmethod
     def view_accountable(user):
-        cost_centres = user.profile.bookkeepable_cost_centres()
+        cost_centres = user.profile.accountable_cost_centres()
         if cost_centres is True:
             return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by(
                 'expense_date')

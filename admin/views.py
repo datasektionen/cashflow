@@ -159,7 +159,7 @@ def invoice_pay(request, pk):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_bookkeepable())
+@user_passes_test(lambda u: u.profile.may_view_accountable())
 def account_overview(request):
     return render(request, 'admin/account/overview.html', {
         'expenses': json.dumps(
@@ -173,14 +173,14 @@ def account_overview(request):
 
 @require_http_methods(["GET", "POST"])
 @login_required
-@user_passes_test(lambda u: u.profile.may_bookkeep_some())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def edit_expense_verification(request, pk):
     try:
         expense = Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_bookkeep(expense=expense):
+    if not request.user.profile.may_account(expense=expense):
         return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
     if expense.reimbursement is None:
         return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
@@ -253,14 +253,14 @@ def unconfirm_expense(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_bookkeep_some())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def set_verification(request, expense_pk):
     try:
         expense = Expense.objects.get(pk=expense_pk)
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_bookkeep(expense=expense):
+    if not request.user.profile.may_account(expense=expense):
         return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
     if expense.reimbursement is None:
         return HttpResponseBadRequest("Du kan inte bokföra det här utlägget än")
@@ -280,14 +280,14 @@ def set_verification(request, expense_pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_bookkeep_some())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def invoice_set_verification(request, invoice_pk):
     try:
         invoice = Invoice.objects.get(pk=invoice_pk)
     except ObjectDoesNotExist:
         raise Http404("Fakturan finns inte")
 
-    if not request.user.profile.may_bookkeep(invoice=invoice):
+    if not request.user.profile.may_account(invoice=invoice):
         return HttpResponseForbidden("Du har inte rättigheter att bokföra det här")
     if invoice.payed_by is None:
         return HttpResponseBadRequest("Du kan inte bokföra den här fakturan än")
