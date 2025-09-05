@@ -231,7 +231,7 @@ class Profile(models.Model):
 
     def may_view_invoice(self, invoice):
         return (
-            invoice.owner.user.username == self.user.invoice
+            invoice.owner.user.username == self.user.username
             or self.may_view_all()
             or self.may_pay()
             or self.may_confirm()
