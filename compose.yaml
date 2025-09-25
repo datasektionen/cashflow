@@ -45,6 +45,8 @@ services:
       retries: 3
   nyckeln:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
+    environment:
+      KTH_ID: turetek #set me to switch user! If you want to view everything, use "turetek"
     configs:
       - source: nyckeln.yaml
         target: /config.yaml
