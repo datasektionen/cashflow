@@ -7,15 +7,18 @@ services:
       LOGIN_KEY: super_secret
       SPAM_API_KEY: super_secret
       SEND_EMAILS: "False"
-      HIVE_URL: https://hive.datasektionen.se
+      HIVE_URL: http://nyckeln:7004
       HIVE_SECRET: api_token_secret
-      LOGIN_API_URL: http://login:7002
+      LOGIN_API_URL: http://nyckeln:7002
       LOGIN_FRONTEND_URL: http://localhost:7002
       PYTHONUNBUFFERED: 1
       BUDGET_URL: https://budget.datasektionen.se
     init: true
     ports:
       - 8000:8000
+    configs:
+      - source: nginx.conf 
+        target: /etc/nginx/nginx.conf
     volumes:
       - ./media:/app/media
     develop:
@@ -40,11 +43,91 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
-  login:
+  nyckeln:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
+    configs:
+      - source: nyckeln.yaml
+        target: /config.yaml
     ports:
+      - 7001:7001
       - 7002:7002
-    environment:
-      # Since we're using the real Hive, it's nice to use some user with a lot of privileges. Putting
-      # Lukas here since he's treasurer at the time of writing.
-      KTH_ID: lukmal
+      - 7003:7003
+      - 7004:7004
+
+configs:
+  nginx.conf:
+    content: | 
+      events {}
+
+      http {
+        server {
+          listen 7003;
+
+          location / {
+            proxy_pass http://nyckeln:7003;
+          }
+        }
+      }
+  
+  nyckeln.yaml:
+    content: |
+      clients:
+        - id: "client-id" # use this in your oidc client
+          secret: "client-secret" # use this in your oidc client
+          redirect_uris: # URIs of your oidc client
+            [
+              "http://localhost:4000/oidcc/callback",
+              "http://localhost:4000/oidcc/authorize",
+            ]
+
+      users:
+        - ug_kth_id: some-id
+          kth_id: turetek
+          email: turetek@kth.se
+          first_name: Ture
+          family_name: Teknolog
+          pls_permissions:
+            sso:
+              - admin
+            calypso:
+              - drek
+              - dfunk
+          hive_tags:
+            - id: personal_email
+              content: turetek@gmail.com
+
+      hive:
+        tokens:
+          - secret: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa
+            permissions:
+              - id: admin
+                scope: null
+        groups:
+          - name: Systemansvarig
+            id: d-sys
+            domain: example.com
+            members:
+              - turetek
+            tags:
+              - id: author-pseudonym
+                content: D-Sys
+              - id: mandate
+            permissions: 
+              - id: accounting
+                scope: Informationsorganet
+              - id: attest
+                scope: Informationsorganet
+              - id: confirm
+                scope: Informationsorganet
+              - id: moderate-comments
+                scope: Informationsorganet
+              - id: delete 
+                scope: null
+              - id: unattest
+                scope: null
+              - id: pay
+                scope: null
+              - id: view-all
+                scope: null
+              - id: view-all-payments
+                scope: null
