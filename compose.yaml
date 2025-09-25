@@ -112,6 +112,22 @@ configs:
               - id: author-pseudonym
                 content: D-Sys
               - id: mandate
-            permissions:
-              - id: admin
+            permissions: 
+              - id: accounting
+                scope: Informationsorganet
+              - id: attest
+                scope: Informationsorganet
+              - id: confirm
+                scope: Informationsorganet
+              - id: moderate-comments
+                scope: Informationsorganet
+              - id: delete 
+                scope: null
+              - id: unattest
+                scope: null
+              - id: pay
+                scope: null
+              - id: view-all
+                scope: null
+              - id: view-all-payments
                 scope: null
