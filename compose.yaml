@@ -71,7 +71,7 @@ configs:
         }
       }
   
-  nyckeln.yaml:
+  nyckeln.yaml: #To update these perms, remove container `docker ps -a` and `docker rm -vf <image hash>` and remove image with `docker rmi -f ghcr.io/datasektionen/nyckeln-under-dorrmattan`
     content: |
       clients:
         - id: "client-id" # use this in your oidc client
@@ -116,20 +116,20 @@ configs:
               - id: mandate
             permissions: 
               - id: accounting
-                scope: Informationsorganet
+                scope: "*"
               - id: attest
-                scope: Informationsorganet
+                scope: "*"
               - id: confirm
-                scope: Informationsorganet
+                scope: "*"
               - id: moderate-comments
-                scope: Informationsorganet
+                scope: Informationsorganet    #accounting, attest, confirm, moderate-comments are scoped. Rest is unscoped.
               - id: delete 
-                scope: null
+                scope: "*"
               - id: unattest
-                scope: null
+                scope: "*"
               - id: pay
-                scope: null
+                scope: "*"
               - id: view-all
-                scope: null
+                scope: "*"
               - id: view-all-payments
-                scope: null
+                scope: "*"
