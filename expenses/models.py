@@ -195,6 +195,9 @@ class Profile(models.Model):
             or expense.owner.user.username == self.user.username
         )
 
+    def may_edit_invoice(self):
+        return dauth.has_unscoped_permission("edit-invoice", self.user)
+
     def may_delete_invoice(self, invoice):
         if invoice.is_payed():
             return False
