@@ -6,6 +6,8 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 Cashflow uses Python 3.6.2
 
+If you have Nix installed you may run `nix develop` before continuing. It creates a shell with the correct Python and Pipenv versions installed.
+
 - Install PostgreSQL
 
 - `pipenv install`
