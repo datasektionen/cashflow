@@ -1,6 +1,7 @@
 services:
   app:
-    build: .
+    build:
+      dockerfile: ./Dockerfile.dev
     environment:
       DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
       DEBUG: "True"
@@ -9,8 +10,10 @@ services:
       SEND_EMAILS: "False"
       HIVE_URL: http://nyckeln:7004
       HIVE_SECRET: api_token_secret
-      LOGIN_API_URL: http://nyckeln:7002
-      LOGIN_FRONTEND_URL: http://localhost:7002
+      OIDC_PROVIDER: http://nyckeln:7003
+      OIDC_ID: client-id
+      OIDC_SECRET: client-secret
+      REDIRECT_URL: http://localhost:8000/login/
       PYTHONUNBUFFERED: 1
       BUDGET_URL: https://budget.datasektionen.se
     init: true
@@ -76,8 +79,7 @@ configs:
           secret: "client-secret" # use this in your oidc client
           redirect_uris: # URIs of your oidc client
             [
-              "http://localhost:4000/oidcc/callback",
-              "http://localhost:4000/oidcc/authorize",
+              http://localhost:8000/login/,
             ]
 
       users:

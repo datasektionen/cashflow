@@ -26,7 +26,6 @@ urlpatterns = [
     url(r'^$', views.index, name='expenses-index'),
     url(r'^accounts/login/$', login, name='login'),
     url(r'^login/$', login, name='login'),
-    url(r'^login/(?P<token>.+)/$', login_with_token, name='login_with_token'),
     url(r'^logout/', logout, name='logout'),
     url(r'^admin/', include("admin.urls")),
     url(r'^admin/django/', include(admin.site.urls)),

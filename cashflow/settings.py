@@ -153,9 +153,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOGIN_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
-LOGIN_API_URL = os.getenv('LOGIN_API_URL', 'https://login.datasektionen.se')
-LOGIN_FRONTEND_URL = os.getenv('LOGIN_FRONTEND_URL', 'https://login.datasektionen.se')
+OIDC_PROVIDER = os.getenv('OIDC_PROVIDER')
+OIDC_ID = os.getenv('OIDC_ID')
+OIDC_SECRET = os.getenv('OIDC_SECRET')
+REDIRECT_URL = os.getenv('REDIRECT_URL')
 
 BUDGET_URL = os.getenv('BUDGET_URL', 'https://budget.datasektionen.se')
 
