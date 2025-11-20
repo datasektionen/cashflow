@@ -34,7 +34,7 @@ job "cashflow" {
 {{ with nomadVar "nomad/jobs/cashflow" }}
 DATABASE_URL=postgres://cashflow:{{ .db_password }}@postgres.dsekt.internal:5432/cashflow
 SECRET_KEY={{ .secret_key }}
-LOGIN_KEY={{ .login_key }}
+OIDC_SECRET={{ .oidc_secret }}
 HIVE_SECRET={{ .hive_api_token_secret }}
 SPAM_API_KEY={{ .spam_api_key }}
 S3_HOST={{ .s3_host }}
@@ -47,8 +47,9 @@ GOOGLE_ANALYTICS_KEY=UA-96183461-2
 DEBUG=False
 SEND_EMAILS=True
 HIVE_URL=https://hive.datasektionen.se
-LOGIN_API_URL=http://sso.nomad.dsekt.internal/legacyapi
-LOGIN_FRONTEND_URL=https://sso.datasektionen.se/legacyapi
+OIDC_PROVIDER=http://sso.nomad.dsekt.internal/op
+OIDC_ID=cashflow
+REDIRECT_URL=https://cashflow.datasektionen.se/login/
 SPAM_URL=https://spam.datasektionen.se
 BUDGET_URL=https://budget.datasektionen.se
 GIT_REV=please-delete-from-code

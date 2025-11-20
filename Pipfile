@@ -20,6 +20,7 @@ raven = "*"
 celery = "==4.2.1"
 pi-heif = "==0.9.0"
 pillow = "==8.4.0"
+authlib = "==0.15.6"
 
 [dev-packages]
 django-extensions = "*"

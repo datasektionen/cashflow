@@ -1,3 +1,4 @@
+from typing import *
 import json
 import re
 import urllib.parse
@@ -7,37 +8,51 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 
+from authlib.integrations.django_client import OAuth
+from authlib.integrations.django_client.integration import DjangoRemoteApp
+from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
+
+# I'm like 90% sure this is the correct type.
+client = cast(DjangoRemoteApp, OAuth().register(
+    name="sso",
+    client_id=settings.OIDC_ID,
+    client_secret=settings.OIDC_SECRET,
+    server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid profile email"},
+))
 
 class DAuth(object):
     """
-    Authenticates user through the login API.
+    Authenticates user through the sso API.
     """
 
     @staticmethod
-    def authenticate(token=None):
+    def authenticate(request):
         """
-        Do the authentication via the login system.
+        Do the authentication via the sso system.
         Save user in database if did not exist before.
         """
-        url = settings.LOGIN_API_URL + '/verify/' + str(token) + '.json?api_key=' + settings.LOGIN_API_KEY
-
-        req = requests.get(url)
-        if req.status_code == 200:
-            data = req.json()
-
-            try:
-                user = User.objects.get(username=data["user"])
-            except User.DoesNotExist:
-                user = User(
-                    first_name=data["first_name"],
-                    last_name=data["last_name"],
-                    username=data["user"],
-                    email=data["emails"]
-                )
-                user.save()
-            return user
-        else:
-            print("Response from login:", req)
+        
+        try:
+            token = client.authorize_access_token(request)
+        except (OAuthError, MismatchingStateError) as error:
+            # These errors are generated for various kinds of invalid codes.
+            print(f"Authentication failed: {error}")
+            return None
+        
+        user = client.userinfo(token=token)
+        
+        try:
+            user = User.objects.get(username=user["sub"])
+        except User.DoesNotExist:
+            user = User(
+                first_name=user["given_name"],
+                last_name=user["family_name"],
+                username=user["sub"],
+                email=user["email"]
+            )
+            user.save()
+        return user
 
     @staticmethod
     def get_user(user_id):
