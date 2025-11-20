@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import raven
+import sys
 import re
 import dj_database_url
 from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
@@ -50,7 +50,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'rest_framework',
-    'raven.contrib.django.raven_compat',
     'storages',
     'corsheaders',
     'widget_tweaks',
@@ -89,15 +88,6 @@ TEMPLATES = [
         },
     },
 ]
-
-# Raven/sentry config
-if not DEBUG:
-    RAVEN_CONFIG = {
-        'dsn': 'https://8454517d78524997a90a51fdab243d7b:8bddac8028dd41daa99198c80c80ba2a@sentry.io/1256268',
-        # Configure release based on git hash
-        'release': os.getenv('GIT_REV'),
-    }
-
 
 WSGI_APPLICATION = 'cashflow.wsgi.application'
 
@@ -197,3 +187,38 @@ RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
