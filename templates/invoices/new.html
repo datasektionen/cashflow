@@ -192,6 +192,14 @@
                                             v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
                                         ></option>
                                     </optgroup>
+                                    <optgroup label="Partitioner">
+                                        <option
+                                            v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'partition')"
+                                            :key="costCentre.CostCentreID"
+                                            v-text="costCentre.CostCentreName"
+                                            v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
+                                        ></option>
+                                    </optgroup>
                                     <optgroup label="Projekt">
                                         <option
                                             v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'project')"
