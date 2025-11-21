@@ -147,7 +147,7 @@
                                 </optgroup>
                                 <optgroup label="Övrigt">
                                     <option
-                                        v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'project')"
+                                        v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'partition' && c.CostCentreType != 'project')"
                                         :key="costCentre.CostCentreID"
                                         v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
                                         v-text="costCentre.CostCentreName"
