@@ -60,6 +60,24 @@
                     <input type="date" model="expense_part.amount" value="{{ expense.expense_date|date:"c" }}" name="expense_date" required/>
                 </div>
             </div>
+            <div class="form-entry">
+                <span class="description">
+                    <label for="is-digital">
+                        Digitalt:
+                    </label> 
+                    <span class="hint"></span>
+                </span> 
+                <div class="input">
+                    <input
+                        type="checkbox"
+                        name="is-digital"
+                        id="is-digital"
+                        {% if expense.is_digital %} checked {% endif %}
+                        style="margin-top: 0.7em; width: 1.4em; height: 1.4em;"
+                    >
+                </div> 
+                <p>Klicka i denna om originalformatet av kvittot är digitalt.</p>
+            </div>
         </div>
         <div class="clear"></div>
         <h2>Kvittodelar</h2>
