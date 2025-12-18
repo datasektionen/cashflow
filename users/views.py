@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.forms import modelform_factory
 
-from cashflow import dauth
+from cashflow import dauth, settings
 from expenses import models
 
 """
@@ -28,8 +28,18 @@ def get_user(request, username):
 
     if not user.profile.may_be_viewed_by(request.user): return HttpResponseForbidden()
 
+    picture_req = requests.get(
+        settings.RFINGER_API_URL + "/api/" + user.username,
+        headers = {
+            'Authorization': 'Bearer ' + settings.RFINGER_API_KEY,
+        },
+    )
+    if not picture_req.status_code == 200:
+        return HttpResponseServerError(f'Misslyckades att hämta bilder från rfinger ({picture_req.status_code} {picture_req.text})')
+
     return render(request, 'users/information.html', {
         'showuser': user,
+        'picture': picture_req.text,
         'total': models.ExpensePart.objects.filter(expense__owner=user.profile).aggregate(Sum('amount')),
         'numcashflows': models.ExpensePart.objects.filter(expense__owner=user.profile).count(),
     })
