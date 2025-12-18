@@ -44,6 +44,8 @@ The following environment variables are required to run the project:
 | LOGIN_API_URL        | URL to login service api             | https://login.datasektionen.se |
 | LOGIN_FRONTEND_URL   | URL to login service frontend        | https://login.datasektionen.se |
 | SEND_EMAILS          | If False, does not send emails       | True                           |
+| RFINGER_API_URL      | URL to rfinger api                   | https://rfinger.datasektionen.se |
+| RFINGER_API_KEY      | API key for rfinger                  | ---                            |
 
 (The variables beginning with `S3` are not used if `DEBUG` is true. Files are
 instead stored at `./media/`)

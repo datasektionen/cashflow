@@ -192,5 +192,8 @@ SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
 HIVE_URL = os.getenv('HIVE_URL', 'https://hive.datasektionen.se')
 HIVE_SECRET = os.getenv('HIVE_SECRET', 'unset')
 
+RFINGER_API_URL = os.getenv('RFINGER_API_URL', 'https://rfinger.datasektionen.se')
+RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
+
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')

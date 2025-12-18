@@ -1,4 +1,6 @@
+import json
 import re
+import requests
 from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -200,11 +202,39 @@ def get_invoice(request, pk):
         if request.user.profile.may_attest(invoice_part):
             attestable.append(invoice_part.id)
 
+    commenters = set()
+    for comment in invoice.comment_set.all():
+        if not comment.author.user.username in commenters:
+            commenters.add(comment.author.user.username)
+
+    pictures_req = requests.post(
+        settings.RFINGER_API_URL + "/api/batch",
+        data = json.dumps(list(commenters)),
+        headers = {
+            'Authorization': 'Bearer ' + settings.RFINGER_API_KEY,
+        },
+    )
+    if not pictures_req.status_code == 200:
+        return HttpResponseServerError(f'Misslyckades att hämta bilder från rfinger ({pictures_req.status_code} {pictures_req.text})')
+    pictures = json.loads(pictures_req.text)
+
+    # This is stupid, but so is Django template support for dictionaries.
+    comments = []
+    for comment in invoice.comment_set.all():
+        comments.append({
+            'username': comment.author.user.username,
+            'full_name': comment.author.user.get_full_name(),
+            'date': comment.date,
+            'content': comment.content,
+            'picture': pictures[comment.author.user.username],
+        })
+
     return render(request, 'invoices/show.html', {
         'invoice': invoice,
         'attestable': attestable,
         'may_account': request.user.profile.may_account(invoice=invoice),
         'budget_url': settings.BUDGET_URL,
+        'comments': comments,
     })
 
 """
