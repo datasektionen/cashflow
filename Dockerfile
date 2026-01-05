@@ -1,15 +1,14 @@
-FROM python:3.6.15-alpine
+FROM python:3.6.15
 
 ENV TZ=Europe/Stockholm
-RUN pip install pipenv
 
-RUN apk --no-cache add gcc libc-dev libffi-dev zlib-dev jpeg-dev py3-psycopg2 postgresql14-dev
+RUN pip install poetry
 
 WORKDIR /app
 
-COPY Pipfile Pipfile.lock ./
+COPY pyproject.toml poetry.lock ./
 
-RUN pipenv --python 3.6 install
+RUN poetry install
 
 COPY . .
 
@@ -17,4 +16,4 @@ RUN ln -s staticfiles static # It seems like it sometimes only looks in staticfi
 
 EXPOSE 8000
 
-CMD ["pipenv", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]
+CMD ["poetry", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]
