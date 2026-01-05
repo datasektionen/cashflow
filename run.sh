@@ -1,11 +1,12 @@
 #!/bin/sh
 
-pipenv run ./manage.py migrate
-pipenv run gunicorn cashflow.wsgi --bind=0.0.0.0:8000 -t 600 --log-file - &
+poetry run ./manage.py makemigrations
+poetry run ./manage.py migrate
+poetry run gunicorn cashflow.wsgi --bind=0.0.0.0:8000 -t 600 --log-file - &
 
-nginx -g 'daemon off;' &
-
-wait -n
+# nginx -g 'daemon off;' &
+#
+wait
 exit $?
 
 # This scripts starts both python and nginx. If one exits, it kills the other
