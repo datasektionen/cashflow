@@ -126,21 +126,3 @@ def has_any_permission_scope(perm_id, user):
     return perm_id in get_permissions(user)
 
 
-class AuthRequiredMiddleware(object):
-
-    # noinspection PyMethodMayBeStatic
-    def process_request(self, request):
-        """
-        Middleware for defining authentication.
-        Forces user to be authenticated before sending on.
-        """
-        path = request.META['PATH_INFO']
-        whitelist = ['^/$', '^/login/$', '^/login/.*$', "^/budget/.*$"]
-
-        for regex in whitelist:
-            pattern = re.compile(regex)
-            if pattern.match(path):
-                return None
-        if not request.user.is_authenticated():
-            return HttpResponseRedirect("/")
-        return None

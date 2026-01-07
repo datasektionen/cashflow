@@ -1,4 +1,4 @@
-FROM python:3.6.15
+FROM python:3.14.2
 
 ENV TZ=Europe/Stockholm
 
@@ -8,9 +8,10 @@ WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry install
 
 COPY . .
+
+RUN poetry install
 
 RUN ln -s staticfiles static # It seems like it sometimes only looks in staticfiles/ and other times only in static/
 

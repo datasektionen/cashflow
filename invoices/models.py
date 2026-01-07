@@ -9,14 +9,15 @@ class Invoice(models.Model):
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
-    confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    # TODO: Is there a better choice for on_delete?
+    confirmed_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey('expenses.Profile')
+    owner = models.ForeignKey('expenses.Profile', on_delete=models.DO_NOTHING)
     description = models.TextField()
     file_is_original = models.BooleanField()
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
-    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")
+    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed", on_delete=models.DO_NOTHING)
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -126,7 +127,7 @@ class InvoicePart(models.Model):
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True)
+    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model
