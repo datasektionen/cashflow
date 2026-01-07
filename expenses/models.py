@@ -41,14 +41,14 @@ class Profile(models.Model):
     and relations with it.
     """
     # The relation to the original django user
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
 
     # Represents a bank account owned by the user
     bank_account = models.CharField(max_length=13, blank=True)
 
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
-    default_account = models.ForeignKey(BankAccount, blank=True, null=True)
+    default_account = models.ForeignKey(BankAccount, blank=True, null=True, on_delete=models.SET_NULL)
     firebase_instance_id = models.TextField(blank=True)
 
     # Return a string representation of the user
@@ -262,9 +262,9 @@ class Payment(models.Model):
     Represents a payment from a chapter account to a member.
     """
     date = models.DateField(auto_now_add=True)
-    payer = models.ForeignKey(Profile, related_name='payer')
-    receiver = models.ForeignKey(Profile, related_name='receiver')
-    account = models.ForeignKey(BankAccount)
+    payer = models.ForeignKey(Profile, related_name='payer', on_delete=models.DO_NOTHING)
+    receiver = models.ForeignKey(Profile, related_name='receiver', on_delete=models.DO_NOTHING)
+    account = models.ForeignKey(BankAccount, on_delete=models.DO_NOTHING)
 
     # Return a string representation of the payment
     def __str__(self):
@@ -303,13 +303,13 @@ class Expense(models.Model):
     """
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
-    confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    confirmed_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey(Profile)
+    owner = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     description = models.TextField()
-    reimbursement = models.ForeignKey(Payment, blank=True, null=True)
+    reimbursement = models.ForeignKey(Payment, blank=True, null=True, on_delete=models.DO_NOTHING)
     verification = models.CharField(max_length=7, blank=True)
-    is_flagged = models.NullBooleanField()
+    is_flagged = models.BooleanField(null=True, blank=True)
 
     # Returns a string representation of the expense
     def __str__(self):
@@ -444,7 +444,7 @@ class ExpensePart(models.Model):
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey(Profile, blank=True, null=True)
+    attested_by = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model
@@ -499,7 +499,7 @@ class Comment(models.Model):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(Profile)
+    author = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     content = models.TextField()
 
     # String representation of comment

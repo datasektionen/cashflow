@@ -14,7 +14,12 @@ import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ..
 import sys
 import re
 import dj_database_url
-from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
+
+# https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
+# Fix for broken "django-queued-storage" dependency
+# TODO: Replace this dependency
+# from urllib.parse import quote
+# django.utils.http.urlquote = quote
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = BASE_DIR
@@ -57,17 +62,16 @@ INSTALLED_APPS = (
     'invoices',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'cashflow.dauth.AuthRequiredMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 )
 
 ROOT_URLCONF = 'cashflow.urls'
