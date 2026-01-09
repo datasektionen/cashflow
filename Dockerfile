@@ -1,8 +1,10 @@
-FROM python:3.6.15
+FROM python:3.14.12-alpine
 
 ENV TZ=Europe/Stockholm
 
 RUN pip install poetry
+
+RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 nginx
 
 WORKDIR /app
 
