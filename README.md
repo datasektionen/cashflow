@@ -1,14 +1,39 @@
 # Cashflow 2.0
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdatasektionen%2Fcashflow%2Frefs%2Fheads%2Fmaster%2Fpyproject.toml&style=flat-square&logoSize=auto)
 
 Django project to manage receipts and reimbursements at Datasektionen.
 
 ## Developing locally
 
-Use Docker Compose:
+### Docker (recommended)
+There is a provided Docker compose file; this will run all necessary services for development, including
+a PostgreSQL instance and a mock authentication system.
+To build and start all services to run in the background:
 
-`docker compose up --watch --build`
+```console
+$ docker compose up --watch --build -d
+```
 
-The server will restart on file changes.
+The app will now be available on `http://localhost:8000`.
+
+
+### Poetry
+
+The [psycopg2](https://pypi.org/project/psycopg2/) library requires an external PostgreSQL installation.
+Install it using your package manager of choice. You will also need to create a `.env` file with the required environment variables (see below).
+
+Cashflow has moved from Pipenv to Poetry for dependency management. Depending on your system you can: install it globally using
+`pip install poetry` or install it using your package manager.
+
+To setup and run the application:
+
+```console
+$ poetry install
+$ poetry run ./manage.py migrate
+$ poetry run ./manage.py runserver
+```
+
+The app will be available on `http://localhost:8000`. The server will restart on file changes.
 
 ### Getting data from production
 
