@@ -12,7 +12,6 @@ from django.template.loader import render_to_string
 from cashflow import dauth
 from cashflow import settings
 from cashflow import email
-from invoices.models import Invoice
 
 
 class BankAccount(models.Model):
@@ -408,7 +407,7 @@ class File(models.Model):
     Represents a file on, for example, S3.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey("invoices.Invoice", on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField()
 
     # Returns a string representation of the file
@@ -497,7 +496,7 @@ class Comment(models.Model):
     Represents a comment on an expense.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey("invoices.Invoice", on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     content = models.TextField()
