@@ -5,27 +5,46 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 ## Developing locally
 
-### Docker (recommended)
+### Docker
 There is a provided Docker compose file; this will run all necessary services for development, including
 a PostgreSQL instance and a mock authentication system.
-To build and start all services to run in the background:
+> [!NOTE]
+> By default, the compose stack will use a Dockerfile meant for development only. This Dockerfile also runs an Nginx server to proxy the mock authentication.
+
+To build and start the application in the background:
 
 ```console
 $ docker compose up --watch --build -d
 ```
+To perform the initial database migrations[^1], you will need to attach to the docker container:
+
+```console
+$ docker exec -it cashflow-app-1 sh
+```
+
+```console
+# poetry run ./manage.py migrate
+```
 
 The app will now be available on `http://localhost:8000`.
+> [!IMPORTANT]
+> If you make any model changes, you will need to generate new migration files. It is easiest to do this outside the docker container; see below for instructions.
 
 
 ### Poetry
 
 The [psycopg2](https://pypi.org/project/psycopg2/) library requires an external PostgreSQL installation.
-Install it using your package manager of choice. You will also need to create a `.env` file with the required environment variables (see below).
+Install it using your package manager of choice. You will also need provide the required environment variables, using your method of choice.
 
-Cashflow has moved from Pipenv to Poetry for dependency management. Depending on your system you can: install it globally using
+Cashflow uses Poetry for dependency management. Depending on your system you can install it globally using
 `pip install poetry` or install it using your package manager.
 
-To setup and run the application:
+
+> [!TIP]
+> To manage Python several versions, you can use a tool like [pyenv](https://github.com/pyenv/pyenv).
+> Poetry will automatically find and use the correct Python version if it is installed.
+
+To install all dependencies, perform the database migration, and run the application:
 
 ```console
 $ poetry install
@@ -34,6 +53,17 @@ $ poetry run ./manage.py runserver
 ```
 
 The app will be available on `http://localhost:8000`. The server will restart on file changes.
+
+If you make any model changes, you will need to generate new migration files:
+
+```console
+$ poetry run ./manage.py makemigrations
+```
+
+You will then need to perform a database migration:
+```poetry
+$ poetry run ./manage.py migrate
+```
 
 ### Getting data from production
 
@@ -79,3 +109,5 @@ The default max upload size in nginx is 1 MB. To allow larger file uploads, set 
 ```bash
 echo "client_max_body_size 100M;" > /home/dokku/cashflow/nginx.conf.d/max_size.conf
 ```
+
+[^1]: A migration performs all the necessary changes to your database instance. For more information, read [Django's documentation](https://docs.djangoproject.com/en/6.0/topics/migrations/).
