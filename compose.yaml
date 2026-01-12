@@ -33,7 +33,6 @@ services:
           action: sync
         - path: Pipfile
           action: rebuild
-    command: sh -c "pipenv run ./manage.py migrate && pipenv run ./manage.py runserver 0.0.0.0:8000"
     depends_on:
       db:
         condition: service_healthy
