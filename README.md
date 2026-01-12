@@ -19,17 +19,17 @@ $ docker compose up --watch --build -d
 To perform the initial database migrations[^1], you will need to attach to the docker container:
 
 ```console
-$ docker exec -it cashflow-app-1 sh
-```
-
-```console
-# poetry run ./manage.py migrate
+$ docker exec -it cashflow-app-1 poetry run ./manage.py migrate
 ```
 
 The app will now be available on `http://localhost:8000`.
-> [!IMPORTANT]
-> If you make any model changes, you will need to generate new migration files. It is easiest to do this outside the docker container; see below for instructions.
 
+If you make any model changes, you will need to generate new migration files. This is easiest to do outside the docker container, but you can run the command and copy the migrations from the container:
+
+```console
+$ docker exec -it cashflow-app-1 poetry run ./manage.py makemigrations
+$ docker cp cashflow-app-1:/app/expenses/migrations/ ./expenses/
+```
 
 ### Poetry
 
