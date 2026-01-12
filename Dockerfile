@@ -1,4 +1,4 @@
-FROM python:3.14.12-alpine
+FROM python:3.14.2-alpine
 
 ENV TZ=Europe/Stockholm
 
@@ -8,14 +8,12 @@ RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 nginx
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY . .
 
 RUN poetry install
-
-COPY . .
 
 RUN ln -s staticfiles static # It seems like it sometimes only looks in staticfiles/ and other times only in static/
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]
+ENTRYPOINT ["poetry", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]
