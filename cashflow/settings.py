@@ -102,7 +102,7 @@ if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
     # Parse the DATABASE_URL env var.
     # First group is the (ql)? group, hence _
     _, USER, PASSWORD, HOST, PORT, NAME = re.match(
-        "^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
+        r"^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
         os.environ.get("DATABASE_URL", "")).groups()
 
     DATABASES = {

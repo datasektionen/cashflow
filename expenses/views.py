@@ -277,7 +277,7 @@ def new_comment(request, expense_pk):
 
     if not request.user.profile.may_view_expense(expense):
         return HttpResponseForbidden()
-    if re.match('^\s*$', request.POST['content']):
+    if re.match(r'^\s*$', request.POST['content']):
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
 
     models.Comment(
