@@ -401,6 +401,8 @@ class Expense(models.Model):
             expensepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct().order_by('expense_date')
 
+FILE_REGEX = re.compile(r".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
+
 
 class File(models.Model):
     """
@@ -427,8 +429,7 @@ class File(models.Model):
 
     # Returns true if image url ends with commit image file names
     def is_image(self):
-        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
-        return file_regex.match(self.file.name)
+        return FILE_REGEX.match(self.file.name)
 
     def is_pdf(self):
         return self.file.name.lower().endswith(".pdf")
