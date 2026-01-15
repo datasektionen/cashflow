@@ -37,7 +37,7 @@ services:
       db:
         condition: service_healthy
   db:
-    image: postgres:14
+    image: postgres:18
     environment:
       POSTGRES_USER: cashflow
       POSTGRES_PASSWORD: cashflow
