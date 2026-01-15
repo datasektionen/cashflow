@@ -3,6 +3,7 @@ from django.conf import settings
 
 register = template.Library()
 from expenses.models import *
+from invoices.models import Invoice
 
 @register.simple_tag(takes_context=True)
 def counts(context):

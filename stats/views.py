@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from django.db.models import Sum, Count
+from decimal import Decimal
+from django.db.models import Sum, Count, DecimalField
 from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -16,7 +17,7 @@ from expenses import models
 def index(request):
     year = models.Expense.objects \
         .filter(expense_date__year=datetime.now().year, reimbursement__isnull=False) \
-        .aggregate(sum=Coalesce(Sum('expensepart__amount'), 0))['sum']
+        .aggregate(sum=Coalesce(Sum('expensepart__amount'), Decimal(0)))['sum']
 
     highscore = models.Profile.objects \
         .filter(expense__reimbursement__isnull=False, expense__expensepart__amount__lt=10000) \
