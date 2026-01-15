@@ -1,10 +1,8 @@
-FROM python:3.14.2-alpine
+FROM python:3.14.2-alpine AS prod
 
 ENV TZ=Europe/Stockholm
 
-RUN pip install poetry
-
-RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 nginx
+RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 poetry
 
 WORKDIR /app
 
@@ -19,3 +17,7 @@ RUN ln -s staticfiles static # It seems like it sometimes only looks in staticfi
 EXPOSE 8000
 
 CMD ["poetry", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]
+
+FROM prod AS dev
+
+RUN apk --no-cache add nginx
