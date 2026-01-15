@@ -1,6 +1,7 @@
 services:
   app:
-    build: .
+    build:
+      target: dev
     environment:
       DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
       DEBUG: "True"
