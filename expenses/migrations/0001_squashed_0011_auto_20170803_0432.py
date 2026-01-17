@@ -94,7 +94,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('belonging_to', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='expenses.Expense')),
-                ('file', models.FileField(blank=True, null=True, storage='expenses.custom_storages.MediaStorage', upload_to='')),
+                ('file', models.FileField(blank=True, null=True, storage='storages.backends.s3.S3Storage', upload_to='')),
                 ('tempfile', models.FileField(default='file', storage='django.core.files.storage.FileSystemStorage', upload_to='')),
             ],
         ),
