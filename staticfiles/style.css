@@ -386,7 +386,7 @@ table .radio {
     color: #278032;
 }
 input[type=radio] {
-    visibility: hidden;
+    opacity: 0;
 }
 input[type="text"], textarea, input[type="number"], input[type="datetime-local"], input[type="date"] {
     width: 300px;

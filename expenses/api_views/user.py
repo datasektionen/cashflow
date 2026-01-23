@@ -1,4 +1,4 @@
-"""
+r"""
       ______                       __         ______   __   ______
      /      \                     /  |       /      \ /  | /      \
     /$$$$$$  |  ______    _______ $$ |____  /$$$$$$  |$$ |/$$$$$$  | __   __   __
@@ -19,12 +19,11 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework import status
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Profile, Payment
 
@@ -64,12 +63,12 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Check permissions
-        if person.user.username == request.user.username or has_permission("pay", request):
+        if person.may_be_viewed_by(request.user):
             return Response({'user': person.to_dict()})
         else:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @list_route()
+    @action(detail=False)
     def current(self, request, **kwargs):
         """
         Returns a JSON representation of the current user
@@ -116,7 +115,7 @@ class UserViewSet(GenericViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def payments(self, request, username, **kwargs):
-        if request.user.username is username or has_permission("admin", request):
+        if request.user.username is username or request.user.profile.may_view_all_payments():
             return Response({
                 'payments': [payment.to_dict() for payment in Payment.objects.filter(receiver__user__username=username)]
             })

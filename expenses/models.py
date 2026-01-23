@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 
 from cashflow import dauth
 from cashflow import settings
-from cashflow import email_util
+from cashflow import email
 from invoices.models import Invoice
 
 
@@ -41,14 +41,14 @@ class Profile(models.Model):
     and relations with it.
     """
     # The relation to the original django user
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
 
     # Represents a bank account owned by the user
     bank_account = models.CharField(max_length=13, blank=True)
 
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
-    default_account = models.ForeignKey(BankAccount, blank=True, null=True)
+    default_account = models.ForeignKey(BankAccount, blank=True, null=True, on_delete=models.SET_NULL)
     firebase_instance_id = models.TextField(blank=True)
 
     # Return a string representation of the user
@@ -91,115 +91,156 @@ class Profile(models.Model):
             }
         }
 
-    # Returns a list of the cost centres that the user may attest
-    def may_attest(self, expense_part=None):
-        may_attest = []
-        for permission in dauth.get_permissions(self.user):
-            if permission.startswith("attest-"):
-                may_attest.append(permission[len("attest-"):].lower())
-        if expense_part is None:
-            return may_attest
-        return 'firmatecknare' in may_attest or expense_part.cost_centre.lower() in may_attest
+    def may_view_all(self):
+        return dauth.has_unscoped_permission("view-all", self.user)
 
-    def may_view_attest(self):
-        if self.may_view_all():
-            return ['.*']
-        return self.may_attest()
+    def may_view_all_payments(self):
+        return dauth.has_unscoped_permission("view-all-payments", self.user)
+
+    # Returns whether the user may attest an expense part's cost centre
+    def may_attest(self, expense_part):
+        return dauth.has_scoped_permission("attest", expense_part.cost_centre, self.user)
+
+    # Returns whether the user may attest for at least one cost centre
+    def may_attest_some(self):
+        return dauth.has_any_permission_scope("attest", self.user)
+
+    # Returns a list of known cost centres that the user may attest, or True
+    def attestable_cost_centres(self):
+        if dauth.get_permissions(self.user).get("attest") is True:
+            # don't filter
+            return True
+
+        return list(filter(
+            lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
+            [
+                ep['cost_centre']
+                for ep in ExpensePart.objects.values('cost_centre').distinct()
+            ]
+        ))
+
+    # Returns whether the user may view attestable expenses
+    def may_view_attestable(self):
+        return self.may_view_all() or self.may_attest_some()
+
+    def may_unattest(self):
+        return dauth.has_unscoped_permission("unattest", self.user)
 
     # Returns whether the user is allowed to make reimbursements
     def may_pay(self):
-        return 'pay' in dauth.get_permissions(self.user)
+        return dauth.has_unscoped_permission("pay", self.user)
 
     # Returns whether the user may view payable expenses
-    def may_view_pay(self):
+    def may_view_payable(self):
         return self.may_view_all() or self.may_pay()
 
     # Returns whether the user may confirm expenses
     def may_confirm(self):
-        return 'confirm' in dauth.get_permissions(self.user)
+        return dauth.has_unscoped_permission("confirm", self.user)
 
-    # Returns a list of the cost centres that the user may pay for
+    # Returns whether the user may unconfirm expenses
     def may_unconfirm(self):
-        return 'unconfirm' in dauth.get_permissions(self.user)
+        # until proven that a separate unconfirm perm is actually needed
+        return self.may_confirm()
 
     # Returns whether the user may view confirmable expenses
-    def may_view_confirm(self):
+    def may_view_confirmable(self):
         return self.may_view_all() or self.may_confirm()
 
-    # Returns a list of the cost centres that the user may account for
+    # Returns whether the user may bookkeep an expense or invoice cost centre
     def may_account(self, expense=None, invoice=None):
-        if 'accounting-*' in dauth.get_permissions(self.user) and (expense is not None or invoice is not None):
-            return True
-
-        may_account = []
-        for permission in dauth.get_permissions(self.user):
-            if permission.startswith("accounting-"):
-                may_account.append(permission[len("accounting-"):].lower())
-        if expense is None and invoice is None:
-            return may_account
-
         if expense is not None:
             for ep in expense.expensepart_set.all():
-                if ep.cost_centre.lower() in may_account:
+                if dauth.has_scoped_permission("accounting", ep.cost_centre, self.user):
                     return True
-        else:
+
+        if invoice is not None:
             for ip in invoice.invoicepart_set.all():
-                if ip.cost_centre.lower() in may_account:
+                if dauth.has_scoped_permission("accounting", ip.cost_centre, self.user):
                     return True
+
         return False
 
-    def may_view_account(self):
-        if self.may_view_all():
-            return ['.*']
-        return self.may_account()
+    # Returns whether the user may bookkeep for at least one cost centre
+    def may_account_some(self):
+        return dauth.has_any_permission_scope("accounting", self.user)
 
-    def may_delete(self, expense):
+    # Returns a list of known cost centres that the user may bookkeep, or True
+    def accountable_cost_centres(self):
+        if dauth.get_permissions(self.user).get("accounting") is True:
+            # don't filter
+            return True
+
+        return list(filter(
+            lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
+            [
+                ep['cost_centre']
+                for ep in ExpensePart.objects.values('cost_centre').distinct()
+            ]
+        ))
+
+    # Returns whether the user may view attestable expenses
+    def may_view_accountable(self):
+        return self.may_view_all() or self.may_account_some()
+
+    def may_flag(self):
+        return self.may_attest_some() or self.may_pay()
+
+    def may_delete_expense(self, expense):
         if expense.reimbursement:
             return False
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user) and expense is not None:
-            return True
-        if expense.owner.user.username == self.user.username:
-            return True
-        return False
+
+        return (
+            dauth.has_unscoped_permission("delete", self.user)
+            or expense.owner.user.username == self.user.username
+        )
+
+    def may_edit_invoice(self):
+        return dauth.has_unscoped_permission("edit-invoice", self.user)
 
     def may_delete_invoice(self, invoice):
-        if invoice is None or invoice.is_payed():
+        if invoice.is_payed():
             return False
-        if 'attest-firmatecknare' in dauth.get_permissions(self.user):
-            return True
-        if invoice.owner.user.username == self.user.username:
-            return True
-        return False
+
+        return (
+            dauth.has_unscoped_permission("delete", self.user)
+            or invoice.owner.user.username == self.user.username
+        )
+
+    def may_delete_comment(self):
+        return dauth.has_unscoped_permission("moderate-comments", self.user)
+
+    def is_admin(self):
+        return (
+            self.may_attest_some()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_account_some()
+            or self.may_view_all()
+        )
 
     def may_be_viewed_by(self, user):
         return user.username == self.user.username or user.profile.is_admin()
 
     def may_view_expense(self, expense):
-        if expense.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
-            return True
-        for cost_centre in expense.cost_centres():
-            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
-                return True
-
-        return False
+        return (
+            expense.owner.user.username == self.user.username
+            or self.may_view_all()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_account(expense=expense)
+            or any(self.may_attest(ep) for ep in expense.expensepart_set.all())
+        )
 
     def may_view_invoice(self, invoice):
-        if invoice.owner.user.username == self.user.username or self.may_pay() or self.may_view_all():
-            return True
-        for cost_centre in invoice.cost_centres():
-            if cost_centre['cost_centre'].lower() in self.may_account() or cost_centre['cost_centre'].lower() in self.may_attest():
-                return True
-
-        return False
-
-    def may_view_all(self):
-        return 'view-all' in dauth.get_permissions(self.user)
-
-    def is_admin(self):
-        return self.may_attest() or self.may_pay() or self.may_confirm() or self.may_account() or self.may_view_all()
-
-    def may_unattest(self):
-        return 'attest-firmatecknare' in dauth.get_permissions(self.user)
+        return (
+            invoice.owner.user.username == self.user.username
+            or self.may_view_all()
+            or self.may_pay()
+            or self.may_confirm()
+            or self.may_account(invoice=invoice)
+            or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all())
+        )
 
     def may_firmatecknare(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
@@ -223,9 +264,9 @@ class Payment(models.Model):
     Represents a payment from a chapter account to a member.
     """
     date = models.DateField(auto_now_add=True)
-    payer = models.ForeignKey(Profile, related_name='payer')
-    receiver = models.ForeignKey(Profile, related_name='receiver')
-    account = models.ForeignKey(BankAccount)
+    payer = models.ForeignKey(Profile, related_name='payer', on_delete=models.DO_NOTHING)
+    receiver = models.ForeignKey(Profile, related_name='receiver', on_delete=models.DO_NOTHING)
+    account = models.ForeignKey(BankAccount, on_delete=models.DO_NOTHING)
 
     # Return a string representation of the payment
     def __str__(self):
@@ -264,13 +305,13 @@ class Expense(models.Model):
     """
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
-    confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    confirmed_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey(Profile)
+    owner = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     description = models.TextField()
-    reimbursement = models.ForeignKey(Payment, blank=True, null=True)
+    reimbursement = models.ForeignKey(Payment, blank=True, null=True, on_delete=models.DO_NOTHING)
     verification = models.CharField(max_length=7, blank=True)
-    is_digital = models.NullBooleanField()
+    is_flagged = models.BooleanField(null=True, blank=True)
 
     # Returns a string representation of the expense
     def __str__(self):
@@ -314,28 +355,33 @@ class Expense(models.Model):
     # Returns a dict representation of the model
     def to_dict(self):
         exp = model_to_dict(self)
+        exp['created_date'] = self.created_date
         exp['expense_parts'] = [part.to_dict() for part in ExpensePart.objects.filter(expense=self)]
         exp['owner_username'] = self.owner.user.username
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
         exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
+        exp['status'] = self.status()
+        exp['is_flagged'] = self.is_flagged
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
 
     @staticmethod
-    def view_attestable(may_attest, user):
+    def view_attestable(user):
         filters = {
             'expensepart__attested_by': None,
         }
-        if 'firmatecknare' not in may_attest:
-            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
-        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).distinct()
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            escaped = [re.escape(cc) for cc in cost_centres]
+            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
+        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def confirmable():
-        return Expense.objects.filter(confirmed_by__isnull=True).distinct()
+        return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def payable():
@@ -346,14 +392,19 @@ class Expense(models.Model):
             order_by('owner__user__username')
 
     @staticmethod
-    def view_accountable(may_account):
-        if '*' in may_account:
+    def view_accountable(user):
+        cost_centres = user.profile.accountable_cost_centres()
+        if cost_centres is True:
             return Expense.objects.exclude(reimbursement=None).filter(verification='').distinct().order_by(
                 'expense_date')
+
+        escaped = [re.escape(cc) for cc in cost_centres]
         return Expense.objects.exclude(reimbursement=None).filter(
             verification='',
-            expensepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
+            expensepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct().order_by('expense_date')
+
+FILE_REGEX = re.compile(r".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
 
 
 class File(models.Model):
@@ -361,7 +412,7 @@ class File(models.Model):
     Represents a file on, for example, S3.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey("invoices.Invoice", on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField()
 
     # Returns a string representation of the file
@@ -381,8 +432,7 @@ class File(models.Model):
 
     # Returns true if image url ends with commit image file names
     def is_image(self):
-        file_regex = re.compile(".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
-        return file_regex.match(self.file.name)
+        return FILE_REGEX.match(self.file.name)
 
     def is_pdf(self):
         return self.file.name.lower().endswith(".pdf")
@@ -397,7 +447,7 @@ class ExpensePart(models.Model):
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey(Profile, blank=True, null=True)
+    attested_by = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model
@@ -450,9 +500,9 @@ class Comment(models.Model):
     Represents a comment on an expense.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, null=True, blank=True)
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True)
+    invoice = models.ForeignKey("invoices.Invoice", on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(Profile)
+    author = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     content = models.TextField()
 
     # String representation of comment

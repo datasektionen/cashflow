@@ -6,7 +6,8 @@
 <div id="app">
     <p>
         Här kan du hitta alla kvitton som har delar som du får attestera,
-        klicka på ett kvitto för att komma till dess specifika vy.
+        klicka på ett kvitto för att komma till dess specifika vy. Endast
+        oflaggade kvitton förekommer.
     </p>
     <div class="select" style="float:right">
         <select v-model="cost_centre">
@@ -23,6 +24,7 @@
                 <th>Ägare</th>
                 <th>Resultatställen</th>
                 <th class="right">Belopp</th>
+                <th></th>
             </tr>
         </thead>
         <tr v-for="expense in expenses" v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
@@ -31,6 +33,7 @@
             <td><a :href="'/users/' + expense.owner_username" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.cost_centres.join(', ')"></td>
             <td class="right" v-text="expense.amount + ' kr'"></td>
+            <td><span class="icon" v-if="expense.is_flagged == false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span></td>
         </tr>
     </table>
     <p v-else><b>Du har inga utlägg som kan attesteras! Bra jobbat!</b></p>

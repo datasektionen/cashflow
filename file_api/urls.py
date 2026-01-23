@@ -1,9 +1,8 @@
-from django.conf.urls import url
-from rest_framework.routers import DefaultRouter
+from django.urls import re_path
 
 import file_api.views as views
 
 urlpatterns = [
-    url(r'^new/$', views.new_file, name='file_api-new'),
-    url(r'^(?P<pk>\d+)/delete/$', views.delete_file, name='file_api-delete'),
+    re_path(r'^new/$', views.new_file, name='file_api-new'),
+    re_path(r'^(?P<pk>\d+)/delete/$', views.delete_file, name='file_api-delete'),
 ]

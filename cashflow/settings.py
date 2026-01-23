@@ -11,10 +11,15 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import raven
+import sys
 import re
 import dj_database_url
-from django.conf.global_settings import AUTHENTICATION_BACKENDS, SESSION_COOKIE_AGE
+
+# https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
+# Fix for broken "django-queued-storage" dependency
+# TODO: Replace this dependency
+# from urllib.parse import quote
+# django.utils.http.urlquote = quote
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = BASE_DIR
@@ -39,6 +44,8 @@ ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [ "https://cashflow.datasektionen.se" ]
+
 # Application definition
 
 INSTALLED_APPS = (
@@ -50,7 +57,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'rest_framework',
-    'raven.contrib.django.raven_compat',
     'storages',
     'corsheaders',
     'widget_tweaks',
@@ -58,17 +64,16 @@ INSTALLED_APPS = (
     'invoices',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'cashflow.dauth.AuthRequiredMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 )
 
 ROOT_URLCONF = 'cashflow.urls'
@@ -90,15 +95,6 @@ TEMPLATES = [
     },
 ]
 
-# Raven/sentry config
-if not DEBUG:
-    RAVEN_CONFIG = {
-        'dsn': 'https://8454517d78524997a90a51fdab243d7b:8bddac8028dd41daa99198c80c80ba2a@sentry.io/1256268',
-        # Configure release based on git hash
-        'release': os.getenv('GIT_REV'),
-    }
-
-
 WSGI_APPLICATION = 'cashflow.wsgi.application'
 
 # Database
@@ -108,7 +104,7 @@ if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
     # Parse the DATABASE_URL env var.
     # First group is the (ql)? group, hence _
     _, USER, PASSWORD, HOST, PORT, NAME = re.match(
-        "^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
+        r"^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
         os.environ.get("DATABASE_URL", "")).groups()
 
     DATABASES = {
@@ -153,9 +149,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOGIN_API_KEY = os.getenv('LOGIN_KEY', 'key-012345678910111213141516171819')
-LOGIN_API_URL = os.getenv('LOGIN_API_URL', 'https://login.datasektionen.se')
-LOGIN_FRONTEND_URL = os.getenv('LOGIN_FRONTEND_URL', 'https://login.datasektionen.se')
+OIDC_PROVIDER = os.getenv('OIDC_PROVIDER')
+OIDC_ID = os.getenv('OIDC_ID')
+OIDC_SECRET = os.getenv('OIDC_SECRET')
+REDIRECT_URL = os.getenv('REDIRECT_URL')
 
 BUDGET_URL = os.getenv('BUDGET_URL', 'https://budget.datasektionen.se')
 
@@ -182,16 +179,99 @@ else:
     AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
 
     MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
-    DEFAULT_FILE_STORAGE = 'expenses.custom_storages.MediaStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "location":  MEDIAFILES_LOCATION,
+                "file_overwrite":  False,
+            },
+        },
+        "staticfiles": STATICFILES_STORAGE
+    }
 
 SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
                                          'pate, brandy and with a fried egg on top and spam.')
 SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
 
-PLS_URL = os.getenv('PLS_URL', 'https://pls.datasektionen.se')
+HIVE_URL = os.getenv('HIVE_URL', 'https://hive.datasektionen.se')
+HIVE_SECRET = os.getenv('HIVE_SECRET', 'unset')
+
+RFINGER_API_URL = os.getenv('RFINGER_API_URL', 'https://rfinger.datasektionen.se')
+RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
 
 # Fortnox settings
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')

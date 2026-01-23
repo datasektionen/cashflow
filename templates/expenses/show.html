@@ -88,12 +88,6 @@
                 </td>
             </tr>
             <tr>
-                <th>Digitalt:</th>
-                <td>
-                    {% if expense.is_digital %}Ja{% elif expense.is_digital == False %}Nej{% else %}?{% endif %}
-                </td>
-            </tr>
-            <tr>
                 <th>Totalsumma:</th>
                 <td>
                     {{ expense.total_amount|intcomma }} kr
@@ -156,6 +150,15 @@
                   <button class="btn btn-danger" type="submit">Avattestera</button>
                 </form>
                 {% endif %}
+                {% if may_flag %}
+                <form method="POST" action="{% url 'expenses-flag' expense.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-danger" type="submit" >
+                    <span class="icon"><i class="fa fa-flag"></i></span> Flagga kvitto
+                  </button> 
+                </form>
+                {% endif %}
+
               </td>
               {% endif %}
             </tr>
@@ -191,12 +194,12 @@
         <h2>Kommentarer</h2>
 
         <ul class="comments">
-            {% for comment in expense.comment_set.all %}
-            <li class="clearfix {% if comment.author.user.username == user.username %}own{% endif %}">
+            {% for comment in comments %}
+            <li class="clearfix {% if comment.username == user.username %}own{% endif %}">
                 <div class="info">
-                    <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/users/{{ comment.author.user.username }}"></a>
+                    <a v-tooltip="{ content: '{{ comment.full_name }}' }" class="crop" style="background-image:url({{ comment.picture }});" href="/users/{{ comment.username }}"></a>
                     <span class="name">
-                        <a href="{% url 'user-show' comment.author.user.username %}">
+                        <a href="{% url 'user-show' comment.username %}">
 
                         </a>
                     </span>
@@ -219,6 +222,8 @@
                 <ul>
                     <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
                     <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
+                    <li><a href="#" v-on:click="send">Det här överskrider budgeten.</a></li>
+                    <li><a href="#" v-on:click="send">Varje kvitto ska laddas upp som ett eget utlägg på Cashflow.</a></li>
                     <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>
                     <li><a href="#" v-on:click="send">Du måste ladda upp både en faktura och ett kontoutdrag.</a></li>
                     <li><a href="#" v-on:click="send">Avvakta med det här utlägget.</a></li>

@@ -54,18 +54,19 @@
 
                 <div class="form-entry">
                     <span class="description">
-                        <label for="files" v-tooltip="{ content: 'Ladda upp en bild av kvittot. Om inköpet gjordes på faktura, ladda upp både fakturan och ett kontoutdrag där man ser att köpet genomförts.' }">
+                        <label for="files" v-tooltip="{ content: 'Ladda upp fakturan. Om den är på papper, ladda upp en tydlig bild och sätt in fakturan i pärmen.' }">
                             Bild/pdf av fakturan:
                         </label>
                         <span class="desc">Obligatoriskt</span>
                     </span>
                     <div class="input">
                         <div style="padding: 8px 0;">
-                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required">
+                            <input type="file" name="files" id="file" data-multiple-caption="{count} filer valda" multiple="multiple" required="required" onchange="updateUploaded()">
                             <label for="file" class="file">
                                 <span class="icon theme-color"><i class="fa fa-upload"></i></span>
                                 <span class="val">Välj filer</span>
                             </label>
+                            <span id="filenames" style="margin-left:1em"></span>
                         </div>
                     </div>
                 </div>
@@ -81,7 +82,7 @@
                             <label for="no">Nej</label>
                         </div>
                         <div class="radio">
-                            <input type="radio" name="invoice-original" value="yes" id="yes" />
+                            <input type="radio" name="invoice-original" value="yes" id="yes" required />
                             <label for="yes">Ja</label>
                         </div>
                     </div>
@@ -98,7 +99,7 @@
                             <label for="accounted-no">Nej</label>
                         </div>
                         <div class="radio">
-                            <input type="radio" name="accounted" value="accounted-yes" id="accounted-yes" v-model="accounted" />
+                            <input type="radio" name="accounted" value="accounted-yes" id="accounted-yes" v-model="accounted" required/>
                             <label for="accounted-yes">Ja</label>
                         </div>
                     </div>
@@ -117,17 +118,17 @@
             </div>
             <div class="clearfix"></div>
             <h2 v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Metadata</h2>
-            <p v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">Frivilligt, men ju mer desto bättre. Förfallodatum kan hjälpa den som betalar att betala ut i tid.</p>
             <div class="form" v-if="payed && payed != 'yes-i-have' && payed != 'no-i-will'">
                 <div class="form-entry">
                     <span class="description">
                         <label for="invoice-date" v-tooltip="{ content: 'Det datum fakturan utfärdades (står på fakturan)' }">
                             Fakturadatum:
                         </label>
+                        <span class="desc">Obligatoriskt</span>
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-date" />
+                        <input type="date" name="invoice-date" id="invoice-date"  required onchange="validateDate()"/>
                     </div>
                 </div>
 
@@ -136,10 +137,11 @@
                         <label for="invoice-due-date" v-tooltip="{ content: 'Det datum fakturan senast ska vara betald (står på fakturan)' }">
                             Förfallodatum:
                         </label>
+                        <span class="desc">Obligatoriskt</span>
                         <span class="hint"></span>
                     </span>
                     <div class="input">
-                        <input type="date" name="invoice-due-date" />
+                        <input type="date" name="invoice-due-date" id="invoice-due-date" required onchange="validateDate()"/>
                     </div>
                 </div>
                 <div class="clearfix"></div>
@@ -168,7 +170,7 @@
 
             <div id="expense_parts">
                 <div v-for="(expense_part, i) in expense_parts" class="form expense-part" style="position: relative" :key="i">
-                    <button type="button" v-tooltip="{ content: 'Ta bort den här kvittodelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
+                    <button type="button" v-tooltip="{ content: 'Ta bort den här fakturadelen' }" style="background:#a00; color: #fff; position: absolute;right:0;" v-if="expense_parts.length > 1" v-on:click="removePart(i)">
                         <i class="fa fa-trash" aria-hidden="true"></i>
                     </button>
 
@@ -190,6 +192,14 @@
                                             v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
                                         ></option>
                                     </optgroup>
+                                    <optgroup label="Partitioner">
+                                        <option
+                                            v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'partition')"
+                                            :key="costCentre.CostCentreID"
+                                            v-text="costCentre.CostCentreName"
+                                            v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
+                                        ></option>
+                                    </optgroup>
                                     <optgroup label="Projekt">
                                         <option
                                             v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'project')"
@@ -200,7 +210,7 @@
                                     </optgroup>
                                     <optgroup label="Övrigt">
                                         <option
-                                            v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'project')"
+                                            v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'partition' && c.CostCentreType != 'project')"
                                             :key="costCentre.CostCentreID"
                                             v-text="costCentre.CostCentreName"
                                             v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
@@ -271,8 +281,9 @@
                     <div class="clearfix"></div>
                 </div>
 
-                <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en kvittodel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till kvittodel</button>
-                <input type="submit" v-tooltip="{ content: 'Spara kvittot när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
+                <!--<button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="float:left;" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>-->
+                <button type="button" v-tooltip="{ content: 'Om du köpt in saker under olika budgetposter skapar du en fakturadel per budgetpost' }" style="color:#216C2A" v-on:click="addPart()"><i class="fa fa-plus"></i> Lägg till en till fakturadel</button>
+                <input type="submit" v-tooltip="{ content: 'Spara fakturan när allt ser bra ut' }" style="float: right" value="Spara och registrera faktura" class="button primary-action theme-color btn-color">
             </div>
             <div class="clearfix"></div>
         </div>
@@ -305,7 +316,6 @@
         });
     });
     }, true);
-
 
     new Vue({
         el: '#form',
@@ -374,6 +384,21 @@
                     this.expense_parts.splice(i, 1)
             }
         }
-    })
+    });
+
+    function validateDate() {
+        const date = document.getElementById("invoice-date");
+        const dueDate = document.getElementById("invoice-due-date");
+        if (dueDate.value < date.value) {
+            dueDate.setCustomValidity("Kan inte vara innan fakturadatum.");
+        } else {
+            dueDate.setCustomValidity("");
+        }
+    }
+
+    function updateUploaded() {
+        const files = [...document.getElementById('file').files];
+        document.getElementById('filenames').innerText = files.map(f => f.name).join(', ');
+    }
 </script>
 {% endblock %}

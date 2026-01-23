@@ -6,35 +6,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
 <div id="data">
-    <p>Här kan du hitta alla kvitton som inte bekräftats.</p>
-    <label for="digital" style="padding-right: 0.5em;">Visa endast digitala</label><input v-model="digital" type="checkbox" id="digital" /><br />
-    <label for="analog" style="padding-right: 0.5em;">Visa endast analoga</label><input v-model="analog" type="checkbox" id="analog" />
+    <p>Här kan du hitta alla kvitton som inte bekräftats. Endast oflaggade kvitton förekommer.</p>
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
                 <th></th>
                 <th>ID</th>
-                <th v-if="!(digital || analog)">Digitalt</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Belopp</th>
+                <th></th>
             </tr>
         </thead>
-        <tr v-for="expense in expenses" v-if="!(digital && expense.is_digital !== true || analog && expense.is_digital !== false)">
+        <tr v-for="expense in expenses">
             <td v-if="!expense.confirmed">
+                {% if user.profile.may_confirm %}
                 <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
                     {% csrf_token %}
                     <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta giltighet</button>
                 </form>
+                {% endif %}
             </td>
             <td v-else>
                 Bekräftad
             </td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a></td>
-            <td v-if="!(digital || analog)"><p v-if="expense.is_digital">Ja</p><p v-else-if="expense.is_digital == false">Nej</p><p v-else>👻</p></td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.amount + ' kr'"></td>
+            <td><span class="icon" v-if="expense.is_flagged === false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span></td>
+            {% comment %} Currently flagged expenses are filtered before rendering HTML {% endcomment %}
         </tr>
     </table>
     <p v-else><b>Det finns inga icke-godkända kvitton. Bra jobbat!</b></p>

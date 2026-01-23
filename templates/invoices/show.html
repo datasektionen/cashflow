@@ -6,13 +6,11 @@
 {% endblock %}
 
 {% block action %}
-{% comment "later" %}
-    {% if user.username == invoice.owner.user.username %}
-        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action">
+    {% if user.username == invoice.owner.user.username or user.profile.may_edit_invoice %} 
+        <a href="{% url 'invoices-edit' invoice.id %}" class="primary-action" style="padding-top: 10px; padding-bottom: 8px; padding-left: 15px; padding-right: 15px;">
             Redigera faktura
         </a>
     {% endif %}
-{% endcomment %}
 {% endblock %}
 
 {% block full_content %}
@@ -79,8 +77,12 @@
         <h2>Information</h2>
         <table>
             <tr>
-                <th>Faktura-id:</th>
-                <td>{{ invoice.id }}</td>
+                <th>Faktura-id:
+                </th>
+                <td>{{ invoice.id }}
+                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto" 
+                     v-on:click="copy('cf {{ invoice.id }}')">📋</button>
+                </td>
             </tr>
             <tr>
                 <th>Skapad av:</th>
@@ -168,12 +170,12 @@
         <h2>Kommentarer</h2>
 
         <ul class="comments">
-            {% for comment in invoice.comment_set.all %}
-            <li class="clearfix {% if comment.author.user.username == user.username %}own{% endif %}">
+            {% for comment in comments %}
+            <li class="clearfix {% if comment.username == user.username %}own{% endif %}">
                 <div class="info">
-                    <a v-tooltip="{ content: '{{ comment.author.user.get_full_name }}' }" class="crop" style="background-image:url(https://zfinger.datasektionen.se/user/{{ comment.author.user.username }}/image);" href="/users/{{ comment.author.user.username }}"></a>
+                    <a v-tooltip="{ content: '{{ comment.full_name }}' }" class="crop" style="background-image:url({{ comment.picture }});" href="/users/{{ comment.username }}"></a>
                     <span class="name">
-                        <a href="{% url 'user-show' comment.author.user.username %}">
+                        <a href="{% url 'user-show' comment.username %}">
                             
                         </a>
                     </span>
@@ -221,6 +223,9 @@
                 console.log(e.target.innerHTML)
                 document.getElementById('content-field').value = e.target.innerHTML
                 document.getElementById('new').submit()
+            },            
+            async copy(value) {
+                await navigator.clipboard.writeText(value).catch(console.error)
             }
         },
         created() {

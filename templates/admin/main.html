@@ -11,7 +11,7 @@
         <div id="secondary-nav" class="below-pic">
             <h3>Utlägg och fakturor</h3>
             <ul>
-                {% if user.profile.may_view_attest %}
+                {% if user.profile.may_view_attestable %}
                     <li>
                         <a href="{% url 'admin-attest' %}">
                             Attestera
@@ -22,7 +22,7 @@
                     </li>
                 {% endif %}
                 
-                {% if user.profile.may_view_confirm %}
+                {% if user.profile.may_view_confirmable %}
                     <li>
                         <a href="{% url 'admin-confirm' %}">
                             Bekräfta kvittons giltighet
@@ -33,7 +33,7 @@
                     </li>
                 {% endif %}
                 
-                {% if user.profile.may_view_pay %}
+                {% if user.profile.may_view_payable %}
                     <li>
                         <a href="{% url 'admin-pay' %}">
                             Betala
@@ -44,7 +44,7 @@
                     </li>
                 {% endif %}
                 
-                {% if user.profile.may_view_account %}
+                {% if user.profile.may_view_accountable %}
                     <li>
                         <a href="{% url 'admin-account' %}">
                             Bokför

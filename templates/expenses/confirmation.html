@@ -1,16 +1,11 @@
 {% extends "../detail.html" %}
 {% load widget_tweaks %}
 
-{% block title %}{% if expense.is_digital %}Digitalt kvitto uppladdat{% else %}Spara kvittot{% endif %}{% endblock %}
+{% block title %}Spara kvittot{% endblock %}
 
 {% block full_content %}
     <div>
-        {% if expense.is_digital %}
-            <p>Eftersom du markerade kvittot som digitalt behöver du inte spara kvittot förutom på Cashflow.</p>
-            <p>Om detta var fel - kontakta sektionens kassör, annars riskerar du att kvittot inte blir utbetalt.</p>
-        {% else %}
-            <p>Spara ditt kvitto ifall att bilden inte är tillräckligt bra eller att något behövs lämnas tillbaka.</p>
-        {% endif %}
+        <p>Spara ditt kvitto ifall att bilden inte är tillräckligt bra eller att något behövs lämnas tillbaka.</p>
         <a href="{% url "expenses-show" expense.pk %}" class="button primary-action btn-color theme-color" style="color:#fff">Gå vidare</a>
     </div>
 {% endblock %}

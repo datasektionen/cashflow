@@ -1,6 +1,9 @@
+from datetime import date
+
 from django.db import models
 from django.contrib.auth.models import User
-from expenses.models import *
+from django.forms.models import model_to_dict
+import re
 
 """
 Represents an invoice.
@@ -9,14 +12,15 @@ class Invoice(models.Model):
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
-    confirmed_by = models.ForeignKey(User, blank=True, null=True)
+    # TODO: Is there a better choice for on_delete?
+    confirmed_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING)
     confirmed_at = models.DateField(blank=True, null=True, default=None)
-    owner = models.ForeignKey('expenses.Profile')
+    owner = models.ForeignKey('expenses.Profile', on_delete=models.DO_NOTHING)
     description = models.TextField()
     file_is_original = models.BooleanField()
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
-    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed")
+    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed", on_delete=models.DO_NOTHING)
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -86,12 +90,14 @@ class Invoice(models.Model):
         return exp
 
     @staticmethod
-    def view_attestable(may_attest, user):
+    def view_attestable(user):
         filters = {
             'invoicepart__attested_by': None,
         }
-        if 'firmatecknare' not in may_attest:
-            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(may_attest) + ')'
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            escaped = [re.escape(cc) for cc in cost_centres]
+            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
         return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
 
     # TODO
@@ -104,12 +110,15 @@ class Invoice(models.Model):
 
     # TODO
     @staticmethod
-    def view_accountable(may_account):
-        if '*' in may_account:
+    def view_accountable(user):
+        cost_centres = user.profile.accountable_cost_centres()
+        if cost_centres is True:
             return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
+
+        escaped = [re.escape(cc) for cc in cost_centres]
         return Invoice.objects.exclude(payed_at__isnull=True).filter(
             verification='',
-            invoicepart__cost_centre__iregex=r'(' + '|'.join(may_account) + ')'
+            invoicepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct()
 
 """
@@ -121,7 +130,7 @@ class InvoicePart(models.Model):
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True)
+    attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
 
     # Returns string representation of the model

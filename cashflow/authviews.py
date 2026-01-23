@@ -1,28 +1,28 @@
 from django.contrib import auth
 from django.http import HttpResponseRedirect, Http404
 
-from cashflow import settings
+from cashflow import settings, dauth
 
 
 def login(request):
     """
     Login route, redirects to the login system.
     """
-    if not request.user.is_authenticated:
-        return HttpResponseRedirect(
-            settings.LOGIN_FRONTEND_URL + '/login?callback=' +
-            request.scheme + '://' + request.get_host() + '/login/')
+    if "code" in request.GET:
+        return login_with_token(request)
+    elif not request.user.is_authenticated:
+        return dauth.client.authorize_redirect(request, settings.REDIRECT_URL)
     else:
         return HttpResponseRedirect("/")
 
 
-def login_with_token(request, token):
+def login_with_token(request):
     """
     Handles a login redirect and authenticates user.
     """
     if request.method != 'GET':
         raise Http404()
-    user = auth.authenticate(token=token)
+    user = auth.authenticate(request)
     if user is not None:
         auth.login(request, user)
         return HttpResponseRedirect(redirect_to=request.build_absolute_uri("/"))

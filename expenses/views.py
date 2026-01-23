@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import re
 import requests
 
@@ -7,7 +8,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -45,7 +46,6 @@ def new_expense(request):
             expense_date=request.POST['expense-date'],
             description=request.POST['expense-description'].strip(),
             confirmed_by=None,
-            is_digital='is-digital' in request.POST,
         )
         expense.save()
 
@@ -124,6 +124,9 @@ def edit_expense(request, pk):
 
     expense.description = request.POST['description']
     expense.expense_date = request.POST['expense_date']
+    if expense.is_flagged != None:
+        expense.is_flagged = False
+
     expense.save()
 
     new_ids = []
@@ -170,7 +173,7 @@ def delete_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
 
-    if not request.user.profile.may_delete(expense):
+    if not request.user.profile.may_delete_expense(expense):
         return HttpResponseForbidden('Du har inte behörighet att ta bort detta kvitto.')
     if expense.reimbursement is not None:
         return HttpResponseBadRequest('Du kan inte ta bort ett kvitto som är återbetalt!')
@@ -187,6 +190,21 @@ def delete_expense(request, pk):
         expense.delete()
         messages.success(request, 'Kvittot raderades.')
         return HttpResponseRedirect(reverse('expenses-index'))
+
+@require_POST
+@login_required
+@user_passes_test(lambda u: u.profile.may_flag())
+def flag_expense(request, pk):
+    """
+    Flag a problematic expense
+    """ 
+    try:
+        expense = models.Expense.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        raise Http404("Utlägget finns inte")
+    expense.is_flagged = True
+    expense.save()
+    return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
 
 
 @require_GET
@@ -208,12 +226,41 @@ def get_expense(request, pk):
         if request.user.profile.may_attest(expense_part):
             attestable.append(expense_part.id)
 
+    commenters = set()
+    for comment in expense.comment_set.all():
+        if not comment.author.user.username in commenters:
+            commenters.add(comment.author.user.username)
+
+    pictures_req = requests.post(
+        settings.RFINGER_API_URL + "/api/batch",
+        data = json.dumps(list(commenters)),
+        headers = {
+            'Authorization': 'Bearer ' + settings.RFINGER_API_KEY,
+        },
+    )
+    if not pictures_req.status_code == 200:
+        return HttpResponseServerError(f'Misslyckades att hämta bilder från rfinger ({pictures_req.status_code} {pictures_req.text})')
+    pictures = json.loads(pictures_req.text)
+
+    # This is stupid, but so is Django template support for dictionaries.
+    comments = []
+    for comment in expense.comment_set.all():
+        comments.append({
+            'username': comment.author.user.username,
+            'full_name': comment.author.user.get_full_name(),
+            'date': comment.date,
+            'content': comment.content,
+            'picture': pictures[comment.author.user.username],
+        })
+
     return render(request, 'expenses/show.html', {
         'expense': expense,
-        'may_account': request.user.profile.may_account(),
+        'may_account': request.user.profile.may_account(expense=expense),
         'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
+        'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,
-        'may_delete': request.user.profile.may_delete(expense),
+        'may_delete': request.user.profile.may_delete_expense(expense),
+        'comments': comments,
     })
 
 
@@ -230,7 +277,7 @@ def new_comment(request, expense_pk):
 
     if not request.user.profile.may_view_expense(expense):
         return HttpResponseForbidden()
-    if re.match('^\s*$', request.POST['content']):
+    if re.match(r'^\s*$', request.POST['content']):
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_pk}))
 
     models.Comment(

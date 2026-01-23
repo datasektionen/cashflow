@@ -26,10 +26,10 @@
         <tbody v-for="expense in expenses" v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
             <tr>
                 <td>
-                    <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     (<span v-text="expense.id"></span>)
+                    <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                        v-on:click="copy(expense.description + ' (' + expense.id + ')')">📋</button>
+                        v-on:click="copy('(' + expense.id + ') ' + expense.description)">📋</button>
                 </td>
                 <td v-text="expense.expense_date"></td>
 
@@ -62,7 +62,7 @@
                             <td>
                                 <span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr
                                 <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
+                                    v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
                             </td>
                         </tr>
                     </table>
@@ -85,7 +85,12 @@
         </thead>
         <tbody v-for="invoice in invoices" v-if="cost_centre == false || invoice.cost_centres.indexOf(cost_centre) > -1">
             <tr>
-                <td><a v-bind:href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
+                <td>
+                    (<span v-text="invoice.id"></span>)
+                    <a v-bind:href="'/invoices/' + invoice.id" v-text="invoice.description"></a>
+                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                        v-on:click="copy('(' + invoice.id + ') ' + invoice.description)">📋</button>
+                </td>
                 <td v-text="invoice.invoice_date"></td>
 
                 <td class="right">
@@ -106,11 +111,19 @@
                     <table>
                         <tr v-for="invoicePart in invoice.invoice_parts">
                             <td style="text-align: right; width: 50%;" v-text="invoicePart.cost_centre + ' > ' + invoicePart.secondary_cost_centre + ' > ' + invoicePart.budget_line"></td>
-                            <td v-text="invoicePart.amount + ' kr'"></td>
+                            <td>
+                                <span v-text="invoicePart.amount + ' kr'"></span>
+                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                                    v-on:click="copy(invoicePart.amount)">📋</button>
+                            </td>
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
-                            <td><span v-text="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr</td>
+                            <td>
+                                <span v-text="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr
+                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
+                                    v-on:click="copy(invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
+                            </td>
                         </tr>
                     </table>
                 </td>
@@ -148,6 +161,10 @@
                     body: form
                 })
                 .then(res => {
+                    if (!res.ok){
+                        alert("Det gick inte att spara utlägget. HTTP statuskod: " + res.status); 
+                        return
+                    }
                     console.log(res)
                     return res.text()
                 })

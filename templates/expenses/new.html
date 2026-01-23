@@ -80,19 +80,6 @@
                 </div>
             </div>
 
-            <div class="form-entry">
-                <span class="description">
-                    <label for="is-digital">
-                        Digitalt:
-                    </label>
-                    <span class="hint"></span>
-                </span>
-                <div class="input">
-                    <input type="checkbox" style="margin-top: 0.7em; width: 1.4em; height: 1.4em" name="is-digital" id="is-digital" />
-                </div>
-                <p>Klicka i denna om originalformatet av kvittot är digitalt.</p>
-            </div>
-
             <div class="clearfix"></div>
         </div>
 
@@ -129,6 +116,14 @@
                                         v-text="costCentre.CostCentreName"
                                     ></option>
                                 </optgroup>
+                                <optgroup label="Partitioner">
+                                    <option
+                                        v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'partition')"
+                                        :key="costCentre.CostCentreID"
+                                        v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
+                                        v-text="costCentre.CostCentreName"
+                                    ></option>
+                                </optgroup>
                                 <optgroup label="Projekt">
                                     <option
                                         v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'project')"
@@ -139,7 +134,7 @@
                                 </optgroup>
                                 <optgroup label="Övrigt">
                                     <option
-                                        v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.type != 'project')"
+                                        v-for="costCentre in costCentres.filter(c => c.CostCentreType != 'committee' && c.CostCentreType != 'partition' && c.CostCentreType != 'project')"
                                         :key="costCentre.CostCentreID"
                                         v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName"
                                         v-text="costCentre.CostCentreName"

@@ -5,12 +5,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from cashflow.dauth import has_permission
 from expenses.models import Expense, Payment, Profile
 
 
@@ -20,7 +19,7 @@ class PaymentViewSet(GenericViewSet):
     permission_classes = (IsAuthenticated,)
 
     def list(self, request, **kwargs):
-        if has_permission("admin", request):
+        if request.user.profile.may_view_all_payments():
             return Response({
                 'payments': [payment.to_dict() for payment in Payment.objects.all()]
             })
@@ -28,7 +27,7 @@ class PaymentViewSet(GenericViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     def create(self, request, **kwargs):
-        if has_permission("pay", request.user):
+        if request.user.profile.may_pay():
             try:
                 json_args = json.loads(request.POST['json'])
                 total = 0
@@ -64,7 +63,7 @@ class PaymentViewSet(GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(payments.to_dict())
 
-    @list_route()
+    @action(detail=False)
     def ready_for_payment(self, request, **kwargs):
         expenses = []
 

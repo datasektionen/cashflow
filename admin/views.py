@@ -32,24 +32,24 @@ def index(request):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_attest())
+@user_passes_test(lambda u: u.profile.may_view_attestable())
 def attest_overview(request):
     """
     Displays the attest overview list.
     """
     return render(request, 'admin/attest/overview.html', {
         'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.view_attestable(request.user.profile.may_view_attest(), request.user)],
+            [expense.to_dict() for expense in Expense.view_attestable(request.user)],
             default=json_serial),
         'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.view_attestable(request.user.profile.may_view_attest(), request.user)],
+            [invoice.to_dict() for invoice in Invoice.view_attestable(request.user)],
             default=json_serial)
     })
 
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_attest())
+@user_passes_test(lambda u: u.profile.may_attest_some())
 def attest_expense_part(request, pk):
     try:
         expense_part = ExpensePart.objects.get(pk=int(pk))
@@ -97,7 +97,7 @@ def unattest_expense(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_attest())
+@user_passes_test(lambda u: u.profile.may_attest_some())
 def attest_invoice_part(request, pk):
     try:
         invoice_part = InvoicePart.objects.get(pk=int(pk))
@@ -117,21 +117,21 @@ def attest_invoice_part(request, pk):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_confirm())
+@user_passes_test(lambda u: u.profile.may_view_confirmable())
 def confirm_overview(request):
     """
     Shows a list of confirmable receipts and lets user confirm them.
     """
     return render(request, 'admin/confirm/overview.html', {
         'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
+            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).exclude(is_flagged=True).order_by('id').distinct()],
             default=json_serial)
     })
 
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_pay())
+@user_passes_test(lambda u: u.profile.may_view_payable())
 def pay_overview(request):
     """
     Shows a list of all payable expenses and lets user pay them.
@@ -162,14 +162,14 @@ def invoice_pay(request, pk):
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_account())
+@user_passes_test(lambda u: u.profile.may_view_accountable())
 def account_overview(request):
     return render(request, 'admin/account/overview.html', {
         'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.view_accountable(request.user.profile.may_view_account())],
+            [expense.to_dict() for expense in Expense.view_accountable(request.user)],
             default=json_serial),
         'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.view_accountable(request.user.profile.may_view_account())],
+            [invoice.to_dict() for invoice in Invoice.view_accountable(request.user)],
             default=json_serial)
     })
 
@@ -299,7 +299,7 @@ def fortnox_auth_search(request):
 
 @require_http_methods(["GET", "POST"])
 @login_required
-@user_passes_test(lambda u: u.profile.may_account())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def edit_expense_verification(request, pk):
     try:
         expense = Expense.objects.get(pk=pk)
@@ -334,7 +334,7 @@ def confirm_expense(request, pk):
     try:
         expense = Expense.objects.get(pk=pk)
 
-        if not dauth.has_permission('confirm', request):
+        if not request.user.profile.may_confirm():
             return HttpResponseForbidden("Du har inte rättigheterna för att bekräfta kvittons giltighet")
 
         expense.confirmed_by = request.user
@@ -358,7 +358,7 @@ def unconfirm_expense(request, pk):
     try:
         expense = Expense.objects.get(pk=pk)
 
-        if not dauth.has_permission('unconfirm', request):
+        if not request.user.profile.may_unconfirm():
             return HttpResponseForbidden("Du har inte rättigheterna för att ta bort bekräftelse av kvittons giltighet")
 
         expense.confirmed_by = None
@@ -379,7 +379,7 @@ def unconfirm_expense(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_account())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def set_verification(request, expense_pk):
     try:
         expense = Expense.objects.get(pk=expense_pk)
@@ -406,7 +406,7 @@ def set_verification(request, expense_pk):
 
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_account())
+@user_passes_test(lambda u: u.profile.may_account_some())
 def invoice_set_verification(request, invoice_pk):
     try:
         invoice = Invoice.objects.get(pk=invoice_pk)
@@ -452,9 +452,20 @@ def expense_overview(request):
         expenses = paginator.page(1)
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
-
+    
+    pages = {
+        'number': expenses.number,
+        'previous_page_number': expenses.previous_page_number,
+        'next_page_number': expenses.next_page_number,
+        'page_range': expenses.paginator.page_range,
+        'num_pages': expenses.paginator.num_pages,
+        'has_next': expenses.has_next,
+    }
     return render(request, 'admin/expenses/overview.html', {
-        'expenses': expenses,
+        'expenses': json.dumps(
+            [x.to_dict() for x in expenses], 
+            default=json_serial),
+        'pages': pages,
         'cost_centres': json.dumps(
             [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
         'cost_centre': cost_centre if cost_centre is not None else ''
