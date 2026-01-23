@@ -11,7 +11,6 @@ from django.template.loader import render_to_string
 
 from cashflow import dauth
 from cashflow import settings
-from cashflow import email
 from invoices.models import Invoice
 
 
