@@ -1,7 +1,7 @@
 #!/bin/sh
 
 poetry run ./manage.py migrate
-poetry run gunicorn cashflow.wsgi --bind=0.0.0.0:8000 -t 600 --log-file - &
+poetry run gunicorn cashflow.wsgi --bind=0.0.0.0:$PORT -t 600 --log-file - &
 
 nginx -g 'daemon off;' &
 

@@ -7,22 +7,18 @@ Django project to manage receipts and reimbursements at Datasektionen.
 
 ### Docker
 There is a provided Docker compose file; this will run all necessary services for development, including
-a PostgreSQL instance and a mock authentication system.
+a PostgreSQL instance, a mock authentication system, an s3 mock as well as a mail system.
 > [!NOTE]
 > By default, the compose stack will use a Dockerfile meant for development only. This Dockerfile also runs an Nginx server to proxy the mock authentication.
 
 To build and start the application in the background:
 
 ```console
-$ docker compose up --watch --build -d
-```
-To perform the initial database migrations[^1], you will need to attach to the docker container:
-
-```console
-$ docker exec -it cashflow-app-1 poetry run ./manage.py migrate
+$ docker compose up --watch --build
 ```
 
 The app will now be available on `http://localhost:8000`.
+Sent emails will be available on `http://localhost:8080`.
 
 If you make any model changes, you will need to generate new migration files. This is easiest to do outside the docker container, but you can run the command and copy the migrations from the container:
 
@@ -64,13 +60,6 @@ You will then need to perform a database migration:
 ```poetry
 $ poetry run ./manage.py migrate
 ```
-
-### Getting data from production
-
-1. Get a database dump: `ssh hermes dokku postgres:export cashflow > cashflow.sql`
-2. Shove it into a local database: `pg_restore -h localhost -U cashflow -d cashflow --no-owner < cashflow.sql`
-3. Copy files from s3 to local: `aws s3 cp --recursive s3://dsekt-cashflow-2/media/ media/` (warning: you need a fair bit of free disk space for this. todo: how does one easily download only new files?)
-
 ## Environment variables
 
 The following environment variables are required to run the project:
@@ -95,19 +84,3 @@ The following environment variables are required to run the project:
 | SEND_EMAILS          | If False, does not send emails       | True                           |
 | RFINGER_API_URL      | URL to rfinger api                   | https://rfinger.datasektionen.se |
 | RFINGER_API_KEY      | API key for rfinger                  | ---                            |
-
-(The variables beginning with `S3` are not used if `DEBUG` is true. Files are
-instead stored at `./media/`)
-
-They can be put in an .env-file in root. They will be loaded automatically by `pipenv`.
-
-Check out [.env.example](.env.example) for an example.
-
-## Protip
-The default max upload size in nginx is 1 MB. To allow larger file uploads, set the max size of file uploads to for example 100 MB.
-
-```bash
-echo "client_max_body_size 100M;" > /home/dokku/cashflow/nginx.conf.d/max_size.conf
-```
-
-[^1]: A migration performs all the necessary changes to your database instance. For more information, read [Django's documentation](https://docs.djangoproject.com/en/6.0/topics/migrations/).
