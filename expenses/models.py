@@ -244,6 +244,7 @@ class Profile(models.Model):
     def may_firmatecknare(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
 
+
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=User)
@@ -537,30 +538,4 @@ def send_mail(sender, instance, created, *args, **kwargs):
             content = render_to_string('email.html', {'comment': instance, 'receiver': owner})
             email_util.send_mail(recipient, subject, content)
 
-class FortnoxAuthToken(models.Model):
-    """
-    Represents an access token for Fortnox.
-    """
-    created_at = models.DateTimeField(auto_now_add=True)
-    access_token = models.TextField()
-    refresh_token = models.TextField()
-    expires_at = models.DateTimeField()
-    
-class FortnoxAccounts(models.Model):
-    """
-    Represents an account in Fortnox.
-    """
-    AccountID = models.AutoField(primary_key=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    URL = models.TextField()
-    Active = models.BooleanField()
-    BalanceBroughtForward = models.DecimalField(max_digits=9, decimal_places=2)
-    CostCenter = models.TextField()
-    CostCenterSettings = models.TextField()
-    Description = models.TextField()
-    Number = models.IntegerField()
-    Project = models.TextField()
-    ProjectSettings = models.TextField()
-    SRU = models.IntegerField()
-    VATCode = models.TextField()
-    Year = models.IntegerField()
+
