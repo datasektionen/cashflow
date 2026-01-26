@@ -6,7 +6,7 @@ RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 poetry
 
 WORKDIR /app
 
-COPY README.md pyproject.toml poetry.lock ./
+COPY pyproject.toml poetry.lock ./
 
 RUN poetry install --no-root
 

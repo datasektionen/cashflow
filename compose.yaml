@@ -3,21 +3,28 @@ services:
     build:
       target: dev
     environment:
-      DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
+      PORT: 8000
       DEBUG: "True"
-      LOGIN_KEY: super_secret
-      SPAM_API_KEY: super_secret
-      SEND_EMAILS: "False"
-      HIVE_URL: http://nyckeln:7004
-      HIVE_SECRET: api_token_secret
+      DJANGO_LOG_LEVEL: DEBUG
+      PYTHONUNBUFFERED: 1
+      SECRET_KEY: something-super-secret
+      BUDGET_URL: https://budget.datasektionen.se
+      DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
       OIDC_PROVIDER: http://nyckeln:7003
       OIDC_ID: client-id
       OIDC_SECRET: client-secret
       REDIRECT_URL: http://localhost:8000/login/
-      PYTHONUNBUFFERED: 1
-      BUDGET_URL: https://budget.datasektionen.se
+      HIVE_URL: http://nyckeln:7004
+      HIVE_SECRET: cashflow-secret
+      SPAM_URL: http://spam:3000
+      SPAM_API_KEY: spam-secrect
       RFINGER_API_URL: http://dock:9003
-      RFINGER_API_KEY: hemlig
+      RFINGER_API_KEY: rfinger-secret
+      S3_ACCESS_KEY_ID: aws-id
+      S3_SECRET_ACCESS_KEY: aws-secret
+      S3_BUCKET_NAME: cashflow
+      S3_REGION: eu-west-1
+      S3_HOST: http://localhost:9090
     command: /app/run.sh
     init: true
     ports:
@@ -31,12 +38,14 @@ services:
       watch:
         - path: .
           target: /app
-          action: sync
-        - path: Pipfile
+          action: sync+restart
+        - path: pyproject.toml
           action: rebuild
     depends_on:
       db:
         condition: service_healthy
+
+  # Database
   db:
     image: postgres:18
     environment:
@@ -48,25 +57,72 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
-  dock:
-    image: ghcr.io/datasektionen/dock:latest
-    configs:
-      - source: dock.yaml
-        target: /config.yaml
+
+  # S3
+  s3:
+    image: adobe/s3mock:latest
+    environment:
+      - COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=cashflow
+      - COM_ADOBE_TESTING_S3MOCK_STORE_REGION=eu-west-1
     ports:
-      - 9001:9001
-      - 9002:9002
-      - 9003:9003
+      - 9090:9090
+
+  # Spam
+  spam:
+    image: ghcr.io/datasektionen/spam-rs:latest
+    ports:
+      - 3000:3000
+    environment:
+      RUST_LOG: debug
+      HOST_ADDRESS: 0.0.0.0
+      PORT: 3000
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: aws-ses-v2-local
+      AWS_ENDPOINT_URL: http://aws-ses:8005
+      APP_SECRET: insert-app-secret
+      HIVE_URL: http://nyckeln:7004/api/v1
+      HIVE_SECRET: aaaa
+
+  smtp:
+    image: changemakerstudiosus/papercut-smtp
+    container_name: smtp
+    ports:
+      - 8080:8080
+      - 2525:2525
+    environment:
+      Urls: http://0.0.0.0:8080
+      SmtpServer__Port: 2525
+
+  aws-ses:
+    container_name: aws-ses-v2-local
+    hostname: aws-ses-v2-local
+    image: ghcr.io/domdomegg/aws-ses-v2-local
+    environment:
+      AWS_SES_ACCOUNT: '{"SendQuota":{"Max24HourSend":1000000,"MaxSendRate":250,"SentLast24Hours":0}}'
+      SMTP_TRANSPORT: '{"host":"smtp","port":2525,"secure":false}'
+    working_dir: /srv/www/dist
+    ports:
+      - "8005:8005"
+    expose:
+      - 8005
+
+  # Our mock systems
   nyckeln:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
     configs:
       - source: nyckeln.yaml
         target: /config.yaml
     ports:
-      - 7001:7001
-      - 7002:7002
       - 7003:7003
       - 7004:7004
+  dock:
+    image: ghcr.io/datasektionen/dock:latest
+    configs:
+      - source: dock.yaml
+        target: /config.yaml
+    ports:
+      - 9003:9003
 
 configs:
   nginx.conf:
@@ -79,6 +135,14 @@ configs:
 
           location / {
             proxy_pass http://nyckeln:7003;
+          }
+        }
+        server {
+          listen 9090;
+          client_max_body_size 100M;
+
+          location / {
+            proxy_pass http://s3:9090;
           }
         }
       }
@@ -97,20 +161,15 @@ configs:
           marmed:
             regular: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
             small: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
-          karklu:
-            regular: https://dsekt-assets.s3.amazonaws.com/website/namnder/dkm.svg
-            small: https://dsekt-assets.s3.amazonaws.com/website/namnder/dkm.svg
 
   
   nyckeln.yaml:
     content: |
       clients:
-        - id: "client-id" # use this in your oidc client
-          secret: "client-secret" # use this in your oidc client
-          redirect_uris: # URIs of your oidc client
-            [
-              http://localhost:8000/login/,
-            ]
+        - id: "client-id"
+          secret: "client-secret"
+          redirect_uris:
+            - http://localhost:8000/login/
 
       users:
         - ug_kth_id: some-id
@@ -118,107 +177,56 @@ configs:
           email: turetek@kth.se
           first_name: Ture
           family_name: Teknolog
-          pls_permissions:
-            sso:
-              - admin
-            calypso:
-              - drek
-              - dfunk
-          hive_tags:
-            - id: personal_email
-              content: turetek@gmail.com
-          
-        - ug_kth_id: some-id
-          kth_id: lukmal
-          email: lukmal@kth.se
-          first_name: Lukas
-          family_name: Malmberg
-          pls_permissions:
-            sso:
-              - admin
-            calypso:
-              - drek
-              - dfunk
-          hive_tags:
-            - id: personal_email
-              content: lukmal@datasektionen.se
-
-        - ug_kth_id: some-id
-          kth_id: sbalter
-          email: sbalter@kth.se
-          first_name: Sofie
-          family_name: Bälter
-          pls_permissions:
-            sso:
-              - admin
-            calypso:
-              - drek
-              - dfunk
-          hive_tags:
-            - id: personal_email
-              content: sbalter@datasektionen.se
+        - ug_kth_id: some-other-id
+          kth_id: diadat
+          email: diadat@kth.se
+          first_name: Diana
+          family_name: Datalog
+          year_tag: D-83
+        - ug_kth_id: yet-anouther-id
+          kth_id: marmed
+          email: marmed@kth.se
+          first_name: Martin
+          family_name: Median
+          year_tag: Me-00
 
       hive:
         tokens:
-          - secret: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa
+          - secret: spam-secrect
             permissions:
-              - id: admin
-                scope: null
+            - id: send
+          - secret: rfinger-secrect
+            permissions:
+            - id: get
         groups:
-          - name: Systemansvarig
-            id: d-sys
-            domain: example.com
-            members:
-              - turetek
-            tags:
-              - id: author-pseudonym
-                content: D-Sys
-              - id: mandate
-            permissions: 
-              - id: accounting
-                scope: Informationsorganet
-              - id: attest
-                scope: Informationsorganet
-              - id: confirm
-                scope: Informationsorganet
-              - id: moderate-comments
-                scope: Informationsorganet
-              - id: delete 
-                scope: null
-              - id: unattest
-                scope: null
-              - id: pay
-                scope: null
-              - id: view-all
-                scope: null
-              - id: view-all-payments
-                scope: null
-
-
           - name: Kassör
             id: kassor
             domain: example.com
             members:
-              - lukmal
-              - sbalter
+              - turetek
             permissions: 
               - id: accounting
                 scope: "*"
               - id: attest
                 scope: "*"
               - id: confirm
-                scope: "*"
-              - id: delete
-                scope: "*" 
+              - id: delete 
               - id: edit-invoice
-                scope: "*"
               - id: moderate-comments
-                scope: "*"
               - id: pay
-                scope: "*"
               - id: unattest
-                scope: "*"
               - id: unconfirm
-                scope: "*"
               - id: view-all-payments
-                scope: "*"
+          - name: Konglig Lokalchef
+            id: lokalchef
+            domain: example.com
+            members:
+              - diadat
+            permissions:
+              - id: attest
+                scope: Sektionslokalsgruppen
+          # - name: METAdorerna
+          #   id: metadorerna
+          #   domain: example.com
+          #   members:
+          #     - marmed
