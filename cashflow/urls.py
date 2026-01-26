@@ -20,8 +20,6 @@ from cashflow import settings
 from expenses import views
 from .authviews import login, login_with_token, logout
 
-media_urls = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG else []
-
 urlpatterns = [
     re_path(r'^$', views.index, name='expenses-index'),
     re_path(r'^accounts/login/$', login, name='login'),
@@ -33,4 +31,4 @@ urlpatterns = [
     re_path(r'^stats/', include("stats.urls")),
     re_path(r'^users/', include("users.urls")),
     re_path(r'^api/files/', include("file_api.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + media_urls
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
