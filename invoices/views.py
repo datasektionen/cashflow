@@ -104,7 +104,8 @@ def invoice_new_confirmation(request, pk):
         messages.error(request, 'Ett fel uppstod och fakturan skapades inte.')
         return HttpResponseRedirect(reverse('invoices-new'))
 
-    return render(request, 'invoices/confirmation.html', {'invoice': invoice})
+    # If successful, show created invoice
+    return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice.id}))
 
 @login_required
 @require_http_methods(["GET", "POST"])
