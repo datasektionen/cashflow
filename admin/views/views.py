@@ -1,22 +1,18 @@
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import *
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models.functions import Length
-from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
-from cashflow import dauth
-from cashflow import fortnox
-from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile, FortnoxAuthToken, FortnoxAccounts
+from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from invoices.models import Invoice, InvoicePart
 
 
@@ -172,129 +168,6 @@ def account_overview(request):
             [invoice.to_dict() for invoice in Invoice.view_accountable(request.user)],
             default=json_serial)
     })
-
-@require_GET
-@login_required
-@user_passes_test(lambda u: u.profile.may_view_account())
-def fortnox_auth(request):
-    return HttpResponseRedirect(fortnox.FortnoxAPI.get_auth_code())
-
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_complete(request):
-    auth_code = fortnox.FortnoxAPI.get_value_from_callback_url(request.get_full_path())
-    get_tokens = fortnox.FortnoxAPI.get_access_token(auth_code)
-    access_token = get_tokens['access_token']
-    refresh_token = get_tokens['refresh_token']
-    expires_in = get_tokens['expires_in']
-    token_parts = FortnoxAuthToken.objects.all().delete()
-    token_parts = FortnoxAuthToken(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_at=datetime.now() + timedelta(0, expires_in)
-    )   
-    token_parts.save()
-
-    return render(request, 'admin/auth/overview.html', {
-        'access_token': json.dumps(access_token, indent=4),
-        'refresh_token': refresh_token,
-        'expires_in': expires_in
-    })
-
-@login_required
-def fortnox_auth_refresh(request):
-    token = FortnoxAuthToken.objects.all().first()
-    new_token = fortnox.FortnoxAPI.get_access_token_from_refresh_token(token.refresh_token)
-    token = FortnoxAuthToken.objects.all().delete()
-    token = FortnoxAuthToken(
-        access_token=new_token['access_token'],
-        refresh_token=new_token['refresh_token'],
-        expires_at=datetime.now() + timedelta(0, new_token['expires_in'])
-    )
-    token.save()
-
-
-#@require_GET
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_test(request):
-    token = FortnoxAuthToken.objects.all().first()
-    if token is None:
-        return HttpResponseBadRequest("No token found")
-    company_info = fortnox.FortnoxAPI.get_company_info(token.access_token)
-    # If company_info returns {'message': 'unauthorized'} then the token is invalid
-    accounts = fortnox.FortnoxAPI.get_accounts(token.access_token, 13)
-    accountchart = fortnox.FortnoxAPI.get_api_request(token.access_token, 'accountcharts')
-    voucher_series = fortnox.FortnoxAPI.get_voucher_series(token.access_token)
-    cost_centers = fortnox.FortnoxAPI.get_cost_centers(token.access_token)
-    expenses = fortnox.FortnoxAPI.get_api_request(token.access_token, 'expenses')
-    labels = fortnox.FortnoxAPI.get_api_request(token.access_token, 'labels')
-    predefined_accounts = fortnox.FortnoxAPI.get_api_request(token.access_token, 'predefinedaccounts')
-    return render(request, 'admin/auth/test.html', {
-        'company_info': company_info,
-        'accounts': accounts,
-        'accountchart': accountchart,
-        'voucher_series': voucher_series,
-        'cost_centers': cost_centers,
-        'expenses': expenses,
-        'labels': labels,
-        'predefined_accounts': predefined_accounts
-    })
-
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_import_accounts_to_db(request):
-    token = FortnoxAuthToken.objects.all().first()
-    if token is None:
-        return HttpResponseBadRequest("No token found")
-    # Get all accounts from Fortnox thru all pages and save them to the database
-    page_number = 0
-    
-    FortnoxAccounts.objects.all().delete()
-    with connection.cursor() as cursor:
-        cursor.execute("TRUNCATE TABLE expenses_fortnoxaccounts RESTART IDENTITY;")
-    
-    while True:
-        accounts = fortnox.FortnoxAPI.get_accounts(token.access_token, page_number)
-        if page_number > accounts.get('MetaInformation', {}).get('@TotalPages', 0):
-            break
-        for account in accounts['Accounts']:
-            account_db = FortnoxAccounts(
-                URL="None" if account.get('@url') is None else account.get('@url'),
-                Active="None" if account.get('Active') is None else account.get('Active'),
-                BalanceBroughtForward=0 if account.get('BalanceBroughtForward') is None else account.get('BalanceBroughtForward'),
-                CostCenter="None" if account.get('CostCenter') is None else account.get('CostCenter'),
-                CostCenterSettings="None" if account.get('CostCenterSettings') is None else account.get('CostCenterSettings'),
-                Description="None" if account.get('Description') is None else account.get('Description'),
-                Number=account.get('Number'),
-                Project="None" if account.get('Project') is None else account.get('Project'),
-                ProjectSettings="None" if account.get('ProjectSettings') is None else account.get('ProjectSettings'),
-                SRU=0 if account.get('SRU') is None else account.get('SRU'),
-                VATCode="None" if account.get('VATCode') is None else account.get('VATCode'),
-                Year=0 if account.get('Year') is None else account.get('Year')
-            )
-            account_db.save()
-        page_number += 1
-    return HttpResponseRedirect(reverse('admin-auth-test'))
-
-@require_GET
-@login_required
-@require_GET
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_search(request):
-    token = FortnoxAuthToken.objects.first()
-    if token is None:
-        return JsonResponse({'error': 'No token found'})
-
-    search_query = request.GET.get('search')
-    
-    search_results = FortnoxAccounts.objects.filter(
-        Description__icontains=search_query
-    ) | FortnoxAccounts.objects.filter(Number__icontains=search_query)
-
-    results_list = list(search_results.values('Number', 'Description'))
-    return JsonResponse({'accounts': results_list})
 
 
 @require_http_methods(["GET", "POST"])

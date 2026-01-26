@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import re_path, path
 
 import admin.views as views
 
@@ -10,12 +10,14 @@ urlpatterns = [
     re_path(r'^pay/$', views.pay_overview, name='admin-pay'),
     re_path(r'^account/$', views.account_overview, name='admin-account'),
 
-    re_path(r'^auth$', views.fortnox_auth, name='admin-auth'),
-    re_path(r'^auth/complete$', views.fortnox_auth_complete, name='admin-auth-complete'),
-    re_path(r'^auth/test$', views.fortnox_auth_test, name='admin-auth-test'),
-    re_path(r'^auth/search$', views.fortnox_auth_search, name='admin-auth-search'),
-    re_path(r'^auth/refresh$', views.fortnox_auth_refresh, name='admin-auth-refresh'),
-    re_path(r'^auth/test/importaccount$', views.fortnox_import_accounts_to_db, name='admin-auth-importaccount'),
+    # Fortnox integration URLs
+    # re_path(r'^auth$', views.fortnox_auth, name='fortnox-auth-get'),
+    path('auth/', views.fortnox.get_auth_code, name='fortnox-auth-get'),
+    path('auth/complete/', views.fortnox.auth_complete, name='fortnox-auth-complete'),
+    # re_path(r'^auth/test$', views.fortnox_auth_test, name='admin-auth-test'),
+    # re_path(r'^auth/search$', views.fortnox_auth_search, name='admin-auth-search'),
+    # re_path(r'^auth/refresh$', views.fortnox_auth_refresh, name='admin-auth-refresh'),
+    # re_path(r'^auth/test/importaccount$', views.fortnox_import_accounts_to_db, name='admin-auth-importaccount'),
 
     re_path(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     re_path(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),
