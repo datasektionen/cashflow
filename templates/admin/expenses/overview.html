@@ -59,8 +59,14 @@
                     <a :href="'?page={{ pages.previous_page_number }}&cost_centre=' + cost_centre">Föregående</a>
                 {% endif %} 
 
-                {% for i in pages.page_range %}
-                    <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
+                {% for i in pages.custom_range %}
+                    {% if i == '...' %}
+                        <span>...</span>
+                    {% elif i == pages.number %}
+                        <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}><b>{{i}}</b></a>
+                    {% else %}
+                        <a :href="'?page={{ i }}&cost_centre=' + cost_centre" {% if i == pages.number %} class="active"{% endif %}>{{i}}</a>
+                    {% endif %}
                 {% endfor %}
 
                 {% if pages.has_next %}
@@ -68,6 +74,12 @@
                 {% endif %}
             </span>
         </div>
+        <form method="get">
+            <input type="hidden" name="cost_centre" value="{{ cost_centre }}">
+            <input type="number" name="page" min="1" max="{{ pages.num_pages }}" placeholder="Sida" style="width:80px">
+            <button type="submit">Kör</button>
+            <button type="button" v-on:click="goToRandomPage()" style="margin-left: 10px;">🎲 Slumpa</button>
+        </form>
     <p v-else>Det finns inga kvitton.</p>
 </div>
 <script type="text/javascript">
@@ -99,6 +111,13 @@
             },
             capFirst(val) {
                 return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+            },
+            goToRandomPage() {
+                const totalPages = {{ pages.num_pages|default:1 }};
+                const randomPage = Math.floor(Math.random() * totalPages) + 1;
+                const costCentre = encodeURIComponent("{{ cost_centre }}");
+                const url = `?page=${randomPage}&cost_centre=${costCentre}`;
+                window.location.href = url;
             },
         },
 
