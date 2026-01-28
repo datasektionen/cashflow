@@ -1,25 +1,22 @@
 from typing import *
 import json
-import re
-import urllib.parse
 
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
 
 from authlib.integrations.django_client import OAuth
-from authlib.integrations.django_client.integration import DjangoRemoteApp
 from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
 
-# I'm like 90% sure this is the correct type.
-client = cast(DjangoRemoteApp, OAuth().register(
+
+client = OAuth().register(
     name="sso",
     client_id=settings.OIDC_ID,
     client_secret=settings.OIDC_SECRET,
     server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email"},
-))
+    client_kwargs={"scope": "openid profile email"}
+)
+
 
 class DAuth(object):
     """
