@@ -7,18 +7,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
 <div id="data">
     <p>Här kan du hitta alla kvitton som inte bekräftats. Endast oflaggade kvitton förekommer.</p>
+    <label>Visa flaggade <input type="checkbox" v-model="showFlagged"></label>
     <table v-if="expenses.length > 0">
         <thead>
             <tr>
-                <th></th>
                 <th>ID</th>
                 <th>Beskrivning</th>
                 <th>Ägare</th>
+                <th>Resultatställen</th>
                 <th>Belopp</th>
                 <th></th>
             </tr>
         </thead>
-        <tr v-for="expense in expenses">
+        <tr v-for="expense in visibleExpenses" :key="expense.id">
+            <!--
             <td v-if="!expense.confirmed">
                 {% if user.profile.may_confirm %}
                 <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
@@ -26,15 +28,19 @@
                     <button class="theme-color btn-color" v-on:click="conf(expense, $event)">Bekräfta giltighet</button>
                 </form>
                 {% endif %}
+                Ej bekräftad
             </td>
             <td v-else>
                 Bekräftad
             </td>
+            -->
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.id"></a></td>
             <td><a :href="'/expenses/' + expense.id + '/'" v-text="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username + '/'" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
+            <td v-text="expense.cost_centres.join(', ')"></td>
             <td v-text="expense.amount + ' kr'"></td>
-            <td><span class="icon" v-if="expense.is_flagged === false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span></td>
+            <td><span class="icon" v-if="expense.is_flagged === false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span>
+            <span class="icon" v-if="expense.is_flagged === true" title="Tidigare flaggad"><i class="fa fa-flag" style="color: red"></i></span></td>
             {% comment %} Currently flagged expenses are filtered before rendering HTML {% endcomment %}
         </tr>
     </table>
@@ -46,11 +52,11 @@
         el: '#data',
         data: function () {
             return {
-                digital: false,
-                analog: false,
+                showFlagged: false,
                 expenses: {% autoescape off %}{{ confirmable_expenses }}{% endautoescape %}
             }
         },
+        /*
         methods: {
             conf: function (expense, e) {
                 let idx = this.expenses.findIndex(x => x.id === expense.id)
@@ -78,6 +84,14 @@
                 })
                 if (e) e.preventDefault()
             },
+        }
+        */
+        computed: {
+            visibleExpenses() {
+                return this.showFlagged
+                    ? this.expenses
+                    : this.expenses.filter(e => !e.is_flagged)
+            }
         }
     })
 </script>
