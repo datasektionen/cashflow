@@ -374,7 +374,7 @@ class Expense(models.Model):
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
             filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
-        return Expense.objects.order_by('-id', '-expense_date').filter(**filters).exclude(is_flagged=True).distinct()
+        return Expense.objects.order_by('id', 'expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
     def confirmable():

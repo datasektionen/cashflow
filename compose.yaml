@@ -177,19 +177,45 @@ configs:
           email: turetek@kth.se
           first_name: Ture
           family_name: Teknolog
-        - ug_kth_id: some-other-id
-          kth_id: diadat
-          email: diadat@kth.se
-          first_name: Diana
-          family_name: Datalog
-          year_tag: D-83
-        - ug_kth_id: yet-anouther-id
-          kth_id: marmed
-          email: marmed@kth.se
-          first_name: Martin
-          family_name: Median
-          year_tag: Me-00
+          pls_permissions:
+            sso:
+              - admin
+            calypso:
+              - drek
+              - dfunk
+          hive_tags:
+            - id: personal_email
+              content: turetek@gmail.com
+          
+        - ug_kth_id: some-id
+          kth_id: lukmal
+          email: lukmal@kth.se
+          first_name: Lukas
+          family_name: Malmberg
+          pls_permissions:
+            sso:
+              - admin
+            calypso:
+              - drek
+              - dfunk
+          hive_tags:
+            - id: personal_email
+              content: lukmal@datasektionen.se
 
+        - ug_kth_id: some-id
+          kth_id: sbalter
+          email: sbalter@kth.se
+          first_name: Sofie
+          family_name: Bälter
+          pls_permissions:
+            sso:
+              - admin
+            calypso:
+              - drek
+              - dfunk
+          hive_tags:
+            - id: personal_email
+              content: sbalter@datasektionen.se
 
       hive:
         tokens:
@@ -218,16 +244,33 @@ configs:
               - id: unattest
               - id: unconfirm
               - id: view-all-payments
-          - name: Konglig Lokalchef
-            id: lokalchef
+                scope: null
+
+
+          - name: Kassör
+            id: kassor
             domain: example.com
             members:
-              - diadat
-            permissions:
+              - lukmal
+              - sbalter
+            permissions: 
+              - id: accounting
+                scope: "*"
               - id: attest
-                scope: Sektionslokalsgruppen
-          # - name: METAdorerna
-          #   id: metadorerna
-          #   domain: example.com
-          #   members:
-          #     - marmed
+                scope: "*"
+              - id: confirm
+                scope: "*"
+              - id: delete
+                scope: "*" 
+              - id: edit-invoice
+                scope: "*"
+              - id: moderate-comments
+                scope: "*"
+              - id: pay
+                scope: "*"
+              - id: unattest
+                scope: "*"
+              - id: unconfirm
+                scope: "*"
+              - id: view-all-payments
+                scope: "*"

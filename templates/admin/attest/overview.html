@@ -46,6 +46,7 @@
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Resultatställen</th>
+                <th>Förfallodatum</th>
                 <th class="right">Belopp</th>
             </tr>
         </thead>
@@ -54,6 +55,7 @@
             <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
             <td><a :href="'/users/' + invoice.owner_username" v-text="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
             <td v-text="invoice.cost_centres.join(', ')"></td>
+            <td v-text="invoice.due_date"></td>
             <td class="right" v-text="invoice.amount + ' kr'"></td>
         </tr>
     </table>
