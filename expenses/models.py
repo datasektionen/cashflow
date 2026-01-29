@@ -241,8 +241,12 @@ class Profile(models.Model):
             or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all())
         )
 
+    # TODO: Check if these are the best/appropriate names for these permissions
     def may_firmatecknare(self):
         return 'attest-firmatecknare' in dauth.get_permissions(self.user)
+
+    def may_view_account(self):
+        return 'view-account' in dauth.get_permissions(self.user)
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone

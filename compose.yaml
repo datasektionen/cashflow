@@ -127,36 +127,6 @@ configs:
           hive_tags:
             - id: personal_email
               content: turetek@gmail.com
-          
-        - ug_kth_id: some-id
-          kth_id: lukmal
-          email: lukmal@kth.se
-          first_name: Lukas
-          family_name: Malmberg
-          pls_permissions:
-            sso:
-              - admin
-            calypso:
-              - drek
-              - dfunk
-          hive_tags:
-            - id: personal_email
-              content: lukmal@datasektionen.se
-
-        - ug_kth_id: some-id
-          kth_id: sbalter
-          email: sbalter@kth.se
-          first_name: Sofie
-          family_name: Bälter
-          pls_permissions:
-            sso:
-              - admin
-            calypso:
-              - drek
-              - dfunk
-          hive_tags:
-            - id: personal_email
-              content: sbalter@datasektionen.se
 
       hive:
         tokens:
@@ -199,8 +169,7 @@ configs:
             id: kassor
             domain: example.com
             members:
-              - lukmal
-              - sbalter
+              - turetek
             permissions: 
               - id: accounting
                 scope: "*"

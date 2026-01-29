@@ -1,12 +1,25 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
-class AuthToken(models.Model):
+class APITokens(models.Model):
+    user = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE) 
     created_at = models.DateTimeField(auto_now_add=True)
     access_token = models.TextField()
     refresh_token = models.TextField()
-    expires_at = models.DateTimeField()
 
+
+    @classmethod
+    def from_auth_response(cls, user, data):
+        return cls.objects.update_or_create(
+            user = user,
+            # access_token=data['access_token'],
+            # refresh_token=data['refresh_token'],
+            defaults={
+                'access_token': data['access_token'],
+                'refresh_token': data['refresh_token'],
+            }
+        )
     
 class Account(models.Model):
     AccountID = models.AutoField(primary_key=True)

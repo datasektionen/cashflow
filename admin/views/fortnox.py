@@ -4,13 +4,13 @@ import json
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_GET
 from django.urls import reverse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse 
 from django.db import connection
 
 from fortnox.api import FortnoxAPIClient
-import fortnox.models as fortnox
+from fortnox.models import APITokens, Account
 
 client = FortnoxAPIClient(
     client_id=settings.FORTNOX_CLIENT_ID,
@@ -21,7 +21,7 @@ client = FortnoxAPIClient(
 
 @require_GET
 @login_required
-@user_passes_test(lambda u: u.profile.may_view_account())
+# @user_passes_test(lambda u: u.profile.may_view_account())
 def get_auth_code(request):
     """Retrieves an auth code from Fortnox.
 
@@ -30,54 +30,29 @@ def get_auth_code(request):
     to a success page.
     """
     redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
-    print(f"{redirect_uri=}")
     return HttpResponseRedirect(client.get_auth_code_url(redirect_uri))
 
 
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def auth_complete(request):
-    auth_code = client.get_value_from_callback_url(request.get_full_path())
-    get_tokens = client.get_access_token(auth_code)
-    access_token = get_tokens['access_token']
-    refresh_token = get_tokens['refresh_token']
-    expires_in = get_tokens['expires_in']
-    token_parts = fortnox.AuthToken.objects.all().delete()
-    token_parts = fortnox.AuthToken(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_at=datetime.now() + timedelta(0, expires_in)
-    )   
-    token_parts.save()
 
-    return render(request, 'admin/fortnox/overview.html', {
-        'access_token': json.dumps(access_token, indent=4),
-        'refresh_token': refresh_token,
-        'expires_in': expires_in
-    })
-
-
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_complete(request):
-    auth_code = client.get_value_from_callback_url(request.get_full_path())
-    get_tokens = client.get_access_token(auth_code)
-    access_token = get_tokens['access_token']
-    refresh_token = get_tokens['refresh_token']
-    expires_in = get_tokens['expires_in']
-    token_parts = fortnox.AuthToken.objects.all().delete()
-    token_parts = fortnox.AuthToken(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_at=datetime.now() + timedelta(0, expires_in)
-    )   
-    token_parts.save()
-
-    return render(request, 'admin/fortnox/overview.html', {
-        'access_token': json.dumps(access_token, indent=4),
-        'refresh_token': refresh_token,
-        'expires_in': expires_in
-    })
+    match request.GET.get('code'), request.GET.get('error'):
+        case None, _:
+            # TODO: Error handling
+            return redirect(reverse('admin-index'))
+        case auth_code, _:
+            tokens = APITokens.from_auth_response(request.user, 
+                                                  client.get_access_token(auth_code))[0]
+            tokens.save()
+            return render(
+                request,
+                'admin/fortnox/overview.html',
+                {
+                    'access_token': json.dumps(tokens.access_token, indent=4),
+                    'refresh_token': json.dumps(tokens.refresh_token, indent=4)
+                }
+            )
 
 
 # TODO: Fix, possibly broken from python/django update
@@ -98,7 +73,7 @@ def fortnox_auth_complete(request):
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def fortnox_auth_test(request):
-    token = fortnox.AuthToken.objects.all().first()
+    token = APITokens.objects.all().first()
     if token is None:
         return HttpResponseBadRequest("No token found")
     company_info = client.get_company_info(token.access_token)
@@ -124,13 +99,13 @@ def fortnox_auth_test(request):
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def fortnox_import_accounts_to_db(request):
-    token = fortnox.AuthToken.objects.all().first()
+    token = APITokens.objects.all().first()
     if token is None:
         return HttpResponseBadRequest("No token found")
     # Get all accounts from Fortnox thru all pages and save them to the database
     page_number = 0
 
-    fortnox.Account.objects.all().delete()
+    Account.objects.all().delete()
     with connection.cursor() as cursor:
         cursor.execute("TRUNCATE TABLE expenses_fortnoxaccounts RESTART IDENTITY;")
 
@@ -139,7 +114,7 @@ def fortnox_import_accounts_to_db(request):
         if page_number > accounts.get('MetaInformation', {}).get('@TotalPages', 0):
             break
         for account in accounts['Accounts']:
-            account_db = fortnox.Account(
+            account_db = Account(
                 URL="None" if account.get('@url') is None else account.get('@url'),
                 Active="None" if account.get('Active') is None else account.get('Active'),
                 BalanceBroughtForward=0 if account.get('BalanceBroughtForward') is None else account.get('BalanceBroughtForward'),
@@ -163,15 +138,15 @@ def fortnox_import_accounts_to_db(request):
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def fortnox_auth_search(request):
-    token = fortnox.AuthToken.objects.first()
+    token = APITokens.objects.first()
     if token is None:
         return JsonResponse({'error': 'No token found'})
 
     search_query = request.GET.get('search')
 
-    search_results = fortnox.Account.objects.filter(
+    search_results = Account.objects.filter(
         Description__icontains=search_query
-    ) | fortnox.Account.objects.filter(Number__icontains=search_query)
+    ) | Account.objects.filter(Number__icontains=search_query)
 
     results_list = list(search_results.values('Number', 'Description'))
     return JsonResponse({'accounts': results_list})

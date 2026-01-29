@@ -30,12 +30,6 @@ class FortnoxAPIClient:
 
         return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={self.scope}&state={self.state}&access_type={self.access_type}&response_type=code&account_type=service"
 
-    @staticmethod
-    def get_value_from_callback_url(url):
-        parsed_url = urlparse(url)
-        captured_value = parse_qs(parsed_url.query)['code'][0]
-        return captured_value
-    
     def get_access_token(self, auth_code):
         token_url = f"{self.FORTNOX_URL}/token"
         credentials = f"{self.client_id}:{self.client_secret}"
