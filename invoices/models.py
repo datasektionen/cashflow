@@ -98,7 +98,7 @@ class Invoice(models.Model):
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
             filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
-        return Invoice.objects.order_by('-due_date').filter(**filters).distinct()
+        return Invoice.objects.order_by('due_date').filter(**filters).distinct()
 
     # TODO
     @staticmethod
