@@ -1,13 +1,13 @@
 import json
 import re
 import requests
-from datetime import date, datetime
+from datetime import date
 
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, HttpResponseServerError
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -55,7 +55,7 @@ def new_invoice(request):
             owner=request.user.profile,
             invoice_date=invdate,
             due_date=duedate,
-            file_is_original=(request.POST['invoice-original'] == "yes"),
+            file_is_original=True, #To be removed
             description=request.POST['invoice-description'],
         )
         invoice.save()
@@ -104,7 +104,8 @@ def invoice_new_confirmation(request, pk):
         messages.error(request, 'Ett fel uppstod och fakturan skapades inte.')
         return HttpResponseRedirect(reverse('invoices-new'))
 
-    return render(request, 'invoices/confirmation.html', {'invoice': invoice})
+    # If successful, show created invoice
+    return HttpResponseRedirect(reverse('invoices-show', kwargs={'pk': invoice.id}))
 
 @login_required
 @require_http_methods(["GET", "POST"])

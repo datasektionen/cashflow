@@ -54,7 +54,7 @@
 
                 <div class="form-entry">
                     <span class="description">
-                        <label for="files" v-tooltip="{ content: 'Ladda upp fakturan. Om den är på papper, ladda upp en tydlig bild och sätt in fakturan i pärmen.' }">
+                        <label for="files" v-tooltip="{ content: 'Ladda upp fakturan. Om den är på papper, ladda upp en tydlig bild.' }">
                             Bild/pdf av fakturan:
                         </label>
                         <span class="desc">Obligatoriskt</span>
@@ -71,25 +71,8 @@
                     </div>
                 </div>
 
-                <div class="form-entry">
-                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
-                        Är ovanstående fil originalversionen av fakturan?
-                        <span class="desc">Obligatoriskt</span>
-                    </span>
-                    <div class="input">
-                        <div class="radio">
-                            <input type="radio" name="invoice-original" value="no" id="no" />
-                            <label for="no">Nej</label>
-                        </div>
-                        <div class="radio">
-                            <input type="radio" name="invoice-original" value="yes" id="yes" required />
-                            <label for="yes">Ja</label>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="form-entry" v-if="payed == 'yes-chapter-have'">
-                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                    <span class="description thin">
                         Är fakturan bokförd?
                         <span class="desc">Obligatoriskt</span>
                     </span>
@@ -106,7 +89,7 @@
                 </div>
 
                 <div class="form-entry" v-if="accounted == 'accounted-yes'">
-                    <span class="description thin" v-tooltip="{content:'Om ja, så måste fakturan också sättas in i pärmen'}">
+                    <span class="description thin">
                         Vilket verifikationsnummer har den?
                         <span class="desc">Obligatoriskt</span>
                     </span>
