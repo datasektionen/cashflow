@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
+from django.db.models import Sum, Case, When, Value, IntegerField
 
 from cashflow import dauth
 from cashflow import settings
@@ -381,12 +382,31 @@ class Expense(models.Model):
         return Expense.objects.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
 
     @staticmethod
-    def payable():
-        return Expense.objects. \
+    def payable(): 
+        user_order = (
+        Expense.objects
+        .filter(reimbursement=None)
+        .exclude(expensepart__attested_by=None)
+        .exclude(confirmed_by=None)
+        .values('owner')
+        .annotate(total_sum=Sum('expensepart__amount'))
+        .order_by('-total_sum')
+        )
+
+        ordered_user_ids = [user['owner'] for user in user_order]
+
+        order = Case(
+            *[When(owner=user_id, then=Value(index)) for index, user_id in enumerate(ordered_user_ids)],
+            output_field=IntegerField()
+        )
+        
+        expenses =  Expense.objects. \
             filter(reimbursement=None). \
             exclude(expensepart__attested_by=None). \
             exclude(confirmed_by=None). \
-            order_by('owner__user__username')
+            order_by(order)
+
+        return expenses
 
     @staticmethod
     def view_accountable(user):
