@@ -55,7 +55,7 @@ def new_invoice(request):
             owner=request.user.profile,
             invoice_date=invdate,
             due_date=duedate,
-            file_is_original=(request.POST['invoice-original'] == "yes"),
+            file_is_original=True, #To be removed
             description=request.POST['invoice-description'],
         )
         invoice.save()
