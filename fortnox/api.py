@@ -1,7 +1,8 @@
-import requests
 import base64
-from pydantic import BaseModel, TypeAdapter
 from typing import Union
+
+import requests
+from pydantic import BaseModel, TypeAdapter
 
 
 class AccessTokenResponse(BaseModel):
@@ -37,10 +38,19 @@ class ExternalAPIError(Exception):
     pass
 
 
-class ErrorInformation(BaseModel):
+class Error(BaseModel):
     Code: int
     Error: int
     Message: str
+
+
+class Me(BaseModel):
+    # https://apps.fortnox.se/apidocs#tag/fortnox_Me
+    Email: str
+    Id: str
+    Locale: str | None
+    Name: str
+    SysAdmin: bool
 
 
 AuthResponse = Union[AccessTokenResponse, AccessTokenError]
@@ -50,7 +60,7 @@ class FortnoxAPIClient:
     """
     A class to interact with Fortnox API.
     """
-    API_URL = "https://api.fortnox.se/3/"
+    API_URL = "https://api.fortnox.se/3"
     FORTNOX_URL = "https://apps.fortnox.se/oauth-v1"
 
     def __init__(self, client_id, client_secret, scope, state, access_type='offline'):
@@ -75,24 +85,13 @@ class FortnoxAPIClient:
         token_url = f"{self.FORTNOX_URL}/token"
         credentials = f"{self.client_id}:{self.client_secret}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
-        headers = {
-            'Authorization': f'Basic {encoded_credentials}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        headers = {'Authorization': f'Basic {encoded_credentials}', 'Content-Type': 'application/x-www-form-urlencoded'}
 
         match grant:
             case AuthCodeGrant(code=code, redirect_uri=redirect_uri):
-                body = {
-                    'grant_type': 'authorization_code',
-                    'code': code,
-                    'redirect_uri': redirect_uri,
-                }
+                body = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirect_uri, }
             case RefreshTokenGrant(code=code):
-                body = {
-                    'grant_type': 'refresh_token',
-                    'refresh_token': code,
-                    'client_id': self.client_id,
-                }
+                body = {'grant_type': 'refresh_token', 'refresh_token': code, 'client_id': self.client_id, }
 
         adapter = TypeAdapter(AuthResponse)
         response = requests.post(token_url, headers=headers, data=body)
@@ -106,38 +105,41 @@ class FortnoxAPIClient:
             case _:
                 raise Exception("Unknown error")
 
+    def get_user_info(self, access_token) -> Me:
+        response = self.get_api_request(access_token, 'me')
+        match response.json():
+            case {"Me": data}:
+                return Me.model_validate(data)
+            case {"Error": data}:
+                e = Error.model_validate(data)
+                raise ExternalAPIError(e.Message)
+            case _:
+                raise Exception("Unknown error")
+
     @classmethod
     def get_api_request(cls, access_token, endpoint):
-        headers = {
-            'Authorization': f'Bearer {access_token}'
-        }
-        response = requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
-        return response.json()
+        headers = {'Authorization': f'Bearer {access_token}'}
+        url = f'{cls.API_URL}/{endpoint}'
+        return requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
 
     @staticmethod
     def get_company_info(access_token):
         company_info_url = 'https://api.fortnox.se/3/companyinformation'
-        headers = {
-            'Authorization': f'Bearer {access_token}'
-        }
+        headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(company_info_url, headers=headers)
-        return response.json()
+        return response
 
     @staticmethod
     def get_accounts(access_token, page):
         account_url = 'https://api.fortnox.se/3/accounts?page=' + str(page)
-        headers = {
-            'Authorization': f'Bearer {access_token}'
-        }
+        headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(account_url, headers=headers)
         return response.json()
 
     @staticmethod
     def get_voucher_series(access_token):
         voucher_series_url = 'https://api.fortnox.se/3/voucherseries'
-        headers = {
-            'Authorization': f'Bearer {access_token}'
-        }
+        headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(voucher_series_url, headers=headers)
         return response.json()
 
@@ -145,7 +147,5 @@ class FortnoxAPIClient:
     @staticmethod
     def get_cost_centers(access_token):
         cost_centers_url = 'https://api.fortnox.se/3/costcenters'
-        headers = {
-            'Authorization': f'Bearer {access_token}'
-        }
+        headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(cost_centers_url, headers=headers)

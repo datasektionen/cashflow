@@ -4,6 +4,8 @@
 
 {% block content %}
 
-	<a href={% url 'fortnox-auth-get' %}>Autentisera Fortnox</a>
+
+    <p>Du är inloggad som {{ fortnox_user.Name }}</p>
+
 
 {% endblock %}

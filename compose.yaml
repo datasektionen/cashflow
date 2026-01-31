@@ -192,3 +192,5 @@ configs:
                 scope: "*"
               - id: view-all-payments
                 scope: "*"
+              - id: attest-firmatecknare
+                scope: "*"
