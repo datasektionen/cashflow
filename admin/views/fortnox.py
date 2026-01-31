@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-from fortnox.api import FortnoxAPIClient, AuthCodeGrant, ExternalAPIError, RefreshTokenGrant
+from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, ExternalAPIError, RefreshTokenGrant
 from fortnox.models import APITokens, Account
 
 

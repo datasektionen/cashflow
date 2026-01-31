@@ -4,6 +4,8 @@ from typing import Union
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel
 
+from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error
+
 
 class AccessTokenResponse(BaseModel):
     # https://www.fortnox.se/developer/authorization/get-access-token
@@ -22,38 +24,8 @@ class AccessTokenError(BaseModel):
     error_description: str
 
 
-class AuthCodeGrant(BaseModel):
-    code: str
-    redirect_uri: str
-
-
-class RefreshTokenGrant(BaseModel):
-    code: str
-
-
-Grant = Union[AuthCodeGrant, RefreshTokenGrant]
-
-
 class ExternalAPIError(Exception):
     pass
-
-
-class Error(BaseModel):
-    Code: int
-    Error: int
-    Message: str
-
-
-class Me(BaseModel):
-    # https://apps.fortnox.se/apidocs#tag/fortnox_Me
-    Email: str
-    Id: str
-    Locale: str | None
-    Name: str
-    SysAdmin: bool
-
-
-AuthResponse = Union[AccessTokenResponse, AccessTokenError]
 
 
 class FortnoxAPIClient:
@@ -63,6 +35,10 @@ class FortnoxAPIClient:
     API_URL = "https://api.fortnox.se/3"
     FORTNOX_URL = "https://apps.fortnox.se/oauth-v1"
 
+    AuthResponse = Union[AccessTokenResponse, AccessTokenError]
+
+    # This class should only be used internally,
+    # it's constructed to neatly parse the JSON responses from Fortnox
     class ApiResponse[InfoModel](RootModel[dict[str, InfoModel]]):
         pass
 
@@ -85,7 +61,7 @@ class FortnoxAPIClient:
 
         return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={self.scope}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
 
-    def get_access_token(self, grant: Grant) -> AccessTokenResponse:
+    def get_access_token(self, grant: Union[AuthCodeGrant, RefreshTokenGrant]) -> AccessTokenResponse:
         token_url = f"{self.FORTNOX_URL}/token"
         credentials = f"{self.client_id}:{self.client_secret}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
@@ -97,8 +73,8 @@ class FortnoxAPIClient:
             case RefreshTokenGrant(code=code):
                 body = {'grant_type': 'refresh_token', 'refresh_token': code, 'client_id': self.client_id, }
 
-        adapter = TypeAdapter(AuthResponse)
         response = requests.post(token_url, headers=headers, data=body)
+        adapter = TypeAdapter(self.AuthResponse)
         match adapter.validate_python(response.json()):
             case AccessTokenResponse(access_token=access_token, refresh_token=refresh_token, scope=scope,
                                      expires_in=expires_in, token_type=token_type):
