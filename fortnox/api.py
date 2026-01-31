@@ -2,7 +2,7 @@ import base64
 from typing import Union
 
 import requests
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, RootModel
 
 
 class AccessTokenResponse(BaseModel):
@@ -63,6 +63,9 @@ class FortnoxAPIClient:
     API_URL = "https://api.fortnox.se/3"
     FORTNOX_URL = "https://apps.fortnox.se/oauth-v1"
 
+    class ApiResponse[InfoModel](RootModel[dict[str, InfoModel]]):
+        pass
+
     def __init__(self, client_id, client_secret, scope, state, access_type='offline'):
         # It's possible some of these should be moved inside certain methods
         self.client_id = client_id
@@ -71,6 +74,11 @@ class FortnoxAPIClient:
         self.state = state
         self.access_type = access_type
         self.redirect_uri = None
+
+    # Helper to validate API responses against models
+    @classmethod
+    def _validate(cls, model, response):
+        return cls.ApiResponse[Union[model, Error]].model_validate(response.json()).root
 
     def get_auth_code_url(self, redirect_uri):
         # According to the API documentation, you always
@@ -103,23 +111,22 @@ class FortnoxAPIClient:
             case AccessTokenError(error=_, error_description=desc):
                 raise ExternalAPIError(desc)
             case _:
-                raise Exception("Unknown error")
+                raise ExternalAPIError("Unknown or invalid API response from Fortnox")
 
     def get_user_info(self, access_token) -> Me:
         response = self.get_api_request(access_token, 'me')
-        match response.json():
-            case {"Me": data}:
-                return Me.model_validate(data)
-            case {"Error": data}:
-                e = Error.model_validate(data)
-                raise ExternalAPIError(e.Message)
+        match self._validate(Me, response):
+            case {'Me': Me() as me}:
+                return me
+            case {'Error': Error(_, description)}:
+                raise ExternalAPIError(description)
             case _:
-                raise Exception("Unknown error")
+                raise ExternalAPIError("Unknown or invalid API response from Fortnox")
 
     @classmethod
     def get_api_request(cls, access_token, endpoint):
+        # TODO: Handle failed requests
         headers = {'Authorization': f'Bearer {access_token}'}
-        url = f'{cls.API_URL}/{endpoint}'
         return requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
 
     @staticmethod
