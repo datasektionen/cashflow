@@ -9,7 +9,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse 
 from django.db import connection
 
-from fortnox.api import FortnoxAPIClient
+from fortnox.api import FortnoxAPIClient, AuthCodeGrant
 from fortnox.models import APITokens, Account
 
 client = FortnoxAPIClient(
@@ -37,20 +37,32 @@ def get_auth_code(request):
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def auth_complete(request):
 
+    redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
+
+    # Get auth code from URL parameters
     match request.GET.get('code'), request.GET.get('error'):
         case None, _:
             # TODO: Error handling
             return redirect(reverse('admin-index'))
         case auth_code, _:
-            tokens = APITokens.from_auth_response(request.user, 
-                                                  client.get_access_token(auth_code))[0]
-            tokens.save()
+            # TODO: Error handling
+            response = client.get_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
+            APITokens.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    'access_token': response.access_token,
+                    'refresh_token': response.refresh_token,
+                }
+            )
+
+
+            tokens = APITokens.objects.get(user=request.user)
             return render(
                 request,
                 'admin/fortnox/overview.html',
                 {
-                    'access_token': json.dumps(tokens.access_token, indent=4),
-                    'refresh_token': json.dumps(tokens.refresh_token, indent=4)
+                    'access_token': tokens.access_token,
+                    'refresh_token': tokens.refresh_token
                 }
             )
 
@@ -72,30 +84,35 @@ def auth_complete(request):
 #@require_GET
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_test(request):
-    token = APITokens.objects.all().first()
-    if token is None:
-        return HttpResponseBadRequest("No token found")
-    company_info = client.get_company_info(token.access_token)
-    # If company_info returns {'message': 'unauthorized'} then the token is invalid
-    accounts = client.get_accounts(token.access_token, 13)
-    accountchart = client.get_api_request(token.access_token, 'accountcharts')
-    voucher_series = client.get_voucher_series(token.access_token)
-    cost_centers = client.get_cost_centers(token.access_token)
-    expenses = client.get_api_request(token.access_token, 'expenses')
-    labels = client.get_api_request(token.access_token, 'labels')
-    predefined_accounts = client.get_api_request(token.access_token, 'predefinedaccounts')
-    return render(request, 'admin/auth/test.html', {
-        'company_info': company_info,
-        'accounts': accounts,
-        'accountchart': accountchart,
-        'voucher_series': voucher_series,
-        'cost_centers': cost_centers,
-        'expenses': expenses,
-        'labels': labels,
-        'predefined_accounts': predefined_accounts
-    })
-
+def overview(request):
+    match APITokens.objects.get(user=request.user):
+        case None:
+            return HttpResponseBadRequest("No token found for user")
+        case tokens:
+            return render(request, 'admin/fortnox/overview.html')
+    # token = APITokens.objects.all().first()
+    # if token is None:
+    #     return HttpResponseBadRequest("No token found")
+    # company_info = client.get_company_info(token.access_token)
+    # # If company_info returns {'message': 'unauthorized'} then the token is invalid
+    # accounts = client.get_accounts(token.access_token, 13)
+    # accountchart = client.get_api_request(token.access_token, 'accountcharts')
+    # voucher_series = client.get_voucher_series(token.access_token)
+    # cost_centers = client.get_cost_centers(token.access_token)
+    # expenses = client.get_api_request(token.access_token, 'expenses')
+    # labels = client.get_api_request(token.access_token, 'labels')
+    # predefined_accounts = client.get_api_request(token.access_token, 'predefinedaccounts')
+    # return render(request, 'admin/auth/test.html', {
+    #     'company_info': company_info,
+    #     'accounts': accounts,
+    #     'accountchart': accountchart,
+    #     'voucher_series': voucher_series,
+    #     'cost_centers': cost_centers,
+    #     'expenses': expenses,
+    #     'labels': labels,
+    #     'predefined_accounts': predefined_accounts
+    # })
+    #
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def fortnox_import_accounts_to_db(request):
