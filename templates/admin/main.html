@@ -66,7 +66,7 @@
                 <li><a href="{% url 'admin-search-verification' %}">Sök verifikation</a></li>
                 <li><a href="{% url 'admin-list-verification' %}">Lista verifikat</a></li>
                 {% if user.profile.may_firmatecknare %}
-                <li><a href="{% url 'fortnox-auth-get' %}">Autentisera Fortnox</a></li>
+                <li><a href="{% url 'fortnox-overview' %}">Fortnox</a></li>
                 {% endif %}
             </ul>
         </div>

@@ -1,27 +1,9 @@
 {% extends "../main.html" %}
 
-{% block title %}Autentisering{% endblock %}
+{% block title %}Fortnox{% endblock %}
 
 {% block content %}
-<div>
-Om allt funkat så ska du ha fått en access token och en refresh token. Dessa används för att autentisera dig mot API:et. Access token är giltig i {{expires_in}} sekunder och refresh token är giltig i 1 månad. Dessa är även uppladdade mot databasen så bokföring kan ske genom Cashflow.
-</div>
-<div id="data">
-Access token:
-<textarea>{{ access_token }}</textarea>
-Refresh token:
-<textarea>{{ refresh_token }}</textarea>
-</div>
-<script type="text/javascript">
-    new Vue({
-        el: '#data',
-        data: function () {
-            return {
-                access_token: {% autoescape off %}"{{ access_token }}"{% endautoescape %},
-                refresh_token: {% autoescape off %}"
-                    {{ refresh_token }}"{% endautoescape %},
-                experies_in: {% autoescape off %}"{{ expires_in }}"{% endautoescape %}    
-                })
-</script>
+
+	<a href={% url 'fortnox-auth-get' %}>Autentisera Fortnox</a>
 
 {% endblock %}

@@ -11,7 +11,7 @@ urlpatterns = [
     re_path(r'^account/$', views.account_overview, name='admin-account'),
 
     # Fortnox integration URLs
-    # re_path(r'^auth$', views.fortnox_auth, name='fortnox-auth-get'),
+    path('/fortnox', views.fortnox.overview, name='fortnox-overview'),
     path('auth/', views.fortnox.get_auth_code, name='fortnox-auth-get'),
     path('auth/complete/', views.fortnox.auth_complete, name='fortnox-auth-complete'),
     # re_path(r'^auth/test$', views.fortnox_auth_test, name='admin-auth-test'),
