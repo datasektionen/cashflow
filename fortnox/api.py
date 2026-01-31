@@ -66,28 +66,24 @@ class FortnoxAPIClient:
     class ApiResponse[InfoModel](RootModel[dict[str, InfoModel]]):
         pass
 
-    def __init__(self, client_id, client_secret, scope, state, access_type='offline'):
-        # It's possible some of these should be moved inside certain methods
+    def __init__(self, client_id, client_secret, scope, access_type='offline'):
         self.client_id = client_id
         self.client_secret = client_secret
         self.scope = scope
-        self.state = state
         self.access_type = access_type
-        self.redirect_uri = None
 
     # Helper to validate API responses against models
     @classmethod
     def _validate(cls, model, response):
         return cls.ApiResponse[Union[model, Error]].model_validate(response.json()).root
 
-    def get_auth_code_url(self, redirect_uri):
+    def get_auth_code_url(self, redirect_uri, state):
         # According to the API documentation, you always
         # have to use the same redirect uri that you used
         # when getting the auth code, so we save it
         # https://www.fortnox.se/developer/authorization/get-access-token
-        self.redirect_uri = redirect_uri
 
-        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={self.scope}&state={self.state}&access_type={self.access_type}&response_type=code&account_type=service"
+        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={self.scope}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
 
     def get_access_token(self, grant: Grant) -> AccessTokenResponse:
         token_url = f"{self.FORTNOX_URL}/token"
@@ -125,16 +121,20 @@ class FortnoxAPIClient:
 
     @classmethod
     def get_api_request(cls, access_token, endpoint):
-        # TODO: Handle failed requests
         headers = {'Authorization': f'Bearer {access_token}'}
-        return requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
+        response = requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
+
+        # TODO: Better error handling
+        if response.status_code != 200:
+            raise ExternalAPIError(response.text)
+        return response
 
     @staticmethod
     def get_company_info(access_token):
         company_info_url = 'https://api.fortnox.se/3/companyinformation'
         headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(company_info_url, headers=headers)
-        return response
+
 
     @staticmethod
     def get_accounts(access_token, page):
