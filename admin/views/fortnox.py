@@ -2,14 +2,13 @@ import secrets
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db import connection
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, ExternalAPIError, RefreshTokenGrant
-from fortnox.models import APITokens, Account
+from fortnox.models import APITokens
 
 
 class CSRFValidationError(PermissionError):
@@ -17,7 +16,7 @@ class CSRFValidationError(PermissionError):
 
 
 client = FortnoxAPIClient(client_id=settings.FORTNOX_CLIENT_ID, client_secret=settings.FORTNOX_CLIENT_SECRET,
-                          scope="bookkeeping%20companyinformation%20settings%20customer%20profile")
+                          scope=['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile'])
 
 
 # TODO: Check using expires_at instead
@@ -45,7 +44,6 @@ def check_or_update_token(user):
 
 @require_GET
 @login_required
-# @user_passes_test(lambda u: u.profile.may_view_account())
 def get_auth_code(request):
     """Retrieves an auth code from Fortnox.
 
@@ -105,59 +103,3 @@ def overview(request):
     user_info = client.get_user_info(access_token)
 
     return render(request, 'admin/fortnox/overview.html', {'fortnox_user': user_info.model_dump()})
-
-
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_import_accounts_to_db(request):
-    token = APITokens.objects.all().first()
-    if token is None:
-        return HttpResponseBadRequest("No token found")
-    # Get all accounts from Fortnox thru all pages and save them to the database
-    page_number = 0
-
-    Account.objects.all().delete()
-    with connection.cursor() as cursor:
-        cursor.execute("TRUNCATE TABLE expenses_fortnoxaccounts RESTART IDENTITY;")
-
-    while True:
-        accounts = client.get_accounts(token.access_token, page_number)
-        if page_number > accounts.get('MetaInformation', {}).get('@TotalPages', 0):
-            break
-        for account in accounts['Accounts']:
-            account_db = Account(URL="None" if account.get('@url') is None else account.get('@url'),
-                                 Active="None" if account.get('Active') is None else account.get('Active'),
-                                 BalanceBroughtForward=0 if account.get(
-                                     'BalanceBroughtForward') is None else account.get('BalanceBroughtForward'),
-                                 CostCenter="None" if account.get('CostCenter') is None else account.get('CostCenter'),
-                                 CostCenterSettings="None" if account.get(
-                                     'CostCenterSettings') is None else account.get('CostCenterSettings'),
-                                 Description="None" if account.get('Description') is None else account.get(
-                                     'Description'), Number=account.get('Number'),
-                                 Project="None" if account.get('Project') is None else account.get('Project'),
-                                 ProjectSettings="None" if account.get('ProjectSettings') is None else account.get(
-                                     'ProjectSettings'), SRU=0 if account.get('SRU') is None else account.get('SRU'),
-                                 VATCode="None" if account.get('VATCode') is None else account.get('VATCode'),
-                                 Year=0 if account.get('Year') is None else account.get('Year'))
-            account_db.save()
-        page_number += 1
-    return HttpResponseRedirect(reverse('admin-auth-test'))
-
-
-@require_GET
-@login_required
-@require_GET
-@login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-def fortnox_auth_search(request):
-    token = APITokens.objects.first()
-    if token is None:
-        return JsonResponse({'error': 'No token found'})
-
-    search_query = request.GET.get('search')
-
-    search_results = Account.objects.filter(Description__icontains=search_query) | Account.objects.filter(
-        Number__icontains=search_query)
-
-    results_list = list(search_results.values('Number', 'Description'))
-    return JsonResponse({'accounts': results_list})

@@ -1,5 +1,6 @@
 import base64
-from typing import Union
+from enum import Enum
+from typing import Union, Literal
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel
@@ -42,10 +43,37 @@ class FortnoxAPIClient:
     class ApiResponse[InfoModel](RootModel[dict[str, InfoModel]]):
         pass
 
-    def __init__(self, client_id, client_secret, scope, access_type='offline'):
+    class ScopeEnum(str, Enum):
+        salary = 'salary'
+        bookkeeping = 'bookkeeping'
+        archive = 'archive'
+        connectfile = 'connectfile'
+        article = 'article'
+        assets = 'assets'
+        companyinformation = 'companyinformation'
+        settings = 'settings'
+        invoice = 'invoice'
+        costcenter = 'costcenter'
+        currency = 'currency'
+        customer = 'customer'
+        inbox = 'inbox'
+        payment = 'payment'
+        noxfinansinvoice = 'noxfinansinvoice'
+        offer = 'offer'
+        order = 'order'
+        price = 'price'
+        print = 'print'
+        project = 'project'
+        profile = 'profile'
+        supplierinvoice = 'supplierinvoice'
+        supplier = 'supplier'
+        timereporting = 'timereporting'
+
+    def __init__(self, client_id: str, client_secret: str, scope: list[str],
+                 access_type: Literal['offline'] = 'offline'):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.scope = scope
+        self.scope = list[self.ScopeEnum](scope)
         self.access_type = access_type
 
     # Helper to validate API responses against models
@@ -59,7 +87,7 @@ class FortnoxAPIClient:
         # when getting the auth code, so we save it
         # https://www.fortnox.se/developer/authorization/get-access-token
 
-        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={self.scope}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
+        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={'%'.join(self.scope)}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
 
     def get_access_token(self, grant: Union[AuthCodeGrant, RefreshTokenGrant]) -> AccessTokenResponse:
         token_url = f"{self.FORTNOX_URL}/token"
@@ -110,7 +138,6 @@ class FortnoxAPIClient:
         company_info_url = 'https://api.fortnox.se/3/companyinformation'
         headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(company_info_url, headers=headers)
-
 
     @staticmethod
     def get_accounts(access_token, page):
