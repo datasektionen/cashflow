@@ -7,7 +7,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, ExternalAPIError, RefreshTokenGrant
+from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, RefreshTokenGrant
+from fortnox.api_client.exceptions import FortnoxAPIError
 from fortnox.models import APITokens
 
 
@@ -30,7 +31,7 @@ def check_or_update_token(user):
     try:
         client.get_user_info(tokens.access_token)
         return tokens.access_token
-    except ExternalAPIError:
+    except FortnoxAPIError:
         # Try refreshing token
         grant = RefreshTokenGrant(code=tokens.refresh_token)
         try:
@@ -38,7 +39,7 @@ def check_or_update_token(user):
             APITokens.objects.update_or_create(user=user, defaults={'access_token': response.access_token,
                                                                     'refresh_token': response.refresh_token, })
             return response.access_token
-        except ExternalAPIError:
+        except FortnoxAPIError:
             return None
 
 

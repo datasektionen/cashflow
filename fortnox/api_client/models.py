@@ -1,3 +1,7 @@
+"""
+This module defines Pydantic data modules that are used to
+validate and (de)serialize data passed to and from the API.
+"""
 from typing import Literal, Optional
 
 from pydantic import BaseModel, constr, conint, model_validator
@@ -80,3 +84,12 @@ class Error(BaseModel):
     Code: int
     Error: int
     Message: str
+
+
+class AccessTokenResponse(BaseModel):
+    # https://www.fortnox.se/developer/authorization/get-access-token
+    access_token: str
+    refresh_token: str
+    scope: str
+    expires_in: int
+    token_type: str
