@@ -276,3 +276,4 @@ LOGGING = {
 
 # Fortnox settings
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
+FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET')
