@@ -82,9 +82,10 @@ def auth_complete(request):
 
     # Get auth code from URL parameters
     match request.GET.get('code'), request.GET.get('error'):
-        case None, _:
+        case None, e:
+            print(e)
             # TODO: Error handling
-            return redirect(reverse('fortnox-overview'))
+            return redirect(reverse('admin-index'))
         case auth_code, _:
             # TODO: Error handling
             response = client.get_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
@@ -98,9 +99,10 @@ def auth_complete(request):
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 def overview(request):
     access_token = check_or_update_token(request.user)
-    if access_token is None:
-        return redirect(reverse('fortnox-auth-get'))
+    if access_token is not None:
+        user_info = client.get_user_info(access_token)
+        fortnox_user = user_info.model_dump()
+    else:
+        fortnox_user = None
 
-    user_info = client.get_user_info(access_token)
-
-    return render(request, 'admin/fortnox/overview.html', {'fortnox_user': user_info.model_dump()})
+    return render(request, 'admin/fortnox/overview.html', {'fortnox_user':fortnox_user})

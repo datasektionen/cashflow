@@ -5,7 +5,11 @@
 {% block content %}
 
 
-    <p>Du är inloggad som {{ fortnox_user.Name }}</p>
+    {% if fortnox_user is not None %}
+        <p>Du är inloggad som {{ fortnox_user.Name }}</p>
+    {% else %}
+        <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>
+    {% endif %}
 
 
 {% endblock %}

@@ -2,6 +2,7 @@ import base64
 import logging
 from enum import Enum
 from typing import Union, Literal
+from urllib import parse
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel
@@ -81,7 +82,7 @@ class FortnoxAPIClient:
         redirect URI and state.
         """
         # https://www.fortnox.se/developer/authorization/get-authorization-code
-        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={'%'.join(self.scope)}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
+        return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={parse.quote_plus(redirect_uri)}&scope={'%20'.join(self.scope)}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
 
     def get_access_token(self, grant: Union[AuthCodeGrant, RefreshTokenGrant]) -> AccessTokenResponse:
         """Requests a new access token for a user.
