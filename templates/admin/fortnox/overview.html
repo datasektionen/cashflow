@@ -12,4 +12,11 @@
     {% endif %}
 
 
+    <h2>Konton</h2>
+    {% for account in accounts %}
+    	<p>{{ account.Number }} - {{ account.Description }}</p>
+    {% endfor %}
+
+
+
 {% endblock %}

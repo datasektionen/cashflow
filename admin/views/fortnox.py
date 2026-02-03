@@ -102,7 +102,12 @@ def overview(request):
     if access_token is not None:
         user_info = client.get_user_info(access_token)
         fortnox_user = user_info.model_dump()
+
+        accounts = client.get_accounts(access_token)
+        accounts = [a.model_dump() for a in accounts]
+
     else:
         fortnox_user = None
+        accounts = []
 
-    return render(request, 'admin/fortnox/overview.html', {'fortnox_user':fortnox_user})
+    return render(request, 'admin/fortnox/overview.html', {'fortnox_user':fortnox_user, 'accounts':accounts})

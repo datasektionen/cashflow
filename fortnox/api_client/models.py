@@ -4,29 +4,29 @@ validate and (de)serialize data passed to and from the API.
 """
 from typing import Literal, Optional
 
-from pydantic import BaseModel, constr, conint, model_validator
+from pydantic import BaseModel, constr, conint, Field, model_validator
 
 
 class Account(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Accounts
-    url: Optional[str]
-    Active: Optional[bool]
-    BalanceBroughtForward: Optional[float]
-    BalanceCarriedForward: Optional[float]
-    CostCenter: Optional[str]
-    CostCenterSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']]
+    url: Optional[str] = Field(alias="@url", default=None)
+    Active: Optional[bool] = None
+    BalanceBroughtForward: Optional[float] = None
+    BalanceCarriedForward: Optional[float] = None
+    CostCenter: Optional[str] = None
+    CostCenterSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
     Description: constr(min_length=1, max_length=200)
     Number: conint(ge=1000, le=9999)
-    OpeningQuantities: Optional[list[OpeningQuantity]]
-    Project: Optional[str]
-    ProjectSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']]
-    QuantitySettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']]
-    QuantityUnit: Optional[str]
-    SRU: Optional[int]
-    TransactionInformation: Optional[str]
-    TransactionInformationSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']]
-    VATCode: Optional[str]
-    Year: Optional[int]
+    OpeningQuantities: Optional[list[OpeningQuantity]] = None
+    Project: Optional[str] = None
+    ProjectSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    QuantitySettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    QuantityUnit: Optional[str] = None
+    SRU: Optional[int] = None
+    TransactionInformation: Optional[str] = None
+    TransactionInformationSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    VATCode: Optional[str] = None
+    Year: Optional[int] = None
 
     @model_validator(mode='after')
     def verify_settings(self):
@@ -56,6 +56,10 @@ class Account(BaseModel):
 
         return self
 
+class AccountsMetaInformation(BaseModel):
+    TotalResources: int = Field(alias="@TotalResources")
+    TotalPages: int = Field(alias="@TotalPages")
+    CurrentPage: int = Field(alias="@CurrentPage")
 
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me

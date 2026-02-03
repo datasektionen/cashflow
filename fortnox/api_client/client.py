@@ -8,7 +8,8 @@ import requests
 from pydantic import BaseModel, TypeAdapter, RootModel
 
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError
-from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse
+from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
+    AccountsMetaInformation
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,23 @@ class FortnoxAPIClient:
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
+    # TODO: Implement sru filter
+    def get_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number") -> list[
+        Account]:
+        response = self.get_api_request(access_token, "accounts")
+
+        class ResponseModel(BaseModel):
+            MetaInformation: AccountsMetaInformation
+            Accounts: list[Account]
+
+        adapter = TypeAdapter(Union[ResponseModel, Error])
+        data = adapter.validate_python(response.json())
+        if isinstance(data, ResponseModel):
+            return data.Accounts
+        elif isinstance(data, Error):
+            raise FortnoxAPIError(f"{data.Error}: {data.Message}")
+        raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
     def get_user_info(self, access_token) -> Me:
         """Retrieves information about the user connected to the given token"""
         response = self.get_api_request(access_token, 'me')
@@ -146,14 +164,6 @@ class FortnoxAPIClient:
         company_info_url = 'https://api.fortnox.se/3/companyinformation'
         headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(company_info_url, headers=headers)
-
-    @staticmethod
-    def get_accounts(access_token, page):
-        logger.warning('get_company is deprecated')
-        account_url = 'https://api.fortnox.se/3/accounts?page=' + str(page)
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(account_url, headers=headers)
-        return response.json()
 
     @staticmethod
     def get_voucher_series(access_token):
