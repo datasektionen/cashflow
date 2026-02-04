@@ -1,7 +1,7 @@
 import base64
 import logging
 from enum import Enum
-from typing import Union, Literal
+from typing import Union, Literal, Any
 from urllib import parse
 
 import requests
@@ -119,9 +119,9 @@ class FortnoxAPIClient:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
     # TODO: Implement sru filter
-    def get_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number") -> list[
-        Account]:
-        response = self.get_api_request(access_token, "accounts")
+    def get_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number",
+                     limit: int = 100, page: int = 1) -> list[Account]:
+        response = self.get_api_request(access_token, "accounts", parameters={"limit": limit, "page": page})
         logger.debug(response)
 
         class ResponseModel(BaseModel):
@@ -149,10 +149,11 @@ class FortnoxAPIClient:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
     @classmethod
-    def get_api_request(cls, access_token: str, endpoint: str) -> requests.Response:
+    def get_api_request(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
         """Performs a GET request to a Fortnox API endpoint, returning a response object"""
         headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(f"{cls.API_URL}/{endpoint}", headers=headers)
+        url_params = "?" + parse.urlencode(parameters) if parameters is not None else ""
+        response = requests.get(f"{cls.API_URL}/{endpoint}/{url_params}", headers=headers)
 
         # TODO: Better error handling
         if response.status_code != 200:

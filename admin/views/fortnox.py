@@ -111,4 +111,4 @@ def overview(request):
         fortnox_user = None
         accounts = []
 
-    return render(request, 'admin/fortnox/overview.html', {'fortnox_user':fortnox_user, 'accounts':accounts})
+    return render(request, 'admin/fortnox/overview.html', {'fortnox_user': fortnox_user, 'accounts': accounts})
