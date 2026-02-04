@@ -104,6 +104,7 @@ def overview(request):
         fortnox_user = user_info.model_dump()
 
         accounts = client.get_accounts(access_token)
+        accounts = [account for account in accounts if account.Active]
         accounts = [a.model_dump() for a in accounts]
 
     else:
