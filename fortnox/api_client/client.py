@@ -122,6 +122,7 @@ class FortnoxAPIClient:
     def get_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number") -> list[
         Account]:
         response = self.get_api_request(access_token, "accounts")
+        logger.debug(response)
 
         class ResponseModel(BaseModel):
             MetaInformation: AccountsMetaInformation
@@ -138,6 +139,7 @@ class FortnoxAPIClient:
     def get_user_info(self, access_token) -> Me:
         """Retrieves information about the user connected to the given token"""
         response = self.get_api_request(access_token, 'me')
+        logger.debug(response)
         match self._validate(Me, response):
             case {'Me': Me() as me}:
                 return me

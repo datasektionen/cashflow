@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import sys
 import re
+import sys
+
 import dj_database_url
 
 # https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
@@ -204,6 +205,7 @@ RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
 
+LOG_LEVEL = 'DEBUG' if DEBUG else 'INFO'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -215,7 +217,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
             'formatter': 'simple',
@@ -232,47 +234,18 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'fortnox': {
+            'handlers': ['console'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        }
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': LOG_LEVEL,
     },
 }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '{levelname} {asctime} {module}: {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'simple',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
 
 # Fortnox settings
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
