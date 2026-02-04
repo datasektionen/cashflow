@@ -4,7 +4,7 @@ validate and (de)serialize data passed to and from the API.
 """
 from typing import Literal, Optional
 
-from pydantic import BaseModel, constr, conint, Field, model_validator
+from pydantic import BaseModel, constr, conint, Field
 
 
 class Account(BaseModel):
@@ -28,38 +28,12 @@ class Account(BaseModel):
     VATCode: Optional[str] = None
     Year: Optional[int] = None
 
-    @model_validator(mode='after')
-    def verify_settings(self):
-        match self.CostCenterSettings, self.CostCenter:
-            case 'ALLOWED', _:
-                pass
-            case 'MANDATORY', None:
-                raise ValueError('CostCenter cannot be empty when mandatory')
-            case 'NOTALLOWED', c if isinstance(c, str):
-                raise ValueError('CostCenter must be None when not allowed')
-
-        match self.ProjectSettings, self.Project:
-            case 'ALLOWED', _:
-                pass
-            case 'MANDATORY', None:
-                raise ValueError('Project cannot be empty when mandatory')
-            case 'NOTALLOWED', c if isinstance(c, str):
-                raise ValueError('Project must be None when not allowed')
-
-        match self.TransactionInformationSettings, self.TransactionInformation:
-            case 'ALLOWED', _:
-                pass
-            case 'MANDATORY', None:
-                raise ValueError('TransactionInformation cannot be empty when not allowed')
-            case 'NOTALLOWED', c if isinstance(c, str):
-                raise ValueError('TransactionInformation must be None when not allowed')
-
-        return self
 
 class AccountsMetaInformation(BaseModel):
     TotalResources: int = Field(alias="@TotalResources")
     TotalPages: int = Field(alias="@TotalPages")
     CurrentPage: int = Field(alias="@CurrentPage")
+
 
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me
