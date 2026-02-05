@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, RefreshTokenGrant
-from fortnox.api_client.exceptions import FortnoxAPIError
+from fortnox.api_client.exceptions import FortnoxAPIError, FortnoxPermissionDenied
 from fortnox.models import APITokens
 
 
@@ -107,8 +107,15 @@ def overview(request):
         accounts = [account for account in accounts if account.Active]
         accounts = [a.model_dump() for a in accounts]
 
+        try:
+            costcenters = filter(lambda cc: cc.Active, client.get_cost_centers(access_token))
+        except FortnoxPermissionDenied:
+            costcenters = []
+
     else:
         fortnox_user = None
         accounts = []
+        costcenters = []
 
-    return render(request, 'admin/fortnox/overview.html', {'fortnox_user': fortnox_user, 'accounts': accounts})
+    return render(request, 'admin/fortnox/overview.html',
+                  {'fortnox_user': fortnox_user, 'accounts': accounts, 'costcenters': costcenters})

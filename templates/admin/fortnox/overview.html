@@ -17,6 +17,12 @@
     	<p>{{ account.Number }} - {{ account.Description }}</p>
     {% endfor %}
 
+    <h2>Kostnadsställen</h2>
+     {% for costcenter in costcenters %}
+     	<p>{{ costcenter.Code }} - {{ costcenter.Description }}</p>
+     {% endfor %}
+
+
 
 
 {% endblock %}

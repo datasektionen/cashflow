@@ -34,6 +34,12 @@ class AccountsMetaInformation(BaseModel):
     TotalPages: int = Field(alias="@TotalPages")
     CurrentPage: int = Field(alias="@CurrentPage")
 
+class CostCenter(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    Active: Optional[bool] = None
+    Code: constr(min_length=1, max_length=6)
+    Description: constr(min_length=1)
+    Note: Optional[str] = None
 
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me
@@ -59,9 +65,9 @@ class RefreshTokenGrant(BaseModel):
 
 
 class Error(BaseModel):
-    Code: int
-    Error: int
-    Message: str
+    Error: int = Field(alias="error")
+    Message: str = Field(alias="message")
+    Code: int = Field(alias="code")
 
 
 class AccessTokenResponse(BaseModel):

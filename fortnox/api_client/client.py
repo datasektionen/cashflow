@@ -5,11 +5,11 @@ from typing import Union, Literal, Any
 from urllib import parse
 
 import requests
-from pydantic import BaseModel, TypeAdapter, RootModel
+from pydantic import BaseModel, TypeAdapter, RootModel, ValidationError
 
-from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError
+from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    AccountsMetaInformation
+    AccountsMetaInformation, CostCenter
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,6 @@ class FortnoxAPIClient:
     This class encapsulates configuration against a Fortnox integration,
     as well as request serialization and response deserialization. It does not
     handle storing user credentials; access tokens must be passed as method arguments.
-
-
     """
     API_URL = "https://api.fortnox.se/3"
     FORTNOX_URL = "https://apps.fortnox.se/oauth-v1"
@@ -136,6 +134,23 @@ class FortnoxAPIClient:
             raise FortnoxAPIError(f"{data.Error}: {data.Message}")
         raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
+    def get_cost_centers(self, access_token: str, limit: int = 100, page: int = 1):
+        response = self.get_api_request(access_token, "costcenters", {"limit": limit, "page": page})
+        logger.debug(response)
+        logger.debug(response.json())
+
+        class ResponseModel(BaseModel):
+            CostCenters: list[CostCenter]
+
+        adapter = TypeAdapter(Union[ResponseModel, Error])
+        data = adapter.validate_python(response.json())
+        if isinstance(data, ResponseModel):
+            return data.CostCenters
+        elif isinstance(data, Error):
+            logger.debug(data)
+            raise FortnoxAPIError(f"{data.Error}: {data.Message}")
+        raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
     def get_user_info(self, access_token) -> Me:
         """Retrieves information about the user connected to the given token"""
         response = self.get_api_request(access_token, 'me')
@@ -155,9 +170,26 @@ class FortnoxAPIClient:
         url_params = "?" + parse.urlencode(parameters) if parameters is not None else ""
         response = requests.get(f"{cls.API_URL}/{endpoint}/{url_params}", headers=headers)
 
-        # TODO: Better error handling
+        # TODO: Handle more errors
         if response.status_code != 200:
-            raise FortnoxAPIError(response.text)
+            # Fortnox doesn't seem to be consistent with their HTTP error codes
+            # For example, trying to access something without proper authentication
+            # will produce a 400 response, instead of 403
+            #   They do, however, send error information which we can parse to raise proper
+            # exceptions.
+
+            # Try to parse error
+            class ErrorResponse(BaseModel):
+                ErrorInformation: Error
+
+            try:
+                error = ErrorResponse.model_validate(response.json())
+            except ValidationError as e:
+                raise FortnoxAPIError(f"Unknown error: {e.message}")
+            if isinstance(error, ErrorResponse):
+                raise FortnoxPermissionDenied(error.ErrorInformation.Message)
+            else:
+                raise FortnoxAPIError(response.text)
         return response
 
     # TODO: These methods need to be updated, and will probably not work as expected
@@ -175,11 +207,3 @@ class FortnoxAPIClient:
         headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(voucher_series_url, headers=headers)
         return response.json()
-
-    # https://api.fortnox.se/3/costcenters
-    @staticmethod
-    def get_cost_centers(access_token):
-        logger.warning('get_company is deprecated')
-        cost_centers_url = 'https://api.fortnox.se/3/costcenters'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(cost_centers_url, headers=headers)
