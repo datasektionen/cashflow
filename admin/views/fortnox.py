@@ -107,15 +107,10 @@ def overview(request):
         accounts = [account for account in accounts if account.Active]
         accounts = [a.model_dump() for a in accounts]
 
-        #try:
-        costcenters = filter(lambda cc: cc.Active, client.get_cost_centers(access_token))
-        #except FortnoxPermissionDenied:
-        #    costcenters = []
 
     else:
         fortnox_user = None
         accounts = []
-        costcenters = []
 
     return render(request, 'admin/fortnox/overview.html',
-                  {'fortnox_user': fortnox_user, 'accounts': accounts, 'costcenters': costcenters})
+                  {'fortnox_user': fortnox_user, 'accounts': accounts})

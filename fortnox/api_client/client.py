@@ -10,7 +10,7 @@ from pydantic import BaseModel, TypeAdapter, RootModel
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    AccountsMetaInformation, CostCenter
+    AccountsMetaInformation, CostCenter, CompanyInformation
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ class FortnoxAPIClient:
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
-    def get_user_info(self, access_token) -> Me:
+    def get_user_info(self, access_token: str) -> Me:
         """Retrieves information about the user connected to the given token"""
         response = self.get_api_request(access_token, 'me')
         logger.debug(response)
@@ -170,6 +170,17 @@ class FortnoxAPIClient:
             case {'Me': Me() as me}:
                 return me
             case {'Error': Error(_, description)}:
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    def get_company_info(self, access_token: str) -> CompanyInformation:
+        response = self.get_api_request(access_token, "companyinformation")
+        logger.debug(response)
+        match self._validate(CompanyInformation, response):
+            case {"CompanyInformation": CompanyInformation() as c}:
+                return c
+            case {"Error": Error(_, description)}:
                 raise FortnoxAPIError(description)
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
@@ -204,14 +215,6 @@ class FortnoxAPIClient:
                     raise FortnoxAPIError(response.text)
 
         return response
-
-    # TODO: These methods need to be updated, and will probably not work as expected
-    @staticmethod
-    def get_company_info(access_token):
-        logger.warning('get_company is deprecated')
-        company_info_url = 'https://api.fortnox.se/3/companyinformation'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(company_info_url, headers=headers)
 
     @staticmethod
     def get_voucher_series(access_token):

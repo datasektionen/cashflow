@@ -35,6 +35,20 @@ class AccountsMetaInformation(BaseModel):
     CurrentPage: int = Field(alias="@CurrentPage")
 
 
+class CompanyInformation(BaseModel):
+    Address: Optional[str] = None
+    City: Optional[str] = None
+    CompanyName: Optional[str] = None
+    CountryCode: Optional[str] = None
+    DatabaseNumber: Optional[int] = None
+    OrganizationNumber: Optional[str] = None
+    VisitAddress: Optional[str] = None
+    VisitCity: Optional[str] = None
+    VisitCountryCode: Optional[str] = None
+    VisitZipCode: Optional[str] = None
+    ZipCode: Optional[str] = None
+
+
 class CostCenter(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     Active: Optional[bool] = None
@@ -68,15 +82,9 @@ class RefreshTokenGrant(BaseModel):
 
 class Error(BaseModel):
     # Fortnox is very inconsistent with casing, hence multiple aliases
-    Error: int = Field(
-        validation_alias=AliasChoices("Error", "error")
-    )
-    Message: str = Field(
-        validation_alias=AliasChoices("Message", "message")
-    )
-    Code: int = Field(
-        validation_alias=AliasChoices("Code", "code")
-    )
+    Error: int = Field(validation_alias=AliasChoices("Error", "error"))
+    Message: str = Field(validation_alias=AliasChoices("Message", "message"))
+    Code: int = Field(validation_alias=AliasChoices("Code", "code"))
 
 
 class AccessTokenResponse(BaseModel):
