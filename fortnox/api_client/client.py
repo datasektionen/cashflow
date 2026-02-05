@@ -1,11 +1,11 @@
 import base64
 import logging
 from enum import Enum
-from typing import Union, Literal, Any, Annotated
+from typing import Union, Literal, Any
 from urllib import parse
 
 import requests
-from pydantic import BaseModel, TypeAdapter, RootModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, RootModel
 
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
     FortnoxNotFound, FortnoxAuthenticationError
@@ -195,12 +195,14 @@ class FortnoxAPIClient:
 
             # Try to parse error
             error = Error.model_validate(response.json()["ErrorInformation"])
-            if isinstance(error, Error):
-                if error.Code == 2000423:
-                    raise FortnoxNotFound(error.Message)
-                raise FortnoxPermissionDenied(error.Message)
-            else:
-                raise FortnoxAPIError(response.text)
+            match error:
+                case Error(Error=_, Message=msg, Code=2000423):
+                    raise FortnoxNotFound(msg)
+                case Error(Error=_, Message=msg, Code=2000663):
+                    raise FortnoxPermissionDenied(msg)
+                case _:
+                    raise FortnoxAPIError(response.text)
+
         return response
 
     # TODO: These methods need to be updated, and will probably not work as expected
