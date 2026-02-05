@@ -66,6 +66,29 @@ class Me(BaseModel):
     SysAdmin: bool
 
 
+class VoucherSeries(BaseModel):
+    class ApproverModel(BaseModel):
+        Id: int
+        Name: str
+
+    url: Optional[str] = Field(alias="@url", default=None)
+    Approver: Optional[ApproverModel] = None
+    Code: constr(min_length=1, max_length=10)
+    Description: Optional[constr(max_length=200)] = None
+    Manual: Optional[bool] = None
+    NextVoucherNumber: Optional[int] = None
+    Year: Optional[int] = None
+
+
+class VoucherSeriesListItem(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    Approver: Optional[VoucherSeries.ApproverModel] = None
+    Code: constr(min_length=1, max_length=10)
+    Description: Optional[constr(max_length=200)]
+    Manual: Optional[bool] = None
+    Year: Optional[int] = None
+
+
 class OpeningQuantity(BaseModel):
     Balance: int
     Project: str

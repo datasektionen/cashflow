@@ -10,7 +10,7 @@ from pydantic import BaseModel, TypeAdapter, RootModel
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    AccountsMetaInformation, CostCenter, CompanyInformation
+    AccountsMetaInformation, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +185,36 @@ class FortnoxAPIClient:
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
+    def get_voucher_series(self, access_token: str, code: str) -> VoucherSeries:
+        response = self.get_api_request(access_token, f"voucherseries/{code}")
+        logger.debug(response)
+        match self._validate(VoucherSeries, response):
+            case {"VoucherSeries": VoucherSeries() as vs}:
+                return vs
+            case {"Error": Error(_, description)}:
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    def get_voucher_series_list(self, access_token: str) -> list[VoucherSeriesListItem]:
+        response = self.get_api_request(access_token, "voucherseries")
+        logger.debug(response)
+
+        class ResponseModel(BaseModel):
+            MetaInformation: AccountsMetaInformation
+            VoucherSeriesCollection: list[VoucherSeriesListItem]
+
+        adapter = TypeAdapter(Union[ResponseModel, Error])
+        data = adapter.validate_python(response.json())
+
+        match data:
+            case ResponseModel() as resp:
+                return resp.VoucherSeriesCollection
+            case Error(_, description):
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
     @classmethod
     def get_api_request(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
         """Performs a GET request to a Fortnox API endpoint, returning a response object"""
@@ -208,18 +238,15 @@ class FortnoxAPIClient:
             error = Error.model_validate(response.json()["ErrorInformation"])
             match error:
                 case Error(Error=_, Message=msg, Code=2000423):
+                    # Resource not found
                     raise FortnoxNotFound(msg)
                 case Error(Error=_, Message=msg, Code=2000663):
+                    # Insufficient permissions
                     raise FortnoxPermissionDenied(msg)
+                case Error(Error=_, Message=msg, Code=2000311):
+                    # Missing token/secret
+                    raise FortnoxAuthenticationError(msg)
                 case _:
                     raise FortnoxAPIError(response.text)
 
         return response
-
-    @staticmethod
-    def get_voucher_series(access_token):
-        logger.warning('get_company is deprecated')
-        voucher_series_url = 'https://api.fortnox.se/3/voucherseries'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(voucher_series_url, headers=headers)
-        return response.json()
