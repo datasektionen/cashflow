@@ -8,7 +8,14 @@ class FortnoxAPIError(Exception):
     pass
 
 
+class FortnoxAuthenticationError(FortnoxAPIError):
+    pass
+
 class FortnoxPermissionDenied(FortnoxAPIError):
+    pass
+
+
+class FortnoxNotFound(FortnoxAPIError):
     pass
 
 

@@ -1,13 +1,14 @@
 import base64
 import logging
 from enum import Enum
-from typing import Union, Literal, Any
+from typing import Union, Literal, Any, Annotated
 from urllib import parse
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel, ValidationError
 
-from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied
+from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
+    FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
     AccountsMetaInformation, CostCenter
 
@@ -137,7 +138,6 @@ class FortnoxAPIClient:
     def get_cost_centers(self, access_token: str, limit: int = 100, page: int = 1):
         response = self.get_api_request(access_token, "costcenters", {"limit": limit, "page": page})
         logger.debug(response)
-        logger.debug(response.json())
 
         class ResponseModel(BaseModel):
             CostCenters: list[CostCenter]
@@ -150,6 +150,17 @@ class FortnoxAPIClient:
             logger.debug(data)
             raise FortnoxAPIError(f"{data.Error}: {data.Message}")
         raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    def get_account_details(self, access_token: str, number: int) -> Account:
+        response = self.get_api_request(access_token, f"accounts/{number}")
+        logger.debug(response)
+        match self._validate(Account, response):
+            case {"Account": Account() as account}:
+                return account
+            case {"Error": Error(_, description)}:
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
     def get_user_info(self, access_token) -> Me:
         """Retrieves information about the user connected to the given token"""
@@ -172,6 +183,10 @@ class FortnoxAPIClient:
 
         # TODO: Handle more errors
         if response.status_code != 200:
+
+            if response.status_code == 401:
+                raise FortnoxAuthenticationError("Invalid access token")
+
             # Fortnox doesn't seem to be consistent with their HTTP error codes
             # For example, trying to access something without proper authentication
             # will produce a 400 response, instead of 403
@@ -179,15 +194,11 @@ class FortnoxAPIClient:
             # exceptions.
 
             # Try to parse error
-            class ErrorResponse(BaseModel):
-                ErrorInformation: Error
-
-            try:
-                error = ErrorResponse.model_validate(response.json())
-            except ValidationError as e:
-                raise FortnoxAPIError(f"Unknown error: {e.message}")
-            if isinstance(error, ErrorResponse):
-                raise FortnoxPermissionDenied(error.ErrorInformation.Message)
+            error = Error.model_validate(response.json()["ErrorInformation"])
+            if isinstance(error, Error):
+                if error.Code == 2000423:
+                    raise FortnoxNotFound(error.Message)
+                raise FortnoxPermissionDenied(error.Message)
             else:
                 raise FortnoxAPIError(response.text)
         return response

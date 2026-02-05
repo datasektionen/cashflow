@@ -4,7 +4,7 @@ validate and (de)serialize data passed to and from the API.
 """
 from typing import Literal, Optional
 
-from pydantic import BaseModel, constr, conint, Field
+from pydantic import BaseModel, constr, conint, Field, AliasChoices
 
 
 class Account(BaseModel):
@@ -34,12 +34,14 @@ class AccountsMetaInformation(BaseModel):
     TotalPages: int = Field(alias="@TotalPages")
     CurrentPage: int = Field(alias="@CurrentPage")
 
+
 class CostCenter(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     Active: Optional[bool] = None
     Code: constr(min_length=1, max_length=6)
     Description: constr(min_length=1)
     Note: Optional[str] = None
+
 
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me
@@ -65,9 +67,16 @@ class RefreshTokenGrant(BaseModel):
 
 
 class Error(BaseModel):
-    Error: int = Field(alias="error")
-    Message: str = Field(alias="message")
-    Code: int = Field(alias="code")
+    # Fortnox is very inconsistent with casing, hence multiple aliases
+    Error: int = Field(
+        validation_alias=AliasChoices("Error", "error")
+    )
+    Message: str = Field(
+        validation_alias=AliasChoices("Message", "message")
+    )
+    Code: int = Field(
+        validation_alias=AliasChoices("Code", "code")
+    )
 
 
 class AccessTokenResponse(BaseModel):
