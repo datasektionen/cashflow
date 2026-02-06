@@ -29,13 +29,13 @@ def check_or_update_token(user):
         return None
 
     try:
-        client.get_user_info(tokens.access_token)
+        client.retrieve_current_user(tokens.access_token)
         return tokens.access_token
     except FortnoxAPIError:
         # Try refreshing token
         grant = RefreshTokenGrant(code=tokens.refresh_token)
         try:
-            response = client.get_access_token(grant)
+            response = client.retrieve_access_token(grant)
             APITokens.objects.update_or_create(user=user, defaults={'access_token': response.access_token,
                                                                     'refresh_token': response.refresh_token, })
             return response.access_token
@@ -58,7 +58,7 @@ def get_auth_code(request):
     request.session['fortnox_csrf_token'] = csrf_token
 
     redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
-    return HttpResponseRedirect(client.get_auth_code_url(redirect_uri, csrf_token))
+    return HttpResponseRedirect(client.build_auth_code_url(redirect_uri, csrf_token))
 
 
 @login_required
@@ -88,7 +88,7 @@ def auth_complete(request):
             return redirect(reverse('admin-index'))
         case auth_code, _:
             # TODO: Error handling
-            response = client.get_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
+            response = client.retrieve_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
             APITokens.objects.update_or_create(user=request.user, defaults={'access_token': response.access_token,
                                                                             'refresh_token': response.refresh_token, })
 
@@ -100,10 +100,10 @@ def auth_complete(request):
 def overview(request):
     access_token = check_or_update_token(request.user)
     if access_token is not None:
-        user_info = client.get_user_info(access_token)
+        user_info = client.retrieve_current_user(access_token)
         fortnox_user = user_info.model_dump()
 
-        accounts = client.get_accounts(access_token)
+        accounts = client.list_accounts(access_token)
         accounts = [account for account in accounts if account.Active]
         accounts = [a.model_dump() for a in accounts]
 

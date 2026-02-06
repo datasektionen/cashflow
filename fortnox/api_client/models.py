@@ -29,7 +29,7 @@ class Account(BaseModel):
     Year: Optional[int] = None
 
 
-class AccountsMetaInformation(BaseModel):
+class ListMetaInformaion(BaseModel):
     TotalResources: int = Field(alias="@TotalResources")
     TotalPages: int = Field(alias="@TotalPages")
     CurrentPage: int = Field(alias="@CurrentPage")
