@@ -10,7 +10,7 @@ from pydantic import BaseModel, TypeAdapter, RootModel
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    AccountsMetaInformation, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries
+    AccountsMetaInformation, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense
 
 logger = logging.getLogger(__name__)
 
@@ -210,6 +210,37 @@ class FortnoxAPIClient:
         match data:
             case ResponseModel() as resp:
                 return resp.VoucherSeriesCollection
+            case Error(_, description):
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    def get_expense(self, code: str) -> Expense:
+        response = self.get_api_request(code, f"expenses/{code}")
+        logger.debug(response)
+
+        match self._validate(Expense, response):
+            case {"Expense": Expense() as expense}:
+                return expense
+            case {"Error": Error(_, description)}:
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    def get_expenses(self, access_token: str) -> list[Expense]:
+        response = self.get_api_request(access_token, "expenses")
+        logger.debug(response)
+
+        class ResponseModel(BaseModel):
+            MetaInformation: AccountsMetaInformation
+            Expenses: list[Expense]
+
+        adapter = TypeAdapter(Union[ResponseModel, Error])
+        data = adapter.validate_python(response.json())
+
+        match data:
+            case ResponseModel() as resp:
+                return resp.Expenses
             case Error(_, description):
                 raise FortnoxAPIError(description)
             case _:

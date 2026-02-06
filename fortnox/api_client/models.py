@@ -57,6 +57,13 @@ class CostCenter(BaseModel):
     Note: Optional[str] = None
 
 
+class Expense(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    Account: int
+    Code: str
+    Text: str
+
+
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me
     Email: str
