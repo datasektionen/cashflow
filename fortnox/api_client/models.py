@@ -102,6 +102,22 @@ class Voucher(BaseModel):
     Year: int
 
 
+class VoucherCreate(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    ApprovalState: Optional[int] = None
+    Comments: Optional[constr(max_length=1000)] = None
+    CostCenter: Optional[str] = None
+    Description: constr(min_length=1, max_length=200)
+    Project: Optional[str] = None
+    ReferenceNumber: Optional[str] = None
+    ReferenceType: Optional[Literal[
+        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    TransactionDate: str
+    VoucherNumber: Optional[int] = None
+    VoucherRows: list[VoucherRow]
+    VoucherSeries: str
+
+
 class VoucherListItem(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     ApprovalState: Optional[int] = None

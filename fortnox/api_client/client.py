@@ -2,16 +2,17 @@ import base64
 import json
 import logging
 from enum import Enum
-from typing import Union, Literal, Any
+from typing import Union, Literal, Any, Optional
 from urllib import parse
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel, Field
 
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
-    FortnoxNotFound, FortnoxAuthenticationError
+    FortnoxNotFound, FortnoxAuthenticationError, FortnoxInvalidPostData, FortnoxMissingFieldsError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher
+    ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher, \
+    VoucherCreate
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +140,15 @@ class FortnoxAPIClient:
         response = self._get(access_token, f"vouchers/{voucher_series}/{voucher_number}")
         return self._parse_retrieve_response(response, Voucher, "Voucher")
 
+    def create_voucher(self, access_token: str, voucher: Optional[VoucherCreate] = None, **fields) -> Voucher:
+        if voucher is None:
+            voucher = VoucherCreate(**fields)
+        # Using by_alias and exclude_none is important!
+        # The API expects the url field to be "@url" and that no None-fields are included
+        model_dict = voucher.model_dump(by_alias=True, exclude_none=True)
+        response = self._post(access_token, "vouchers", json={"Voucher": model_dict})
+        return self._parse_retrieve_response(response, Voucher, "Voucher")
+
     def list_voucher_series(self, access_token: str, limit: int = 100, page: int = 1) -> list[VoucherSeriesListItem]:
         response = self._get(access_token, "voucherseries", parameters={"limit": limit, "page": page})
         return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")
@@ -151,12 +161,13 @@ class FortnoxAPIClient:
     # Helpers
     # ======================
 
+    @classmethod
     def _parse_retrieve_response[T](cls, response: requests.Response, model: type[T], label: str) -> T:
         data = cls._validate(model, response)
-        if isinstance(data[label], model):
+        if isinstance(data.get(label), model):
             return data[label]
-        elif isinstance(data["Error"], Error):
-            raise cls._parse_error(data["Error"], response)
+        elif isinstance(data.get("ErrorInformation"), Error):
+            raise cls._parse_error(data["ErrorInformation"], response)
         else:
             raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
@@ -175,21 +186,6 @@ class FortnoxAPIClient:
                 raise cls._parse_error(e, response)
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
-
-    @classmethod
-    def _parse_error(cls, error: Error, response: requests.Response) -> Exception:
-        match error.Code:
-            case 2000423:
-                # Resource not found
-                raise FortnoxNotFound(error.Message)
-            case 2000663:
-                # Insufficient permissions
-                raise FortnoxPermissionDenied(error.Message)
-            case 2000311:
-                # Missing token/secret
-                raise FortnoxAuthenticationError(error.Message)
-            case _:
-                raise FortnoxAPIError(f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")
 
     @classmethod
     def _get(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
@@ -219,6 +215,13 @@ class FortnoxAPIClient:
                 raise FortnoxAPIError(
                     f"Unknown error from Fortnox API, failed to parse error response:\n{json.dumps(response.json(), indent=4)}")
 
+        return response
+
+    @classmethod
+    def _post(cls, access_token: str, endpoint: str, json: dict):
+        headers = {'Authorization': f'Bearer {access_token}'}
+        response = requests.post(f"{cls.API_URL}/{endpoint}/", json=json, headers=headers)
+        logger.debug(response)
         return response
 
     # Helper to validate API responses against models
@@ -270,3 +273,25 @@ class FortnoxAPIClient:
         supplierinvoice = 'supplierinvoice'
         supplier = 'supplier'
         timereporting = 'timereporting'
+
+    @classmethod
+    def _parse_error(cls, error: Error, response: requests.Response) -> Exception:
+        match error.Code:
+            case 2000423:
+                # Resource not found
+                raise FortnoxNotFound(error.Message)
+            case 2000663:
+                # Insufficient permissions
+                raise FortnoxPermissionDenied(error.Message)
+            case 2000311:
+                # Missing token/secret
+                raise FortnoxAuthenticationError(error.Message)
+            case 2001392:
+                # Invalid field type
+                raise FortnoxInvalidPostData(error.Message)
+            case 2001795:
+                # Missing fields
+                raise FortnoxMissingFieldsError(error.Message)
+            case _:
+                raise FortnoxAPIError(
+                    f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")
