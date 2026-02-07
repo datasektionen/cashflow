@@ -64,6 +64,15 @@ class Expense(BaseModel):
     Text: str
 
 
+class FinancialYear(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    AccountChartType: Optional[str] = None
+    AccountingMethod: Optional[Literal["ACCRUAL", "CASH"]] = None
+    FromDate: str
+    Id: Optional[int] = None
+    ToDate: str
+
+
 class Me(BaseModel):
     # https://apps.fortnox.se/apidocs#tag/fortnox_Me
     Email: str

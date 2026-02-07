@@ -12,7 +12,7 @@ from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError,
     FortnoxNotFound, FortnoxAuthenticationError, FortnoxInvalidPostData, FortnoxMissingFieldsError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
     ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher, \
-    VoucherCreate
+    VoucherCreate, FinancialYear
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,18 @@ class FortnoxAPIClient:
     def retrieve_expense(self, code: str) -> Expense:
         response = self._get(code, f"expenses/{code}")
         return self._parse_retrieve_response(response, Expense, "Expense")
+
+    # ======================
+    # Financial years
+    # ======================
+
+    def list_financial_years(self, access_token: str, limit: int = 100, page: int = 1) -> list[FinancialYear]:
+        response = self._get(access_token, "financialyears", parameters={"limit": limit, "page": page})
+        return self._parse_list_response(response, FinancialYear, "FinancialYears")
+
+    def retrieve_financial_year(self, access_token: str, id: int) -> FinancialYear:
+        response = self._get(access_token, f"financialyears/{id}")
+        return self._parse_retrieve_response(response, FinancialYear, "FinancialYear")
 
     # ======================
     # Users
