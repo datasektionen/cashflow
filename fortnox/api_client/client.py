@@ -5,12 +5,12 @@ from typing import Union, Literal, Any
 from urllib import parse
 
 import requests
-from pydantic import BaseModel, TypeAdapter, RootModel
+from pydantic import BaseModel, TypeAdapter, RootModel, Field
 
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense
+    ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher
 
 logger = logging.getLogger(__name__)
 
@@ -84,30 +84,11 @@ class FortnoxAPIClient:
     def list_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number",
                       limit: int = 100, page: int = 1) -> list[Account]:
         response = self._get(access_token, "accounts", parameters={"limit": limit, "page": page})
-
-        class ResponseModel(BaseModel):
-            MetaInformation: ListMetaInformaion
-            Accounts: list[Account]
-
-        adapter = TypeAdapter(Union[ResponseModel, Error])
-        data = adapter.validate_python(response.json())
-        match data:
-            case ResponseModel():
-                return data.Accounts
-            case Error(_, description):
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_list_response(response, Account, "Accounts")
 
     def retrieve_account(self, access_token: str, number: int) -> Account:
         response = self._get(access_token, f"accounts/{number}")
-        match self._validate(Account, response):
-            case {"Account": Account() as account}:
-                return account
-            case {"Error": Error(_, description)}:
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_retrieve_response(response, Account, "Account")
 
     # ======================
     # Cost centers
@@ -115,64 +96,27 @@ class FortnoxAPIClient:
 
     def list_cost_centers(self, access_token: str, limit: int = 100, page: int = 1) -> list[CostCenter]:
         response = self._get(access_token, "costcenters", {"limit": limit, "page": page})
-
-        class ResponseModel(BaseModel):
-            CostCenters: list[CostCenter]
-
-        adapter = TypeAdapter(Union[ResponseModel, Error])
-        data = adapter.validate_python(response.json())
-        if isinstance(data, ResponseModel):
-            return data.CostCenters
-        elif isinstance(data, Error):
-            logger.debug(data)
-            raise FortnoxAPIError(f"{data.Error}: {data.Message}")
-        raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_list_response(response, CostCenter, "CostCenters")
 
     # ======================
     # Company information
     # ======================
+
     def retrieve_company_info(self, access_token: str) -> CompanyInformation:
         response = self._get(access_token, "companyinformation")
-        match self._validate(CompanyInformation, response):
-            case {"CompanyInformation": CompanyInformation() as c}:
-                return c
-            case {"Error": Error(_, description)}:
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_retrieve_response(response, CompanyInformation, "CompanyInformation")
 
     # ======================
     # Expenses
     # ======================
 
-    def retrieve_expense(self, code: str) -> Expense:
-        response = self._get(code, f"expenses/{code}")
-
-        match self._validate(Expense, response):
-            case {"Expense": Expense() as expense}:
-                return expense
-            case {"Error": Error(_, description)}:
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
-
     def list_expenses(self, access_token: str) -> list[Expense]:
         response = self._get(access_token, "expenses")
+        return self._parse_list_response(response, Expense, "Expenses")
 
-        class ResponseModel(BaseModel):
-            MetaInformation: ListMetaInformaion
-            Expenses: list[Expense]
-
-        adapter = TypeAdapter(Union[ResponseModel, Error])
-        data = adapter.validate_python(response.json())
-
-        match data:
-            case ResponseModel() as resp:
-                return resp.Expenses
-            case Error(_, description):
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+    def retrieve_expense(self, code: str) -> Expense:
+        response = self._get(code, f"expenses/{code}")
+        return self._parse_retrieve_response(response, Expense, "Expense")
 
     # ======================
     # Users
@@ -181,49 +125,56 @@ class FortnoxAPIClient:
     def retrieve_current_user(self, access_token: str) -> Me:
         """Retrieves information about the user connected to the given token"""
         response = self._get(access_token, 'me')
-        match self._validate(Me, response):
-            case {'Me': Me() as me}:
-                return me
-            case {'Error': Error(_, description)}:
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_retrieve_response(response, Me, "Me")
 
     # ======================
     # Vouchers
     # ======================
 
+    def list_vouchers(self, access_token: str) -> list[Voucher]:
+        response = self._get(access_token, "vouchers")
+        return self._parse_list_response(response, Voucher, "Vouchers")
+
+    def retrieve_voucher(self, access_token: str, voucher_series: str, voucher_number: int) -> Voucher:
+        response = self._get(access_token, f"vouchers/{voucher_series}/{voucher_number}")
+        return self._parse_retrieve_response(response, Voucher, "Voucher")
+
     def list_voucher_series(self, access_token: str) -> list[VoucherSeriesListItem]:
         response = self._get(access_token, "voucherseries")
-
-        class ResponseModel(BaseModel):
-            MetaInformation: ListMetaInformaion
-            VoucherSeriesCollection: list[VoucherSeriesListItem]
-
-        adapter = TypeAdapter(Union[ResponseModel, Error])
-        data = adapter.validate_python(response.json())
-
-        match data:
-            case ResponseModel() as resp:
-                return resp.VoucherSeriesCollection
-            case Error(_, description):
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")
 
     def retrieve_voucher_series(self, access_token: str, code: str) -> VoucherSeries:
         response = self._get(access_token, f"voucherseries/{code}")
-        match self._validate(VoucherSeries, response):
-            case {"VoucherSeries": VoucherSeries() as vs}:
-                return vs
-            case {"Error": Error(_, description)}:
-                raise FortnoxAPIError(description)
-            case _:
-                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+        return self._parse_retrieve_response(response, VoucherSeries, "VoucherSeries")
 
     # ======================
     # Helpers
     # ======================
+
+    def _parse_retrieve_response[T](cls, response: requests.Response, model: type[T], label: str) -> T:
+        data = cls._validate(model, response)
+        if isinstance(data[label], model):
+            return data[label]
+        elif isinstance(data["Error"], Error):
+            raise FortnoxAPIError(data["Error"].description)
+        else:
+            raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    @classmethod
+    def _parse_list_response[T](cls, response: requests.Response, model: type[T], label: str) -> list[T]:
+        class ResponseModel(BaseModel):
+            MetaInformation: ListMetaInformaion
+            Collection: list[model] = Field(alias=label)
+
+        adapter = TypeAdapter(Union[ResponseModel, Error])
+
+        match adapter.validate_python(response.json()):
+            case ResponseModel() as resp:
+                return resp.Collection
+            case Error(_, description):
+                raise FortnoxAPIError(description)
+            case _:
+                raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
     @classmethod
     def _get(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
@@ -271,6 +222,12 @@ class FortnoxAPIClient:
     # This class should only be used internally,
     # it's constructed to neatly parse the JSON responses from Fortnox
     class _APIResponse[InfoModel](RootModel[dict[str, InfoModel]]):
+        # Responses from Fortnox come in the following shape:
+        # {
+        #   "Model": {
+        #       ...
+        #   }
+        # }
         pass
 
     class _AuthErrorInfo(BaseModel):

@@ -73,6 +73,49 @@ class Me(BaseModel):
     SysAdmin: bool
 
 
+class VoucherRow(BaseModel):
+    Account: conint(ge=1000, le=9999)
+    CostCenter: Optional[str] = None
+    Credit: Optional[float] = None
+    Debit: Optional[float] = None
+    Description: Optional[str] = None
+    Project: Optional[str] = None
+    Quantity: Optional[float] = None
+    Removed: Optional[bool] = None
+    TransactionInformation: Optional[constr(max_length=100)] = None
+
+
+class Voucher(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    ApprovalState: Optional[int] = None
+    Comments: Optional[constr(max_length=1000)] = None
+    CostCenter: Optional[str] = None
+    Description: constr(min_length=1, max_length=200)
+    Project: Optional[str] = None
+    ReferenceNumber: Optional[str] = None
+    ReferenceType: Optional[Literal[
+        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    TransactionDate: str
+    VoucherNumber: int
+    VoucherRows: Optional[list[VoucherRow]] = None
+    VoucherSeries: str
+    Year: int
+
+
+class VoucherListItem(BaseModel):
+    url: Optional[str] = Field(alias="@url", default=None)
+    ApprovalState: Optional[int] = None
+    Comments: Optional[str] = None
+    Description: Optional[str] = None
+    ReferenceNumber: Optional[str] = None
+    ReferenceType: Optional[Literal[
+        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    TransactionDate: Optional[str] = None
+    VoucherNumber: Optional[int] = None
+    VoucherSeries: Optional[str] = None
+    Year: Optional[int] = None
+
+
 class VoucherSeries(BaseModel):
     class ApproverModel(BaseModel):
         Id: int
