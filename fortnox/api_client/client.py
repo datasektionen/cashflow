@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 from enum import Enum
 from typing import Union, Literal, Any
@@ -81,8 +82,7 @@ class FortnoxAPIClient:
     # Accounts
     # ======================
 
-    def list_accounts(self, access_token: str, sru: int | None = None, orderby: Literal["number"] = "number",
-                      limit: int = 100, page: int = 1) -> list[Account]:
+    def list_accounts(self, access_token: str, limit: int = 100, page: int = 1) -> list[Account]:
         response = self._get(access_token, "accounts", parameters={"limit": limit, "page": page})
         return self._parse_list_response(response, Account, "Accounts")
 
@@ -110,8 +110,8 @@ class FortnoxAPIClient:
     # Expenses
     # ======================
 
-    def list_expenses(self, access_token: str) -> list[Expense]:
-        response = self._get(access_token, "expenses")
+    def list_expenses(self, access_token: str, limit: int = 100, page: int = 1) -> list[Expense]:
+        response = self._get(access_token, "expenses", parameters={"limit": limit, "page": page})
         return self._parse_list_response(response, Expense, "Expenses")
 
     def retrieve_expense(self, code: str) -> Expense:
@@ -131,16 +131,16 @@ class FortnoxAPIClient:
     # Vouchers
     # ======================
 
-    def list_vouchers(self, access_token: str) -> list[Voucher]:
-        response = self._get(access_token, "vouchers")
+    def list_vouchers(self, access_token: str, limit: int = 100, page: int = 1) -> list[Voucher]:
+        response = self._get(access_token, "vouchers", parameters={"limit": limit, "page": page})
         return self._parse_list_response(response, Voucher, "Vouchers")
 
     def retrieve_voucher(self, access_token: str, voucher_series: str, voucher_number: int) -> Voucher:
         response = self._get(access_token, f"vouchers/{voucher_series}/{voucher_number}")
         return self._parse_retrieve_response(response, Voucher, "Voucher")
 
-    def list_voucher_series(self, access_token: str) -> list[VoucherSeriesListItem]:
-        response = self._get(access_token, "voucherseries")
+    def list_voucher_series(self, access_token: str, limit: int = 100, page: int = 1) -> list[VoucherSeriesListItem]:
+        response = self._get(access_token, "voucherseries", parameters={"limit": limit, "page": page})
         return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")
 
     def retrieve_voucher_series(self, access_token: str, code: str) -> VoucherSeries:
@@ -156,7 +156,7 @@ class FortnoxAPIClient:
         if isinstance(data[label], model):
             return data[label]
         elif isinstance(data["Error"], Error):
-            raise FortnoxAPIError(data["Error"].description)
+            raise cls._parse_error(data["Error"], response)
         else:
             raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
@@ -171,10 +171,25 @@ class FortnoxAPIClient:
         match adapter.validate_python(response.json()):
             case ResponseModel() as resp:
                 return resp.Collection
-            case Error(_, description):
-                raise FortnoxAPIError(description)
+            case Error() as e:
+                raise cls._parse_error(e, response)
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
+
+    @classmethod
+    def _parse_error(cls, error: Error, response: requests.Response) -> Exception:
+        match error:
+            case Error(Error=_, Message=msg, Code=2000423):
+                # Resource not found
+                raise FortnoxNotFound(msg)
+            case Error(Error=_, Message=msg, Code=2000663):
+                # Insufficient permissions
+                raise FortnoxPermissionDenied(msg)
+            case Error(Error=_, Message=msg, Code=2000311):
+                # Missing token/secret
+                raise FortnoxAuthenticationError(msg)
+            case _:
+                raise FortnoxAPIError(f"Unknown error from Fortnox API (={error.Code}): {error.Message}")
 
     @classmethod
     def _get(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
@@ -197,19 +212,12 @@ class FortnoxAPIClient:
             # exceptions.
 
             # Try to parse error
-            error = Error.model_validate(response.json()["ErrorInformation"])
-            match error:
-                case Error(Error=_, Message=msg, Code=2000423):
-                    # Resource not found
-                    raise FortnoxNotFound(msg)
-                case Error(Error=_, Message=msg, Code=2000663):
-                    # Insufficient permissions
-                    raise FortnoxPermissionDenied(msg)
-                case Error(Error=_, Message=msg, Code=2000311):
-                    # Missing token/secret
-                    raise FortnoxAuthenticationError(msg)
-                case _:
-                    raise FortnoxAPIError(response.text)
+            try:
+                error = Error.model_validate(response.json()["ErrorInformation"])
+                raise cls._parse_error(error, response)
+            except Exception:
+                raise FortnoxAPIError(
+                    f"Unknown error from Fortnox API, failed to parse error response:\n{json.dumps(response.json(), indent=4)}")
 
         return response
 
