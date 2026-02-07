@@ -178,18 +178,18 @@ class FortnoxAPIClient:
 
     @classmethod
     def _parse_error(cls, error: Error, response: requests.Response) -> Exception:
-        match error:
-            case Error(Error=_, Message=msg, Code=2000423):
+        match error.Code:
+            case 2000423:
                 # Resource not found
-                raise FortnoxNotFound(msg)
-            case Error(Error=_, Message=msg, Code=2000663):
+                raise FortnoxNotFound(error.Message)
+            case 2000663:
                 # Insufficient permissions
-                raise FortnoxPermissionDenied(msg)
-            case Error(Error=_, Message=msg, Code=2000311):
+                raise FortnoxPermissionDenied(error.Message)
+            case 2000311:
                 # Missing token/secret
-                raise FortnoxAuthenticationError(msg)
+                raise FortnoxAuthenticationError(error.Message)
             case _:
-                raise FortnoxAPIError(f"Unknown error from Fortnox API (={error.Code}): {error.Message}")
+                raise FortnoxAPIError(f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")
 
     @classmethod
     def _get(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
