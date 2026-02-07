@@ -1,46 +1,18 @@
 import secrets
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-from fortnox.api_client import FortnoxAPIClient, AuthCodeGrant, RefreshTokenGrant
-from fortnox.api_client.exceptions import FortnoxAPIError, FortnoxPermissionDenied
+from fortnox import require_fortnox_auth
+from fortnox.api_client import AuthCodeGrant
 from fortnox.models import APITokens
 
 
 class CSRFValidationError(PermissionError):
     pass
-
-
-client = FortnoxAPIClient(client_id=settings.FORTNOX_CLIENT_ID, client_secret=settings.FORTNOX_CLIENT_SECRET,
-                          scope=['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile'])
-
-
-# TODO: Check using expires_at instead
-def check_or_update_token(user):
-    """Returns a valid access token for the user, if possible. Otherwise None"""
-    try:
-        tokens = APITokens.objects.get(user=user)
-    except APITokens.DoesNotExist:
-        return None
-
-    try:
-        client.retrieve_current_user(tokens.access_token)
-        return tokens.access_token
-    except FortnoxAPIError:
-        # Try refreshing token
-        grant = RefreshTokenGrant(code=tokens.refresh_token)
-        try:
-            response = client.retrieve_access_token(grant)
-            APITokens.objects.update_or_create(user=user, defaults={'access_token': response.access_token,
-                                                                    'refresh_token': response.refresh_token, })
-            return response.access_token
-        except FortnoxAPIError:
-            return None
 
 
 @require_GET
@@ -58,7 +30,7 @@ def get_auth_code(request):
     request.session['fortnox_csrf_token'] = csrf_token
 
     redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
-    return HttpResponseRedirect(client.build_auth_code_url(redirect_uri, csrf_token))
+    return HttpResponseRedirect(request.fortnox_client.build_auth_code_url(redirect_uri, csrf_token))
 
 
 @login_required
@@ -88,7 +60,8 @@ def auth_complete(request):
             return redirect(reverse('admin-index'))
         case auth_code, _:
             # TODO: Error handling
-            response = client.retrieve_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
+            response = request.fortnox_client.retrieve_access_token(
+                AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
             APITokens.objects.update_or_create(user=request.user, defaults={'access_token': response.access_token,
                                                                             'refresh_token': response.refresh_token, })
 
@@ -97,20 +70,13 @@ def auth_complete(request):
 
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
+@require_fortnox_auth
 def overview(request):
-    access_token = check_or_update_token(request.user)
-    if access_token is not None:
-        user_info = client.retrieve_current_user(access_token)
-        fortnox_user = user_info.model_dump()
+    user_info = request.fortnox_client.retrieve_current_user(request.fortnox_access_token)
+    fortnox_user = user_info.model_dump()
 
-        accounts = client.list_accounts(access_token)
-        accounts = [account for account in accounts if account.Active]
-        accounts = [a.model_dump() for a in accounts]
+    accounts = request.fortnox_client.list_accounts(request.fortnox_access_token)
+    accounts = [account for account in accounts if account.Active]
+    accounts = [a.model_dump() for a in accounts]
 
-
-    else:
-        fortnox_user = None
-        accounts = []
-
-    return render(request, 'admin/fortnox/overview.html',
-                  {'fortnox_user': fortnox_user, 'accounts': accounts})
+    return render(request, 'admin/fortnox/overview.html', {'fortnox_user': fortnox_user, 'accounts': accounts})

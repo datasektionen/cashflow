@@ -76,6 +76,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'fortnox.FortnoxMiddleware',
 )
 
 ROOT_URLCONF = 'cashflow.urls'
@@ -250,3 +251,6 @@ LOGGING = {
 # Fortnox settings
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
 FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET')
+FORTNOX_SCOPE = ['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile']
+# urlconf to redirect when requiring Fortnox authentication
+FORTNOX_AUTH_REDIRECT = "fortnox-auth-get"
