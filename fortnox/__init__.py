@@ -21,6 +21,7 @@ class FortnoxMiddleware:
     def __call__(self, request):
         from .models import APIUser
 
+        retrieve_or_refresh_token(self.client, request.user)
         request.fortnox_client = self.client
         return self.get_response(request)
 
