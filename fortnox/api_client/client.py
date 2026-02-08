@@ -75,7 +75,7 @@ class FortnoxAPIClient:
                     logger.debug(f'{user_info.Name} fetched new access token')
                 return response
             case self._AuthErrorInfo() as e:
-                raise FortnoxAPIError(f'{e.error}: {e.error_description}')
+                raise FortnoxAuthenticationError(f'{e.error}: {e.error_description}')
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
@@ -137,7 +137,10 @@ class FortnoxAPIClient:
 
     def retrieve_current_user(self, access_token: str) -> Me:
         """Retrieves information about the user connected to the given token"""
-        response = self._get(access_token, 'me')
+        try:
+            response = self._get(access_token, 'me')
+        except FortnoxNotFound as e:
+            raise FortnoxNotFound("No user connected to the given token.") from e
         return self._parse_retrieve_response(response, Me, "Me")
 
     # ======================
@@ -212,6 +215,8 @@ class FortnoxAPIClient:
 
             if response.status_code == 401:
                 raise FortnoxAuthenticationError("Invalid access token")
+            elif response.status_code == 404:
+                raise FortnoxNotFound("Resource not found")
 
             # Fortnox doesn't seem to be consistent with their HTTP error codes
             # For example, trying to access something without proper authentication
@@ -225,7 +230,7 @@ class FortnoxAPIClient:
                 raise cls._parse_error(error, response)
             except Exception:
                 raise FortnoxAPIError(
-                    f"Unknown error from Fortnox API, failed to parse error response:\n{json.dumps(response.json(), indent=4)}")
+                    f"Unknown error from Fortnox API, failed to parse error response:\n{response.text=}")
 
         return response
 

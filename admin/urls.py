@@ -14,10 +14,7 @@ urlpatterns = [
     path('fortnox', views.fortnox.overview, name='fortnox-overview'),
     path('auth/', views.fortnox.get_auth_code, name='fortnox-auth-get'),
     path('auth/complete/', views.fortnox.auth_complete, name='fortnox-auth-complete'),
-    # re_path(r'^auth/test$', views.fortnox_auth_test, name='admin-auth-test'),
-    # re_path(r'^auth/search$', views.fortnox_auth_search, name='admin-auth-search'),
-    # re_path(r'^auth/refresh$', views.fortnox_auth_refresh, name='admin-auth-refresh'),
-    # re_path(r'^auth/test/importaccount$', views.fortnox_import_accounts_to_db, name='admin-auth-importaccount'),
+    path('auth/disconnect/', views.fortnox.disconnect, name='fortnox-disconnect'),
 
     re_path(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     re_path(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),

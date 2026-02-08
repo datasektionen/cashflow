@@ -1,26 +1,15 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 
-class APITokens(models.Model):
-    user = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE) 
-    created_at = models.DateTimeField(auto_now_add=True)
-    access_token = models.TextField()
-    refresh_token = models.TextField()
+class APIUser(models.Model):
+    user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE, related_name="fortnox")
+    name = models.TextField(null=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    access_token = models.TextField(null=False)
+    refresh_token = models.TextField(null=False)
 
 
-    @classmethod
-    def from_auth_response(cls, user, data):
-        return cls.objects.update_or_create(
-            user = user,
-            # access_token=data['access_token'],
-            # refresh_token=data['refresh_token'],
-            defaults={
-                'access_token': data['access_token'],
-                'refresh_token': data['refresh_token'],
-            }
-        )
-    
 class Account(models.Model):
     AccountID = models.AutoField(primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,4 +25,3 @@ class Account(models.Model):
     SRU = models.IntegerField()
     VATCode = models.TextField()
     Year = models.IntegerField()
-

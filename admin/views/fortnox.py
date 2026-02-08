@@ -1,3 +1,4 @@
+import logging
 import secrets
 
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -8,7 +9,9 @@ from django.views.decorators.http import require_GET
 
 from fortnox import require_fortnox_auth
 from fortnox.api_client import AuthCodeGrant
-from fortnox.models import APITokens
+from fortnox.models import APIUser
+
+logger = logging.getLogger(__name__)
 
 
 class CSRFValidationError(PermissionError):
@@ -55,27 +58,40 @@ def auth_complete(request):
     # Get auth code from URL parameters
     match request.GET.get('code'), request.GET.get('error'):
         case None, e:
-            print(e)
-            # TODO: Error handling
+            logger.error(f"Error when authenticating {request.user} to Fortnox: {e}")
             return redirect(reverse('admin-index'))
         case auth_code, _:
-            # TODO: Error handling
             response = request.fortnox_client.retrieve_access_token(
                 AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
-            APITokens.objects.update_or_create(user=request.user, defaults={'access_token': response.access_token,
-                                                                            'refresh_token': response.refresh_token, })
+            user_info = request.fortnox_client.retrieve_current_user(response.access_token)
+            APIUser.objects.update_or_create(user=request.user, access_token=response.access_token,
+                                             refresh_token=response.refresh_token, name=user_info.Name)
+            logger.info(f"Completed Fortnox authentication for {request.user} as {user_info.Name}")
 
     return redirect(reverse('fortnox-overview'))
+
+
+@login_required
+def disconnect(request):
+    """Disconnects (logs out) the user from Fortnox. Deletes saved tokens and then redirects to main admin page."""
+    try:
+        name = request.user.fortnox.name
+        request.user.fortnox.delete()
+        logger.info(f"{request.user} ({name}) manually disconnected from Fortnox")
+    except APIUser.DoesNotExist:
+        logger.warning(f"{request.user} tried to disconnect from Fortnox, but was not previously connected")
+
+    return redirect(reverse('admin-index'))
 
 
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 @require_fortnox_auth
 def overview(request):
-    user_info = request.fortnox_client.retrieve_current_user(request.fortnox_access_token)
+    user_info = request.fortnox_client.retrieve_current_user(request.user.fortnox.access_token)
     fortnox_user = user_info.model_dump()
 
-    accounts = request.fortnox_client.list_accounts(request.fortnox_access_token)
+    accounts = request.fortnox_client.list_accounts(request.user.fortnox.access_token)
     accounts = [account for account in accounts if account.Active]
     accounts = [a.model_dump() for a in accounts]
 
