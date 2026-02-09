@@ -64,8 +64,9 @@ def auth_complete(request):
             response = request.fortnox_client.retrieve_access_token(
                 AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
             user_info = request.fortnox_client.retrieve_current_user(response.access_token)
-            APIUser.objects.update_or_create(user=request.user, access_token=response.access_token,
-                                             refresh_token=response.refresh_token, name=user_info.Name)
+            APIUser.objects.update_or_create(user=request.user, defaults={"access_token": response.access_token,
+                                                                          "refresh_token": response.refresh_token,
+                                                                          "name": user_info.Name})
             logger.info(f"Completed Fortnox authentication for {request.user} as {user_info.Name}")
 
     return redirect(reverse('fortnox-overview'))
@@ -88,11 +89,9 @@ def disconnect(request):
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 @require_fortnox_auth
 def overview(request):
-    user_info = request.fortnox_client.retrieve_current_user(request.user.fortnox.access_token)
-    fortnox_user = user_info.model_dump()
-
     accounts = request.fortnox_client.list_accounts(request.user.fortnox.access_token)
     accounts = [account for account in accounts if account.Active]
     accounts = [a.model_dump() for a in accounts]
 
-    return render(request, 'admin/fortnox/overview.html', {'fortnox_user': fortnox_user, 'accounts': accounts})
+    return render(request, 'admin/fortnox/overview.html',
+                  {'fortnox_user_name': request.user.fortnox.name, 'accounts': accounts})

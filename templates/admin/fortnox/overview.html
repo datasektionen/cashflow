@@ -5,8 +5,8 @@
 {% block content %}
 
 
-    {% if fortnox_user is not None %}
-        <p>Du är inloggad som {{ fortnox_user.Name }}</p>
+    {% if fortnox_user_name is not None %}
+        <p>Du är inloggad som {{ fortnox_user_name }}</p>
         <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox </a>
     {% else %}
         <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>

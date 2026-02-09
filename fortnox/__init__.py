@@ -21,8 +21,13 @@ class FortnoxMiddleware:
     def __call__(self, request):
         from .models import APIUser
 
-        retrieve_or_refresh_token(self.client, request.user)
         request.fortnox_client = self.client
+
+        if APIUser.objects.filter(user=request.user).exists():
+            APIUser.objects.get(user=request.user)
+            # Make sure token is up to date
+            retrieve_or_refresh_token(self.client, request.user)
+
         return self.get_response(request)
 
 
