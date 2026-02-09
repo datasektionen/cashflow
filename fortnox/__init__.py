@@ -44,14 +44,14 @@ def retrieve_or_refresh_token(client, user):
         # Test validity
         client.retrieve_current_user(token)
         return token
-    except FortnoxNotFound as e:
+    except (FortnoxNotFound, FortnoxAuthenticationError) as e:
         logger.debug(f"Missing or invalid access token for {user}: {e}\nAttempting to refresh access token")
         # Try refreshing token
         grant = RefreshTokenGrant(code=user.fortnox.refresh_token)
         try:
             response = client.retrieve_access_token(grant)
-            APIUser.objects.update_or_create(user=user, access_token=response.access_token,
-                                             refresh_token=response.refresh_token)
+            APIUser.objects.update_or_create(user=user, defaults={"access_token": response.access_token,
+                                                                  "refresh_token": response.refresh_token})
             logger.debug(f"Successfully refreshed access token for {user}")
             return response.access_token
         except FortnoxAuthenticationError as e:
