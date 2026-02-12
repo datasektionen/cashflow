@@ -1,13 +1,18 @@
-from datetime import date
+from datetime import date, timedelta
 
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.forms.models import model_to_dict
-import re
+from requests_cache import CachedSession
+
+# Cache Gordian requests for 24 hours
+cache_session = CachedSession("gordian", expire_after=timedelta(hours=24))
 
 """
 Represents an invoice.
 """
+
+
 class Invoice(models.Model):
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
@@ -20,7 +25,8 @@ class Invoice(models.Model):
     file_is_original = models.BooleanField()
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
-    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed", on_delete=models.DO_NOTHING)
+    payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed",
+                                 on_delete=models.DO_NOTHING)
 
     # Returns a string representation of the invoice
     def __str__(self):
@@ -44,26 +50,19 @@ class Invoice(models.Model):
         self.save()
 
         from expenses.models import Comment
-        comment = Comment(
-            author=user.profile,
-            invoice=self,
-            content="Betalade fakturan ```" + str(self) + "```"
-        )
+        comment = Comment(author=user.profile, invoice=self, content="Betalade fakturan ```" + str(self) + "```")
         comment.save()
 
     # Return the total amount of the invoice parts
     def total_amount(self):
-        total = 0
-        for part in self.invoicepart_set.all():
-            total += part.amount
-        return total
+        return sum([part.amount for part in self.parts.all()])  # return total
 
     # Returns the cost centres belonging to the invoice as a list [{ cost_centre: 'Name' }, ...]
     def cost_centres(self):
-        return self.invoicepart_set.order_by('cost_centre').values('cost_centre').distinct()
+        return self.parts.order_by('cost_centre').values('cost_centre').distinct()
 
     def is_attested(self):
-        return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
+        return self.parts.filter(attested_by__isnull=True).count() == 0
 
     def is_payed(self):
         if self.payed_at and self.payed_by:
@@ -74,8 +73,8 @@ class Invoice(models.Model):
     def is_payable(self):
         if self.payed_at:
             return False
-        for ip in self.invoicepart_set.all():
-            if ip.attested_by == None: return False
+        for ip in self.parts.all():
+            if ip.attested_by is None: return False
         return True
 
     # Returns a dict representation of the model
@@ -91,41 +90,26 @@ class Invoice(models.Model):
 
     @staticmethod
     def view_attestable(user):
-        filters = {
-            'invoicepart__attested_by': None,
-        }
-        cost_centres = user.profile.attestable_cost_centres()
-        if cost_centres is not True:
-            escaped = [re.escape(cc) for cc in cost_centres]
-            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
-        return Invoice.objects.order_by('due_date').filter(**filters).distinct()
+        return InvoicePart.objects.filter(attested_by__isnull=True)
 
-    # TODO
+    # # TODO
     @staticmethod
     def payable():
-        return Invoice.objects. \
-            exclude(payed_at__isnull=False). \
-            exclude(invoicepart__attested_by=None). \
-            order_by('due_date')
+        return Invoice.objects.exclude(payed_at__isnull=True, parts__attested_by__isnull=True)
 
     # TODO
     @staticmethod
     def view_accountable(user):
-        cost_centres = user.profile.accountable_cost_centres()
-        if cost_centres is True:
-            return Invoice.objects.exclude(payed_at__isnull=True).filter(verification='').distinct()
+        return Invoice.objects.exclude(payed_at__isnull=True).order_by("invoice_date")
 
-        escaped = [re.escape(cc) for cc in cost_centres]
-        return Invoice.objects.exclude(payed_at__isnull=True).filter(
-            verification='',
-            invoicepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
-        ).distinct()
 
 """
 Defines an invoice part, which is a specification of a part of an invoice.
 """
+
+
 class InvoicePart(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="parts")
     cost_centre = models.TextField(blank=True)
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
@@ -141,17 +125,40 @@ class InvoicePart(models.Model):
     def __unicode__(self):
         return self.invoice.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
 
+    def retrieve_account_from_gordian(self):
+        """Updates the account field to match the specified account on Gordian"""
+        response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
+        try:
+            cost_center = next(filter(lambda cc: cc["CostCentreName"] == self.cost_centre, response.json()))
+        except IndexError as e:
+            raise ValueError(f"Couldn't find cost centre {self.cost_centre} on Gordian:\n{e}")
+
+        response = cache_session.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres",
+                                     params={"id": cost_center["CostCentreID"]})
+        try:
+            snd_cost_center = next(
+                filter(lambda cc: cc["SecondaryCostCentreName"] == self.secondary_cost_centre, response.json()))
+        except IndexError as e:
+            raise ValueError(f"Couldn't find secondary cost centre {self.secondary_cost_centre}:\n{e}")
+
+        response = cache_session.get(f"https://budget.datasektionen.se/api/BudgetLines",
+                                     params={"id": snd_cost_center["SecondaryCostCentreID"]})
+
+        try:
+            budget_line = next(filter((lambda b: b["BudgetLineName"] == self.budget_line), response.json()))
+        except IndexError as e:
+            raise ValueError(f"Couldn't find budget line {self.budget_line}:\n{e}")
+
+        return budget_line["BudgetLineAccount"]
+
     def attest(self, user):
         self.attested_by = user.profile
         self.attest_date = date.today()
 
         self.save()
         from expenses.models import Comment
-        comment = Comment(
-            author=user.profile,
-            invoice=self.invoice,
-            content="Attesterar fakturadelen ```" + str(self) + "```"
-        )
+        comment = Comment(author=user.profile, invoice=self.invoice,
+                          content="Attesterar fakturadelen ```" + str(self) + "```")
         comment.save()
 
     # Returns dict representation of the model
