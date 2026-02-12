@@ -1,4 +1,4 @@
-FROM python:3.14.2-alpine AS prod
+FROM python:3.14.3-alpine AS prod
 
 ENV TZ=Europe/Stockholm
 
