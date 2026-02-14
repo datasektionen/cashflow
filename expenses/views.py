@@ -118,7 +118,7 @@ def edit_expense(request, pk):
     if request.method == 'GET':
         return render(request, 'expenses/edit.html', {
             "expense": expense,
-            "expenseparts": expense.expensepart_set.all(),
+            "expenseparts": expense.parts.all(),
             "budget_url": settings.BUDGET_URL,
         })
 
@@ -222,7 +222,7 @@ def get_expense(request, pk):
         return HttpResponseForbidden()
 
     attestable = []
-    for expense_part in expense.expensepart_set.all():
+    for expense_part in expense.parts.all():
         if request.user.profile.may_attest(expense_part):
             attestable.append(expense_part.id)
 

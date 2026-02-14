@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
+from expenses.models import Expense
 from fortnox import require_fortnox_auth
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
@@ -88,20 +89,39 @@ def disconnect(request):
 
 
 @require_POST
-def account_invoice(request, **kwargs):
-    logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
+def account_expense(request, **kwargs):
+    expense = Expense.objects.get(id=kwargs['id'])
 
+    # Generate a voucher row for every expense part
+    voucher_rows = []
+    for part in expense.parts.all():
+        voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
+        voucher_rows.append(voucher_row)
+
+    created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
+                                                    VoucherCreate(Description=expense.description,
+                                                                  TransactionDate=expense.expense_date.strftime(
+                                                                      '%Y-%m-%d'), VoucherRows=voucher_rows,
+                                                                  # TODO: Is this the right Voucher Series?
+                                                                  VoucherSeries="A"))
+
+    expense.verification = created.VouchNumber
+    expense.save()
+
+    logger.info(f"{request.user} accounted for expense {expense.id}")
+
+    return redirect('admin-account')
+
+
+@require_POST
+def account_invoice(request, **kwargs):
     invoice = Invoice.objects.get(id=kwargs['id'])
-    #
+
     # Generate a voucher row for every invoice part
     voucher_rows = []
     for part in invoice.parts.all():
         voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
         voucher_rows.append(voucher_row)
-
-    # # Determine financial year
-    # years = request.fortnox_client.list_financial_years(request.user.fortnox.access_token)
-    # year = next(y for y in years if datetime.strptime(y.FromDate, "%Y-%m-%d").year == invoice.invoice_date.year)
 
     created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
                                                     VoucherCreate(Description=invoice.description,
@@ -112,6 +132,8 @@ def account_invoice(request, **kwargs):
 
     invoice.verification = created.VoucherNumber
     invoice.save()
+
+    logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
 
     return redirect(reverse('admin-account'))
 

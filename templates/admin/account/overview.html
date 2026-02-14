@@ -10,84 +10,8 @@
             resultatställen så prata med bokföringsansvarig för den andra nämnden).
         </p>
 
-        <div class="select" style="float:right">
-            <select v-model="cost_centre">
-                <option :value="false">Filtrera på resultatställe</option>
-                <option v-for="cost_centre in cost_centres"
-                        v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'"
-                        :value="cost_centre"></option>
-            </select>
-        </div>
+
         <h2>Utlägg</h2>
-        <table v-if="expenses.length > 0">
-            <thead>
-            <tr>
-                <th>Beskrivning</th>
-                <th>Inköpsdatum</th>
-                <th class="right">Verifikationsnummer</th>
-            </tr>
-            </thead>
-            <tbody v-for="expense in expenses"
-                   v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
-            <tr>
-                <td>
-                    (<span v-text="expense.id"></span>)
-                    <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
-                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                            v-on:click="copy('(' + expense.id + ') ' + expense.description)">📋
-                    </button>
-                </td>
-                <td v-text="expense.expense_date"></td>
-
-                <td class="right">
-                    <div v-if="!expense.verification">
-                        <form v-on:submit.prevent="save(expense)" method="POST"
-                              v-bind:action="'expense/' + expense.id + '/verification'">
-                            {% csrf_token %}
-                            <input type="text" style="width:120px;" name="verification"
-                                   v-model="expense.verificationString" placeholder="Tex. E214">
-                            <button class="theme-color btn-color" v-on:click="save(expense, $event)">Spara</button>
-                        </form>
-                    </div>
-                    <div v-else>
-                        <span>Sparade: <span style="font-weight: bold;" v-text="expense.verification"></span>.</span>
-                    </div>
-                </td>
-            </tr>
-            <tr v-if="!expense.verification">
-                <td colspan="3">
-                    <table>
-                        <tr v-for="expensePart in expense.expense_parts">
-                            <td style="text-align: right; width: 50%;"
-                                v-text="expensePart.cost_centre + ' > ' + expensePart.secondary_cost_centre + ' > ' + expensePart.budget_line"></td>
-                            <td>
-                                <span v-text="expensePart.amount + ' kr'"></span>
-                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                        v-on:click="copy(expensePart.amount)">📋
-                                </button>
-                            </td>
-                        </tr>
-                        <tr style="font-weight: bold;">
-                            <td class="right">Totalt:</td>
-                            <td>
-                                <span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span>
-                                kr
-                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                        v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">
-                                    📋
-                                </button>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <p v-else><b>Du har inga kvitton att bokföra. Bra jobbat!</b></p>
-
-
-        <h2>Fakturor</h2>
-
         <div class="container-fluid">
             <div class="row">
                 <div class="col-lg-3"><h3>Beskrivning</h3></div>
@@ -95,18 +19,18 @@
                 <div class="col-lg-3"></div>
             </div>
 
-            {% for invoice in invoices %}
-                <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
+            {% for expense in expenses %}
+                <form method="post" action={% url 'fortnox-account-expense' expense.id %}>
                     <div class="row theme-label-when-auto">
-                        <div class="col-lg-3"><strong>{{ invoice.description }}</strong></div>
-                        <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
+                        <div class="col-lg-3"><strong>{{ expense.description }}</strong></div>
+                        <div class="col-lg-3"><strong>{{ expense.expense_date}}</strong></div>
                         <div class="col-lg-3 pull-right">
                             <button type="submit">Bokför</button>
                         </div>
                     </div>
                     <div class="container">
-                        {% for part, default_account in invoice_parts %}
-                            {% if part.invoice == invoice %}
+                        {% for part, default_account in expense_parts %}
+                            {% if part.expense == expense %}
                                 <div class="row">
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
                                         <option>{{ default_account }}</option>
@@ -128,10 +52,61 @@
                         <hr>
                     </div>
 
-                {% csrf_token %}
+                    {% csrf_token %}
                 </form>
             {% endfor %}
         </div>
+
+
+    </div>
+
+
+    <h2>Fakturor</h2>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3"><h3>Beskrivning</h3></div>
+            <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
+            <div class="col-lg-3"></div>
+        </div>
+
+        {% for invoice in invoices %}
+            <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
+                <div class="row theme-label-when-auto">
+                    <div class="col-lg-3"><strong>{{ invoice.description }}</strong></div>
+                    <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
+                    <div class="col-lg-3 pull-right">
+                        <button type="submit">Bokför</button>
+                    </div>
+                </div>
+                <div class="container">
+                    {% for part, default_account in invoice_parts %}
+                        {% if part.invoice == invoice %}
+                            <div class="row">
+                                <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                    <option>{{ default_account }}</option>
+                                </select>
+                                <div class="col-lg-4">
+                                    <p>
+                                        {{ part.cost_centre }} >
+                                        {{ part.secondary_cost_centre }} >
+                                        {{ part.budget_line }}
+                                    </p>
+                                </div>
+                                <div class="col-sm-1">
+                                    {{ part.amount }} kr
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <hr>
+                </div>
+
+                {% csrf_token %}
+            </form>
+        {% endfor %}
+    </div>
 
 
     </div>

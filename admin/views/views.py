@@ -157,19 +157,21 @@ def invoice_pay(request, pk):
 @user_passes_test(lambda u: u.profile.may_view_accountable())
 @require_fortnox_auth
 def account_overview(request):
-
     # Retrieve active accounts from Fortnox
     accounts = [account.model_dump() for account in
                 request.fortnox_client.list_accounts(request.user.fortnox.access_token) if account.Active]
 
     accountable_invoices = Invoice.view_accountable(request.user)
+    accountable_expenses = Expense.view_accountable(request.user)
 
+    expense_parts = [(part, part.retrieve_account_from_gordian()) for part in
+                     ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
     invoice_parts = [(part, part.retrieve_account_from_gordian()) for part in
                      InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
-                  {"expenses": Expense.view_accountable(request.user), "accounts": accounts,
-                   "invoices": accountable_invoices, "invoice_parts": invoice_parts})
+                  {"accounts": accounts, "invoices": accountable_invoices, "invoice_parts": invoice_parts,
+                   "expenses": accountable_expenses, "expense_parts": expense_parts})
 
 
 @require_http_methods(["GET", "POST"])
@@ -196,7 +198,7 @@ def edit_expense_verification(request, pk):
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense.id}))
     else:
         return render(request, 'expenses/edit-verification.html',
-                      {"expense": expense, "expense_parts": expense.expensepart_set.all()})
+                      {"expense": expense, "expense_parts": expense.parts.all()})
 
 
 @require_POST
