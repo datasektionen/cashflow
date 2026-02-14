@@ -15,6 +15,7 @@ urlpatterns = [
     path('auth/', views.fortnox.get_auth_code, name='fortnox-auth-get'),
     path('auth/complete/', views.fortnox.auth_complete, name='fortnox-auth-complete'),
     path('auth/disconnect/', views.fortnox.disconnect, name='fortnox-disconnect'),
+    path('fortnox/invoices/account/<id>/', views.fortnox.account_invoice, name='fortnox-account-invoice'),
 
     re_path(r'^expense/(?P<pk>\d+)/verification/edit/$', views.edit_expense_verification, name='admin-expense-edit-verification'),
     re_path(r'^expense/(?P<expense_pk>\d+)/verification/$', views.set_verification, name='admin-expense-verification'),

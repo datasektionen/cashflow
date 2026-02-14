@@ -125,8 +125,23 @@ class InvoicePart(models.Model):
     def __unicode__(self):
         return self.invoice.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
 
+    @classmethod
+    def list_cost_centres_from_gordian(cls):
+        response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
+        return response.json()
+
+    @classmethod
+    def list_secondary_cost_centres_from_gordian(cls):
+        cost_centers = cls.list_cost_centres_from_gordian()
+        secondary_cost_centres = []
+        for cc in cost_centers:
+            response = cache_session.get("https://budget.datasektionen.se/api/SecondaryCostCentres",
+                                         params={"id": cc["CostCentreID"]})
+            secondary_cost_centres += response.json()
+        return secondary_cost_centres
+
     def retrieve_account_from_gordian(self):
-        """Updates the account field to match the specified account on Gordian"""
+        """Retrieves the account number for the budget line for this invoice part"""
         response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
         try:
             cost_center = next(filter(lambda cc: cc["CostCentreName"] == self.cost_centre, response.json()))

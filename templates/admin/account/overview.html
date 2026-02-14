@@ -3,41 +3,49 @@
 {% block title %}Bokför{% endblock %}
 
 {% block content %}
-<div id="data">
-    <p>
-        Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för. Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika resultatställen så prata med bokföringsansvarig för den andra nämnden).
-    </p>
+    <div id="data">
+        <p>
+            Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för.
+            Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika
+            resultatställen så prata med bokföringsansvarig för den andra nämnden).
+        </p>
 
-    <div class="select" style="float:right">
-        <select v-model="cost_centre">
-            <option :value="false">Filtrera på resultatställe</option>
-            <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
-        </select>
-    </div>
-    <h2>Utlägg</h2>
-    <table v-if="expenses.length > 0">
-        <thead>
+        <div class="select" style="float:right">
+            <select v-model="cost_centre">
+                <option :value="false">Filtrera på resultatställe</option>
+                <option v-for="cost_centre in cost_centres"
+                        v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'"
+                        :value="cost_centre"></option>
+            </select>
+        </div>
+        <h2>Utlägg</h2>
+        <table v-if="expenses.length > 0">
+            <thead>
             <tr>
                 <th>Beskrivning</th>
                 <th>Inköpsdatum</th>
                 <th class="right">Verifikationsnummer</th>
             </tr>
-        </thead>
-        <tbody v-for="expense in expenses" v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
+            </thead>
+            <tbody v-for="expense in expenses"
+                   v-if="cost_centre == false || expense.cost_centres.indexOf(cost_centre) > -1">
             <tr>
                 <td>
                     (<span v-text="expense.id"></span>)
                     <a v-bind:href="'/expenses/' + expense.id" v-text="expense.description"></a>
                     <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                        v-on:click="copy('(' + expense.id + ') ' + expense.description)">📋</button>
+                            v-on:click="copy('(' + expense.id + ') ' + expense.description)">📋
+                    </button>
                 </td>
                 <td v-text="expense.expense_date"></td>
 
                 <td class="right">
                     <div v-if="!expense.verification">
-                        <form v-on:submit.prevent="save(expense)" method="POST" v-bind:action="'expense/' + expense.id + '/verification'">
+                        <form v-on:submit.prevent="save(expense)" method="POST"
+                              v-bind:action="'expense/' + expense.id + '/verification'">
                             {% csrf_token %}
-                            <input type="text" style="width:120px;" name="verification" v-model="expense.verificationString" placeholder="Tex. E214">
+                            <input type="text" style="width:120px;" name="verification"
+                                   v-model="expense.verificationString" placeholder="Tex. E214">
                             <button class="theme-color btn-color" v-on:click="save(expense, $event)">Spara</button>
                         </form>
                     </div>
@@ -50,164 +58,159 @@
                 <td colspan="3">
                     <table>
                         <tr v-for="expensePart in expense.expense_parts">
-                            <td style="text-align: right; width: 50%;" v-text="expensePart.cost_centre + ' > ' + expensePart.secondary_cost_centre + ' > ' + expensePart.budget_line"></td>
+                            <td style="text-align: right; width: 50%;"
+                                v-text="expensePart.cost_centre + ' > ' + expensePart.secondary_cost_centre + ' > ' + expensePart.budget_line"></td>
                             <td>
                                 <span v-text="expensePart.amount + ' kr'"></span>
                                 <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                    v-on:click="copy(expensePart.amount)">📋</button>
+                                        v-on:click="copy(expensePart.amount)">📋
+                                </button>
                             </td>
                         </tr>
                         <tr style="font-weight: bold;">
                             <td class="right">Totalt:</td>
                             <td>
-                                <span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span> kr
+                                <span v-text="expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2)"></span>
+                                kr
                                 <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                    v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
+                                        v-on:click="copy(expense.expense_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">
+                                    📋
+                                </button>
                             </td>
                         </tr>
                     </table>
                 </td>
             </tr>
-        </tbody>
-    </table>
-    <p v-else><b>Du har inga kvitton att bokföra. Bra jobbat!</b></p>
+            </tbody>
+        </table>
+        <p v-else><b>Du har inga kvitton att bokföra. Bra jobbat!</b></p>
 
 
+        <h2>Fakturor</h2>
 
-    <h2>Fakturor</h2>
-    <table v-if="invoices.length > 0">
-        <thead>
-            <tr>
-                <th>Beskrivning</th>
-                <th>Inköpsdatum</th>
-                <th class="right">Verifikationsnummer</th>
-            </tr>
-        </thead>
-        <tbody v-for="invoice in invoices" v-if="cost_centre == false || invoice.cost_centres.indexOf(cost_centre) > -1">
-            <tr>
-                <td>
-                    (<span v-text="invoice.id"></span>)
-                    <a v-bind:href="'/invoices/' + invoice.id" v-text="invoice.description"></a>
-                    <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                        v-on:click="copy('(' + invoice.id + ') ' + invoice.description)">📋</button>
-                </td>
-                <td v-text="invoice.invoice_date"></td>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3"><h3>Beskrivning</h3></div>
+                <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
+                <div class="col-lg-3"></div>
+            </div>
 
-                <td class="right">
-                    <div v-if="!invoice.verification">
-                        <form v-on:submit.prevent="saveInvoice(invoice)" method="POST" v-bind:action="'invoice/' + invoice.id + '/verification'">
-                            {% csrf_token %}
-                            <input type="text" style="width:120px;" name="verification" v-model="invoice.verificationString" placeholder="Tex. U214">
-                            <button class="theme-color btn-color" v-on:click="saveInvoice(invoice, $event)">Spara</button>
-                        </form>
+            {% for invoice in invoices %}
+                <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
+                    <div class="row theme-label-when-auto">
+                        <div class="col-lg-3"><strong>{{ invoice.description }}</strong></div>
+                        <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
+                        <div class="col-lg-3 pull-right">
+                            <button type="submit">Bokför</button>
+                        </div>
                     </div>
-                    <div v-else>
-                        <span>Sparade: <span style="font-weight: bold;" v-text="invoice.verification"></span>.</span>
-                    </div>
-                </td>
-            </tr>
-            <tr v-if="!invoice.verification">
-                <td colspan="3">
-                    <table>
-                        <tr v-for="invoicePart in invoice.invoice_parts">
-                            <td style="text-align: right; width: 50%;" v-text="invoicePart.cost_centre + ' > ' + invoicePart.secondary_cost_centre + ' > ' + invoicePart.budget_line"></td>
-                            <td>
-                                <span v-text="invoicePart.amount + ' kr'"></span>
-                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                    v-on:click="copy(invoicePart.amount)">📋</button>
-                            </td>
-                        </tr>
-                        <tr style="font-weight: bold;">
-                            <td class="right">Totalt:</td>
-                            <td>
-                                <span v-text="invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0)"></span> kr
-                                <button style="background: none; padding: 4px; box-shadow: none; margin-left: auto"
-                                    v-on:click="copy(invoice.invoice_parts.map(x => x.amount).reduce((a,b) => a + b, 0).toFixed(2))">📋</button>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <p v-else><b>Du har inga fakturor att bokföra. Bra jobbat!</b></p>
-</div>
+                    <div class="container">
+                        {% for part, default_account in invoice_parts %}
+                            {% if part.invoice == invoice %}
+                                <div class="row">
+                                    <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                        <option>{{ default_account }}</option>
+                                    </select>
+                                    <div class="col-lg-4">
+                                        <p>
+                                            {{ part.cost_centre }} >
+                                            {{ part.secondary_cost_centre }} >
+                                            {{ part.budget_line }}
+                                        </p>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        {{ part.amount }} kr
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
 
-<script type="text/javascript">
-    new Vue({
-        el: '#data', 
-        data: function () {
-            return {
-                cost_centre: false,
-                cost_centres: [],
-                expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
-                invoices: {% autoescape off %}{{ invoices }}{% endautoescape %}
-            }
-        },
-        methods: {
-            save: function (expense, e) {
-                let idx = this.expenses.findIndex(x => x.id === expense.id)
-                if (idx === -1) {
-                    return
+                        <hr>
+                    </div>
+
+                {% csrf_token %}
+                </form>
+            {% endfor %}
+        </div>
+
+
+    </div>
+
+    <script type="text/javascript">
+        new Vue({
+            el: '#data',
+            data: function () {
+                return {
+                    cost_centre: false,
+                    cost_centres: [],
+                    expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
+                    invoices: {% autoescape off %}{{ invoices }}{% endautoescape %}
                 }
-
-                let form = new FormData()
-                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
-                form.append('verification', expense.verificationString)
-
-                fetch('/admin/expense/' + expense.id + '/verification/', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: form
-                })
-                .then(res => {
-                    if (!res.ok){
-                        alert("Det gick inte att spara utlägget. HTTP statuskod: " + res.status); 
+            },
+            methods: {
+                save: function (expense, e) {
+                    let idx = this.expenses.findIndex(x => x.id === expense.id)
+                    if (idx === -1) {
                         return
                     }
-                    console.log(res)
-                    return res.text()
-                })
-                .then(res => {
-                    this.expenses[idx].verification = expense.verificationString
-                })
-                if (e) e.preventDefault()
-            },
-            saveInvoice: function (invoice, e) {
-                let idx = this.invoices.findIndex(x => x.id === invoice.id)
-                if (idx === -1) {
-                    return
+
+                    let form = new FormData()
+                    form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                    form.append('verification', expense.verificationString)
+
+                    fetch('/admin/expense/' + expense.id + '/verification/', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        body: form
+                    })
+                        .then(res => {
+                            if (!res.ok) {
+                                alert("Det gick inte att spara utlägget. HTTP statuskod: " + res.status);
+                                return
+                            }
+                            console.log(res)
+                            return res.text()
+                        })
+                        .then(res => {
+                            this.expenses[idx].verification = expense.verificationString
+                        })
+                    if (e) e.preventDefault()
+                },
+                saveInvoice: function (invoice, e) {
+                    let idx = this.invoices.findIndex(x => x.id === invoice.id)
+                    if (idx === -1) {
+                        return
+                    }
+
+                    let form = new FormData()
+                    form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                    form.append('verification', invoice.verificationString)
+
+                    fetch('/admin/invoice/' + invoice.id + '/verification/', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        body: form
+                    })
+                        .then(res => {
+                            console.log(res)
+                            return res.text()
+                        })
+                        .then(res => {
+                            this.invoices[idx].verification = invoice.verificationString
+                        })
+                    if (e) e.preventDefault()
+                },
+                copy(value) {
+                    navigator.clipboard.writeText(value).catch(console.error)
                 }
-
-                let form = new FormData()
-                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
-                form.append('verification', invoice.verificationString)
-
-                fetch('/admin/invoice/' + invoice.id + '/verification/', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: form
-                })
-                .then(res => {
-                    console.log(res)
-                    return res.text()
-                })
-                .then(res => {
-                    this.invoices[idx].verification = invoice.verificationString
-                })
-                if (e) e.preventDefault()
             },
-            copy(value) {
-                navigator.clipboard.writeText(value).catch(console.error)
+            created: function () {
+                this.cost_centres = Array.from(new Set([
+                    ...this.expenses.flatMap(x => x.cost_centres),
+                    ...this.invoices.flatMap(x => x.cost_centres),
+                ]))
+                this.cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))
             }
-        },
-        created: function() {
-            this.cost_centres = Array.from(new Set([
-                ...this.expenses.flatMap(x => x.cost_centres),
-                ...this.invoices.flatMap(x => x.cost_centres),
-            ]))
-            this.cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))
-        }
-    })
-</script>
+        })
+    </script>
 {% endblock %}

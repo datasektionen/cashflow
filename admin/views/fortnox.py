@@ -5,11 +5,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from fortnox import require_fortnox_auth
 from fortnox.api_client import AuthCodeGrant
+from fortnox.api_client.models import VoucherRow, VoucherCreate
 from fortnox.models import APIUser
+from invoices.models import Invoice
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +85,35 @@ def disconnect(request):
         logger.warning(f"{request.user} tried to disconnect from Fortnox, but was not previously connected")
 
     return redirect(reverse('admin-index'))
+
+
+@require_POST
+def account_invoice(request, **kwargs):
+    logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
+
+    invoice = Invoice.objects.get(id=kwargs['id'])
+    #
+    # Generate a voucher row for every invoice part
+    voucher_rows = []
+    for part in invoice.parts.all():
+        voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
+        voucher_rows.append(voucher_row)
+
+    # # Determine financial year
+    # years = request.fortnox_client.list_financial_years(request.user.fortnox.access_token)
+    # year = next(y for y in years if datetime.strptime(y.FromDate, "%Y-%m-%d").year == invoice.invoice_date.year)
+
+    created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
+                                                    VoucherCreate(Description=invoice.description,
+                                                                  TransactionDate=invoice.invoice_date.strftime(
+                                                                      '%Y-%m-%d'), VoucherRows=voucher_rows,
+                                                                  # TODO: Is this the right Voucher Series?
+                                                                  VoucherSeries="A"))
+
+    invoice.verification = created.VoucherNumber
+    invoice.save()
+
+    return redirect(reverse('admin-account'))
 
 
 @login_required

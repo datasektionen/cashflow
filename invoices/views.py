@@ -124,7 +124,7 @@ def edit_invoice(request, pk):
     if request.method == 'GET':
         return render(request, 'invoices/edit.html', {
             "invoice": invoice,
-            "invoice_parts": invoice.invoicepart_set.all(),
+            "invoice_parts": invoice.parts.all(),
             "budget_url": settings.BUDGET_URL,
             })
     
@@ -199,7 +199,7 @@ def get_invoice(request, pk):
     if not request.user.profile.may_view_invoice(invoice): return HttpResponseForbidden()
 
     attestable = []
-    for invoice_part in invoice.invoicepart_set.all():
+    for invoice_part in invoice.parts.all():
         if request.user.profile.may_attest(invoice_part):
             attestable.append(invoice_part.id)
 

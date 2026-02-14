@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
+from fortnox import require_fortnox_auth
 from invoices.models import Invoice, InvoicePart
 
 
@@ -34,13 +35,10 @@ def attest_overview(request):
     Displays the attest overview list.
     """
     return render(request, 'admin/attest/overview.html', {
-        'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.view_attestable(request.user)],
-            default=json_serial),
-        'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.view_attestable(request.user)],
-            default=json_serial)
-    })
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.view_attestable(request.user)],
+                               default=json_serial),
+        'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.view_attestable(request.user)],
+                               default=json_serial)})
 
 
 @require_POST
@@ -65,6 +63,7 @@ def attest_expense_part(request, pk):
     if expense_part.expense.is_attested():
         return HttpResponseRedirect(reverse('admin-attest'))
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense_part.expense.id}))
+
 
 @require_POST
 @login_required
@@ -118,11 +117,9 @@ def confirm_overview(request):
     """
     Shows a list of confirmable receipts and lets user confirm them.
     """
-    return render(request, 'admin/confirm/overview.html', {
-        'confirmable_expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
-            default=json_serial)
-    })
+    return render(request, 'admin/confirm/overview.html', {'confirmable_expenses': json.dumps(
+        [expense.to_dict() for expense in Expense.objects.filter(confirmed_by=None).order_by('id').distinct()],
+        default=json_serial)})
 
 
 @require_GET
@@ -132,11 +129,10 @@ def pay_overview(request):
     """
     Shows a list of all payable expenses and lets user pay them.
     """
-    return render(request, 'admin/pay/overview.html', {
-        'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
-        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
-        'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
-    })
+    return render(request, 'admin/pay/overview.html',
+                  {'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
+                   'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
+                   'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])})
 
 
 @require_POST
@@ -159,15 +155,21 @@ def invoice_pay(request, pk):
 @require_GET
 @login_required
 @user_passes_test(lambda u: u.profile.may_view_accountable())
+@require_fortnox_auth
 def account_overview(request):
-    return render(request, 'admin/account/overview.html', {
-        'expenses': json.dumps(
-            [expense.to_dict() for expense in Expense.view_accountable(request.user)],
-            default=json_serial),
-        'invoices': json.dumps(
-            [invoice.to_dict() for invoice in Invoice.view_accountable(request.user)],
-            default=json_serial)
-    })
+
+    # Retrieve active accounts from Fortnox
+    accounts = [account.model_dump() for account in
+                request.fortnox_client.list_accounts(request.user.fortnox.access_token) if account.Active]
+
+    accountable_invoices = Invoice.view_accountable(request.user)
+
+    invoice_parts = [(part, part.retrieve_account_from_gordian()) for part in
+                     InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
+
+    return render(request, 'admin/account/overview.html',
+                  {"expenses": Expense.view_accountable(request.user), "accounts": accounts,
+                   "invoices": accountable_invoices, "invoice_parts": invoice_parts})
 
 
 @require_http_methods(["GET", "POST"])
@@ -188,18 +190,13 @@ def edit_expense_verification(request, pk):
         expense.verification = request.POST['verification']
         expense.save()
 
-        Comment(
-            author=request.user.profile,
-            expense=expense,
-            content="Ändrade verifikationsnumret till: " + expense.verification
-        ).save()
+        Comment(author=request.user.profile, expense=expense,
+                content="Ändrade verifikationsnumret till: " + expense.verification).save()
 
         return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': expense.id}))
     else:
-        return render(request, 'expenses/edit-verification.html', {
-            "expense": expense,
-            "expense_parts": expense.expensepart_set.all()
-        })
+        return render(request, 'expenses/edit-verification.html',
+                      {"expense": expense, "expense_parts": expense.expensepart_set.all()})
 
 
 @require_POST
@@ -214,11 +211,7 @@ def confirm_expense(request, pk):
         expense.confirmed_at = date.today()
         expense.save()
 
-        comment = Comment(
-            expense=expense,
-            author=request.user.profile,
-            content='Jag har bekräftat kvittots giltighet.'
-        )
+        comment = Comment(expense=expense, author=request.user.profile, content='Jag har bekräftat kvittots giltighet.')
         comment.save()
 
         return HttpResponseRedirect(reverse('admin-confirm'))
@@ -238,11 +231,8 @@ def unconfirm_expense(request, pk):
         expense.confirmed_at = None
         expense.save()
 
-        comment = Comment(
-            expense=expense,
-            author=request.user.profile,
-            content='Jag tar bort bekräftelsen av kvittots giltighet.'
-        )
+        comment = Comment(expense=expense, author=request.user.profile,
+                          content='Jag tar bort bekräftelsen av kvittots giltighet.')
         comment.save()
 
         return HttpResponseRedirect(reverse('admin-confirm'))
@@ -267,11 +257,8 @@ def set_verification(request, expense_pk):
     expense.verification = request.POST['verification']
     expense.save()
 
-    comment = Comment(
-        author=request.user.profile,
-        expense=expense,
-        content="Bokförde med verifikationsnumret: " + expense.verification
-    )
+    comment = Comment(author=request.user.profile, expense=expense,
+                      content="Bokförde med verifikationsnumret: " + expense.verification)
     comment.save()
 
     return HttpResponseRedirect(reverse('admin-account'))
@@ -294,11 +281,8 @@ def invoice_set_verification(request, invoice_pk):
     invoice.verification = request.POST['verification']
     invoice.save()
 
-    comment = Comment(
-        author=request.user.profile,
-        invoice=invoice,
-        content="Bokförde med verifikationsnumret: " + invoice.verification
-    )
+    comment = Comment(author=request.user.profile, invoice=invoice,
+                      content="Bokförde med verifikationsnumret: " + invoice.verification)
     comment.save()
 
     return HttpResponseRedirect(reverse('admin-account'))
@@ -325,24 +309,15 @@ def expense_overview(request):
         expenses = paginator.page(1)
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
-    
-    pages = {
-        'number': expenses.number,
-        'previous_page_number': expenses.previous_page_number,
-        'next_page_number': expenses.next_page_number,
-        'page_range': expenses.paginator.page_range,
-        'num_pages': expenses.paginator.num_pages,
-        'has_next': expenses.has_next,
-    }
-    return render(request, 'admin/expenses/overview.html', {
-        'expenses': json.dumps(
-            [x.to_dict() for x in expenses], 
-            default=json_serial),
-        'pages': pages,
-        'cost_centres': json.dumps(
-            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
-        'cost_centre': cost_centre if cost_centre is not None else ''
-    })
+
+    pages = {'number': expenses.number, 'previous_page_number': expenses.previous_page_number,
+             'next_page_number': expenses.next_page_number, 'page_range': expenses.paginator.page_range,
+             'num_pages': expenses.paginator.num_pages, 'has_next': expenses.has_next, }
+    return render(request, 'admin/expenses/overview.html',
+                  {'expenses': json.dumps([x.to_dict() for x in expenses], default=json_serial), 'pages': pages,
+                   'cost_centres': json.dumps(
+                       [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
+                   'cost_centre': cost_centre if cost_centre is not None else ''})
 
 
 @require_GET
@@ -362,9 +337,7 @@ def user_overview(request):
     except EmptyPage:
         users = paginator.page(paginator.num_pages)
 
-    return render(request, 'admin/users/overview.html', {
-        'users': users
-    })
+    return render(request, 'admin/users/overview.html', {'users': users})
 
 
 @require_GET
@@ -389,12 +362,9 @@ def invoice_overview(request):
     except EmptyPage:
         invoices = paginator.page(paginator.num_pages)
 
-    return render(request, 'admin/invoices/overview.html', {
-        'invoices': invoices,
-        'cost_centres': json.dumps(
-            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
-        'cost_centre': cost_centre if cost_centre is not None else ''
-    })
+    return render(request, 'admin/invoices/overview.html', {'invoices': invoices, 'cost_centres': json.dumps(
+        [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
+                                                            'cost_centre': cost_centre if cost_centre is not None else ''})
 
 
 @require_GET
@@ -413,10 +383,8 @@ def search_verification_response(request):
 
     invoices = Invoice.objects.filter(verification__contains=request.POST['query']).all()
     expenses = Expense.objects.filter(verification__contains=request.POST['query']).all()
-    return JsonResponse({
-        'invoices': [invoice.to_dict() for invoice in invoices[:10]],
-        'expenses': [expense.to_dict() for expense in expenses[:10]]
-    })
+    return JsonResponse({'invoices': [invoice.to_dict() for invoice in invoices[:10]],
+                         'expenses': [expense.to_dict() for expense in expenses[:10]]})
 
 
 @require_GET
@@ -428,10 +396,8 @@ def list_verification(request):
 
     year = year if year is not None and year != '' else datetime.now().year
 
-    verification_list = Expense.objects \
-        .filter(expense_date__year=year, verification__regex=r'E') \
-        .order_by(Length('verification').asc(), 'verification') \
-        .all()
+    verification_list = Expense.objects.filter(expense_date__year=year, verification__regex=r'E').order_by(
+        Length('verification').asc(), 'verification').all()
 
     paginator = Paginator(verification_list, 25)
     page = request.GET.get('page')
@@ -443,11 +409,7 @@ def list_verification(request):
     except EmptyPage:
         verifications = paginator.page(paginator.num_pages)
 
-    return render(request, 'admin/list-verification.html', {
-        'expenses': verifications,
-        'years': years,
-        'year': year,
-    })
+    return render(request, 'admin/list-verification.html', {'expenses': verifications, 'years': years, 'year': year, })
 
 
 class FakeFloat(float):

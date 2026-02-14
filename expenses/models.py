@@ -154,7 +154,7 @@ class Profile(models.Model):
                     return True
 
         if invoice is not None:
-            for ip in invoice.invoicepart_set.all():
+            for ip in invoice.parts.all():
                 if dauth.has_scoped_permission("accounting", ip.cost_centre, self.user):
                     return True
 
