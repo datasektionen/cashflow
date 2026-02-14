@@ -23,10 +23,11 @@ class FortnoxMiddleware:
 
         request.fortnox_client = self.client
 
-        if APIUser.objects.filter(user=request.user).exists():
-            APIUser.objects.get(user=request.user)
-            # Make sure token is up to date
-            retrieve_or_refresh_token(self.client, request.user)
+        if not request.user.is_anonymous:
+            if APIUser.objects.filter(user=request.user).exists():
+                APIUser.objects.get(user=request.user)
+                # Make sure token is up to date
+                retrieve_or_refresh_token(self.client, request.user)
 
         return self.get_response(request)
 
