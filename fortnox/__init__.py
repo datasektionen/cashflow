@@ -1,5 +1,6 @@
 import logging
 from functools import wraps
+from typing import Callable
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -8,6 +9,27 @@ from .api_client import FortnoxAPIClient, RefreshTokenGrant
 from .api_client.exceptions import FortnoxAPIError, FortnoxNotFound, FortnoxAuthenticationError
 
 logger = logging.getLogger(__name__)
+
+
+class FortnoxRequest:
+    """Monad-ish class to handle Fortnox requests with automatic token refreshing"""
+
+    def __init__(self, client: FortnoxAPIClient, user):
+        self._client = client
+        self._user = user
+        self._value = None
+
+    def bind[T](self, fn: Callable[[str, ...], T], *args, **kwargs) -> T | None:
+        try:
+            self._value = fn(self._user.fortnox.access_token, *args, **kwargs)
+        except FortnoxAuthenticationError as e:
+            logger.debug(f"Attempting to refresh access token for {self._user}: {e}")
+
+            retrieve_or_refresh_token(self._client, self._user)
+            self._value = fn(self._user.fortnox.access_token, *args, **kwargs)
+
+    def get(self):
+        return self._value
 
 
 class FortnoxMiddleware:

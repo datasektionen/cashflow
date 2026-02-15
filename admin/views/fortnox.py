@@ -8,9 +8,9 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from expenses.models import Expense
-from fortnox import require_fortnox_auth
+from fortnox import require_fortnox_auth, FortnoxRequest
 from fortnox.api_client import AuthCodeGrant
-from fortnox.api_client.models import VoucherRow, VoucherCreate
+from fortnox.api_client.models import VoucherRow, VoucherCreate, Account
 from fortnox.models import APIUser
 from invoices.models import Invoice
 
@@ -98,13 +98,13 @@ def account_expense(request, **kwargs):
         voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
         voucher_rows.append(voucher_row)
 
-    created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
-                                                    VoucherCreate(Description=expense.description,
-                                                                  TransactionDate=expense.expense_date.strftime(
-                                                                      '%Y-%m-%d'), VoucherRows=voucher_rows,
-                                                                  # TODO: Is this the right Voucher Series?
-                                                                  VoucherSeries="A"))
-
+    # Upload invoice to Fortnox and receive the voucher number
+    api = FortnoxRequest(request.fortnox_client, request.user)
+    api.bind(request.fortnox_client.create_voucher,
+             VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
+                           VoucherRows=voucher_rows, # TODO: Is this the right Voucher Series?
+                           VoucherSeries="A"))
+    created = api.get()
     expense.verification = created.VouchNumber
     expense.save()
 
@@ -123,12 +123,20 @@ def account_invoice(request, **kwargs):
         voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
         voucher_rows.append(voucher_row)
 
-    created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
-                                                    VoucherCreate(Description=invoice.description,
-                                                                  TransactionDate=invoice.invoice_date.strftime(
-                                                                      '%Y-%m-%d'), VoucherRows=voucher_rows,
-                                                                  # TODO: Is this the right Voucher Series?
-                                                                  VoucherSeries="A"))
+    # Upload invoice to Fortnox and receive the voucher number
+    api = FortnoxRequest(request.fortnox_client, request.user)
+    api.bind(request.fortnox_client.create_voucher,
+             VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
+                           VoucherRows=voucher_rows, # TODO: Is this the right Voucher Series?
+                           VoucherSeries="A"))
+    created = api.get()
+
+    # created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
+    #                                                 VoucherCreate(Description=invoice.description,
+    #                                                               TransactionDate=invoice.invoice_date.strftime(
+    #                                                                   '%Y-%m-%d'), VoucherRows=voucher_rows,
+    #                                                               # TODO: Is this the right Voucher Series?
+    #                                                               VoucherSeries="A"))
 
     invoice.verification = created.VoucherNumber
     invoice.save()
@@ -142,7 +150,10 @@ def account_invoice(request, **kwargs):
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 @require_fortnox_auth
 def overview(request):
-    accounts = request.fortnox_client.list_accounts(request.user.fortnox.access_token)
+    api = FortnoxRequest(request.fortnox_client, request.user)
+    api.bind(request.fortnox_client.list_accounts)
+    accounts: list[Account] = api.get()
+
     accounts = [account for account in accounts if account.Active]
     accounts = [a.model_dump() for a in accounts]
 

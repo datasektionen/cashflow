@@ -13,7 +13,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
-from fortnox import require_fortnox_auth
+from fortnox import require_fortnox_auth, FortnoxRequest
+from fortnox.api_client.models import Account
 from invoices.models import Invoice, InvoicePart
 
 
@@ -158,8 +159,9 @@ def invoice_pay(request, pk):
 @require_fortnox_auth
 def account_overview(request):
     # Retrieve active accounts from Fortnox
-    accounts = [account.model_dump() for account in
-                request.fortnox_client.list_accounts(request.user.fortnox.access_token) if account.Active]
+    api = FortnoxRequest(request.fortnox_client, request.user)
+    api.bind(request.fortnox_client.list_accounts)
+    accounts: list[Account] = [account.model_dump() for account in api.get() if account.Active]
 
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
