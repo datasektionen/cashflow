@@ -1,3 +1,4 @@
+import re
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
@@ -90,12 +91,19 @@ class Invoice(models.Model):
 
     @staticmethod
     def view_attestable(user):
-        return InvoicePart.objects.filter(attested_by__isnull=True)
+        filters = {
+            'invoicepart__attested_by': None,
+        }
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            escaped = [re.escape(cc) for cc in cost_centres]
+            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
+        return Invoice.objects.order_by('due_date').filter(**filters).distinct()
 
     # # TODO
     @staticmethod
     def payable():
-        return Invoice.objects.exclude(payed_at__isnull=True, parts__attested_by__isnull=True)
+        return Invoice.objects.exclude(payed_at__isnull=True, invoicepart__attested_by__isnull=True)
 
     # TODO
     @staticmethod
@@ -109,7 +117,7 @@ Defines an invoice part, which is a specification of a part of an invoice.
 
 
 class InvoicePart(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="parts")
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="parts", related_query_name="invoicepart")
     cost_centre = models.TextField(blank=True)
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
