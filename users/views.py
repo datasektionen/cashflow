@@ -61,7 +61,7 @@ def get_user_receipts(request, username):
     for expense in user.profile.expense_set.all():
         if expense.reimbursement is not None: continue  # expense is waay past attesting
 
-        for expense_part in expense.expensepart_set.all():
+        for expense_part in expense.parts.all():
             if expense_part.attested_by is None:
                 non_attested_expenses.append(expense)
                 break

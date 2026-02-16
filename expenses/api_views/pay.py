@@ -72,7 +72,7 @@ class PaymentViewSet(GenericViewSet):
 
         # Filter out the expenses with all parts attested
         for expense in to_be_paid_expenses:
-            if len(expense.expensepart_set.filter(attested_by__isnull=True)) == 0:  # All parts attested
+            if len(expense.parts.filter(attested_by__isnull=True)) == 0:  # All parts attested
                 expenses.append(expense.to_dict())
 
         return JsonResponse({'ready_for_payment': expenses})

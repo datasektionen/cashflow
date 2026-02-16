@@ -34,7 +34,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for expense_part in expense.expensepart_set.all %}
+        {% for expense_part in expense.parts.all %}
             <tr>
                 <td>{{ expense_part.amount|intcomma }} kr</td>
                 <td>{{ expense_part.cost_centre }}</td>

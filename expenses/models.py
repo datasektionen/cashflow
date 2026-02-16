@@ -202,7 +202,7 @@ class Profile(models.Model):
     def may_view_invoice(self, invoice):
         return (
                 invoice.owner.user.username == self.user.username or self.may_view_all() or self.may_pay() or self.may_confirm() or self.may_account(
-            invoice=invoice) or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all()))
+            invoice=invoice) or any(self.may_attest(ip) for ip in invoice.parts.all()))
 
     # TODO: Check if these are the best/appropriate names for these permissions
     def may_firmatecknare(self):

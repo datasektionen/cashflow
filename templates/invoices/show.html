@@ -41,7 +41,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for invoice_part in invoice.invoicepart_set.all %}
+        {% for invoice_part in invoice.parts.all %}
             <tr>
                 <td>{{ invoice_part.amount|intcomma }} kr</td>
                 <td>{{ invoice_part.cost_centre }}</td>
