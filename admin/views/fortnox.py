@@ -95,20 +95,21 @@ def account_expense(request, **kwargs):
 
     # Generate a voucher row for every expense part
     voucher_rows = []
+    credit_row = VoucherRow(Account="2820", Credit=float(part.amount))
+    voucher_rows.append(credit_row)
     for part in expense.parts.all():
-        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
-        credit_row = VoucherRow(Account=settings.FORTNOX_CREDIT_ACCOUNT, Credit=float(part.amount))
+        #TODO Change CostCenter to the correct value
+        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), CostCenter="CENALL", Debit=float(expense.total_amount()))
         voucher_rows.append(debit_row)
-        voucher_rows.append(credit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
     api = FortnoxRequest(request.fortnox_client, request.user)
     api.bind(request.fortnox_client.create_voucher,
              VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
-                           VoucherRows=voucher_rows, # TODO: Is this the right Voucher Series?
-                           VoucherSeries="A"))
+                           VoucherRows=voucher_rows,
+                           VoucherSeries="E"))
     created = api.get()
-    expense.verification = created.VouchNumber
+    expense.verification = f"E{created.VoucherNumber}"
     expense.save()
 
     logger.info(f"{request.user} accounted for expense {expense.id}")
@@ -122,21 +123,21 @@ def account_invoice(request, **kwargs):
 
     # Generate a voucher row for every invoice part
     voucher_rows = []
+    credit_row = VoucherRow(Account="2440", Credit=float(invoice.total_amount()))
+    voucher_rows.append(credit_row)
     for part in invoice.parts.all():
-        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
-        credit_row = VoucherRow(Account=settings.FORTNOX_CREDIT_ACCOUNT, Credit=float(part.amount))
+        #TODO Change CostCenter to the correct value
+        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), CostCenter="CENALL", Debit=float(part.amount))
         voucher_rows.append(debit_row)
-        voucher_rows.append(credit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
     api = FortnoxRequest(request.fortnox_client, request.user)
     api.bind(request.fortnox_client.create_voucher,
              VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
-                           VoucherRows=voucher_rows, # TODO: Is this the right Voucher Series?
-                           VoucherSeries="A"))
+                           VoucherRows=voucher_rows,
+                           VoucherSeries="U"))
     created = api.get()
-
-    invoice.verification = created.VoucherNumber
+    invoice.verification = f"U{created.VoucherNumber}"
     invoice.save()
 
     logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
