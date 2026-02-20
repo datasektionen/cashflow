@@ -1,6 +1,7 @@
 import logging
 import secrets
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -95,8 +96,10 @@ def account_expense(request, **kwargs):
     # Generate a voucher row for every expense part
     voucher_rows = []
     for part in expense.parts.all():
-        voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
-        voucher_rows.append(voucher_row)
+        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
+        credit_row = VoucherRow(Account=settings.FORTNOX_CREDIT_ACCOUNT, Credit=float(part.amount))
+        voucher_rows.append(debit_row)
+        voucher_rows.append(credit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
     api = FortnoxRequest(request.fortnox_client, request.user)
@@ -120,8 +123,10 @@ def account_invoice(request, **kwargs):
     # Generate a voucher row for every invoice part
     voucher_rows = []
     for part in invoice.parts.all():
-        voucher_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
-        voucher_rows.append(voucher_row)
+        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), Debit=float(part.amount))
+        credit_row = VoucherRow(Account=settings.FORTNOX_CREDIT_ACCOUNT, Credit=float(part.amount))
+        voucher_rows.append(debit_row)
+        voucher_rows.append(credit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
     api = FortnoxRequest(request.fortnox_client, request.user)
@@ -130,13 +135,6 @@ def account_invoice(request, **kwargs):
                            VoucherRows=voucher_rows, # TODO: Is this the right Voucher Series?
                            VoucherSeries="A"))
     created = api.get()
-
-    # created = request.fortnox_client.create_voucher(request.user.fortnox.access_token,
-    #                                                 VoucherCreate(Description=invoice.description,
-    #                                                               TransactionDate=invoice.invoice_date.strftime(
-    #                                                                   '%Y-%m-%d'), VoucherRows=voucher_rows,
-    #                                                               # TODO: Is this the right Voucher Series?
-    #                                                               VoucherSeries="A"))
 
     invoice.verification = created.VoucherNumber
     invoice.save()
