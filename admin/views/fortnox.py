@@ -94,12 +94,17 @@ def account_expense(request, **kwargs):
     expense = Expense.objects.get(id=kwargs['id'])
 
     # Generate a voucher row for every expense part
-    voucher_rows = []
-    credit_row = VoucherRow(Account="2820", Credit=float(part.amount))
+    voucher_rows: list[VoucherRow] = []
+    credit_row = VoucherRow(Account="2820", Credit=float(expense.total_amount()))
     voucher_rows.append(credit_row)
     for part in expense.parts.all():
-        #TODO Change CostCenter to the correct value
-        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), CostCenter="CENALL", Debit=float(expense.total_amount()))
+        acct = int(request.POST[f"part-{part.id}-account"])
+        cc = request.POST.get(f"part-{part.id}-cost_centre", "").strip()# or "CENALL"
+        debit_row = VoucherRow(
+            Account=acct,
+            CostCenter=cc,
+            Debit=float(part.amount),
+        )
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
@@ -122,12 +127,17 @@ def account_invoice(request, **kwargs):
     invoice = Invoice.objects.get(id=kwargs['id'])
 
     # Generate a voucher row for every invoice part
-    voucher_rows = []
+    voucher_rows: list[VoucherRow] = []
     credit_row = VoucherRow(Account="2440", Credit=float(invoice.total_amount()))
     voucher_rows.append(credit_row)
     for part in invoice.parts.all():
-        #TODO Change CostCenter to the correct value
-        debit_row = VoucherRow(Account=int(request.POST[f"part-{part.id}-account"]), CostCenter="CENALL", Debit=float(part.amount))
+        acct = int(request.POST[f"part-{part.id}-account"])
+        cc = request.POST.get(f"part-{part.id}-cost_centre", "").strip()# or "CENALL"
+        debit_row = VoucherRow(
+            Account=acct,
+            CostCenter=cc,
+            Debit=float(part.amount),
+        )
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number

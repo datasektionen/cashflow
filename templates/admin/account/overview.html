@@ -29,7 +29,7 @@
                     <div class="row theme-label-when-auto">
                         <div class="col-lg-3">({{ expense.id }})
                             <a href="/expenses/{{ expense.id }}">{{ expense.description }}</a></div>
-                        <div class="col-lg-3"><strong>{{ expense.expense_date}}</strong></div>
+                        <div class="col-lg-3">{{ expense.expense_date|date:"Y-m-d" }}</div>
                         <div class="col-lg-3 pull-right">
                             {% if not expense.verification %}
                                 <button class="theme-color btn-color" type="submit">Bokför</button>
@@ -45,14 +45,20 @@
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
                                         <option>{{ default_account }}</option>
                                     </select>
-                                    <div class="col-lg-4">
+                                    <div class="col-sm-2 col-lg-2">
+                                        <!-- cost centre field for expense part -->
+                                        <input type="text" style="width:150px;"
+                                               name="part-{{ part.id }}-cost_centre"
+                                               placeholder="KS: t.ex. CENALL">
+                                    </div>
+                                    <div class="col-sm-4 col-lg-4">
                                         <p>
-                                            {{ part.cost_centre }} >
-                                            {{ part.secondary_cost_centre }} >
+                                            {{ part.cost_centre }} &gt;
+                                            {{ part.secondary_cost_centre }} &gt;
                                             {{ part.budget_line }}
                                         </p>
                                     </div>
-                                    <div class="col-sm-1">
+                                    <div class="col-sm-2">
                                         {{ part.amount }} kr
                                     </div>
                                 </div>
@@ -83,7 +89,7 @@
                         <div class="col-lg-3">({{ invoice.id }})
                             <a href="/invoices/{{ invoice.id }}">{{ invoice.description }}</a>
                         </div>
-                        <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
+                        <div class="col-lg-3">{{ invoice.invoice_date|date:"Y-m-d" }}</div>
                         <div class="col-lg-3 pull-right">
                             {% if not invoice.verification %}
                                 <button class="theme-color btn-color" type="submit">Bokför</button>
@@ -99,14 +105,20 @@
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
                                         <option>{{ default_account }}</option>
                                     </select>
-                                    <div class="col-lg-4">
+                                    <div class="col-sm-2 col-lg-2">
+                                        <!-- user-entered cost centre for this invoice part -->
+                                        <input type="text" style="width:150px;"
+                                               name="part-{{ part.id }}-cost_centre"
+                                               placeholder="KS: t.ex. CENALL">
+                                    </div>
+                                    <div class="col-sm-4 col-lg-4">
                                         <p>
-                                            {{ part.cost_centre }} >
-                                            {{ part.secondary_cost_centre }} >
+                                            {{ part.cost_centre }} &gt;
+                                            {{ part.secondary_cost_centre }} &gt;
                                             {{ part.budget_line }}
                                         </p>
                                     </div>
-                                    <div class="col-sm-1">
+                                    <div class="col-sm-2">
                                         {{ part.amount }} kr
                                     </div>
                                 </div>
