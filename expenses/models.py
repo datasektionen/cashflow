@@ -402,7 +402,8 @@ class ExpensePart(models.Model):
     """
     Defines an expense part, which is a specification of a part of an expense.
     """
-    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name="parts", related_query_name="expensepart")
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name="parts",
+                                related_query_name="expensepart")
     cost_centre = models.TextField(blank=True)
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
@@ -446,32 +447,6 @@ class ExpensePart(models.Model):
             exp_part['attested_by_first_name'] = self.attested_by.user.first_name
             exp_part['attested_by_last_name'] = self.attested_by.user.last_name
         return exp_part
-
-    def retrieve_account_from_gordian(self):
-        """Retrieves the account number for the budget line for this invoice part"""
-        response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
-        try:
-            cost_center = next(filter(lambda cc: cc["CostCentreName"] == self.cost_centre, response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find cost centre {self.cost_centre} on Gordian:\n{e}")
-
-        response = cache_session.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres",
-                                     params={"id": cost_center["CostCentreID"]})
-        try:
-            snd_cost_center = next(
-                filter(lambda cc: cc["SecondaryCostCentreName"] == self.secondary_cost_centre, response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find secondary cost centre {self.secondary_cost_centre}:\n{e}")
-
-        response = cache_session.get(f"https://budget.datasektionen.se/api/BudgetLines",
-                                     params={"id": snd_cost_center["SecondaryCostCentreID"]})
-
-        try:
-            budget_line = next(filter((lambda b: b["BudgetLineName"] == self.budget_line), response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find budget line {self.budget_line}:\n{e}")
-
-        return budget_line["BudgetLineAccount"]
 
 
 class Comment(models.Model):
