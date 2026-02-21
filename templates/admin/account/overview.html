@@ -9,7 +9,12 @@
             Observera att alla delar av ett kvitto måste bokföras samtidigt i samma verifikat (är det flera olika
             resultatställen så prata med bokföringsansvarig för den andra nämnden).
         </p>
-
+        <div class="select" style="float:right">
+            <select v-model="cost_centre">
+                <option :value="false">Filtrera på resultatställe </option>
+                <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
+            </select>
+        </div>
 
         <h2>Utlägg</h2>
         <div class="container-fluid">
@@ -22,10 +27,15 @@
             {% for expense in expenses %}
                 <form method="post" action={% url 'fortnox-account-expense' expense.id %}>
                     <div class="row theme-label-when-auto">
-                        <div class="col-lg-3"><strong>{{ expense.description }}</strong></div>
+                        <div class="col-lg-3">({{ expense.id }})
+                            <a href="/expenses/{{ expense.id }}">{{ expense.description }}</a></div>
                         <div class="col-lg-3"><strong>{{ expense.expense_date}}</strong></div>
                         <div class="col-lg-3 pull-right">
-                            <button type="submit">Bokför</button>
+                            {% if not expense.verification %}
+                                <button class="theme-color btn-color" type="submit">Bokför</button>
+                            {% else %}
+                                <span>Sparade: <span style="font-weight: bold;">{{ expense.verification }}</span>.</span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="container">
@@ -56,59 +66,60 @@
                 </form>
             {% endfor %}
         </div>
-
-
     </div>
 
 
-    <h2>Fakturor</h2>
+        <h2>Fakturor</h2>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3"><h3>Beskrivning</h3></div>
+                <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
+                <div class="col-lg-3"></div>
+            </div>
 
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-3"><h3>Beskrivning</h3></div>
-            <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
-            <div class="col-lg-3"></div>
-        </div>
-
-        {% for invoice in invoices %}
-            <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
-                <div class="row theme-label-when-auto">
-                    <div class="col-lg-3"><strong>{{ invoice.description }}</strong></div>
-                    <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
-                    <div class="col-lg-3 pull-right">
-                        <button type="submit">Bokför</button>
+            {% for invoice in invoices %}
+                <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
+                    <div class="row theme-label-when-auto">
+                        <div class="col-lg-3">({{ invoice.id }})
+                            <a href="/invoices/{{ invoice.id }}">{{ invoice.description }}</a>
+                        </div>
+                        <div class="col-lg-3"><strong>{{ invoice.invoice_date }}</strong></div>
+                        <div class="col-lg-3 pull-right">
+                            {% if not invoice.verification %}
+                                <button class="theme-color btn-color" type="submit">Bokför</button>
+                            {% else %}
+                                <span>Sparade: <span style="font-weight: bold;">{{ invoice.verification }}</span>.</span>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                <div class="container">
-                    {% for part, default_account in invoice_parts %}
-                        {% if part.invoice == invoice %}
-                            <div class="row">
-                                <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                    <option>{{ default_account }}</option>
-                                </select>
-                                <div class="col-lg-4">
-                                    <p>
-                                        {{ part.cost_centre }} >
-                                        {{ part.secondary_cost_centre }} >
-                                        {{ part.budget_line }}
-                                    </p>
+                    <div class="container">
+                        {% for part, default_account in invoice_parts %}
+                            {% if part.invoice == invoice %}
+                                <div class="row">
+                                    <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                        <option>{{ default_account }}</option>
+                                    </select>
+                                    <div class="col-lg-4">
+                                        <p>
+                                            {{ part.cost_centre }} >
+                                            {{ part.secondary_cost_centre }} >
+                                            {{ part.budget_line }}
+                                        </p>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        {{ part.amount }} kr
+                                    </div>
                                 </div>
-                                <div class="col-sm-1">
-                                    {{ part.amount }} kr
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                            {% endif %}
+                        {% endfor %}
 
-                    <hr>
-                </div>
+                        <hr>
+                    </div>
 
-                {% csrf_token %}
-            </form>
-        {% endfor %}
-    </div>
-
-
+                    {% csrf_token %}
+                </form>
+            {% endfor %}
+        </div>
     </div>
 
     <script type="text/javascript">
