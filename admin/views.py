@@ -326,13 +326,27 @@ def expense_overview(request):
         expenses = paginator.page(1)
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
-    
+
+    # Create custom page range
+    current_page = expenses.number
+    total_pages = expenses.paginator.num_pages
+    if total_pages <= 7:
+        custom_page_range = list(range(1, total_pages + 1))
+    elif current_page <= 4:
+        custom_page_range = [1, 2, 3, 4, 5, '...', total_pages]
+    elif current_page >= total_pages - 3:
+        custom_page_range = [1, '...', total_pages-4, total_pages-3, total_pages-2, total_pages-1, total_pages]
+    else:
+        custom_page_range = [1, '...', current_page-2, current_page-1, current_page, current_page+1, current_page+2, '...', total_pages]
+
     pages = {
         'number': expenses.number,
         'previous_page_number': expenses.previous_page_number,
         'next_page_number': expenses.next_page_number,
         'page_range': expenses.paginator.page_range,
+        'custom_range': custom_page_range,
         'num_pages': expenses.paginator.num_pages,
+        'has_previous': expenses.has_previous,
         'has_next': expenses.has_next,
     }
     return render(request, 'admin/expenses/overview.html', {
