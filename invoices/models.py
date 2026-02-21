@@ -1,20 +1,15 @@
 import re
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
 from django.forms.models import model_to_dict
-from requests_cache import CachedSession
-
-# Cache Gordian requests for 24 hours
-cache_session = CachedSession("gordian", expire_after=timedelta(hours=24))
-
-"""
-Represents an invoice.
-"""
 
 
 class Invoice(models.Model):
+    """
+    Represents an invoice.
+    """
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
@@ -91,9 +86,7 @@ class Invoice(models.Model):
 
     @staticmethod
     def view_attestable(user):
-        filters = {
-            'invoicepart__attested_by': None,
-        }
+        filters = {'invoicepart__attested_by': None, }
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
@@ -111,13 +104,12 @@ class Invoice(models.Model):
         return Invoice.objects.exclude(payed_at__isnull=True).order_by("invoice_date")
 
 
-"""
-Defines an invoice part, which is a specification of a part of an invoice.
-"""
-
-
 class InvoicePart(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="parts", related_query_name="invoicepart")
+    """
+    Defines an invoice part, which is a specification of a part of an invoice.
+    """
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="parts",
+                                related_query_name="invoicepart")
     cost_centre = models.TextField(blank=True)
     secondary_cost_centre = models.TextField(blank=True)
     budget_line = models.TextField(blank=True)
@@ -132,47 +124,6 @@ class InvoicePart(models.Model):
     # Returns unicode representation of the model
     def __unicode__(self):
         return self.invoice.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
-
-    @classmethod
-    def list_cost_centres_from_gordian(cls):
-        response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
-        return response.json()
-
-    @classmethod
-    def list_secondary_cost_centres_from_gordian(cls):
-        cost_centers = cls.list_cost_centres_from_gordian()
-        secondary_cost_centres = []
-        for cc in cost_centers:
-            response = cache_session.get("https://budget.datasektionen.se/api/SecondaryCostCentres",
-                                         params={"id": cc["CostCentreID"]})
-            secondary_cost_centres += response.json()
-        return secondary_cost_centres
-
-    def retrieve_account_from_gordian(self):
-        """Retrieves the account number for the budget line for this invoice part"""
-        response = cache_session.get(f"https://budget.datasektionen.se/api/CostCentres")
-        try:
-            cost_center = next(filter(lambda cc: cc["CostCentreName"] == self.cost_centre, response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find cost centre {self.cost_centre} on Gordian:\n{e}")
-
-        response = cache_session.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres",
-                                     params={"id": cost_center["CostCentreID"]})
-        try:
-            snd_cost_center = next(
-                filter(lambda cc: cc["SecondaryCostCentreName"] == self.secondary_cost_centre, response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find secondary cost centre {self.secondary_cost_centre}:\n{e}")
-
-        response = cache_session.get(f"https://budget.datasektionen.se/api/BudgetLines",
-                                     params={"id": snd_cost_center["SecondaryCostCentreID"]})
-
-        try:
-            budget_line = next(filter((lambda b: b["BudgetLineName"] == self.budget_line), response.json()))
-        except IndexError as e:
-            raise ValueError(f"Couldn't find budget line {self.budget_line}:\n{e}")
-
-        return budget_line["BudgetLineAccount"]
 
     def attest(self, user):
         self.attested_by = user.profile

@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
+from cashflow.gordian import retrieve_account_from_gordian
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from fortnox import require_fortnox_auth, FortnoxRequest
 from fortnox.api_client.models import Account
@@ -166,9 +167,11 @@ def account_overview(request):
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
-    expense_parts = [(part, part.retrieve_account_from_gordian()) for part in
+    # Note that several accounts can be specified for the same budget line, for now the first one will
+    # be chosen by default
+    expense_parts = [(part, retrieve_account_from_gordian(part)[0]) for part in
                      ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
-    invoice_parts = [(part, part.retrieve_account_from_gordian()) for part in
+    invoice_parts = [(part, retrieve_account_from_gordian(part)[0]) for part in
                      InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
