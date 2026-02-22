@@ -254,4 +254,8 @@ FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET')
 FORTNOX_SCOPE = ['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile', 'costcenter']
 # urlconf to redirect when requiring Fortnox authentication
 FORTNOX_AUTH_REDIRECT = "fortnox-auth-get"
-FORTNOX_CREDIT_ACCOUNT=1910
+# Default accounts and voucher series for accounting
+FORTNOX_EXPENSE_CREDIT_ACCOUNT=2820
+FORTNOX_INVOICE_CREDIT_ACCOUNT=2440
+FORTNOX_EXPENSE_VOUCHER_SERIES="E"
+FORTNOX_INVOICE_VOUCHER_SERIES="U"

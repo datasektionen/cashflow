@@ -330,6 +330,9 @@ class FortnoxAPIClient:
             case 2001795:
                 # Missing fields
                 raise FortnoxMissingFieldsError(error.Message)
+            case 2001939:
+                # Invalid voucher series
+                raise FortnoxInvalidPostData(error.Message)
             case _:
                 raise FortnoxAPIError(
                     f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")

@@ -11,8 +11,10 @@
         </p>
         <div class="select" style="float:right">
             <select v-model="cost_centre">
-                <option :value="false">Filtrera på resultatställe </option>
-                <option v-for="cost_centre in cost_centres" v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'" :value="cost_centre"></option>
+                <option :value="false">Filtrera på resultatställe</option>
+                <option v-for="cost_centre in cost_centres"
+                        v-text="cost_centre + ' (' + expenses.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ' + ' + invoices.filter(x => x.cost_centres.indexOf(cost_centre) > -1).length + ')'"
+                        :value="cost_centre"></option>
             </select>
         </div>
 
@@ -34,12 +36,13 @@
                             {% if not expense.verification %}
                                 <button class="theme-color btn-color" type="submit">Bokför</button>
                             {% else %}
-                                <span>Sparade: <span style="font-weight: bold;">{{ expense.verification }}</span>.</span>
+                                <span>Sparade: <span
+                                        style="font-weight: bold;">{{ expense.verification }}</span>.</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="container">
-                        {% for part, default_account in expense_parts %}
+                        {% for part, default_account, cost_center in expense_parts %}
                             {% if part.expense == expense %}
                                 <div class="row">
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
@@ -49,7 +52,9 @@
                                         <!-- cost centre field for expense part -->
                                         <input type="text" style="width:150px;"
                                                name="part-{{ part.id }}-cost_centre"
-                                               placeholder="KS: t.ex. CENALL">
+                                               placeholder="KS: t.ex. CENALL"
+                                               value="{{ cost_center }}"
+                                        >
                                     </div>
                                     <div class="col-sm-4 col-lg-4">
                                         <p>
@@ -75,63 +80,64 @@
     </div>
 
 
-        <h2>Fakturor</h2>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-3"><h3>Beskrivning</h3></div>
-                <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
-                <div class="col-lg-3"></div>
-            </div>
-
-            {% for invoice in invoices %}
-                <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
-                    <div class="row theme-label-when-auto">
-                        <div class="col-lg-3">({{ invoice.id }})
-                            <a href="/invoices/{{ invoice.id }}">{{ invoice.description }}</a>
-                        </div>
-                        <div class="col-lg-3">{{ invoice.invoice_date|date:"Y-m-d" }}</div>
-                        <div class="col-lg-3 pull-right">
-                            {% if not invoice.verification %}
-                                <button class="theme-color btn-color" type="submit">Bokför</button>
-                            {% else %}
-                                <span>Sparade: <span style="font-weight: bold;">{{ invoice.verification }}</span>.</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="container">
-                        {% for part, default_account in invoice_parts %}
-                            {% if part.invoice == invoice %}
-                                <div class="row">
-                                    <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                        <option>{{ default_account }}</option>
-                                    </select>
-                                    <div class="col-sm-2 col-lg-2">
-                                        <!-- user-entered cost centre for this invoice part -->
-                                        <input type="text" style="width:150px;"
-                                               name="part-{{ part.id }}-cost_centre"
-                                               placeholder="KS: t.ex. CENALL">
-                                    </div>
-                                    <div class="col-sm-4 col-lg-4">
-                                        <p>
-                                            {{ part.cost_centre }} &gt;
-                                            {{ part.secondary_cost_centre }} &gt;
-                                            {{ part.budget_line }}
-                                        </p>
-                                    </div>
-                                    <div class="col-sm-2">
-                                        {{ part.amount }} kr
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-
-                        <hr>
-                    </div>
-
-                    {% csrf_token %}
-                </form>
-            {% endfor %}
+    <h2>Fakturor</h2>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3"><h3>Beskrivning</h3></div>
+            <div class="col-lg-3"><h3>Inköpsdatum</h3></div>
+            <div class="col-lg-3"></div>
         </div>
+
+        {% for invoice in invoices %}
+            <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
+                <div class="row theme-label-when-auto">
+                    <div class="col-lg-3">({{ invoice.id }})
+                        <a href="/invoices/{{ invoice.id }}">{{ invoice.description }}</a>
+                    </div>
+                    <div class="col-lg-3">{{ invoice.invoice_date|date:"Y-m-d" }}</div>
+                    <div class="col-lg-3 pull-right">
+                        {% if not invoice.verification %}
+                            <button class="theme-color btn-color" type="submit">Bokför</button>
+                        {% else %}
+                            <span>Sparade: <span style="font-weight: bold;">{{ invoice.verification }}</span>.</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="container">
+                    {% for part, default_account, cost_center in invoice_parts %}
+                        {% if part.invoice == invoice %}
+                            <div class="row">
+                                <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                    <option>{{ default_account }}</option>
+                                </select>
+                                <div class="col-sm-2 col-lg-2">
+                                    <!-- user-entered cost centre for this invoice part -->
+                                    <input type="text" style="width:150px;"
+                                           name="part-{{ part.id }}-cost_centre"
+                                           placeholder="KS: t.ex. CENALL"
+                                           value="{{ cost_center }}">
+                                </div>
+                                <div class="col-sm-4 col-lg-4">
+                                    <p>
+                                        {{ part.cost_centre }} &gt;
+                                        {{ part.secondary_cost_centre }} &gt;
+                                        {{ part.budget_line }}
+                                    </p>
+                                </div>
+                                <div class="col-sm-2">
+                                    {{ part.amount }} kr
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <hr>
+                </div>
+
+                {% csrf_token %}
+            </form>
+        {% endfor %}
+    </div>
     </div>
 
     <script type="text/javascript">

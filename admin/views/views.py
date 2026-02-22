@@ -15,7 +15,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from cashflow.gordian import retrieve_account_from_gordian
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from fortnox import require_fortnox_auth, FortnoxRequest
-from fortnox.api_client.models import Account
+from fortnox.api_client.models import Account, CostCenter
 from invoices.models import Invoice, InvoicePart
 
 
@@ -167,11 +167,16 @@ def account_overview(request):
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
+    def find_cost_center(part) -> CostCenter:
+        # Find cost center on Fortnox
+        api.bind(request.fortnox_client.find_cost_center, Description=part.cost_centre)
+        return api.get()
+
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
-    expense_parts = [(part, retrieve_account_from_gordian(part)[0]) for part in
+    expense_parts = [(part, retrieve_account_from_gordian(part)[0], find_cost_center(part).Code) for part in
                      ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
-    invoice_parts = [(part, retrieve_account_from_gordian(part)[0]) for part in
+    invoice_parts = [(part, retrieve_account_from_gordian(part)[0], find_cost_center(part).Code) for part in
                      InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
