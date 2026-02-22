@@ -1,5 +1,4 @@
 import base64
-import json
 import logging
 from enum import Enum
 from typing import Union, Literal, Any, Optional
@@ -31,7 +30,8 @@ class FortnoxAPIClient:
                  access_type: Literal['offline'] = 'offline'):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.scope = list[self._ScopeEnum](scope)
+        # Ensure valid scopes to prevent future errors
+        self.scope = TypeAdapter(list[self._ScopeEnum]).validate_python(scope)
         self.access_type = access_type
 
     # ======================
@@ -85,7 +85,7 @@ class FortnoxAPIClient:
 
     def list_accounts(self, access_token: str, limit: int = 100, page: int = 1) -> list[Account]:
         response = self._get(access_token, "accounts", parameters={"limit": limit, "page": page})
-        return self._parse_list_response(response, Account, "Accounts")
+        return self._parse_list_response(response, Account, "Accounts")[0]
 
     def retrieve_account(self, access_token: str, number: int) -> Account:
         response = self._get(access_token, f"accounts/{number}")
@@ -97,7 +97,27 @@ class FortnoxAPIClient:
 
     def list_cost_centers(self, access_token: str, limit: int = 100, page: int = 1) -> list[CostCenter]:
         response = self._get(access_token, "costcenters", {"limit": limit, "page": page})
-        return self._parse_list_response(response, CostCenter, "CostCenters")
+        return self._parse_list_response(response, CostCenter, "CostCenters")[0]
+
+    def find_cost_center(self, access_token: str, **fields) -> CostCenter:
+        """Finds the first cost center on Fortnox that matches the given fields."""
+        response = self._get(access_token, "costcenters")
+
+        while True:
+            query, meta = self._parse_list_response(response, CostCenter, "CostCenters")
+            page = meta.CurrentPage
+            for p in range(1, meta.TotalPages + 1):
+                for cc in query:
+                    cc_data = cc.model_dump()
+
+                    # Check that given fields match
+                    if all(cc_data.get(k) == v for k, v in fields.items()):
+                        return cc
+
+            if page >= meta.TotalPages:
+                break
+
+        raise FortnoxNotFound(f"Could not find a cost center matching {fields}")
 
     # ======================
     # Company information
@@ -113,7 +133,7 @@ class FortnoxAPIClient:
 
     def list_expenses(self, access_token: str, limit: int = 100, page: int = 1) -> list[Expense]:
         response = self._get(access_token, "expenses", parameters={"limit": limit, "page": page})
-        return self._parse_list_response(response, Expense, "Expenses")
+        return self._parse_list_response(response, Expense, "Expenses")[0]
 
     def retrieve_expense(self, code: str) -> Expense:
         response = self._get(code, f"expenses/{code}")
@@ -125,7 +145,7 @@ class FortnoxAPIClient:
 
     def list_financial_years(self, access_token: str, limit: int = 100, page: int = 1) -> list[FinancialYear]:
         response = self._get(access_token, "financialyears", parameters={"limit": limit, "page": page})
-        return self._parse_list_response(response, FinancialYear, "FinancialYears")
+        return self._parse_list_response(response, FinancialYear, "FinancialYears")[0]
 
     def retrieve_financial_year(self, access_token: str, id: int) -> FinancialYear:
         response = self._get(access_token, f"financialyears/{id}")
@@ -149,7 +169,7 @@ class FortnoxAPIClient:
 
     def list_vouchers(self, access_token: str, limit: int = 100, page: int = 1) -> list[Voucher]:
         response = self._get(access_token, "vouchers", parameters={"limit": limit, "page": page})
-        return self._parse_list_response(response, Voucher, "Vouchers")
+        return self._parse_list_response(response, Voucher, "Vouchers")[0]
 
     def retrieve_voucher(self, access_token: str, voucher_series: str, voucher_number: int) -> Voucher:
         response = self._get(access_token, f"vouchers/{voucher_series}/{voucher_number}")
@@ -166,7 +186,7 @@ class FortnoxAPIClient:
 
     def list_voucher_series(self, access_token: str, limit: int = 100, page: int = 1) -> list[VoucherSeriesListItem]:
         response = self._get(access_token, "voucherseries", parameters={"limit": limit, "page": page})
-        return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")
+        return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")[0]
 
     def retrieve_voucher_series(self, access_token: str, code: str) -> VoucherSeries:
         response = self._get(access_token, f"voucherseries/{code}")
@@ -187,7 +207,8 @@ class FortnoxAPIClient:
             raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
     @classmethod
-    def _parse_list_response[T](cls, response: requests.Response, model: type[T], label: str) -> list[T]:
+    def _parse_list_response[T](cls, response: requests.Response, model: type[T], label: str) -> tuple[
+        list[T], ListMetaInformaion]:
         class ResponseModel(BaseModel):
             MetaInformation: ListMetaInformaion
             Collection: list[model] = Field(alias=label)
@@ -196,7 +217,7 @@ class FortnoxAPIClient:
 
         match adapter.validate_python(response.json()):
             case ResponseModel() as resp:
-                return resp.Collection
+                return resp.Collection, resp.MetaInformation
             case Error() as e:
                 raise cls._parse_error(e, response)
             case _:
