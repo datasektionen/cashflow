@@ -19,12 +19,13 @@ services:
       BUDGET_URL: https://budget.datasektionen.se
       RFINGER_API_URL: http://dock:9003
       RFINGER_API_KEY: hemlig
+      REDIS_HOST: redis
     command: /app/run.sh
     init: true
     ports:
       - 8000:8000
     configs:
-      - source: nginx.conf 
+      - source: nginx.conf
         target: /etc/nginx/nginx.conf
     volumes:
       - ./media:/app/media
@@ -45,10 +46,14 @@ services:
       POSTGRES_PASSWORD: cashflow
       POSTGRES_DB: cashflow
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "cashflow"]
+      test: [ "CMD", "pg_isready", "-U", "cashflow" ]
       interval: 2s
       timeout: 2s
       retries: 3
+
+  redis: # To cache expensive API calls
+    image: redis:8-alpine
+
   dock:
     image: ghcr.io/datasektionen/dock:latest
     configs:
@@ -71,7 +76,7 @@ services:
 
 configs:
   nginx.conf:
-    content: | 
+    content: |
       events {}
 
       http {
@@ -101,7 +106,7 @@ configs:
           karklu:
             regular: https://dsekt-assets.s3.amazonaws.com/website/namnder/dkm.svg
             small: https://dsekt-assets.s3.amazonaws.com/website/namnder/dkm.svg
-
+  
   
   nyckeln.yaml:
     content: |

@@ -2,6 +2,8 @@ import json
 from datetime import date, datetime
 from decimal import *
 
+import redis
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,8 +17,14 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from cashflow.gordian import retrieve_account_from_gordian
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from fortnox import require_fortnox_auth, FortnoxRequest
-from fortnox.api_client.models import Account, CostCenter
+from fortnox.api_client.models import CostCenter
 from invoices.models import Invoice, InvoicePart
+
+# TODO: Possibly move to middleware?
+r = redis.Redis(host=settings.REDIS_HOST, decode_responses=True)
+# Expire cost centers cache after 24 hours
+r.expire("cost_centers", 86400)
+r.expire("active_accounts", 86400)
 
 
 @require_GET
@@ -159,18 +167,30 @@ def invoice_pay(request, pk):
 @user_passes_test(lambda u: u.profile.may_view_accountable())
 @require_fortnox_auth
 def account_overview(request):
-    # Retrieve active accounts from Fortnox
-    api = FortnoxRequest(request.fortnox_client, request.user)
-    api.bind(request.fortnox_client.list_accounts)
-    accounts: list[Account] = [account.model_dump() for account in api.get() if account.Active]
+    # Retrieve all active accounts
+    cached_accounts = r.get("accounts")
+    if cached_accounts is None:  # Cache miss
+        # Retrieve from Fortnox
+        api = FortnoxRequest(request.fortnox_client, request.user)
+        api.bind(request.fortnox_client.list_accounts)
+        accounts = [account.model_dump() for account in api.get() if account.Active]
+        r.set("accounts", json.dumps(accounts))
+    else:
+        accounts = json.loads(cached_accounts)
 
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
     def find_cost_center(part) -> CostCenter:
-        # Find cost center on Fortnox
-        api.bind(request.fortnox_client.find_cost_center, Description=part.cost_centre)
-        return api.get()
+        cached_cost_center = r.hget("cost_centers", part.cost_centre)
+        if cached_cost_center is None:
+            # Find cost center on Fortnox
+            api.bind(request.fortnox_client.find_cost_center, Description=part.cost_centre)
+            cc = api.get()
+            r.hset("cost_centers", part.cost_centre, cc.model_dump_json())
+            return cc
+        else:
+            return CostCenter.model_validate_json(cached_cost_center)
 
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
