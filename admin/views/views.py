@@ -167,11 +167,11 @@ def invoice_pay(request, pk):
 @user_passes_test(lambda u: u.profile.may_view_accountable())
 @require_fortnox_auth
 def account_overview(request):
+    api = FortnoxRequest(request.fortnox_client, request.user)
     # Retrieve all active accounts
     cached_accounts = r.get("accounts")
     if cached_accounts is None:  # Cache miss
         # Retrieve from Fortnox
-        api = FortnoxRequest(request.fortnox_client, request.user)
         api.bind(request.fortnox_client.list_accounts)
         accounts = [account.model_dump() for account in api.get() if account.Active]
         r.set("accounts", json.dumps(accounts))
