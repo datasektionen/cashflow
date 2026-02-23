@@ -8,6 +8,7 @@ class APIUser(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     access_token = models.TextField(null=False)
     refresh_token = models.TextField(null=False)
+    expires_at = models.DateTimeField()
 
 
 class Account(models.Model):

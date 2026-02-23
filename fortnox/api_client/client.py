@@ -1,14 +1,14 @@
 import base64
 import logging
 from enum import Enum
-from typing import Union, Literal, Any, Optional
+from typing import Union, Literal, Any, Optional, Callable
 from urllib import parse
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel, Field
 
 from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
-    FortnoxNotFound, FortnoxAuthenticationError, FortnoxInvalidPostData, FortnoxMissingFieldsError
+    FortnoxNotFound, FortnoxAuthenticationError, FortnoxInvalidPostData, FortnoxMissingFieldsError, AccountNotFound
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
     ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher, \
     VoucherCreate, FinancialYear
@@ -27,12 +27,13 @@ class FortnoxAPIClient:
     FORTNOX_URL = "https://apps.fortnox.se/oauth-v1"
 
     def __init__(self, client_id: str, client_secret: str, scope: list[str],
-                 access_type: Literal['offline'] = 'offline'):
+                 access_type: Literal['offline'] = 'offline', token_provider: Callable = None):
         self.client_id = client_id
         self.client_secret = client_secret
         # Ensure valid scopes to prevent future errors
         self.scope = TypeAdapter(list[self._ScopeEnum]).validate_python(scope)
         self.access_type = access_type
+        self.token_provider = token_provider
 
     # ======================
     # Authentication
@@ -83,27 +84,27 @@ class FortnoxAPIClient:
     # Accounts
     # ======================
 
-    def list_accounts(self, access_token: str, limit: int = 100, page: int = 1) -> list[Account]:
-        response = self._get(access_token, "accounts", parameters={"limit": limit, "page": page})
+    def list_accounts(self, access_token: str = None, limit: int = 100, page: int = 1) -> list[Account]:
+        response = self._get("accounts", parameters={"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, Account, "Accounts")[0]
 
-    def retrieve_account(self, access_token: str, number: int) -> Account:
-        response = self._get(access_token, f"accounts/{number}")
+    def retrieve_account(self, number: int, access_token: str = None) -> Account:
+        response = self._get(f"accounts/{number}", access_token=access_token)
         return self._parse_retrieve_response(response, Account, "Account")
 
     # ======================
     # Cost centers
     # ======================
 
-    def list_cost_centers(self, access_token: str, limit: int = 100, page: int = 1) -> list[CostCenter]:
-        response = self._get(access_token, "costcenters", {"limit": limit, "page": page})
+    def list_cost_centers(self, access_token: str = None, limit: int = 100, page: int = 1) -> list[CostCenter]:
+        response = self._get("costcenters", {"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, CostCenter, "CostCenters")[0]
 
-    def find_cost_center(self, access_token: str, **fields) -> CostCenter:
+    def find_cost_center(self, access_token: str = None, **fields) -> CostCenter:
         """Finds the first cost center on Fortnox that matches the given fields."""
         page = 1
         while True:
-            response = self._get(access_token, "costcenters", parameters={"page": page})
+            response = self._get("costcenters", parameters={"page": page}, access_token=access_token)
             query, meta = self._parse_list_response(response, CostCenter, "CostCenters")
             page = meta.CurrentPage + 1
             for p in range(1, meta.TotalPages + 1):
@@ -123,42 +124,42 @@ class FortnoxAPIClient:
     # Company information
     # ======================
 
-    def retrieve_company_info(self, access_token: str) -> CompanyInformation:
-        response = self._get(access_token, "companyinformation")
+    def retrieve_company_info(self, access_token: str = None) -> CompanyInformation:
+        response = self._get("companyinformation", access_token=access_token)
         return self._parse_retrieve_response(response, CompanyInformation, "CompanyInformation")
 
     # ======================
     # Expenses
     # ======================
 
-    def list_expenses(self, access_token: str, limit: int = 100, page: int = 1) -> list[Expense]:
-        response = self._get(access_token, "expenses", parameters={"limit": limit, "page": page})
+    def list_expenses(self, access_token: str = None, limit: int = 100, page: int = 1) -> list[Expense]:
+        response = self._get("expenses", parameters={"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, Expense, "Expenses")[0]
 
-    def retrieve_expense(self, code: str) -> Expense:
-        response = self._get(code, f"expenses/{code}")
+    def retrieve_expense(self, code: str, access_token: str = None) -> Expense:
+        response = self._get(f"expenses/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, Expense, "Expense")
 
     # ======================
     # Financial years
     # ======================
 
-    def list_financial_years(self, access_token: str, limit: int = 100, page: int = 1) -> list[FinancialYear]:
-        response = self._get(access_token, "financialyears", parameters={"limit": limit, "page": page})
+    def list_financial_years(self, access_token: str = None, limit: int = 100, page: int = 1) -> list[FinancialYear]:
+        response = self._get("financialyears", parameters={"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, FinancialYear, "FinancialYears")[0]
 
-    def retrieve_financial_year(self, access_token: str, id: int) -> FinancialYear:
-        response = self._get(access_token, f"financialyears/{id}")
+    def retrieve_financial_year(self, id: int, access_token: str = None) -> FinancialYear:
+        response = self._get(f"financialyears/{id}", access_token=access_token)
         return self._parse_retrieve_response(response, FinancialYear, "FinancialYear")
 
     # ======================
     # Users
     # ======================
 
-    def retrieve_current_user(self, access_token: str) -> Me:
+    def retrieve_current_user(self, access_token: str = None) -> Me:
         """Retrieves information about the user connected to the given token"""
         try:
-            response = self._get(access_token, 'me')
+            response = self._get('me', access_token=access_token)
         except FortnoxNotFound as e:
             raise FortnoxNotFound("No user connected to the given token.") from e
         return self._parse_retrieve_response(response, Me, "Me")
@@ -167,29 +168,30 @@ class FortnoxAPIClient:
     # Vouchers
     # ======================
 
-    def list_vouchers(self, access_token: str, limit: int = 100, page: int = 1) -> list[Voucher]:
-        response = self._get(access_token, "vouchers", parameters={"limit": limit, "page": page})
+    def list_vouchers(self, limit: int = 100, page: int = 1, access_token: str = None) -> list[Voucher]:
+        response = self._get("vouchers", parameters={"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, Voucher, "Vouchers")[0]
 
-    def retrieve_voucher(self, access_token: str, voucher_series: str, voucher_number: int) -> Voucher:
-        response = self._get(access_token, f"vouchers/{voucher_series}/{voucher_number}")
+    def retrieve_voucher(self, voucher_series: str, voucher_number: int, access_token: str = None) -> Voucher:
+        response = self._get(f"vouchers/{voucher_series}/{voucher_number}", access_token=access_token)
         return self._parse_retrieve_response(response, Voucher, "Voucher")
 
-    def create_voucher(self, access_token: str, voucher: Optional[VoucherCreate] = None, **fields) -> Voucher:
+    def create_voucher(self, voucher: Optional[VoucherCreate] = None, access_token: str = None, **fields) -> Voucher:
         if voucher is None:
             voucher = VoucherCreate(**fields)
         # Using by_alias and exclude_none is important!
         # The API expects the url field to be "@url" and that no None-fields are included
         model_dict = voucher.model_dump(by_alias=True, exclude_none=True)
-        response = self._post(access_token, "vouchers", json={"Voucher": model_dict})
+        response = self._post("vouchers", json={"Voucher": model_dict}, access_token=access_token)
         return self._parse_retrieve_response(response, Voucher, "Voucher")
 
-    def list_voucher_series(self, access_token: str, limit: int = 100, page: int = 1) -> list[VoucherSeriesListItem]:
-        response = self._get(access_token, "voucherseries", parameters={"limit": limit, "page": page})
+    def list_voucher_series(self, limit: int = 100, page: int = 1, access_token: str = None) -> list[
+        VoucherSeriesListItem]:
+        response = self._get("voucherseries", parameters={"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, VoucherSeriesListItem, "VoucherSeriesCollection")[0]
 
-    def retrieve_voucher_series(self, access_token: str, code: str) -> VoucherSeries:
-        response = self._get(access_token, f"voucherseries/{code}")
+    def retrieve_voucher_series(self, code: str, access_token: str = None) -> VoucherSeries:
+        response = self._get(f"voucherseries/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, VoucherSeries, "VoucherSeries")
 
     # ======================
@@ -223,12 +225,15 @@ class FortnoxAPIClient:
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
-    @classmethod
-    def _get(cls, access_token: str, endpoint: str, parameters: dict[str, Any] = None) -> requests.Response:
+    def _get(self, endpoint: str, parameters: dict[str, Any] = None, access_token: str = None) -> requests.Response:
         """Performs a GET request to a Fortnox API endpoint, returning a response object"""
+
+        if access_token is None:
+            access_token = self.token_provider()
+
         headers = {'Authorization': f'Bearer {access_token}'}
         url_params = "?" + parse.urlencode(parameters) if parameters is not None else ""
-        response = requests.get(f"{cls.API_URL}/{endpoint}/{url_params}", headers=headers)
+        response = requests.get(f"{self.API_URL}/{endpoint}/{url_params}", headers=headers)
         logger.debug(response)
 
         # TODO: Handle more errors
@@ -248,17 +253,18 @@ class FortnoxAPIClient:
             # Try to parse error
             try:
                 error = Error.model_validate(response.json()["ErrorInformation"])
-                raise cls._parse_error(error, response)
+                raise self._parse_error(error, response)
             except Exception:
                 raise FortnoxAPIError(
                     f"Unknown error from Fortnox API, failed to parse error response:\n{response.text=}")
 
         return response
 
-    @classmethod
-    def _post(cls, access_token: str, endpoint: str, json: dict):
+    def _post(self, endpoint: str, json: dict, access_token: str = None):
+        if access_token is None:
+            access_token = self.token_provider()
         headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.post(f"{cls.API_URL}/{endpoint}/", json=json, headers=headers)
+        response = requests.post(f"{self.API_URL}/{endpoint}/", json=json, headers=headers)
         logger.debug(response)
         return response
 
@@ -333,6 +339,9 @@ class FortnoxAPIClient:
             case 2001939:
                 # Invalid voucher series
                 raise FortnoxInvalidPostData(error.Message)
+            case 2001798:
+                # Invalid account
+                raise AccountNotFound(error.Message)
             case _:
                 raise FortnoxAPIError(
                     f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")

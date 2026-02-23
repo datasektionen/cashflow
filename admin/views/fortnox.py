@@ -1,17 +1,19 @@
 import logging
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from expenses.models import Expense
-from fortnox import require_fortnox_auth, FortnoxRequest
+from fortnox import FortnoxRequest, require_fortnox_auth
 from fortnox.api_client import AuthCodeGrant
-from fortnox.api_client.models import VoucherRow, VoucherCreate, Account
+from fortnox.api_client.models import VoucherRow, VoucherCreate
 from fortnox.models import APIUser
 from invoices.models import Invoice
 
@@ -65,12 +67,13 @@ def auth_complete(request):
             logger.error(f"Error when authenticating {request.user} to Fortnox: {e}")
             return redirect(reverse('admin-index'))
         case auth_code, _:
-            response = request.fortnox_client.retrieve_access_token(
-                AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
-            user_info = request.fortnox_client.retrieve_current_user(response.access_token)
+            response = request.fortnox.retrieve_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
+            user_info = request.fortnox.retrieve_current_user(response.access_token)
             APIUser.objects.update_or_create(user=request.user, defaults={"access_token": response.access_token,
                                                                           "refresh_token": response.refresh_token,
-                                                                          "name": user_info.Name})
+                                                                          "name": user_info.Name,
+                                                                          "expires_at": timezone.now() + timedelta(
+                                                                              seconds=response.expires_in)})
             logger.info(f"Completed Fortnox authentication for {request.user} as {user_info.Name}")
 
     return redirect(reverse('fortnox-overview'))
@@ -90,7 +93,7 @@ def disconnect(request):
 
 
 @require_POST
-def account_expense(request, **kwargs):
+def account_expense(request: FortnoxRequest, **kwargs):
     expense = Expense.objects.get(id=kwargs['id'])
 
     # Generate a voucher row for every expense part
@@ -104,11 +107,9 @@ def account_expense(request, **kwargs):
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
-    api = FortnoxRequest(request.fortnox_client, request.user)
-    api.bind(request.fortnox_client.create_voucher,
-             VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
-                           VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES))
-    created = api.get()
+    created = request.fortnox.create_voucher(
+        VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
+                      VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES))
     expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
     expense.save()
 
@@ -118,7 +119,7 @@ def account_expense(request, **kwargs):
 
 
 @require_POST
-def account_invoice(request, **kwargs):
+def account_invoice(request: FortnoxRequest, **kwargs):
     invoice = Invoice.objects.get(id=kwargs['id'])
 
     # Generate a voucher row for every invoice part
@@ -132,11 +133,9 @@ def account_invoice(request, **kwargs):
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
-    api = FortnoxRequest(request.fortnox_client, request.user)
-    api.bind(request.fortnox_client.create_voucher,
-             VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
-                           VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES))
-    created = api.get()
+    created = request.fortnox.create_voucher(
+        VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
+                      VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES))
     invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
     invoice.save()
 
@@ -148,10 +147,8 @@ def account_invoice(request, **kwargs):
 @login_required
 @user_passes_test(lambda u: u.profile.may_firmatecknare())
 @require_fortnox_auth
-def overview(request):
-    api = FortnoxRequest(request.fortnox_client, request.user)
-    api.bind(request.fortnox_client.list_accounts)
-    accounts: list[Account] = api.get()
+def overview(request: FortnoxRequest):
+    accounts = request.fortnox.list_accounts()
 
     accounts = [account for account in accounts if account.Active]
     accounts = [a.model_dump() for a in accounts]

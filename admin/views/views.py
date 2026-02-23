@@ -166,14 +166,12 @@ def invoice_pay(request, pk):
 @login_required
 @user_passes_test(lambda u: u.profile.may_view_accountable())
 @require_fortnox_auth
-def account_overview(request):
-    api = FortnoxRequest(request.fortnox_client, request.user)
+def account_overview(request: FortnoxRequest):
     # Retrieve all active accounts
     cached_accounts = r.get("accounts")
     if cached_accounts is None:  # Cache miss
         # Retrieve from Fortnox
-        api.bind(request.fortnox_client.list_accounts)
-        accounts = [account.model_dump() for account in api.get() if account.Active]
+        accounts = [account.model_dump() for account in request.fortnox.list_accounts() if account.Active]
         r.set("accounts", json.dumps(accounts))
     else:
         accounts = json.loads(cached_accounts)
@@ -185,8 +183,7 @@ def account_overview(request):
         cached_cost_center = r.hget("cost_centers", part.cost_centre)
         if cached_cost_center is None:
             # Find cost center on Fortnox
-            api.bind(request.fortnox_client.find_cost_center, Description=part.cost_centre)
-            cc = api.get()
+            cc = request.fortnox.find_cost_center(Description=part.cost_centre)
             r.hset("cost_centers", part.cost_centre, cc.model_dump_json())
             return cc
         else:

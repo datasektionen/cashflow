@@ -1,9 +1,11 @@
 import logging
+from datetime import timedelta
 from functools import wraps
-from typing import Callable
 
 from django.conf import settings
+from django.http import HttpRequest
 from django.shortcuts import redirect
+from django.utils import timezone
 
 from .api_client import FortnoxAPIClient, RefreshTokenGrant
 from .api_client.exceptions import FortnoxAPIError, FortnoxNotFound, FortnoxAuthenticationError
@@ -11,25 +13,13 @@ from .api_client.exceptions import FortnoxAPIError, FortnoxNotFound, FortnoxAuth
 logger = logging.getLogger(__name__)
 
 
-class FortnoxRequest:
-    """Monad-ish class to handle Fortnox requests with automatic token refreshing"""
+class FortnoxRequest(HttpRequest):
+    """This subclass allows for proper type hinting in views.
 
-    def __init__(self, client: FortnoxAPIClient, user):
-        self._client = client
-        self._user = user
-        self._value = None
-
-    def bind[T](self, fn: Callable[[str, ...], T], *args, **kwargs) -> T | None:
-        try:
-            self._value = fn(self._user.fortnox.access_token, *args, **kwargs)
-        except FortnoxAuthenticationError as e:
-            logger.debug(f"Attempting to refresh access token for {self._user}: {e}")
-
-            retrieve_or_refresh_token(self._client, self._user)
-            self._value = fn(self._user.fortnox.access_token, *args, **kwargs)
-
-    def get(self):
-        return self._value
+    Instead of writing e.g. `def my_view(request: HttpRequest)` you can write
+    `def my_view(request: FortnoxRequest)`, and you will get hints for the api client.
+    """
+    fortnox: FortnoxAPIClient
 
 
 class FortnoxMiddleware:
@@ -37,24 +27,22 @@ class FortnoxMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.client = FortnoxAPIClient(client_id=settings.FORTNOX_CLIENT_ID,
-                                       client_secret=settings.FORTNOX_CLIENT_SECRET, scope=settings.FORTNOX_SCOPE)
 
     def __call__(self, request):
         from .models import APIUser
 
-        request.fortnox_client = self.client
-
         if not request.user.is_anonymous:
-            if APIUser.objects.filter(user=request.user).exists():
-                APIUser.objects.get(user=request.user)
-                # Make sure token is up to date
-                retrieve_or_refresh_token(self.client, request.user)
+            client = FortnoxAPIClient(client_id=settings.FORTNOX_CLIENT_ID,
+                                      client_secret=settings.FORTNOX_CLIENT_SECRET, scope=settings.FORTNOX_SCOPE)
+            # Evil closure
+            client.token_provider = lambda: retrieve_or_refresh_token(client, request.user)
+            request.fortnox = client
+        else:
+            request.fortnox = None
 
         return self.get_response(request)
 
 
-# TODO: Check using expires_at instead
 def retrieve_or_refresh_token(client, user):
     """Returns a valid access token for the user, if possible. Otherwise None"""
     # Lazy imports to prevent issues when loading apps
@@ -64,22 +52,22 @@ def retrieve_or_refresh_token(client, user):
         return None
 
     try:
-        token = user.fortnox.access_token
+        api_user = user.fortnox
     except APIUser.DoesNotExist:
         return None
 
-    try:
-        # Test validity
-        client.retrieve_current_user(token)
-        return token
-    except (FortnoxNotFound, FortnoxAuthenticationError) as e:
-        logger.debug(f"Missing or invalid access token for {user}: {e}\nAttempting to refresh access token")
-        # Try refreshing token
-        grant = RefreshTokenGrant(code=user.fortnox.refresh_token)
+    if api_user.expires_at > timezone.now():
+        logger.debug(f"{user} has an active access token")
+        return api_user.access_token
+    else:
+        logger.debug(f"Attempting to refresh access token for {user}")
+        grant = RefreshTokenGrant(code=api_user.refresh_token)
         try:
             response = client.retrieve_access_token(grant)
             APIUser.objects.update_or_create(user=user, defaults={"access_token": response.access_token,
-                                                                  "refresh_token": response.refresh_token})
+                                                                  "refresh_token": response.refresh_token,
+                                                                  "expires_at": timezone.now() + timedelta(
+                                                                      seconds=response.expires_in)})
             logger.debug(f"Successfully refreshed access token for {user}")
             return response.access_token
         except FortnoxAuthenticationError as e:
@@ -95,8 +83,8 @@ def require_fortnox_auth(view):
     """Requires the user to have a valid access or refresh token"""
 
     @wraps(view)
-    def wrap(request, *args, **kwargs):
-        token = retrieve_or_refresh_token(request.fortnox_client, request.user)
+    def wrap(request: FortnoxRequest, *args, **kwargs):
+        token = retrieve_or_refresh_token(request.fortnox, request.user)
         if token is None:
             return redirect(settings.FORTNOX_AUTH_REDIRECT)
         else:
