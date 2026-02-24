@@ -11,9 +11,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from expenses.models import Expense
-from fortnox import FortnoxRequest, require_fortnox_auth
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
+from fortnox.django import FortnoxRequest, require_fortnox_auth
 from fortnox.models import APIUser
 from invoices.models import Invoice
 
@@ -39,7 +39,7 @@ def get_auth_code(request):
     request.session['fortnox_csrf_token'] = csrf_token
 
     redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
-    return HttpResponseRedirect(request.fortnox_client.build_auth_code_url(redirect_uri, csrf_token))
+    return HttpResponseRedirect(request.fortnox.build_auth_code_url(redirect_uri, csrf_token))
 
 
 @login_required
@@ -112,9 +112,7 @@ def account_expense(request: FortnoxRequest, **kwargs):
                       VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES))
     expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
     expense.save()
-
     logger.info(f"{request.user} accounted for expense {expense.id}")
-
     return redirect('admin-account')
 
 
@@ -138,9 +136,7 @@ def account_invoice(request: FortnoxRequest, **kwargs):
                       VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES))
     invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
     invoice.save()
-
     logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
-
     return redirect(reverse('admin-account'))
 
 

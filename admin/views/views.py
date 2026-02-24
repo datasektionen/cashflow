@@ -16,8 +16,8 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 
 from cashflow.gordian import retrieve_account_from_gordian
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
-from fortnox import require_fortnox_auth, FortnoxRequest
 from fortnox.api_client.models import CostCenter
+from fortnox.django import FortnoxRequest, require_fortnox_auth
 from invoices.models import Invoice, InvoicePart
 
 # TODO: Possibly move to middleware?

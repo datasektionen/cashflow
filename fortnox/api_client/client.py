@@ -7,8 +7,8 @@ from urllib import parse
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel, Field
 
-from fortnox.api_client.exceptions import FortnoxAPIError, ResponseParsingError, FortnoxPermissionDenied, \
-    FortnoxNotFound, FortnoxAuthenticationError, FortnoxInvalidPostData, FortnoxMissingFieldsError, AccountNotFound
+from fortnox.api_client.exceptions import CODE_EXCEPTION_MAPPING, FortnoxAPIError, ResponseParsingError, \
+    FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
     ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher, \
     VoucherCreate, FinancialYear
@@ -204,7 +204,7 @@ class FortnoxAPIClient:
         if isinstance(data.get(label), model):
             return data[label]
         elif isinstance(data.get("ErrorInformation"), Error):
-            raise cls._parse_error(data["ErrorInformation"], response)
+            raise cls._parse_error(data["ErrorInformation"])
         else:
             raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
@@ -221,7 +221,7 @@ class FortnoxAPIClient:
             case ResponseModel() as resp:
                 return resp.Collection, resp.MetaInformation
             case Error() as e:
-                raise cls._parse_error(e, response)
+                raise cls._parse_error(e)
             case _:
                 raise ResponseParsingError("Unknown or invalid API response from Fortnox")
 
@@ -253,7 +253,7 @@ class FortnoxAPIClient:
             # Try to parse error
             try:
                 error = Error.model_validate(response.json()["ErrorInformation"])
-                raise self._parse_error(error, response)
+                raise self._parse_error(error)
             except Exception:
                 raise FortnoxAPIError(
                     f"Unknown error from Fortnox API, failed to parse error response:\n{response.text=}")
@@ -319,29 +319,10 @@ class FortnoxAPIClient:
         timereporting = 'timereporting'
 
     @classmethod
-    def _parse_error(cls, error: Error, response: requests.Response) -> Exception:
-        match error.Code:
-            case 2000423:
-                # Resource not found
-                raise FortnoxNotFound(error.Message)
-            case 2000663:
-                # Insufficient permissions
-                raise FortnoxPermissionDenied(error.Message)
-            case 2000311:
-                # Missing token/secret
-                raise FortnoxAuthenticationError(error.Message)
-            case 2001392:
-                # Invalid field type
-                raise FortnoxInvalidPostData(error.Message)
-            case 2001795:
-                # Missing fields
-                raise FortnoxMissingFieldsError(error.Message)
-            case 2001939:
-                # Invalid voucher series
-                raise FortnoxInvalidPostData(error.Message)
-            case 2001798:
-                # Invalid account
-                raise AccountNotFound(error.Message)
-            case _:
-                raise FortnoxAPIError(
-                    f"Unknown error from Fortnox API ({error.Code=}): {error.Message=}\n{response.text=}")
+    def _parse_error(cls, error: Error) -> Exception:
+        # Takes an ErrorInformation object and tries to generate a suitable exception
+        exception = CODE_EXCEPTION_MAPPING.get(error.Code)
+        if exception is not None:
+            return exception
+        else:
+            return FortnoxAPIError(f"Unknown error from Fortnox API ({error.Code=}):\n{error.Message}")

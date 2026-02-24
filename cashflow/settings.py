@@ -76,7 +76,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'fortnox.FortnoxMiddleware',
+    'fortnox.django.FortnoxMiddleware',
 )
 
 ROOT_URLCONF = 'cashflow.urls'
