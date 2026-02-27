@@ -6,6 +6,7 @@ import re
 from datetime import timedelta
 from typing import Literal, Union, Any, Annotated
 
+import pydantic_core
 from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
 from requests_cache import CachedSession
 
@@ -94,7 +95,7 @@ def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter
     return secondary_cost_centres
 
 
-def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryCostCenter]) -> list[GBudgetLine]:
+def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryCostCenter] = None) -> list[GBudgetLine]:
     if secondary_cost_center is not None:
         # Find only budget lines for given secondary cost center
         scc_id = secondary_cost_center.id if isinstance(secondary_cost_center,
@@ -107,7 +108,11 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
         budget_lines: list[GBudgetLine] = []
         for scc in secondary_cost_centres:
             response = CACHE_SESSION.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
-            budget_lines += BL_LIST.validate_json(response.text)
+            try:
+                budget_lines += BL_LIST.validate_json(response.text)
+            except pydantic_core.ValidationError:
+                # GOrdian returns None when a scc has no budget lines
+                budget_lines += []
     return budget_lines
 
 
