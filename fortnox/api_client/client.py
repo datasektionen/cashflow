@@ -102,6 +102,7 @@ class FortnoxAPIClient:
 
     def find_cost_center(self, access_token: str = None, **fields) -> CostCenter:
         """Finds the first cost center on Fortnox that matches the given fields."""
+        page = 1
         while True:
             response = self._get("costcenters", parameters={"page": page}, access_token=access_token)
             data, meta = self._parse_list_response(response, CostCenter, "CostCenters")
