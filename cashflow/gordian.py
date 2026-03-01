@@ -106,12 +106,13 @@ def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter
     cc_id = cost_center.id if isinstance(cost_center, GCostCenter) else cost_center
 
     if not force_refresh:
-        if cost_center is not None:
+        keys = cache.get(SND_COST_CENTER_SEARCH_KEYS, None)
+        if keys is None and cost_center is not None:
             keys = cache.get(f"{SND_COST_CENTER_SEARCH_KEYS}:{cc_id}", None)
-        else:
-            keys = cache.get(SND_COST_CENTER_SEARCH_KEYS, None)
         if keys is not None:
             secondary_cost_centers = SCC_LIST.validate_python(cache.get_many(keys).values(), by_name=True)
+            if cost_center is not None:
+                return [scc for scc in secondary_cost_centers if scc.cc_id == cc_id]
             return secondary_cost_centers
 
     if cost_center is not None:
@@ -148,12 +149,13 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
                                                     GSecondaryCostCenter) else secondary_cost_center
     if not force_refresh:
 
-        if secondary_cost_center is not None:
+        keys = cache.get(BUDGET_LINE_SEARCH_KEYS, [])
+        if keys is None and secondary_cost_center is not None:
             keys = cache.get(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", None)
-        else:
-            keys = cache.get(BUDGET_LINE_SEARCH_KEYS, [])
         if keys is not None:
             budget_lines = BL_LIST.validate_python(cache.get_many(keys).values(), by_name=True)
+            if secondary_cost_center is not None:
+                return [bl for bl in budget_lines if bl.scc_id == scc_id]
             return budget_lines
 
     if secondary_cost_center is not None:
