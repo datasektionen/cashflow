@@ -128,11 +128,13 @@ def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter
     else:
         # List all secondary cost centers
         cost_centers = list_cost_centres_from_gordian(force_refresh=force_refresh)
-        secondary_cost_centers = [SCC_LIST.validate_json(
-            requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc.id}).text) for cc
-            in cost_centers]
 
-        cache.set(SND_COST_CENTER_SEARCH_KEYS, [scc.id for scc in secondary_cost_centers],
+        secondary_cost_centers = []
+        for cc in cost_centers:
+            response = requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc.id})
+            secondary_cost_centers += SCC_LIST.validate_json(response.text)
+
+        cache.set(SND_COST_CENTER_SEARCH_KEYS, [_snd_cost_center_key(scc) for scc in secondary_cost_centers],
                   timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
         cache.set_many({_snd_cost_center_key(scc): scc.model_dump() for scc in secondary_cost_centers},
                        timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
@@ -166,9 +168,10 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
     else:
         # Retrieve all budget lines (from all secondary cost centers)
         secondary_cost_centers = list_secondary_cost_centres_from_gordian(force_refresh=force_refresh)
-        budget_lines = [BL_LIST.validate_json(
-            requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id}).text) for scc in
-            secondary_cost_centers]
+        budget_lines = []
+        for scc in secondary_cost_centers:
+            response = requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
+            budget_lines += BL_LIST.validate_json(response.text)
 
         cache.set(BUDGET_LINE_SEARCH_KEYS, [bl.id for bl in budget_lines],
                   timeout=settings.Gordian_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
