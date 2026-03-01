@@ -43,18 +43,6 @@ files = [
 tests = ["mypy (>=1.14.0)", "pytest", "pytest-asyncio"]
 
 [[package]]
-name = "attrs"
-version = "25.4.0"
-description = "Classes Without Boilerplate"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "attrs-25.4.0-py3-none-any.whl", hash = "sha256:adcf7e2a1fb3b36ac48d97835bb6d8ade15b8dcce26aba8bf1d14847b57a3373"},
-    {file = "attrs-25.4.0.tar.gz", hash = "sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11"},
-]
-
-[[package]]
 name = "authlib"
 version = "1.6.6"
 description = "The ultimate Python library in building OAuth and OpenID Connect servers and clients."
@@ -120,32 +108,6 @@ urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >
 
 [package.extras]
 crt = ["awscrt (==0.29.2)"]
-
-[[package]]
-name = "cattrs"
-version = "25.3.0"
-description = "Composable complex class support for attrs and dataclasses."
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "cattrs-25.3.0-py3-none-any.whl", hash = "sha256:9896e84e0a5bf723bc7b4b68f4481785367ce07a8a02e7e9ee6eb2819bc306ff"},
-    {file = "cattrs-25.3.0.tar.gz", hash = "sha256:1ac88d9e5eda10436c4517e390a4142d88638fe682c436c93db7ce4a277b884a"},
-]
-
-[package.dependencies]
-attrs = ">=25.4.0"
-typing-extensions = ">=4.14.0"
-
-[package.extras]
-bson = ["pymongo (>=4.4.0)"]
-cbor2 = ["cbor2 (>=5.4.6)"]
-msgpack = ["msgpack (>=1.0.5)"]
-msgspec = ["msgspec (>=0.19.0) ; implementation_name == \"cpython\""]
-orjson = ["orjson (>=3.11.3) ; implementation_name == \"cpython\""]
-pyyaml = ["pyyaml (>=6.0)"]
-tomlkit = ["tomlkit (>=0.11.8)"]
-ujson = ["ujson (>=5.10.0)"]
 
 [[package]]
 name = "celery"
@@ -684,6 +646,45 @@ s3 = ["boto3 (>=1.4.4)"]
 sftp = ["paramiko (>=1.15)"]
 
 [[package]]
+name = "django-stubs"
+version = "5.2.9"
+description = "Mypy stubs for Django"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_stubs-5.2.9-py3-none-any.whl", hash = "sha256:2317a7130afdaa76f6ff7f623650d7f3bf1b6c86a60f95840e14e6ec6de1a7cd"},
+    {file = "django_stubs-5.2.9.tar.gz", hash = "sha256:c192257120b08785cfe6f2f1c91f1797aceae8e9daa689c336e52c91e8f6a493"},
+]
+
+[package.dependencies]
+django = "*"
+django-stubs-ext = ">=5.2.9"
+types-pyyaml = "*"
+typing-extensions = ">=4.11.0"
+
+[package.extras]
+compatible-mypy = ["mypy (>=1.13,<1.20)"]
+oracle = ["oracledb"]
+redis = ["redis", "types-redis"]
+
+[[package]]
+name = "django-stubs-ext"
+version = "5.2.9"
+description = "Monkey-patching and extensions for django-stubs"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_stubs_ext-5.2.9-py3-none-any.whl", hash = "sha256:230c51575551b0165be40177f0f6805f1e3ebf799b835c85f5d64c371ca6cf71"},
+    {file = "django_stubs_ext-5.2.9.tar.gz", hash = "sha256:6db4054d1580657b979b7d391474719f1a978773e66c7070a5e246cd445a25a9"},
+]
+
+[package.dependencies]
+django = "*"
+typing-extensions = "*"
+
+[[package]]
 name = "django-widget-tweaks"
 version = "1.5.1"
 description = "Tweak the form field rendering in templates, not in python-level form definitions."
@@ -712,6 +713,29 @@ files = [
 
 [package.dependencies]
 django = ">=4.2"
+
+[[package]]
+name = "djangorestframework-stubs"
+version = "3.16.8"
+description = "PEP-484 stubs for django-rest-framework"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "djangorestframework_stubs-3.16.8-py3-none-any.whl", hash = "sha256:c5bf61def0f330a071dd5f470f05710189d06c467b3f3e186b32c5a23d4952fb"},
+    {file = "djangorestframework_stubs-3.16.8.tar.gz", hash = "sha256:f6d464b54fa2f929610e957446c04e6ac29558265418e0a2d9f653a4cdd410b5"},
+]
+
+[package.dependencies]
+django-stubs = ">=5.2.8"
+types-pyyaml = "*"
+typing-extensions = ">=4.0"
+
+[package.extras]
+compatible-mypy = ["django-stubs[compatible-mypy]", "mypy (>=1.13,<1.20)"]
+coreapi = ["coreapi (>=2.0.0)"]
+markdown = ["types-markdown (>=0.1.5)"]
+requests = ["types-requests"]
 
 [[package]]
 name = "gunicorn"
@@ -990,23 +1014,6 @@ tests = ["check-manifest", "coverage (>=7.4.2)", "defusedxml", "markdown2", "ole
 xmp = ["defusedxml"]
 
 [[package]]
-name = "platformdirs"
-version = "4.5.1"
-description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "platformdirs-4.5.1-py3-none-any.whl", hash = "sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31"},
-    {file = "platformdirs-4.5.1.tar.gz", hash = "sha256:61d5cdcc6065745cdd94f0f878977f8de9437be93de97c1c12f853c9c0cdcbda"},
-]
-
-[package.extras]
-docs = ["furo (>=2025.9.25)", "proselint (>=0.14)", "sphinx (>=8.2.3)", "sphinx-autodoc-typehints (>=3.2)"]
-test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=8.4.2)", "pytest-cov (>=7)", "pytest-mock (>=3.15.1)"]
-type = ["mypy (>=1.18.2)"]
-
-[[package]]
 name = "prompt-toolkit"
 version = "3.0.52"
 description = "Library for building powerful interactive command lines in Python"
@@ -1265,34 +1272,6 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
-name = "requests-cache"
-version = "1.3.0"
-description = "A persistent cache for python requests"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "requests_cache-1.3.0-py3-none-any.whl", hash = "sha256:f09f27bbf100c250886acf13a9db35b53cf2852fddd71977b47c71ea7d90dbba"},
-    {file = "requests_cache-1.3.0.tar.gz", hash = "sha256:070e357ccef11a300ccef4294a85de1ab265833c5d9c9538b26cd7ba4085d54a"},
-]
-
-[package.dependencies]
-attrs = ">=21.2"
-cattrs = ">=22.2"
-platformdirs = ">=2.5"
-requests = ">=2.22"
-url-normalize = ">=2.0"
-urllib3 = ">=1.25.5"
-
-[package.extras]
-all = ["boto3 (>=1.15)", "botocore (>=1.18)", "itsdangerous (>=2.0)", "orjson (>=3.0)", "pymongo (>=3)", "pyyaml (>=6.0.1)", "redis (>=3)", "ujson (>=5.4)"]
-dynamodb = ["boto3 (>=1.15)", "botocore (>=1.18)"]
-mongodb = ["pymongo (>=3)"]
-redis = ["redis (>=3)"]
-security = ["itsdangerous (>=2.0)"]
-yaml = ["pyyaml (>=6.0.1)"]
-
-[[package]]
 name = "s3transfer"
 version = "0.16.0"
 description = "An Amazon S3 Transfer Manager"
@@ -1360,6 +1339,18 @@ dev = ["build"]
 doc = ["sphinx"]
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.12.20250915"
+description = "Typing stubs for PyYAML"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"},
+    {file = "types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -1415,24 +1406,6 @@ tzdata = {version = "*", markers = "platform_system == \"Windows\""}
 
 [package.extras]
 devenv = ["check-manifest", "pytest (>=4.3)", "pytest-cov", "pytest-mock (>=3.3)", "zest.releaser"]
-
-[[package]]
-name = "url-normalize"
-version = "2.2.1"
-description = "URL normalization for Python"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "url_normalize-2.2.1-py3-none-any.whl", hash = "sha256:3deb687587dc91f7b25c9ae5162ffc0f057ae85d22b1e15cf5698311247f567b"},
-    {file = "url_normalize-2.2.1.tar.gz", hash = "sha256:74a540a3b6eba1d95bdc610c24f2c0141639f3ba903501e61a52a8730247ff37"},
-]
-
-[package.dependencies]
-idna = ">=3.3"
-
-[package.extras]
-dev = ["mypy", "pre-commit", "pytest", "pytest-cov", "pytest-socket", "ruff"]
 
 [[package]]
 name = "urllib3"
@@ -1494,4 +1467,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.14.2"
-content-hash = "6136bd202349300d699b159ddf833cb40080c7df7adcada803ac816640c0b624"
+content-hash = "7923093b48f67c0de1fc2ce70f79985ae9c3ed6b4805734cd9989caa78fa8a61"

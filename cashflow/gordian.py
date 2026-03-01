@@ -3,12 +3,12 @@
 https://github.com/datasektionen/gordian
 """
 import re
-from datetime import timedelta
 from typing import Literal, Union, Any, Annotated
 
-import pydantic_core
+import requests
+from django.conf import settings
+from django.core.cache import cache
 from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
-from requests_cache import CachedSession
 
 from expenses.models import ExpensePart
 from invoices.models import InvoicePart
@@ -35,8 +35,10 @@ def validate_account(value: Any) -> list[int]:
     #   (1): 4209            Only one account
     #   (2): 3041, 3042      These specific accounts
     #   (3): 3021-3025       All accounts in the range
-    if not isinstance(value, str):
-        raise ValueError(f"Expected a string, got {type(value)}")
+    if isinstance(value, list):
+        return [int(x) for x in value]
+    elif not isinstance(value, str):
+        raise ValueError(f"Expected a list of ints or a string, got {type(value)}")
     try:
         patterns = [r"^\d{4}(, \d{4})*$", r"^\d{4}-\d{4}$", ]
         match _match_regex(value, patterns):
@@ -60,59 +62,119 @@ class GBudgetLine(BaseModel):
     comment: str = Field(alias="BudgetLineComment")
 
 
-# Cache Gordian requests for 24 hours
-CACHE_SESSION = CachedSession("gordian", expire_after=timedelta(hours=24))
-
 # Type adapters, better for performance to define these once
 # These handle parsing list responses from GOrdian
 CC_LIST = TypeAdapter(list[GCostCenter])
 SCC_LIST = TypeAdapter(list[GSecondaryCostCenter])
 BL_LIST = TypeAdapter(list[GBudgetLine])
 
+# Caching
+# These determine which key is used to look up all stored cost center etc. IDs currently in the cache
+COST_CENTER_SEARCH_KEYS = "gordian:cost_center:search_keys"
+SND_COST_CENTER_SEARCH_KEYS = "gordian:secondary_cost_center:search_keys"
+BUDGET_LINE_SEARCH_KEYS = "gordian:budget_line:search_keys"
+
 
 # ======================
 # API request functions
 # ======================
-def list_cost_centres_from_gordian() -> list[GCostCenter]:
-    response = CACHE_SESSION.get(f"https://budget.datasektionen.se/api/CostCentres")
-    return CC_LIST.validate_json(response.text)
+def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCenter]:
+    """Lists all cost centers on GOrdian.
+
+    Caches responses by default, the timeout is configurable using GORDIAN_COST_CENTER_CACHE_TIMEOUT.
+    :param force_refresh: Forces fetching from the API, bypassing the cache
+    :return: A list of cost centers using the GCostCenter data-class.
+    """
+
+    if not force_refresh:
+        keys = cache.get(COST_CENTER_SEARCH_KEYS, [])
+        cost_centers = CC_LIST.validate_python(cache.get_many(keys).values(), by_name=True)
+        if len(cost_centers) != 0:
+            return cost_centers
+
+    response = requests.get(f"https://budget.datasektionen.se/api/CostCentres")
+    cost_centers = CC_LIST.validate_json(response.text)
+    cache.set(COST_CENTER_SEARCH_KEYS, [_cost_center_key(cc) for cc in cost_centers],
+              timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+    cache.set_many({_cost_center_key(cc): cc.model_dump() for cc in cost_centers},
+                   timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+    return cost_centers
 
 
-def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter] = None) -> list[GSecondaryCostCenter]:
+def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter] = None,
+                                             force_refresh: bool = False) -> list[GSecondaryCostCenter]:
+    cc_id = cost_center.id if isinstance(cost_center, GCostCenter) else cost_center
+
+    if not force_refresh:
+        if cost_center is not None:
+            keys = cache.get(f"{SND_COST_CENTER_SEARCH_KEYS}:{cc_id}", None)
+        else:
+            keys = cache.get(SND_COST_CENTER_SEARCH_KEYS, None)
+        if keys is not None:
+            secondary_cost_centers = SCC_LIST.validate_python(cache.get_many(keys).values(), by_name=True)
+            return secondary_cost_centers
+
     if cost_center is not None:
-        # Find only secondary cost centres for given cost center
-        cc_id = cost_center.id if isinstance(cost_center, GCostCenter) else cost_center
-        response = CACHE_SESSION.get("https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc_id})
-        secondary_cost_centres = SCC_LIST.validate_json(response.text)
+        response = requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc_id})
+        secondary_cost_centers = SCC_LIST.validate_json(response.text)
+
+        # (!) We don't want to overwrite the existing search keys -> store cc specific keys separately
+        cache.set(f"{SND_COST_CENTER_SEARCH_KEYS}:{cc_id}",
+                  [_snd_cost_center_key(scc) for scc in secondary_cost_centers],
+                  timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+        cache.set_many({_snd_cost_center_key(scc): scc.model_dump() for scc in secondary_cost_centers},
+                       timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+
     else:
-        # List all cost centers
-        cost_centers = list_cost_centres_from_gordian()
-        secondary_cost_centres: list[GSecondaryCostCenter] = []
-        for cc in cost_centers:
-            response = CACHE_SESSION.get("https://budget.datasektionen.se/api/SecondaryCostCentres",
-                                         params={"id": cc.id})
-            secondary_cost_centres += SCC_LIST.validate_json(response.text)
-    return secondary_cost_centres
+        # List all secondary cost centers
+        cost_centers = list_cost_centres_from_gordian(force_refresh=force_refresh)
+        secondary_cost_centers = [SCC_LIST.validate_json(
+            requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc.id}).text) for cc
+            in cost_centers]
+
+        cache.set(SND_COST_CENTER_SEARCH_KEYS, [scc.id for scc in secondary_cost_centers],
+                  timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+        cache.set_many({_snd_cost_center_key(scc): scc.model_dump() for scc in secondary_cost_centers},
+                       timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+
+    return secondary_cost_centers
 
 
-def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryCostCenter] = None) -> list[GBudgetLine]:
+def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryCostCenter] = None,
+                                   force_refresh: bool = False) -> list[GBudgetLine]:
+    scc_id = secondary_cost_center.id if isinstance(secondary_cost_center,
+                                                    GSecondaryCostCenter) else secondary_cost_center
+    if not force_refresh:
+
+        if secondary_cost_center is not None:
+            keys = cache.get(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", None)
+        else:
+            keys = cache.get(BUDGET_LINE_SEARCH_KEYS, [])
+        if keys is not None:
+            budget_lines = BL_LIST.validate_python(cache.get_many(keys).values(), by_name=True)
+            return budget_lines
+
     if secondary_cost_center is not None:
-        # Find only budget lines for given secondary cost center
-        scc_id = secondary_cost_center.id if isinstance(secondary_cost_center,
-                                                        GSecondaryCostCenter) else secondary_cost_center
-        response = CACHE_SESSION.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc_id})
+        response = requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc_id})
         budget_lines = BL_LIST.validate_json(response.text)
+
+        cache.set(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", [_budget_line_key(bl) for bl in budget_lines],
+                  timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+        cache.set_many({_budget_line_key(bl): bl.model_dump() for bl in budget_lines},
+                       timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+
     else:
-        # List all budget lines
-        secondary_cost_centres = list_secondary_cost_centres_from_gordian()
-        budget_lines: list[GBudgetLine] = []
-        for scc in secondary_cost_centres:
-            response = CACHE_SESSION.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
-            try:
-                budget_lines += BL_LIST.validate_json(response.text)
-            except pydantic_core.ValidationError:
-                # GOrdian returns None when a scc has no budget lines
-                budget_lines += []
+        # Retrieve all budget lines (from all secondary cost centers)
+        secondary_cost_centers = list_secondary_cost_centres_from_gordian(force_refresh=force_refresh)
+        budget_lines = [BL_LIST.validate_json(
+            requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id}).text) for scc in
+            secondary_cost_centers]
+
+        cache.set(BUDGET_LINE_SEARCH_KEYS, [bl.id for bl in budget_lines],
+                  timeout=settings.Gordian_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+        cache.set_many({_budget_line_key(bl): bl.model_dump() for bl in budget_lines},
+                       timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+
     return budget_lines
 
 
@@ -121,20 +183,22 @@ def retrieve_account_from_gordian(part: Union[InvoicePart, ExpensePart]) -> list
 
     try:
         cost_center = next(cc for cc in list_cost_centres_from_gordian() if cc.name == part.cost_centre)
-    except IndexError as e:
+    except StopIteration as e:
         raise ValueError(f"Could not find the cost center `{part.cost_centre}` on GOrdian") from e
 
     try:
         secondary_cost_center = next(scc for scc in list_secondary_cost_centres_from_gordian(cost_center) if
                                      scc.name == part.secondary_cost_centre)
-    except IndexError as e:
-        raise ValueError(f"Could not find the secondary cost center `{part.secondary_cost_centre}` on GOrdian`")
+    except StopIteration as e:
+        raise ValueError(
+            f"Could not find the secondary cost center `{cost_center.name}/{part.secondary_cost_centre}` on GOrdian`") from e
 
     try:
         budget_line = next(
             bl for bl in list_budget_lines_from_gordian(secondary_cost_center) if bl.name == part.budget_line)
-    except IndexError as e:
-        raise ValueError(f"Could not find the budget line `{part.budget_line}` on GOrdian")
+    except StopIteration as e:
+        raise ValueError(
+            f"Could not find the budget line `{cost_center.name}/{secondary_cost_center.name}/{part.budget_line}` on GOrdian") from e
 
     return budget_line.account
 
@@ -149,3 +213,18 @@ def _match_regex(input_str: str, patterns: list[str]) -> str:
         if re.match(pattern, input_str):
             return pattern
     raise ValueError(f"{input_str} does not match any of the patterns in {patterns}")
+
+
+def _cost_center_key(cost_center: GCostCenter) -> str:
+    # Formatted cache key for cost centers
+    return f"gordian:cost_center:{cost_center.id}"
+
+
+def _snd_cost_center_key(snd_cost_center: GSecondaryCostCenter) -> str:
+    # Formatted cache key for secondary cost centers
+    return f"gordian:secondary_cost_center:{snd_cost_center.id}"
+
+
+def _budget_line_key(budget_line: GBudgetLine) -> str:
+    # Formatted cache key for budget lines
+    return f"gordian:budget_line:{budget_line.id}"

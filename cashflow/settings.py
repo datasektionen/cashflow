@@ -45,58 +45,29 @@ ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [ "https://cashflow.datasektionen.se" ]
+CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 
 # Application definition
 
-INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-    'rest_framework',
-    'storages',
-    'corsheaders',
-    'widget_tweaks',
-    'expenses',
-    'invoices',
-    'fortnox',
-)
+INSTALLED_APPS = ('django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
+                  'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
+                  'django.contrib.humanize', 'rest_framework', 'storages', 'corsheaders', 'widget_tweaks', 'expenses',
+                  'invoices', 'fortnox',)
 
-MIDDLEWARE = (
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'fortnox.django.FortnoxMiddleware',
-)
+MIDDLEWARE = ('corsheaders.middleware.CorsMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
+              'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware',
+              'django.contrib.auth.middleware.AuthenticationMiddleware',
+              'django.contrib.messages.middleware.MessageMiddleware',
+              'django.middleware.clickjacking.XFrameOptionsMiddleware', 'django.middleware.security.SecurityMiddleware',
+              'whitenoise.middleware.WhiteNoiseMiddleware', 'fortnox.django.FortnoxMiddleware',)
 
 ROOT_URLCONF = 'cashflow.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'string_if_invalid': '%s',
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
+TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': ['templates'], 'APP_DIRS': True,
+    'OPTIONS': {'string_if_invalid': '%s',
+        'context_processors': ['django.template.context_processors.debug', 'django.template.context_processors.request',
+            'django.contrib.auth.context_processors.auth',
+            'django.contrib.messages.context_processors.messages', ], }, }, ]
 
 WSGI_APPLICATION = 'cashflow.wsgi.application'
 
@@ -111,27 +82,13 @@ if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
         os.environ.get("DATABASE_URL", "")).groups()
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': NAME,
-            'USER': USER,
-            'PASSWORD': PASSWORD,
-            'HOST': HOST,
-            'PORT': PORT,
-        }
-    }
+        'default': {'ENGINE': 'django.db.backends.postgresql', 'NAME': NAME, 'USER': USER, 'PASSWORD': PASSWORD,
+            'HOST': HOST, 'PORT': PORT, }}
 else:
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'cashflow'),
-            'USER': os.getenv('DB_USER', 'cashflow'),
-            'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
-        }
-    }
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.postgresql', 'NAME': os.getenv('DB_NAME', 'cashflow'),
+        'USER': os.getenv('DB_USER', 'cashflow'), 'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
+        'HOST': os.getenv('DB_HOST', 'localhost'), 'PORT': os.getenv('DB_PORT', '5432'), }}
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
@@ -182,16 +139,8 @@ else:
     AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
 
     MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "location":  MEDIAFILES_LOCATION,
-                "file_overwrite":  False,
-            },
-        },
-        "staticfiles": STATICFILES_STORAGE
-    }
+    STORAGES = {"default": {"BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {"location": MEDIAFILES_LOCATION, "file_overwrite": False, }, }, "staticfiles": STATICFILES_STORAGE}
 
 SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
                                          'pate, brandy and with a fried egg on top and spam.')
@@ -207,58 +156,38 @@ RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
 
 LOG_LEVEL = 'DEBUG' if DEBUG else 'INFO'
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '{levelname} {asctime} {module}: {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': LOG_LEVEL,
-            'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'simple',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'fortnox': {
-            'handlers': ['console'],
-            'level': LOG_LEVEL,
-            'propagate': False,
-        }
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': LOG_LEVEL,
-    },
-}
+LOGGING = {'version': 1, 'disable_existing_loggers': False,
+    'formatters': {'simple': {'format': '{levelname} {asctime} {module}: {message}', 'style': '{', }, }, 'handlers': {
+        'console': {'level': LOG_LEVEL, 'class': 'logging.StreamHandler', 'stream': sys.stdout,
+            'formatter': 'simple', }, }, 'loggers': {
+        'django': {'handlers': ['console'], 'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'), 'propagate': False, },
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False, },
+        'fortnox': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False, }},
+    'root': {'handlers': ['console'], 'level': LOG_LEVEL, }, }
 
+# Cache configuration
+# We use caching to reduce the number of slow API calls to e.g. GOrdian and Fortnox
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": os.getenv("REDIS_URL"),
 
+}}
+
+# How long to cache cost centers from GOrdian
+GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
+
+#
 # Fortnox settings
+#
+
+# How long to cache (active) accounts and cost centers retrieved from Fortnox
+FORTNOX_ACCOUNT_CACHE_TIMEOUT = 12
+FORTNOX_COST_CENTER_CACHE_TIMEOUT = 12
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
 FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET')
 FORTNOX_SCOPE = ['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile', 'costcenter']
 # urlconf to redirect when requiring Fortnox authentication
 FORTNOX_AUTH_REDIRECT = "fortnox-auth-get"
-# Default accounts and voucher series for accounting
-FORTNOX_EXPENSE_CREDIT_ACCOUNT=2820
-FORTNOX_INVOICE_CREDIT_ACCOUNT=2440
-FORTNOX_EXPENSE_VOUCHER_SERIES="E"
-FORTNOX_INVOICE_VOUCHER_SERIES="U"
-
-# Redis caching
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+# These determine which account number and voucher series that is sent to Fortnox when accounting
+FORTNOX_EXPENSE_CREDIT_ACCOUNT = 2820
+FORTNOX_INVOICE_CREDIT_ACCOUNT = 2440
+FORTNOX_EXPENSE_VOUCHER_SERIES = "E"
+FORTNOX_INVOICE_VOUCHER_SERIES = "U"

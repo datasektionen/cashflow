@@ -1,5 +1,5 @@
 import re
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -7,13 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
-from requests_cache import CachedSession
 
 from cashflow import dauth
 from invoices.models import Invoice
-
-# Cache Gordian requests for 24 hours
-cache_session = CachedSession("gordian", expire_after=timedelta(hours=24))
 
 
 class BankAccount(models.Model):

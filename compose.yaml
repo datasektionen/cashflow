@@ -19,7 +19,7 @@ services:
       BUDGET_URL: https://budget.datasektionen.se
       RFINGER_API_URL: http://dock:9003
       RFINGER_API_KEY: hemlig
-      REDIS_HOST: redis
+      REDIS_URL: redis://redis:6379
     command: /app/run.sh
     init: true
     ports:
