@@ -9,6 +9,7 @@ from django.conf import settings
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.db import transaction
 
 from fortnox import FortnoxAPIClient, RefreshTokenGrant, FortnoxAuthenticationError
 
@@ -51,32 +52,37 @@ def retrieve_or_refresh_token(client, user):
     if user.is_anonymous:
         return None
 
-    try:
-        api_user = user.fortnox
-    except APIUser.DoesNotExist:
-        return None
-
-    if api_user.expires_at > timezone.now():
-        logger.debug(f"{user} has an active access token")
-        return api_user.access_token
-    else:
-        logger.debug(f"Attempting to refresh access token for {user}")
-        grant = RefreshTokenGrant(code=api_user.refresh_token)
+    with transaction.atomic():
         try:
-            response = client.retrieve_access_token(grant)
-            APIUser.objects.update_or_create(user=user, defaults={"access_token": response.access_token,
-                                                                  "refresh_token": response.refresh_token,
-                                                                  "expires_at": timezone.now() + timedelta(
-                                                                      seconds=response.expires_in)})
-            logger.debug(f"Successfully refreshed access token for {user}")
-            return response.access_token
-        except FortnoxAuthenticationError as e:
-            logger.debug(f"Failed to refresh access token for {user}: {e}")
-            # Most likely both tokens are expired
-            # Better to "de-authenticate" user completely
-            logger.info(f"Fortnox tokens for {user} are expired or otherwise invalid -- deleting saved tokens")
-            APIUser.objects.get(user=user).delete()
+            api_user = APIUser.objects.select_for_update().get(user=user)
+        except APIUser.DoesNotExist:
             return None
+
+        if api_user.expires_at > timezone.now():
+            logger.debug(f"{user} has an active access token")
+            return api_user.access_token
+
+        else:
+
+            logger.debug(f"Attempting to refresh access token for {user}")
+            grant = RefreshTokenGrant(code=api_user.refresh_token)
+            try:
+                response = client.retrieve_access_token(grant)
+
+                api_user.access_token = response.access_token
+                api_user.refresh_token = response.refresh_token
+                api_user.expires_at = timezone.now() + timedelta(seconds=response.expires_in)
+                api_user.save(update_fields=["access_token", "refresh_token", "expires_at"])
+
+                logger.debug(f"Successfully refreshed access token for {user}")
+                return response.access_token
+            except FortnoxAuthenticationError as e:
+                logger.debug(f"Failed to refresh access token for {user}: {e}")
+                # Most likely both tokens are expired
+                # Better to "de-authenticate" user completely
+                logger.info(f"Fortnox tokens for {user} are expired or otherwise invalid -- deleting saved tokens")
+                APIUser.objects.get(user=user).delete()
+                return None
 
 
 def require_fortnox_auth(view):

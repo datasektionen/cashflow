@@ -2,8 +2,10 @@
 
 https://github.com/datasektionen/gordian
 """
+import logging
 import re
 from typing import Literal, Union, Any, Annotated
+from warnings import deprecated
 
 import requests
 from django.conf import settings
@@ -12,6 +14,8 @@ from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
 
 from expenses.models import ExpensePart
 from invoices.models import InvoicePart
+
+logger = logging.getLogger(__name__)
 
 
 # ======================
@@ -35,19 +39,26 @@ def validate_account(value: Any) -> list[int]:
     #   (1): 4209            Only one account
     #   (2): 3041, 3042      These specific accounts
     #   (3): 3021-3025       All accounts in the range
+    #   (4): (empty)         No accounts
     if isinstance(value, list):
         return [int(x) for x in value]
     elif not isinstance(value, str):
         raise ValueError(f"Expected a list of ints or a string, got {type(value)}")
     try:
-        patterns = [r"^\d{4}(, \d{4})*$", r"^\d{4}-\d{4}$", ]
-        match _match_regex(value, patterns):
-            case r"^\d{4}(, \d{4})*$":  # (1) or (2)
-                return [int(a) for a in value.split(",")]
-            case r"^\d{4}-\d{4}$":  # (3)
-                return list(range(int(value[0:4]), int(value[5:9])))
-            case _:
-                raise ValueError(f"Unknown error when pattern matching account format")
+        patterns = [r"^\d{4}(, \d{4})*$", r"^\d{4}-\d{4}$", r"^$"]
+        try:
+            match _match_regex(value, patterns):
+                case r"^\d{4}(, \d{4})*$":  # (1) or (2)
+                    return [int(a) for a in value.split(",")]
+                case r"^\d{4}-\d{4}$":  # (3)
+                    return list(range(int(value[0:4]), int(value[5:9])))
+                case r"^$":  # (4)
+                    return []
+                case _:
+                    raise ValueError(
+                        f"Unknown error when pattern matching account format")  # TODO: Temporary fix for erronous accounts on GOrdian
+        except ValueError:
+            return []
     except ValueError as e:
         raise ValueError(f"Invalid account format: {value}") from e
 
@@ -78,6 +89,88 @@ BUDGET_LINE_SEARCH_KEYS = "gordian:budget_line:search_keys"
 # ======================
 # API request functions
 # ======================
+@deprecated("This function is meant to be used temporarily, until a better solution is found")
+def find_cost_center(cc_id: int = None, name: str = None, force_refresh=False) -> GCostCenter:
+    """Finds a cost center on GOrdian based on the given fields"""
+
+    if not force_refresh:
+        if cc_id is not None:
+            cost_center = cache.get(f"gordian:cost_center:{cc_id}", None)
+            if cost_center is not None:
+                return GCostCenter.model_validate(cost_center, by_name=True)
+
+    all_cost_centers = list_cost_centres_from_gordian(force_refresh=force_refresh)
+    if cc_id is not None:
+        try:
+            cost_center = GCostCenter.model_validate(next(cc for cc in all_cost_centers if cc.id == cc_id))
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find cost center with {cc_id=}") from e
+
+        return cost_center
+    elif name is not None:
+        try:
+            cost_center = next(cc for cc in all_cost_centers if cc.name == name)
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find cost center with {name=}") from e
+        return GCostCenter.model_validate(cost_center)
+    else:
+        raise ValueError(f"You must specify either a cost center ID or name")
+
+
+@deprecated("This function is meant to be used temporarily, until a better solution is found")
+def find_snd_cost_center(scc_id: int = None, name: str = None, force_refresh=False) -> GSecondaryCostCenter:
+    """Finds a secondary cost center on GOrdian based on the given fields"""
+
+    if not force_refresh:
+        if scc_id is not None:
+            secondary_cost_center = cache.get(f"gordian:secondary_cost_center:{scc_id}", None)
+            if secondary_cost_center is not None:
+                return GSecondaryCostCenter.model_validate(secondary_cost_center)
+
+    all_snd_cost_centers = list_secondary_cost_centres_from_gordian(force_refresh=force_refresh)
+    if scc_id is not None:
+        try:
+            secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.id == scc_id)
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find cost secondary center with {scc_id=}")
+        return GSecondaryCostCenter.model_validate(secondary_cost_center)
+    elif name is not None:
+        try:
+            secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.name == name)
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find secondary cost center with {name=}")
+        return GSecondaryCostCenter.model_validate(secondary_cost_center)
+    else:
+        raise ValueError(f"You must specify either a secondary cost center ID or name")
+
+
+@deprecated("This function is meant to be used temporarily, until a better solution is found")
+def find_budget_line(bl_id: int = None, name: str = None, force_refresh=False) -> GBudgetLine:
+    """Finds a budget line on GOrdian based on the given fields"""
+
+    if not force_refresh:
+        if bl_id is not None:
+            budget_line = cache.get(f"gordian:budget_line:{bl_id}", None)
+            if budget_line is not None:
+                return GBudgetLine.model_validate(budget_line)
+
+    all_budget_lines = list_budget_lines_from_gordian(force_refresh=force_refresh)
+    if bl_id is not None:
+        try:
+            budget_line = next(bl for bl in all_budget_lines if bl.id == bl_id)
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find cost budget line with {bl_id=}")
+        return GBudgetLine.model_validate(budget_line)
+    elif name is not None:
+        try:
+            budget_line = next(bl for bl in all_budget_lines if bl.name == name)
+        except StopIteration as e:
+            raise ValueError(f"Couldn't find budget line with {name=}")
+        return GBudgetLine.model_validate(budget_line)
+    else:
+        raise ValueError(f"You must specify either a budget line ID or name")
+
+
 def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCenter]:
     """Lists all cost centers on GOrdian.
 
@@ -149,7 +242,7 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
                                                     GSecondaryCostCenter) else secondary_cost_center
     if not force_refresh:
 
-        keys = cache.get(BUDGET_LINE_SEARCH_KEYS, [])
+        keys = cache.get(BUDGET_LINE_SEARCH_KEYS, None)
         if keys is None and secondary_cost_center is not None:
             keys = cache.get(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", None)
         if keys is not None:
@@ -173,10 +266,12 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
         budget_lines = []
         for scc in secondary_cost_centers:
             response = requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
+            if response.text.strip() == "null":  # No budget lines for this scc
+                continue
             budget_lines += BL_LIST.validate_json(response.text)
 
-        cache.set(BUDGET_LINE_SEARCH_KEYS, [bl.id for bl in budget_lines],
-                  timeout=settings.Gordian_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
+        cache.set(BUDGET_LINE_SEARCH_KEYS, [_budget_line_key(bl) for bl in budget_lines],
+                  timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
         cache.set_many({_budget_line_key(bl): bl.model_dump() for bl in budget_lines},
                        timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
 

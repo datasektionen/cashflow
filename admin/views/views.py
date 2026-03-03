@@ -12,8 +12,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
-from cashflow.gordian import retrieve_account_from_gordian
-from cashflow.utils import find_cost_center, list_active_accounts
+from cashflow import gordian
+from cashflow.utils import list_active_accounts
 from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
 from fortnox.django import FortnoxRequest, require_fortnox_auth
 from invoices.models import Invoice, InvoicePart
@@ -164,12 +164,23 @@ def account_overview(request: FortnoxRequest):
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
+    # # Since Fortnox and Gordian has differing IDs etc for the same cost centers
+    # # there is some mismatching, e.g. Cashflow's API endpoints
+    # def i_hate_this(part):
+    #     fortnox_cc = find_cost_center(request, part)
+    #     gordian_cc = gordian.find_cost_center(fortnox_cc.Description)
+    #     return gordian_cc
+
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
-    expense_parts = [(part, retrieve_account_from_gordian(part)[0], find_cost_center(request, part).Code) for part in
-                     ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
-    invoice_parts = [(part, retrieve_account_from_gordian(part)[0], find_cost_center(request, part).Code) for part in
-                     InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
+    expense_parts = [
+        (part, gordian.retrieve_account_from_gordian(part)[0], gordian.find_cost_center(name=part.cost_centre),
+         gordian.find_snd_cost_center(name=part.secondary_cost_centre), gordian.find_budget_line(name=part.budget_line))
+        for part in ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
+    invoice_parts = [
+        (part, gordian.retrieve_account_from_gordian(part)[0], gordian.find_cost_center(name=part.cost_centre),
+         gordian.find_snd_cost_center(name=part.secondary_cost_centre), gordian.find_budget_line(name=part.budget_line))
+        for part in InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
                   {"accounts": accounts, "invoices": accountable_invoices, "invoice_parts": invoice_parts,

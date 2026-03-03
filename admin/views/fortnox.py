@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from cashflow.utils import retrieve_fortnox_cost_center
 from expenses.models import Expense
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
@@ -102,8 +103,9 @@ def account_expense(request: FortnoxRequest, **kwargs):
     voucher_rows.append(credit_row)
     for part in expense.parts.all():
         acct = int(request.POST[f"part-{part.id}-account"])
-        cc = request.POST.get(f"part-{part.id}-cost_centre", "").strip()  # or "CENALL"
-        debit_row = VoucherRow(Account=acct, CostCenter=cc, Debit=float(part.amount), )
+        cc_id = int(request.POST.get(f"part-{part.id}-cost_center").strip())
+        cc = retrieve_fortnox_cost_center(request, cc_id)
+        debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount), )
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
@@ -126,8 +128,9 @@ def account_invoice(request: FortnoxRequest, **kwargs):
     voucher_rows.append(credit_row)
     for part in invoice.parts.all():
         acct = int(request.POST[f"part-{part.id}-account"])
-        cc = request.POST.get(f"part-{part.id}-cost_centre", "").strip()  # or "CENALL"
-        debit_row = VoucherRow(Account=acct, CostCenter=cc, Debit=float(part.amount), )
+        cc_id = int(request.POST.get(f"part-{part.id}-cost_center").strip())
+        cc = retrieve_fortnox_cost_center(request, cc_id)
+        debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount), )
         voucher_rows.append(debit_row)
 
     # Upload invoice to Fortnox and receive the voucher number
