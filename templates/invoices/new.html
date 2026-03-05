@@ -257,7 +257,7 @@
                             </label>
                         </span>
                         <div class="input">
-                            <input type="number" step="0.01" model="expense_part.amount" name="amounts[]" required>
+                            <input type="number" step="0.01" model="expense_part.amount" name="amounts[]" required oninput="const s=this.selectionStart,e=this.selectionEnd; const nv=this.value.replace(/,/g,'.'); if(nv!==this.value){ this.value=nv; this.setSelectionRange(s,e); }">
                         </div>
                     </div>
 
