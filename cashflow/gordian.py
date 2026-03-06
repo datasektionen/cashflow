@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
 from expenses.models import ExpensePart
 from invoices.models import InvoicePart
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,6 +93,7 @@ BUDGET_LINE_SEARCH_KEYS = "gordian:budget_line:search_keys"
 @deprecated("This function is meant to be used temporarily, until a better solution is found")
 def find_cost_center(cc_id: int = None, name: str = None, force_refresh=False) -> GCostCenter:
     """Finds a cost center on GOrdian based on the given fields"""
+    from .utils import build_cache_key
 
     if not force_refresh:
         if cc_id is not None:
@@ -108,8 +110,14 @@ def find_cost_center(cc_id: int = None, name: str = None, force_refresh=False) -
 
         return cost_center
     elif name is not None:
+        cost_center = cache.get(f"gordian:cost_center:search:name:{build_cache_key(name)}", None)
+        if cost_center is not None:
+            logger.debug("Cache hit for cost center with name %s", name)
+            return GCostCenter.model_validate(cost_center, by_name=True)
         try:
             cost_center = next(cc for cc in all_cost_centers if cc.name == name)
+            cache.set(f"gordian:cost_center:search:name:{build_cache_key(cost_center.name)}", cost_center.model_dump(),
+                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
         except StopIteration as e:
             raise ValueError(f"Couldn't find cost center with {name=}") from e
         return GCostCenter.model_validate(cost_center)
@@ -120,6 +128,7 @@ def find_cost_center(cc_id: int = None, name: str = None, force_refresh=False) -
 @deprecated("This function is meant to be used temporarily, until a better solution is found")
 def find_snd_cost_center(scc_id: int = None, name: str = None, force_refresh=False) -> GSecondaryCostCenter:
     """Finds a secondary cost center on GOrdian based on the given fields"""
+    from .utils import build_cache_key
 
     if not force_refresh:
         if scc_id is not None:
@@ -132,13 +141,19 @@ def find_snd_cost_center(scc_id: int = None, name: str = None, force_refresh=Fal
         try:
             secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.id == scc_id)
         except StopIteration as e:
-            raise ValueError(f"Couldn't find cost secondary center with {scc_id=}")
+            raise ValueError(f"Couldn't find cost secondary center with {scc_id=}") from e
         return GSecondaryCostCenter.model_validate(secondary_cost_center)
     elif name is not None:
+        secondary_cost_center = cache.get(f"gordian:secondary_cost_center:search:name:{build_cache_key(name)}", None)
+        if secondary_cost_center is not None:
+            logger.debug("Cache hit for secondary cost center with name %s", name)
+            return GSecondaryCostCenter.model_validate(secondary_cost_center, by_name=True)
         try:
             secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.name == name)
+            cache.set(f"gordian:secondary_cost_center:search:name:{build_cache_key(secondary_cost_center.name)}", secondary_cost_center.model_dump(),
+                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
         except StopIteration as e:
-            raise ValueError(f"Couldn't find secondary cost center with {name=}")
+            raise ValueError(f"Couldn't find secondary cost center with {name=}") from e
         return GSecondaryCostCenter.model_validate(secondary_cost_center)
     else:
         raise ValueError(f"You must specify either a secondary cost center ID or name")
@@ -147,6 +162,7 @@ def find_snd_cost_center(scc_id: int = None, name: str = None, force_refresh=Fal
 @deprecated("This function is meant to be used temporarily, until a better solution is found")
 def find_budget_line(bl_id: int = None, name: str = None, force_refresh=False) -> GBudgetLine:
     """Finds a budget line on GOrdian based on the given fields"""
+    from .utils import build_cache_key
 
     if not force_refresh:
         if bl_id is not None:
@@ -159,13 +175,19 @@ def find_budget_line(bl_id: int = None, name: str = None, force_refresh=False) -
         try:
             budget_line = next(bl for bl in all_budget_lines if bl.id == bl_id)
         except StopIteration as e:
-            raise ValueError(f"Couldn't find cost budget line with {bl_id=}")
+            raise ValueError(f"Couldn't find cost budget line with {bl_id=}") from e
         return GBudgetLine.model_validate(budget_line)
     elif name is not None:
+        budget_line = cache.get(f"gordian:budget_line:search:name:{build_cache_key(name)}", None)
+        if budget_line is not None:
+            logger.debug("Cache hit for budget line with name %s", name)
+            return GBudgetLine.model_validate(budget_line, by_name=True)
         try:
             budget_line = next(bl for bl in all_budget_lines if bl.name == name)
+            cache.set(f"gordian:budget_line:search:name:{build_cache_key(budget_line.name)}", budget_line.model_dump(),
+                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
         except StopIteration as e:
-            raise ValueError(f"Couldn't find budget line with {name=}")
+            raise ValueError(f"Couldn't find budget line with {name=}") from e
         return GBudgetLine.model_validate(budget_line)
     else:
         raise ValueError(f"You must specify either a budget line ID or name")

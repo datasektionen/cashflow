@@ -164,13 +164,6 @@ def account_overview(request: FortnoxRequest):
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
-    # # Since Fortnox and Gordian has differing IDs etc for the same cost centers
-    # # there is some mismatching, e.g. Cashflow's API endpoints
-    # def i_hate_this(part):
-    #     fortnox_cc = find_cost_center(request, part)
-    #     gordian_cc = gordian.find_cost_center(fortnox_cc.Description)
-    #     return gordian_cc
-
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
     expense_parts = [
