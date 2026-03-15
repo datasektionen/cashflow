@@ -34,11 +34,5 @@
             <th>Antal utlägg</th>
             <td> {{ numcashflows }} st</td>
         </tr>
-        {% if showuser.profile.may_pay %}
-        <tr>
-            <th>Standardkonto för utbetalningar</th>
-            <td>{{ showuser.profile.default_account }}</td>
-        </tr>
-        {% endif %}
     </table>
 {% endblock %}
