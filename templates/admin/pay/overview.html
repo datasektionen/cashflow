@@ -5,15 +5,6 @@
 {% block content %}
 <div id="app">
     <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare.</p>
-    <p>Välj vilket konto du kommer betala ut ifrån innan du börjar göra utbetalningar. Du kan ställa in ditt standardkonto på din profil.</p>
-    <div style="float:left">
-        <label style="float:left;margin-right: 10px; line-height: 40px;height:40px;display:inline-block;" for="account">Bankkonto:</label>
-        <div class="select">
-            <select id="main_account" v-model="account">
-                <option v-for="account in accounts" :value="account" :selected="account" v-text="account"></option>
-            </select>
-        </div>
-    </div>
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="cost_centre">
             <option :value="false">Filtrera på resultatställe</option>
@@ -150,8 +141,6 @@
                 cost_centres: [],
                 expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
                 invoices: {% autoescape off %}{{ invoices }}{% endautoescape %},
-                accounts: {% autoescape off %}{{ accounts }}{% endautoescape %},
-                account: '{{ user.profile.default_account }}',
                 payment: null,
             }
         },
@@ -165,7 +154,6 @@
 
                 let form = new FormData()
                 form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
-                form.append('account', this.account)
                 exps.forEach(e => {
                     form.append('expense', e.id)
                 })
