@@ -14,26 +14,6 @@ from cashflow import settings
 from cashflow import email
 
 
-class BankAccount(models.Model):
-    """
-    BankAccount represents an actual bank account owned by the organisation.
-    This is a real bank account like one on Handelsbanken or another bank.
-    """
-    name = models.TextField()
-
-    # Return a string representation of the bank account
-    def __str__(self):
-        return self.name
-
-    # Return a unicode representation of the bank account
-    def __unicode__(self):
-        return self.name
-
-    # Creates a dict from the model
-    def to_dict(self):
-        return model_to_dict(self)
-
-
 class Profile(models.Model):
     """
     A profile is attached to each user to be able to store more information
@@ -47,7 +27,6 @@ class Profile(models.Model):
 
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
-    default_account = models.ForeignKey(BankAccount, blank=True, null=True, on_delete=models.SET_NULL)
     firebase_instance_id = models.TextField(blank=True)
 
     # Return a string representation of the user
@@ -67,10 +46,6 @@ class Profile(models.Model):
         person_dict['bank_info']['bank_account'] = self.bank_account
         person_dict['bank_info']['sorting_number'] = self.sorting_number
         person_dict['bank_info']['bank_name'] = self.bank_name
-        if self.default_account is not None:
-            person_dict['default_account'] = self.default_account.to_dict()
-        else:
-            person_dict['default_account'] = None
         del person_dict['user']
         del person_dict['id']
         return person_dict
@@ -263,7 +238,6 @@ class Payment(models.Model):
     date = models.DateField(auto_now_add=True)
     payer = models.ForeignKey(Profile, related_name='payer', on_delete=models.DO_NOTHING)
     receiver = models.ForeignKey(Profile, related_name='receiver', on_delete=models.DO_NOTHING)
-    account = models.ForeignKey(BankAccount, on_delete=models.DO_NOTHING)
 
     # Return a string representation of the payment
     def __str__(self):
@@ -278,7 +252,6 @@ class Payment(models.Model):
         payment = model_to_dict(self)
         payment['payer'] = self.payer.user_dict()
         payment['receiver'] = self.receiver.user_dict()
-        payment['account'] = self.account.to_dict()
         payment['tag'] = self.tag()
         payment['amount'] = self.amount()
         return payment
