@@ -210,10 +210,12 @@ configs:
               - id: attest
                 scope: "*"
               - id: confirm
-              - id: delete 
+                scope: "*"
+              - id: delete
               - id: edit-invoice
               - id: moderate-comments
               - id: pay
+                scope: "*"
               - id: unattest
               - id: unconfirm
               - id: view-all-payments
