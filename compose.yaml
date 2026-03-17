@@ -32,7 +32,7 @@ services:
     ports:
       - "8000:8000"
     configs:
-      - source: nginx.conf 
+      - source: nginx.conf
         target: /etc/nginx/nginx.conf
     volumes:
       - ./media:/app/media
@@ -55,22 +55,10 @@ services:
       POSTGRES_PASSWORD: cashflow
       POSTGRES_DB: cashflow
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "cashflow"]
+      test: [ "CMD", "pg_isready", "-U", "cashflow" ]
       interval: 2s
       timeout: 2s
       retries: 3
-
-  redis: # To cache expensive API calls
-    image: redis:8-alpine
-
-  redis-commander:
-      image: rediscommander/redis-commander:latest
-      environment:
-        REDIS_HOSTS: local:redis:6379
-      ports:
-        - "8081:8081"
-      depends_on:
-        - redis
 
   # S3
   s3:
@@ -140,7 +128,7 @@ services:
 
 configs:
   nginx.conf:
-    content: | 
+    content: |
       events {}
 
       http {
@@ -175,7 +163,7 @@ configs:
           marmed:
             regular: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
             small: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
-
+  
   
   nyckeln.yaml:
     content: |

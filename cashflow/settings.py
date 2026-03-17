@@ -172,11 +172,7 @@ LOGGING = {'version': 1, 'disable_existing_loggers': False,
         'fortnox': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False, }},
     'root': {'handlers': ['console'], 'level': LOG_LEVEL, }, }
 
-# Cache configuration
-# We use caching to reduce the number of slow API calls to e.g. GOrdian and Fortnox
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": os.getenv("REDIS_URL"),
 
-}}
 
 # How long to cache cost centers from GOrdian
 GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
