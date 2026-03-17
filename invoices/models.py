@@ -96,7 +96,7 @@ class Invoice(models.Model):
     # # TODO
     @staticmethod
     def payable():
-        return Invoice.objects.exclude(payed_at__isnull=True, invoicepart__attested_by__isnull=True)
+        return Invoice.objects.filter(payed_at__isnull=True).filter(invoicepart__attested_by__isnull=False).distinct().order_by("due_date")
 
     # TODO
     @staticmethod
