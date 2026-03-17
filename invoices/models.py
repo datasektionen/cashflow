@@ -101,7 +101,7 @@ class Invoice(models.Model):
     # TODO
     @staticmethod
     def view_accountable(user):
-        return Invoice.objects.exclude(payed_at__isnull=True).order_by("invoice_date")
+        return Invoice.objects.exclude(payed_at__isnull=True).filter(verification="").order_by("invoice_date")
 
 
 class InvoicePart(models.Model):

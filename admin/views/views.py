@@ -164,15 +164,17 @@ def account_overview(request: FortnoxRequest):
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
+
+    # Retrieves the fortnox account for the given part
+    get_account = lambda part: request.fortnox.retrieve_account(gordian.retrieve_account_from_gordian(part)[0])
+
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
     expense_parts = [
-        (part, gordian.retrieve_account_from_gordian(part)[0], gordian.find_cost_center(name=part.cost_centre),
-         gordian.find_snd_cost_center(name=part.secondary_cost_centre), gordian.find_budget_line(name=part.budget_line))
+        (part, get_account(part))
         for part in ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
     invoice_parts = [
-        (part, gordian.retrieve_account_from_gordian(part)[0], gordian.find_cost_center(name=part.cost_centre),
-         gordian.find_snd_cost_center(name=part.secondary_cost_centre), gordian.find_budget_line(name=part.budget_line))
+        (part, get_account(part))
         for part in InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',

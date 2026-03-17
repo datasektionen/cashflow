@@ -103,8 +103,7 @@ def account_expense(request: FortnoxRequest, **kwargs):
     voucher_rows.append(credit_row)
     for part in expense.parts.all():
         acct = int(request.POST[f"part-{part.id}-account"])
-        cc_id = int(request.POST.get(f"part-{part.id}-cost_center").strip())
-        cc = retrieve_fortnox_cost_center(request, cc_id)
+        cc = request.fortnox.find_cost_center(Description=part.cost_centre)
         debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount), )
         voucher_rows.append(debit_row)
 
@@ -128,8 +127,7 @@ def account_invoice(request: FortnoxRequest, **kwargs):
     voucher_rows.append(credit_row)
     for part in invoice.parts.all():
         acct = int(request.POST[f"part-{part.id}-account"])
-        cc_id = int(request.POST.get(f"part-{part.id}-cost_center").strip())
-        cc = retrieve_fortnox_cost_center(request, cc_id)
+        cc = request.fortnox.find_cost_center(Description=part.cost_centre)
         debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount), )
         voucher_rows.append(debit_row)
 

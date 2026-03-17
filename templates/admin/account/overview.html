@@ -42,39 +42,21 @@
                         </div>
                     </div>
                     <div class="container">
-                        {% for part, default_account, cost_center in expense_parts %}
+                        {% for part, default_account in expense_parts %}
                             {% if part.expense == expense %}
                                 <div class="row">
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                        <option>{{ default_account }}</option>
+                                        <option label="{{ default_account.Number}} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                        {% for account in accounts %}
+                                        	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
+                                        {% endfor %}
+
                                     </select>
                                     <div class="col-sm-6 col-lg-6">
                                         <div class="row">
                                             <!-- Cost Center -->
-                                            <div class="col-sm-4">
-                                                <select name="part-{{ part.id }}-cost_center"
-                                                        class="form-control cost-center-select"
-                                                        data-part-id="{{ part.id }}">
-                                                    <option value="{{ part.cost_centre }}">{{ part.cost_centre }}</option>
-                                                </select>
-                                            </div>
-
-                                            <!-- Secondary Cost Center -->
-                                            <div class="col-sm-4">
-                                                <select name="part-{{ part.id }}-secondary_cost_center"
-                                                        class="form-control secondary-cost-center-select"
-                                                        data-part-id="{{ part.id }}">
-                                                    <option value="">Välj sekundärt</option>
-                                                </select>
-                                            </div>
-
-                                            <!-- Budget Line -->
-                                            <div class="col-sm-4">
-                                                <select name="part-{{ part.id }}-budget_line"
-                                                        class="form-control budget-line-select"
-                                                        data-part-id="{{ part.id }}">
-                                                    <option value="">Välj budgetrad</option>
-                                                </select>
+                                            <div class="col-lg-4">
+                                                {{ part.cost_centre }}/{{ part.secondary_cost_centre }}/{{ part.budget_line }}
                                             </div>
                                         </div>
                                     </div>
@@ -119,40 +101,24 @@
                     </div>
                 </div>
                 <div class="container">
-                    {% for part, default_account, cost_center, snd_cost_center, budget_line in invoice_parts %}
+                    {% for part, default_account in invoice_parts %}
                         {% if part.invoice == invoice %}
                             <div class="row">
                                 <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                    <option>{{ default_account }}</option>
+                                    <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                    {% for account in accounts %}
+                                    	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
+                                    {% endfor %}
+
                                 </select>
                                 <div class="col-sm-6 col-lg-6">
                                     <div class="row">
                                         <!-- Cost Center -->
                                         <div class="col-sm-4">
-                                            <select name="part-{{ part.id }}-cost_center"
-                                                    class="form-control cost-center-select"
-                                                    data-part-id="{{ part.id }}">
-                                                <option value="{{ cost_center.id}}">{{ cost_center.name}}</option>
-                                            </select>
+                                           {{ part.cost_centre }}/{{ part.secondary_cost_centre }}/{{ part.budget_line }}
                                         </div>
 
-                                        <!-- Secondary Cost Center -->
-                                        <div class="col-sm-4">
-                                            <select name="part-{{ part.id }}-secondary_cost_center"
-                                                    class="form-control secondary-cost-center-select"
-                                                    data-part-id="{{ part.id }}">
-                                                <option value="{{ snd_cost_center.id }}">{{ snd_cost_center.name }}</option>
-                                            </select>
-                                        </div>
 
-                                        <!-- Budget Line -->
-                                        <div class="col-sm-4">
-                                            <select name="part-{{ part.id }}-budget_line"
-                                                    class="form-control budget-line-select"
-                                                    data-part-id="{{ part.id }}">
-                                                <option value="{{ budget_line.id }}">{{ budget_line.name }}</option>
-                                            </select>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-2">
