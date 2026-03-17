@@ -23,6 +23,7 @@
                 <th>Beskrivning</th>
                 <th>Ägare</th>
                 <th>Resultatställen</th>
+                <th>Datum</th>
                 <th class="right">Belopp</th>
                 <th></th>
             </tr>
@@ -32,6 +33,7 @@
             <td><a :href="'/expenses/' + expense.id" v-text="expense.description"></a></td>
             <td><a :href="'/users/' + expense.owner_username" v-text="expense.owner_first_name + ' ' + expense.owner_last_name"></a></td>
             <td v-text="expense.cost_centres.join(', ')"></td>
+            <td v-text="expense.expense_date"></td>
             <td class="right" v-text="expense.amount + ' kr'"></td>
             <td><span class="icon" v-if="expense.is_flagged == false" title="Tidigare flaggad"><i class="fa fa-flag"></i></span></td>
         </tr>

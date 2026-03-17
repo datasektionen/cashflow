@@ -37,16 +37,23 @@ class DAuth(object):
             print(f"Authentication failed: {error}")
             return None
         
-        user = client.userinfo(token=token)
+        ssoUser = client.userinfo(token=token)
         
         try:
-            user = User.objects.get(username=user["sub"])
+            user = User.objects.get(username=ssoUser["sub"])
+            if (user.first_name != ssoUser["given_name"] or
+                    user.last_name != ssoUser["family_name"] or
+                    user.email != ssoUser["email"]):
+                user.first_name = ssoUser["given_name"];
+                user.last_name = ssoUser["family_name"];
+                user.email = ssoUser["email"];
+                user.save()
         except User.DoesNotExist:
             user = User(
-                first_name=user["given_name"],
-                last_name=user["family_name"],
-                username=user["sub"],
-                email=user["email"]
+                first_name=ssoUser["given_name"],
+                last_name=ssoUser["family_name"],
+                username=ssoUser["sub"],
+                email=ssoUser["email"]
             )
             user.save()
         return user

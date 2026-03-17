@@ -35,7 +35,7 @@ AUTHENTICATION_BACKENDS = ['cashflow.dauth.DAuth']
 SECRET_KEY = os.getenv('SECRET_KEY', '-01^^veefr*f_p=phew0w7ib37_738%=lwmp9n4bl_2*5^)vjy')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('DEBUG', 'False') == "True")
+DEBUG = bool(os.getenv('DEBUG', 'False') == "True")
 
 GOOGLE_ANALYTICS_KEY = os.getenv('GOOGLE_ANALYTICS_KEY')
 
@@ -85,10 +85,16 @@ if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
         'default': {'ENGINE': 'django.db.backends.postgresql', 'NAME': NAME, 'USER': USER, 'PASSWORD': PASSWORD,
             'HOST': HOST, 'PORT': PORT, }}
 else:
-
-    DATABASES = {'default': {'ENGINE': 'django.db.backends.postgresql', 'NAME': os.getenv('DB_NAME', 'cashflow'),
-        'USER': os.getenv('DB_USER', 'cashflow'), 'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
-        'HOST': os.getenv('DB_HOST', 'localhost'), 'PORT': os.getenv('DB_PORT', '5432'), }}
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'cashflow'),
+            'USER': os.getenv('DB_USER', 'cashflow'),
+            'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
@@ -126,25 +132,26 @@ STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, 'staticfiles'),)
 
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
-MEDIAFILES_LOCATION = 'media'
-if DEBUG:
-    MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
-    MEDIA_URL = '/media/'
-else:
-    AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'se.datasektionen.foo')
-    AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'xxxxxxxxxxxxxxxxxxxx')
-    AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'unset')
+AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'unset')
 
-    AWS_S3_HOST = os.getenv('S3_HOST', 's3.eu-central-1.amazonaws.com')
-    AWS_S3_CUSTOM_DOMAIN = "{0}.s3.amazonaws.com".format(AWS_STORAGE_BUCKET_NAME)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": os.getenv('S3_BUCKET_NAME', 'cashflow'),
+            "file_overwrite": False,
+            "location":  'media',
+            "region_name": os.getenv('S3_REGION', 'eu-west-1'),
+            "addressing_style": "path" if DEBUG == True else "virtual",
+            "endpoint_url": os.getenv('S3_HOST', 'http://localhost:9090') if DEBUG == True else None
+        },
+    },
+    "staticfiles": STATICFILES_STORAGE
+}
 
-    MEDIA_URL = "https://{0}/{1}/".format(AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
-    STORAGES = {"default": {"BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {"location": MEDIAFILES_LOCATION, "file_overwrite": False, }, }, "staticfiles": STATICFILES_STORAGE}
-
-SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'Lobster Thermidor au Crevette with a Mornay sauce garnished with truffle '
-                                         'pate, brandy and with a fried egg on top and spam.')
 SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
+SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'unset')
 
 HIVE_URL = os.getenv('HIVE_URL', 'https://hive.datasektionen.se')
 HIVE_SECRET = os.getenv('HIVE_SECRET', 'unset')

@@ -20,8 +20,6 @@ from expenses import views as expenses_views
 from . import views
 from .authviews import login, logout
 
-media_urls = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG else []
-
 app_name = "cashflow"
 urlpatterns = [re_path(r'^$', expenses_views.index, name='expenses-index'),
                re_path(r'^accounts/login/$', login, name='login'), re_path(r'^login/$', login, name='login'),
@@ -35,4 +33,4 @@ urlpatterns = [re_path(r'^$', expenses_views.index, name='expenses-index'),
                     name="secondarycostcenter-list"),
                path("api/budgetlines/", views.api.BudgetLineList.as_view(), name="budgetline-list"),
 
-               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + media_urls
+               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

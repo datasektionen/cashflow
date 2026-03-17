@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
 
-from cashflow import dauth
+from cashflow import dauth, email_util
 from invoices.models import Invoice
 
 
