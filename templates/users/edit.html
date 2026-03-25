@@ -44,22 +44,7 @@
                         {{ form.bank_name }}
                     </div>
                 </div>
-                {% if user.profile.may_pay %}
-                    <div class="form-entry">
-                        {{ form.bank_name.errors }}
-                        <span class="description">
-                            <label for="default_account">
-                                Sektionsbankkonto vid utbetalningar:
-                            </label>
-                            <span class="hint">Ställ in till det konto du använder när du gör utbetalninar</span>
-                        </span>
-                        <div class="input">
-                            <div class="select">
-                                {{ form.default_account }}
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
+
                 <div class="clearfix"></div>
                 <div class="clearfix" style="height:20px;"></div>
                 <button type="submit" class="theme-color" style="color:#fff;margin: 0 auto;float:none;display: block;">Uppdatera min profil</button>

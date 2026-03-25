@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from cashflow import dauth
-from expenses.models import Expense, ExpensePart, BankAccount, Comment, Profile
+from expenses.models import Expense, ExpensePart, Comment, Profile
 from invoices.models import Invoice, InvoicePart
 
 
@@ -135,8 +135,7 @@ def pay_overview(request):
     """
     return render(request, 'admin/pay/overview.html', {
         'invoices': json.dumps([invoice.to_dict() for invoice in Invoice.payable()], default=json_serial),
-        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial),
-        'accounts': json.dumps([s.name for s in BankAccount.objects.all().order_by('name')])
+        'expenses': json.dumps([expense.to_dict() for expense in Expense.payable()], default=json_serial)
     })
 
 

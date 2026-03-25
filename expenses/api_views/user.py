@@ -106,8 +106,6 @@ class UserViewSet(GenericViewSet):
                 person.sorting_number = json_args['sorting_number']
             if 'bank_name' in json_args:
                 person.bank_name = json_args['bank_name']
-            if 'default_account' in json_args:
-                person.default_account_id = json_args['default_account']
 
             person.save()
             return Response({'user': person.to_dict()})

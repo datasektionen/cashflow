@@ -26,10 +26,6 @@
                     <td>{{ payment.date|date:"Y-m-d" }}</td>
                 </tr>
                 <tr>
-                    <th>Utbetalat från konto:</th> 
-                    <td>{{ payment.account }}</td>
-                </tr>
-                <tr>
                     <th>Utbetalat av:</th>
                     <td>
                         <a href="{% url 'user-show' payment.payer.user %}">
