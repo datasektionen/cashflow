@@ -23,6 +23,7 @@
                     <th>Ägare</th>
                     <th>Resultatställen</th>
                     <th class="right">Belopp</th>
+                    <th>Fakturadatum</th>
                 </tr>
             </thead>
             {% for invoice in invoices %}
@@ -36,6 +37,7 @@
                     {% endfor %}
                     </td>
                     <td class="right no-wrap">{{ invoice.total_amount|intcomma }} kr</td>
+                    <td class="no-wrap">{{ invoice.invoice_date|date:"Y-m-d" }}</td>
                 </tr>
             {% endfor %}
             <tfoot>
