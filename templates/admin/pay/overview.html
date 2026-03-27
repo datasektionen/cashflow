@@ -174,6 +174,7 @@
                             this.expenses.splice(idx, 1)
                         }
                     })
+                    this.sortExpensesByOwnerTotal()
                 })
                 if (e) e.preventDefault()
             },
@@ -186,8 +187,34 @@
                 })
                 console.log(this.expenses)
             },
+            sortExpensesByOwnerTotal() {
+                const ownerTotals = this.expenses.reduce((accumulator, expense) => {
+                    if (this.cost_centre == false || expense.cost_centres.indexOf(this.cost_centre) > -1) {
+                        accumulator[expense.owner] = (accumulator[expense.owner] || 0) + Number(expense.amount)
+                    }
+                    return accumulator
+                }, {})
+
+                this.expenses.sort((a, b) => {
+                    const totalDiff = (ownerTotals[b.owner] || 0) - (ownerTotals[a.owner] || 0)
+                    if (totalDiff !== 0) {
+                        return totalDiff
+                    }
+
+                    if (a.owner !== b.owner) {
+                        return a.owner_username.localeCompare(b.owner_username, 'sv-SE')
+                    }
+
+                    return a.id - b.id
+                })
+            },
             copy(value) {
                 navigator.clipboard.writeText(value).catch(console.error);
+            },
+        },
+        watch: {
+            cost_centre: function () {
+                this.sortExpensesByOwnerTotal()
             },
         },
         created: function() {
@@ -196,6 +223,7 @@
                 ...this.invoices.flatMap(x => x.cost_centres),
             ]))
             this.cost_centres.sort((a, b) => a.localeCompare(b, 'sv-SE'))
+            this.sortExpensesByOwnerTotal()
             document.getElementById('cover').style.display = 'flex'
 
             document.addEventListener('keyup', (e) => {
