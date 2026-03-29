@@ -329,8 +329,7 @@ def new_payment(request):
 
     payment = models.Payment(
         payer=request.user.profile,
-        receiver=expense_owner,
-        account=models.BankAccount.objects.get(name=request.POST['account'])
+        receiver=expense_owner
     )
     payment.save()
 
@@ -370,8 +369,7 @@ def api_new_payment(request):
 
     payment = models.Payment(
         payer=request.user.profile,
-        receiver=expense_owner,
-        account=models.BankAccount.objects.get(name=request.POST['account'])
+        receiver=expense_owner
     )
     payment.save()
 

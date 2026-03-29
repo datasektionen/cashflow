@@ -86,7 +86,7 @@ Shows edit user form and handles its request.
 @login_required
 def edit_user(request, username):
     # noinspection PyPep8Naming
-    UserForm = modelform_factory(models.Profile, fields=('bank_account', 'sorting_number', 'bank_name', 'default_account'))
+    UserForm = modelform_factory(models.Profile, fields=('bank_account', 'sorting_number', 'bank_name'))
     try: user = models.User.objects.get_by_natural_key(username)
     except ObjectDoesNotExist: raise Http404("Användaren finns inte")
 

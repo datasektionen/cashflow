@@ -30,16 +30,10 @@ class PaymentViewSet(GenericViewSet):
         if request.user.profile.may_pay():
             try:
                 json_args = json.loads(request.POST['json'])
-                total = 0
-                for exp_id in json_args['expense_ids']:
-                    total += Expense.objects.get(id=exp_id).compute_total()
-
                 payment = Payment(
                     date=date.today(),
                     payer=Profile.objects.get(user=request.user),
-                    receiver=Expense.objects.get(id=json_args['expense_ids'][0]).owner,
-                    account_id=json_args['account_id'],
-                    sum=total
+                    receiver=Expense.objects.get(id=json_args['expense_ids'][0]).owner
                 )
 
                 payment.save()
