@@ -196,13 +196,13 @@ def delete_expense(request, pk):
 @user_passes_test(lambda u: u.profile.may_flag())
 def flag_expense(request, pk):
     """
-    Flag a problematic expense
+    Toggle flagged state on an expense
     """ 
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
-    expense.is_flagged = True
+    expense.is_flagged = not expense.is_flagged
     expense.save()
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
 
