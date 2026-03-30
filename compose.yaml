@@ -213,6 +213,7 @@ configs:
                 scope: "*"
               - id: delete
               - id: edit-invoice
+                scope: "*"
               - id: moderate-comments
               - id: pay
                 scope: "*"
