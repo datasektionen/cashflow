@@ -118,7 +118,7 @@
                                 <option value="0">- Välj -</option>
                                 <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'old')"
                                         :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
-                                    <optgroup label="Nämnder">
+                                <optgroup label="Nämnder">
                                     <option v-for="costCentre in costCentres.filter(c => c.CostCentreType == 'committee')"
                                             :key="costCentre.CostCentreID" v-bind:value="costCentre.CostCentreID+','+costCentre.CostCentreName" v-text="costCentre.CostCentreName"></option>
                                 </optgroup>
@@ -253,9 +253,9 @@
             let res = await fetch('{{ budget_url }}/api/CostCentres');
             let body = await res.json();
             this.costCentres = body.sort((a, b) => a.CostCentreName.localeCompare(b.CostCentreName));
-            let costCenreNames = [{% for invoice_part in invoicepartss %} '{{ invoice_part.cost_centre }}', {% endfor %}];
-            let secondaryCostCenreNames = [{% for invoice_part in invoiceparts %} '{{ invoice_part.secondary_cost_centre }}', {% endfor %}];
-            let budgetLineNames = [{% for invoice_part in invoiceeparts %} '{{ invoice_part.budget_line }}', {% endfor %}];
+            let costCenreNames = [{% for invoice_part in invoice_parts %} '{{ invoice_part.cost_centre }}', {% endfor %}];
+            let secondaryCostCenreNames = [{% for invoice_part in invoice_parts %} '{{ invoice_part.secondary_cost_centre }}', {% endfor %}];
+            let budgetLineNames = [{% for invoice_part in invoice_parts %} '{{ invoice_part.budget_line }}', {% endfor %}];
             let costCentreIdByName = new Map();
             for (let name of costCenreNames) {
                 for (let constCenre of body) {
