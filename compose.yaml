@@ -212,11 +212,13 @@ configs:
               - id: confirm
                 scope: "*"
               - id: delete
+                scope: "*"
               - id: edit-invoice
               - id: moderate-comments
               - id: pay
                 scope: "*"
               - id: unattest
+                scope: "*"
               - id: unconfirm
               - id: view-all-payments
           - name: Konglig Lokalchef
