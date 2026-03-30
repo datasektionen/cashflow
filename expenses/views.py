@@ -256,7 +256,11 @@ def get_expense(request, pk):
     return render(request, 'expenses/show.html', {
         'expense': expense,
         'may_account': request.user.profile.may_account(expense=expense),
-        'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
+        'may_unattest': (
+            request.user.profile.may_unattest()
+            and not expense.reimbursement
+            and expense.expensepart_set.exclude(attested_by=None).exists()
+        ),
         'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,
         'may_delete': request.user.profile.may_delete_expense(expense),
