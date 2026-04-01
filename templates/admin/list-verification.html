@@ -5,12 +5,21 @@
 
 {% block content %}
     <div id="app">
-        <div class="select">
+        <div id="verification-filters" class="filters-row">
+        <div class="select year-select">
             <select v-model="year" v-on:change="move">
                 {% for year in years %}
                     <option :value="{{ year }}">{{ year }}</option>
                 {% endfor %}
             </select>
+        </div>
+        <div class="select series-select">
+            <select v-model="series" v-on:change="move">
+                <option value="ALL">Alla</option>
+                <option value="E">E</option>
+                <option value="U">U</option>
+            </select>
+        </div>
         </div>
         <div class="clear"></div>
         <br/>
@@ -42,16 +51,16 @@
             <div class="pagination">
         <span class="step-links">
             {% if expenses.has_previous %}
-                <a href="?page={{ expenses.previous_page_number }}&year={{ year }}">Föregående</a>
+                <a href="?page={{ expenses.previous_page_number }}&year={{ year }}&series={{ series }}">Föregående</a>
             {% endif %}
 
             {% for i in expenses.paginator.page_range %}
-                <a href="?page={{ i }}&year={{ year }}" {% if i == expenses.number %}
+                <a href="?page={{ i }}&year={{ year }}&series={{ series }}" {% if i == expenses.number %}
                    class="active"{% endif %}>{{ i }}</a>
             {% endfor %}
 
             {% if expenses.has_next %}
-                <a href="?page={{ expenses.next_page_number }}&year={{ year }}">Nästa</a>
+                <a href="?page={{ expenses.next_page_number }}&year={{ year }}&series={{ series }}">Nästa</a>
             {% endif %}
         </span>
             </div>
@@ -65,11 +74,14 @@
             data: function () {
                 return {
                     year: {% autoescape off %} {{ year }} {% endautoescape %},
+                    series: "{{ series }}",
                 }
             },
             methods: {
                 move() {
                     this.params.set('year', this.year)
+                    this.params.set('series', this.series)
+                    this.params.delete('page')
                     window.location.href = `?${this.params.toString()}`
                 }
             },

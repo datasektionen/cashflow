@@ -6,7 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models.functions import Length
+from django.db.models import IntegerField, Case, When, Value
+from django.db.models.functions import Cast, Substr, Trim, Upper, Replace
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -425,13 +426,54 @@ def search_verification_response(request):
 def list_verification(request):
     years = range(2017, datetime.now().year + 1)
     year = request.GET.get('year')
+    series = request.GET.get('series')
 
     year = year if year is not None and year != '' else datetime.now().year
+    series = series.upper() if series is not None and series != '' else 'ALL'
+    if series not in ['ALL', 'E', 'U']:
+        series = 'ALL'
 
     verification_list = Expense.objects \
-        .filter(expense_date__year=year, verification__regex=r'E') \
-        .order_by(Length('verification').asc(), 'verification') \
+        .filter(expense_date__year=year) \
+        .exclude(verification__isnull=True) \
+        .annotate(
+            verification_trimmed=Trim('verification'),
+            verification_compact=Replace(
+                Upper(
+                    Replace(
+                        Replace(
+                            Replace(Trim('verification'), Value(' '), Value('')),
+                            Value('\xa0'),
+                            Value('')
+                        ),
+                        Value('\t'),
+                        Value('')
+                    )
+                ),
+                Value('\r'),
+                Value('')
+            ),
+        ) \
+        .exclude(verification_trimmed__regex=r'^\s*$') \
+        .annotate(
+            verification_priority=Case(
+                When(verification_compact__regex=r'^[EU][0-9]+$', then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField()
+            ),
+            verification_number=Case(
+                When(verification_compact__regex=r'^[EU][0-9]+$', then=Cast(Substr('verification_compact', 2), IntegerField())),
+                default=Value(-1),
+                output_field=IntegerField()
+            )
+        ) \
+        .order_by('verification_priority', '-verification_number', 'verification_compact', '-id') \
         .all()
+
+    if series == 'E':
+        verification_list = verification_list.filter(verification_compact__regex=r'^E[0-9]+$')
+    elif series == 'U':
+        verification_list = verification_list.filter(verification_compact__regex=r'^U[0-9]+$')
 
     paginator = Paginator(verification_list, 25)
     page = request.GET.get('page')
@@ -447,6 +489,7 @@ def list_verification(request):
         'expenses': verifications,
         'years': years,
         'year': year,
+        'series': series,
     })
 
 
