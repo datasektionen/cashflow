@@ -196,13 +196,13 @@ def delete_expense(request, pk):
 @user_passes_test(lambda u: u.profile.may_flag())
 def flag_expense(request, pk):
     """
-    Flag a problematic expense
+    Toggle flagged state on an expense
     """ 
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
         raise Http404("Utlägget finns inte")
-    expense.is_flagged = True
+    expense.is_flagged = not expense.is_flagged
     expense.save()
     return HttpResponseRedirect(reverse('expenses-show', kwargs={'pk': int(pk)}))
 
@@ -256,7 +256,11 @@ def get_expense(request, pk):
     return render(request, 'expenses/show.html', {
         'expense': expense,
         'may_account': request.user.profile.may_account(expense=expense),
-        'may_unattest': request.user.profile.may_unattest() and not expense.reimbursement,
+        'may_unattest': (
+            request.user.profile.may_unattest()
+            and not expense.reimbursement
+            and expense.expensepart_set.exclude(attested_by=None).exists()
+        ),
         'may_flag': request.user.profile.may_flag(),
         'attestable': attestable,
         'may_delete': request.user.profile.may_delete_expense(expense),

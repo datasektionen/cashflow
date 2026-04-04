@@ -153,8 +153,8 @@
                 {% if may_flag %}
                 <form method="POST" action="{% url 'expenses-flag' expense.id %}">
                   {% csrf_token %}
-                  <button class="btn btn-danger" type="submit" >
-                    <span class="icon"><i class="fa fa-flag"></i></span> Flagga kvitto
+                    <button class="btn {% if expense.is_flagged %}btn-default{% else %}btn-danger{% endif %}" type="submit" >
+                        <span class="icon"><i class="fa fa-flag"></i></span> {% if expense.is_flagged %}Avflagga kvitto{% else %}Flagga kvitto{% endif %}
                   </button> 
                 </form>
                 {% endif %}
