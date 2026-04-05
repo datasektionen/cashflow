@@ -33,7 +33,7 @@
             <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
             <td><a :href="'/users/' + invoice.owner_username" v-text="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
             <td v-text="invoice.cost_centres.join(', ')"></td>
-            <td v-text="invoice.due_date"></td>
+            <td :style="isPastDueDate(invoice) ? 'color: #f82020;' : ''" v-text="invoice.due_date"></td>
             <td class="right" v-text="invoice.amount + ' kr'"></td>
         </tr>
     </table>
@@ -74,10 +74,24 @@
                 cost_centre: false,
                 expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
                 invoices: {% autoescape off %}{{ invoices }}{% endautoescape %},
-                cost_centres: []
+                cost_centres: [],
+                today: '',
             }
         },
+        methods: {
+            getLocalTodayISO: function () {
+                const now = new Date()
+                const year = now.getFullYear()
+                const month = String(now.getMonth() + 1).padStart(2, '0')
+                const day = String(now.getDate()).padStart(2, '0')
+                return `${year}-${month}-${day}`
+            },
+            isPastDueDate: function (invoice) {
+                return Boolean(invoice.due_date) && invoice.due_date < this.today
+            },
+        },
         created: function() {
+            this.today = this.getLocalTodayISO()
             this.cost_centres = Array.from(new Set([
                 ...this.expenses.flatMap(x => x.cost_centres),
                 ...this.invoices.flatMap(x => x.cost_centres),
