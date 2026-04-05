@@ -5,6 +5,9 @@
 {% block content %}
 <div id="app">
     <p>Här kan du hitta alla kvitton som är redo att betalas ut ordnade efter användare.</p>
+    <ul class="messages" v-if="error_message">
+        <li v-text="error_message"></li>
+    </ul>
     <div class="select" style="margin-left: 10px;float:right">
         <select v-model="cost_centre">
             <option :value="false">Filtrera på resultatställe</option>
@@ -142,10 +145,12 @@
                 expenses: {% autoescape off %}{{ expenses }}{% endautoescape %},
                 invoices: {% autoescape off %}{{ invoices }}{% endautoescape %},
                 payment: null,
+                error_message: '',
             }
         },
         methods: {
             save: function (user, e) {
+                this.error_message = ''
                 let exps = this.expenses.filter(x => x.checked && x.owner == user && (this.cost_centre == false || x.cost_centres.indexOf(this.cost_centre) > -1))
                 if (exps.length < 1) {
                     console.log('Not enough expenses')
@@ -163,7 +168,25 @@
                     credentials: 'same-origin',
                     body: form
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const body = await res.text()
+                    let parsed = null
+
+                    if (body) {
+                        try {
+                            parsed = JSON.parse(body)
+                        } catch (err) {
+                            parsed = null
+                        }
+                    }
+
+                    if (!res.ok) {
+                        const message = (parsed && parsed.error) || body || 'Utbetalningen misslyckades.'
+                        throw new Error(message)
+                    }
+
+                    return parsed || {}
+                })
                 .then(res => {
                     // Done
                     console.log(res)
@@ -175,6 +198,9 @@
                         }
                     })
                     this.sortExpensesByOwnerTotal()
+                })
+                .catch(err => {
+                    this.error_message = err.message || 'Utbetalningen misslyckades.'
                 })
                 if (e) e.preventDefault()
             },
