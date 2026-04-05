@@ -424,7 +424,7 @@ def search_verification_response(request):
 @login_required
 @user_passes_test(lambda u: u.profile.is_admin())
 def list_verification(request):
-    years = range(2017, datetime.now().year + 1)
+    years = range(datetime.now().year, 2016, -1)
     year = request.GET.get('year')
     series = request.GET.get('series')
 
