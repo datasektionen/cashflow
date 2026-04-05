@@ -333,7 +333,7 @@ def new_payment(request):
             models.Comment(
                 author=request.user.profile,
                 expense=expense,
-                content="Misslyckades att betala ut: användaren saknar fullständiga bankuppgifter"
+                content="Utbetalning misslyckades: användaren saknar fullständiga bankuppgifter"
             ).save()
         return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
 
