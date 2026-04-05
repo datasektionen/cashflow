@@ -475,7 +475,7 @@ def list_verification(request):
     elif series == 'U':
         verification_list = verification_list.filter(verification_compact__regex=r'^U[0-9]+$')
 
-    paginator = Paginator(verification_list, 25)
+    paginator = Paginator(verification_list, 50)
     page = request.GET.get('page')
 
     try:
