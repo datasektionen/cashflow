@@ -118,7 +118,10 @@ def edit_invoice(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Fakturan finns inte")
     
-    if not request.user.profile.may_delete_invoice(invoice):
+    if not (
+        request.user.profile.may_edit_invoice()
+        or invoice.owner.user.username == request.user.username
+    ):
         return HttpResponseForbidden('Du har inte behörighet att redigera denna faktura.')
     
     if request.method == 'GET':

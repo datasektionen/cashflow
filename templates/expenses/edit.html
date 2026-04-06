@@ -228,7 +228,7 @@
                     this.costCentres.unshift({ CostCentreID: "", CostCentreName: name, CostCentreType: "old" });
                 }
             }
-            let secondaryCostCentreByName = new Map();
+            let secondaryCostCentreByKey = new Map();
             let costCentre = new Map();
             for (let id of costCentreIdByName.values()) {
                 if (id == "") continue;
@@ -237,39 +237,43 @@
                 for (let name of secondaryCostCenreNames) {
                     for (let secondaryCostCentre of body) {
                         if (secondaryCostCentre.SecondaryCostCentreName == name) {
-                            secondaryCostCentreByName.set(name, secondaryCostCentre);
+                            secondaryCostCentreByKey.set(id + "," + name, secondaryCostCentre);
                         }
                     }
                 }
             }
             this.updateSecondaryCostCentres().then(async () => {
                 for (let part of this.expense_parts) {
+                    let costCentreId = part.costCentre.split(',')[0];
                     let [id, name] = part.secondaryCostCentre.split(/,(.*)/);
-                    if (secondaryCostCentreByName.has(name)) {
-                        part.secondaryCostCentre = secondaryCostCentreByName.get(name).SecondaryCostCentreID+","+name;
+                    let compositeKey = costCentreId + "," + name;
+                    if (secondaryCostCentreByKey.has(compositeKey)) {
+                        part.secondaryCostCentre = secondaryCostCentreByKey.get(compositeKey).SecondaryCostCentreID+","+name;
                     } else {
                         if (!this.secondaryCostCentres.has(part.costCentre))
                             this.secondaryCostCentres.set(part.costCentre, []);
                         this.secondaryCostCentres.get(part.costCentre).unshift({ SecondaryCostCentreID: "", SecondaryCostCentreName: name });
                     }
                 }
-                let budgetLineIdByName = new Map();
-                for (let scc of secondaryCostCentreByName.values()) {
+                let budgetLineIdByKey = new Map();
+                for (let scc of secondaryCostCentreByKey.values()) {
                     let res = await fetch('{{ budget_url }}/api/BudgetLines?id=' + scc.SecondaryCostCentreID);
                     let body = await res.json();
                     for (let name of budgetLineNames) {
                         for (let budgetLine of body) {
                             if (budgetLine.BudgetLineName == name) {
-                                budgetLineIdByName.set(name, budgetLine.BudgetLineID);
+                                budgetLineIdByKey.set(scc.SecondaryCostCentreID + "," + name, budgetLine.BudgetLineID);
                             }
                         }
                     }
                 }
                 this.updateBudgetLines().then(() => {
                     for (let part of this.expense_parts) {
-                        let [id, name] = part.budgetLine.split(/,(.*)/);
-                        if (budgetLineIdByName.has(name)) {
-                            part.budgetLine = budgetLineIdByName.get(name)+","+name;
+                        let secondaryCostCentreId = part.secondaryCostCentre.split(',')[0];
+                        let [id, name] = part.budgetLine.split(/,(.*)/);  
+                        let budgetKeyComposite = secondaryCostCentreId + "," + name;
+                        if (budgetLineIdByKey.has(budgetKeyComposite)) {
+                            part.budgetLine = budgetLineIdByKey.get(budgetKeyComposite)+","+name;
                         } else {
                             if (!this.budgetLines.has(part.secondaryCostCentre))
                                 this.budgetLines.set(part.secondaryCostCentre, []);

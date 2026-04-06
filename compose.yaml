@@ -214,6 +214,7 @@ configs:
               - id: delete
                 scope: "*"
               - id: edit-invoice
+                scope: "*"
               - id: moderate-comments
               - id: pay
                 scope: "*"
