@@ -33,7 +33,7 @@
             <td><a :href="'/invoices/' + invoice.id" v-text="invoice.description"></a></td>
             <td><a :href="'/users/' + invoice.owner_username" v-text="invoice.owner_first_name + ' ' + invoice.owner_last_name"></a></td>
             <td v-text="invoice.cost_centres.join(', ')"></td>
-            <td :style="isPastDueDate(invoice) ? 'color: #f82020;' : ''" v-text="invoice.due_date"></td>
+            <td :style="isPastDueDate(invoice) ? 'color: #f82020;' : (isDueSoon(invoice) ? 'color: #f9b031;' : '')" v-text="invoice.due_date"></td>
             <td class="right" v-text="invoice.amount + ' kr'"></td>
         </tr>
     </table>
@@ -86,8 +86,25 @@
                 const day = String(now.getDate()).padStart(2, '0')
                 return `${year}-${month}-${day}`
             },
+            parseISODate: function (dateString) {
+                if (!dateString) {
+                    return null
+                }
+                const [year, month, day] = dateString.split('-').map(Number)
+                return new Date(year, month - 1, day)
+            },
             isPastDueDate: function (invoice) {
                 return Boolean(invoice.due_date) && invoice.due_date < this.today
+            },
+            isDueSoon: function (invoice) {
+                if (!invoice.due_date) {
+                    return false
+                }
+                const todayDate = this.parseISODate(this.today)
+                const dueDate = this.parseISODate(invoice.due_date)
+                const msPerDay = 1000 * 60 * 60 * 24
+                const diffDays = Math.ceil((dueDate - todayDate) / msPerDay)
+                return diffDays >= 0 && diffDays <= 7
             },
         },
         created: function() {
