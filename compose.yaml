@@ -189,6 +189,13 @@ configs:
           first_name: Martin
           family_name: Median
           year_tag: Me-00
+        - ug_kth_id: yet-another-other-id
+          kth_id: jobjav
+          email: jobjav@kth.se
+          first_name: Jobbig
+          family_name: "\"Speciell\" Jävel"
+          year_tag: B-99
+
 
       hive:
         tokens:

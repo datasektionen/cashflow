@@ -90,7 +90,7 @@
         system_name: "Cashflow",
         color_scheme: "money_green",
         {% if user.is_authenticated %}
-            login_text: "{{ user.get_full_name }}",
+            login_text: "{{ user.get_full_name|escapejs }}",
             login_href: "{% url 'user-show' user.username %}",
         {% else %}
             login_text: "Logga in",
