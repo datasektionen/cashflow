@@ -1,3 +1,9 @@
+import json
+from datetime import date, datetime
+from decimal import *
+
+import requests
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import (
     Http404,
@@ -13,10 +19,12 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_GET
 from django.forms import modelform_factory
+from rest_framework import generics
 
 from cashflow import settings
 from cashflow.utils import json_serial
 from expenses import models
+from .serializers import UserSerializer
 
 """
 Shows one user.
@@ -59,6 +67,14 @@ def get_user(request, username):
             ).count(),
         },
     )
+
+
+class CurrentUserView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
+
 
 
 """

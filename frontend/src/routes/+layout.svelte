@@ -1,13 +1,12 @@
 <script lang="ts">
 	import './layout.css';
 	import '$lib/i18n'; // initialize i18n
-	import type { LayoutProps } from './$types';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import favicon from '$lib/assets/favicon.svg';
 	import { DarkMode } from 'flowbite-svelte';
 
-	let { data, children }: LayoutProps = $props();
+	let { children, data } = $props();
 </script>
 
 <nav
@@ -38,6 +37,11 @@
 
 	<div class="flex h-full items-center">
 		<DarkMode class="items-center" />
+		{#if data.user != null}
+			<p>{data.user.username}</p>
+		{:else}
+			<a href="http://localhost:8000/login?next=http%3A%2F%2Flocalhost%3A5173%2F">{$_("login")}</a>
+		{/if}
 	</div>
 </nav>
 
@@ -45,14 +49,14 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="flex h-screen flex-col justify-between pt-16">
+<div class="flex h-screen flex-col justify-between pt-16 dark:bg-slate-950">
 	<div class="h-16 w-screen bg-primary-500 dark:bg-gray-700">
-		<h1 class="flex h-full items-center justify-center text-2xl font-bold text-white">
+		<h1 class="flex h-full items-center justify-center text-2xl font-bold text-white dark:text-slate-100">
 			{$_(page.data.title_key)}
 		</h1>
 	</div>
 
-	<main class="h-full px-64 py-16">
+	<main class="h-full mx-64 lg:p-16 md:p-4 dark:bg-slate-900 dark:text-slate-100">
 		{@render children()}
 	</main>
 
