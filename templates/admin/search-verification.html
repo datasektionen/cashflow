@@ -7,10 +7,58 @@
 <div id="app">
     <input type="text" v-on:keyup="search" v-model="query" placeholder="Skriv ett verifikationsnummer att söka efter..." />
     <ul class="search-result">
-        <li v-for="invoice in invoices"><a :href="'/invoices/' + invoice.id" v-text="invoice.verification + ': Faktura ' + invoice.description"></a></li>
-        <li v-for="expense in expenses"><a :href="'/expenses/' + expense.id" v-text="expense.verification + ': Utlägg ' + expense.description"></a></li>
+        <li class="search-result-row" v-for="invoice in invoices" :key="`invoice-${invoice.id}`">
+            <a class="search-result-item" :href="'/invoices/' + invoice.id">
+                <span class="search-result-label" v-text="invoice.verification + ': ' + invoice.description"></span>
+                <span class="search-result-year" v-text="getYear(invoice.invoice_date || invoice.created_date)"></span>
+            </a>
+        </li>
+        <li class="search-result-row" v-for="expense in expenses" :key="`expense-${expense.id}`">
+            <a class="search-result-item" :href="'/expenses/' + expense.id">
+                <span class="search-result-label" v-text="expense.verification + ': ' + expense.description"></span>
+                <span class="search-result-year" v-text="getYear(expense.expense_date || expense.created_date)"></span>
+            </a>
+        </li>
     </ul>
 </div>
+<style>
+    .search-result-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .search-result-item {
+        display: block;
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+        padding-right: 55px;
+        text-decoration: none;
+    }
+
+    .search-result-item:hover,
+    .search-result-item:focus,
+    .search-result-item:visited {
+        text-decoration: none;
+    }
+
+    .search-result-label {
+        min-width: 0;
+        display: block;
+    }
+
+    .search-result-year {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #696969;
+        text-decoration: none !important;
+        white-space: nowrap;
+    }
+</style>
 <script type="text/javascript">
     new Vue({
         el: '#app', 
@@ -24,6 +72,12 @@
         },
         methods: {
             search() {
+                if (this.query.trim().length < 1) {
+                    this.invoices = []
+                    this.expenses = []
+                    return
+                }
+
                 let form = new FormData()
                 form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
                 form.append('query', this.query)
@@ -39,6 +93,12 @@
                     this.invoices = res.invoices
                     this.expenses = res.expenses
                 })
+            },
+            getYear(dateValue) {
+                if (!dateValue) {
+                    return ''
+                }
+                return String(dateValue).slice(0, 4)
             }
         },
         created: function() {

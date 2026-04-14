@@ -6,7 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models.functions import Length
+from django.db.models import IntegerField, Case, When, Value
+from django.db.models.functions import Cast, Substr, Trim, Upper, Replace, Coalesce
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -423,17 +424,99 @@ def search_verification_response(request):
 @login_required
 @user_passes_test(lambda u: u.profile.is_admin())
 def list_verification(request):
-    years = range(2017, datetime.now().year + 1)
+    years = range(datetime.now().year, 2016, -1)
     year = request.GET.get('year')
+    series = request.GET.get('series')
 
     year = year if year is not None and year != '' else datetime.now().year
+    series = series.upper() if series is not None and series != '' else 'ALL'
+    if series not in ['ALL', 'E', 'U']:
+        series = 'ALL'
 
-    verification_list = Expense.objects \
-        .filter(expense_date__year=year, verification__regex=r'E') \
-        .order_by(Length('verification').asc(), 'verification') \
-        .all()
+    def apply_verification_filters(queryset):
+        queryset = queryset \
+            .exclude(verification__isnull=True) \
+            .annotate(
+                verification_trimmed=Trim('verification'),
+                verification_compact=Replace(
+                    Upper(
+                        Replace(
+                            Replace(
+                                Replace(Trim('verification'), Value(' '), Value('')),
+                                Value('\xa0'),
+                                Value('')
+                            ),
+                            Value('\t'),
+                            Value('')
+                        )
+                    ),
+                    Value('\r'),
+                    Value('')
+                ),
+            ) \
+            .exclude(verification_trimmed__regex=r'^\s*$') \
+            .annotate(
+                verification_priority=Case(
+                    When(verification_compact__regex=r'^[EU][0-9]+$', then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField()
+                ),
+                verification_number=Case(
+                    When(verification_compact__regex=r'^[EU][0-9]+$', then=Cast(Substr('verification_compact', 2), IntegerField())),
+                    default=Value(-1),
+                    output_field=IntegerField()
+                )
+            )
 
-    paginator = Paginator(verification_list, 25)
+        if series == 'E':
+            queryset = queryset.filter(verification_compact__regex=r'^E[0-9]+$')
+        elif series == 'U':
+            queryset = queryset.filter(verification_compact__regex=r'^U[0-9]+$')
+
+        return queryset
+
+    verification_list = []
+
+    for expense in apply_verification_filters(
+        Expense.objects.filter(expense_date__year=year)
+    ).order_by('verification_priority', '-verification_number', 'verification_compact', '-id'):
+        verification_list.append({
+            'id': expense.id,
+            'verification': expense.verification,
+            'description': expense.description,
+            'owner_label': str(expense.owner),
+            'owner_href': reverse('user-show', kwargs={'username': expense.owner.user.username}),
+            'date': expense.expense_date,
+            'href': reverse('expenses-show', kwargs={'pk': expense.id}),
+            'verification_priority': expense.verification_priority,
+            'verification_number': expense.verification_number,
+            'verification_compact': expense.verification_compact,
+        })
+
+    for invoice in apply_verification_filters(
+        Invoice.objects.annotate(verification_date=Coalesce('invoice_date', 'created_date')).filter(verification_date__year=year)
+    ).order_by('verification_priority', '-verification_number', 'verification_compact', '-id'):
+        verification_list.append({
+            'id': invoice.id,
+            'verification': invoice.verification,
+            'description': invoice.description,
+            'owner_label': str(invoice.owner),
+            'owner_href': reverse('user-show', kwargs={'username': invoice.owner.user.username}),
+            'date': invoice.invoice_date or invoice.created_date,
+            'href': reverse('invoices-show', kwargs={'pk': invoice.id}),
+            'verification_priority': invoice.verification_priority,
+            'verification_number': invoice.verification_number,
+            'verification_compact': invoice.verification_compact,
+        })
+
+    verification_list.sort(key=lambda item: (
+        item['verification_priority'],
+        -item['verification_number'],
+        item['verification_compact'],
+        -item['id']
+    ))
+
+    paginator = Paginator(verification_list, 50)
     page = request.GET.get('page')
 
     try:
@@ -444,9 +527,10 @@ def list_verification(request):
         verifications = paginator.page(paginator.num_pages)
 
     return render(request, 'admin/list-verification.html', {
-        'expenses': verifications,
+        'verifications': verifications,
         'years': years,
         'year': year,
+        'series': series,
     })
 
 

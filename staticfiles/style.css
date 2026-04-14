@@ -542,6 +542,21 @@ input[type="date"], input[type="time"] {
     text-overflow: '';
     padding: 0 20px 0 7px;
 }
+#verification-filters .year-select {
+    min-width: 80px;
+}
+
+#verification-filters .year-select select {
+    width: 100%;
+}
+
+#verification-filters .series-select {
+    min-width: 70px;
+}
+
+#verification-filters .series-select select {
+    width: 100%;
+}
 #content table.card tbody tr {
     background: #fff;
     border-bottom: 1px solid #efefef;
