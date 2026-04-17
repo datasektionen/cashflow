@@ -5,34 +5,19 @@
 	import { _ } from 'svelte-i18n';
 	import favicon from '$lib/assets/favicon.svg';
 	import { DarkMode } from 'flowbite-svelte';
+	import NavLink from '$lib/components/NavLink.svelte';
 
 	let { children, data } = $props();
 </script>
 
 <nav
-	class="fixed flex h-16 w-screen flex-row justify-between bg-primary-600 px-4 text-white drop-shadow-xl lg:px-64 dark:bg-gray-800"
+	class="fixed flex h-16 w-screen flex-row justify-between bg-money-green-600 px-4 text-white drop-shadow-xl lg:px-64 dark:bg-dark-base-200 dark:text-dark-base-text"
 >
 	<div class="flex h-full">
-		<a
-			href="/"
-			class="flex h-full items-center p-2 text-xl text-white transition-all hover:bg-primary-500"
-			>{$_('new_expense')}</a
-		>
-		<a
-			href="/"
-			class="flex h-full items-center p-2 text-xl text-white transition-all hover:bg-primary-500"
-			>{$_('new_invoice')}</a
-		>
-		<a
-			href="/"
-			class="flex h-full items-center p-2 text-xl text-white transition-all hover:bg-primary-500"
-			>{$_('user_expenses')}</a
-		>
-		<a
-			href="/"
-			class="flex h-full items-center p-2 text-xl text-white transition-all hover:bg-primary-500"
-			>{$_('admin')}</a
-		>
+		<NavLink to="/expenses/new" text={$_('new_expense')}></NavLink>
+		<NavLink to="/invoices/new" text={$_('new_invoice')}></NavLink>
+		<NavLink to="/user/expenses/" text={$_('user_expenses')}></NavLink>
+		<NavLink to="/admin/" text={$_('admin')}></NavLink>
 	</div>
 
 	<div class="flex h-full items-center">
@@ -40,7 +25,7 @@
 		{#if data.user != null}
 			<p>{data.user.username}</p>
 		{:else}
-			<a href="http://localhost:8000/login?next=http%3A%2F%2Flocalhost%3A5173%2F">{$_("login")}</a>
+			<a href="http://localhost:8000/login?next=http%3A%2F%2Flocalhost%3A5173%2F">{$_('login')}</a>
 		{/if}
 	</div>
 </nav>
@@ -49,18 +34,24 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="flex h-screen flex-col justify-between pt-16 dark:bg-slate-950">
-	<div class="h-16 w-screen bg-primary-500 dark:bg-gray-700">
-		<h1 class="flex h-full items-center justify-center text-2xl font-bold text-white dark:text-slate-100">
+<div
+	class="base-text-base-text flex h-screen flex-col justify-between bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
+>
+	<div class="h-16 w-screen p-4">
+		<h1 class="flex h-full items-center justify-center text-2xl font-bold">
 			{$_(page.data.title_key)}
 		</h1>
 	</div>
 
-	<main class="h-full mx-64 lg:p-16 md:p-4 dark:bg-slate-900 dark:text-slate-100">
+	<main
+		class="mx-64 h-full bg-base-100 md:p-4 lg:p-16 dark:bg-dark-base-100 dark:text-dark-base-text"
+	>
 		{@render children()}
 	</main>
 
-	<footer class="flex h-64 items-center bg-primary-600 px-64 py-4 text-white dark:bg-gray-800">
+	<footer
+		class="flex h-64 items-center bg-money-green-700 px-64 py-4 text-white dark:bg-dark-base-200 dark:text-dark-base-text"
+	>
 		<div class="flex h-full w-full flex-row justify-between">
 			<div class="w-96">
 				<h2 class="font-bold">{$_('footer.about.title')}</h2>

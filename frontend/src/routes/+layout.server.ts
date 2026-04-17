@@ -1,5 +1,4 @@
-
-export const load = ({locals}) => {
+export const load = ({ locals }) => {
 	return {
 		user: locals.user
 	};
