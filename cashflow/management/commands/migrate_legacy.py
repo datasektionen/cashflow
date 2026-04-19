@@ -7,6 +7,7 @@ from django.utils.timezone import now
 
 from expenses.models import Comment, Expense, ExpensePart
 from expenses.models import create_user_profile, save_user_profile, send_mail
+from invoices.models import Invoice, InvoicePart
 from cashflow import snapshots
 
 
@@ -47,9 +48,30 @@ class Command(BaseCommand):
             """)
             parts = cursor.fetchall()
 
+            cursor.execute("""
+                SELECT i.id, i.created_date, i.invoice_date, i.due_date, i.confirmed_by_id, i.confirmed_at,
+                       i.owner_id, i.description, i.file_is_original, i.verification, i.payed_at, i.payed_by_id,
+                       au.first_name, au.last_name, au.email
+                FROM invoices_invoice i
+                JOIN expenses_profile ep ON ep.id = i.owner_id
+                JOIN auth_user au ON au.id = ep.user_id
+            """)
+            invoices = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT ip.id, ip.invoice_id, ip.amount, ip.attested_by_id, ip.attest_date,
+                       ip.cost_centre, ip.secondary_cost_centre, ip.budget_line
+                FROM invoices_invoicepart ip
+            """)
+            invoice_parts = cursor.fetchall()
+
         parts_by_expense = {}
         for part in parts:
             parts_by_expense.setdefault(part[1], []).append(part)
+
+        parts_by_invoice = {}
+        for part in invoice_parts:
+            parts_by_invoice.setdefault(part[1], []).append(part)
 
         with connections['legacy'].cursor() as cursor, transaction.atomic():
             post_save.disconnect(create_user_profile, sender=User)
@@ -60,8 +82,6 @@ class Command(BaseCommand):
                 "auth_user",
                 "expenses_profile",
                 "expenses_payment",
-                "invoices_invoice",
-                "invoices_invoicepart",
             ]:
                 n = copy_table(cursor, table)
                 self.stdout.write(f"Copied {n} rows from {table}")
@@ -108,10 +128,53 @@ class Command(BaseCommand):
                         ),
                     )
 
+            self.stdout.write("Migrating invoices and invoice parts...")
+            for row in invoices:
+                (iid, created_date, invoice_date, due_date, confirmed_by_id, confirmed_at,
+                 owner_id, description, file_is_original, verification, payed_at, payed_by_id,
+                 first_name, last_name, email) = row
+
+                captured_at = now()
+                invoice_snapshot = snapshots.InvoiceSnapshot(
+                    captured_at=captured_at,
+                    owner=snapshots.Owner(name=f"{first_name} {last_name}", email=email),
+                )
+                Invoice.objects.update_or_create(
+                    id=iid,
+                    defaults=dict(
+                        created_date=created_date, invoice_date=invoice_date, due_date=due_date,
+                        confirmed_by_id=confirmed_by_id, confirmed_at=confirmed_at,
+                        owner_id=owner_id, description=description,
+                        file_is_original=file_is_original, verification=verification,
+                        payed_at=payed_at, payed_by_id=payed_by_id,
+                        snapshot=invoice_snapshot.model_dump(mode='json'),
+                    ),
+                )
+
+                for pid, _, amount, attested_by_id, attest_date, cost_centre, secondary_cost_centre, budget_line in parts_by_invoice.get(iid, []):
+                    part_snapshot = snapshots.InvoicePartSnapshot(
+                        captured_at=captured_at,
+                        budget_line=snapshots.Budgetline(
+                            name=budget_line,
+                            cost_center=cost_centre,
+                            secondary_cost_center=secondary_cost_centre,
+                        ),
+                    )
+                    InvoicePart.objects.update_or_create(
+                        id=pid,
+                        defaults=dict(
+                            invoice_id=iid, gordian_budget_line=None,
+                            amount=amount, attested_by_id=attested_by_id,
+                            attest_date=attest_date,
+                            snapshot=part_snapshot.model_dump(mode='json'),
+                        ),
+                    )
+
             for table in ["expenses_comment", "expenses_file"]:
                 n = copy_table(cursor, table)
                 self.stdout.write(f"Copied {n} rows from {table}")
 
         self.stdout.write(self.style.SUCCESS(
-            f"Done. Migrated {len(expenses)} expenses and {len(parts)} expense parts."
+            f"Done. Migrated {len(expenses)} expenses, {len(parts)} expense parts, "
+            f"{len(invoices)} invoices and {len(invoice_parts)} invoice parts."
         ))

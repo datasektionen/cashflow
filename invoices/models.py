@@ -3,7 +3,10 @@ from datetime import date
 from django.db import models
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
+from django.utils import timezone
 import re
+
+from cashflow import snapshots
 
 """
 Represents an invoice.
@@ -21,13 +24,10 @@ class Invoice(models.Model):
     verification = models.CharField(max_length=7, blank=True)
     payed_at = models.DateField(blank=True, null=True, default=None)
     payed_by = models.ForeignKey(User, blank=True, null=True, default=None, related_name="payed", on_delete=models.DO_NOTHING)
+    snapshot = models.JSONField(null=True, blank=True)
 
     # Returns a string representation of the invoice
     def __str__(self):
-        return self.description
-
-    # Returns a unicode representation of the invoice
-    def __unicode__(self):
         return self.description
 
     # Returns a json dict from the invoice
@@ -58,9 +58,9 @@ class Invoice(models.Model):
             total += part.amount
         return total
 
-    # Returns the cost centres belonging to the invoice as a list [{ cost_centre: 'Name' }, ...]
+    # Returns the cost centres belonging to the invoice as a list
     def cost_centres(self):
-        return self.invoicepart_set.order_by('cost_centre').values('cost_centre').distinct()
+        return [part.cost_centre for part in self.invoicepart_set.all()]
 
     def is_attested(self):
         return self.invoicepart_set.filter(attested_by__isnull=True).count() == 0
@@ -86,8 +86,15 @@ class Invoice(models.Model):
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
-        exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
+        exp['cost_centres'] = self.cost_centres()
         return exp
+
+    @classmethod
+    def create_snapshot(cls, user):
+        return snapshots.InvoiceSnapshot(
+            captured_at=timezone.now(),
+            owner=snapshots.Owner(name=f"{user.first_name} {user.last_name}", email=user.email),
+        )
 
     @staticmethod
     def view_attestable(user):
@@ -126,20 +133,35 @@ Defines an invoice part, which is a specification of a part of an invoice.
 """
 class InvoicePart(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-    cost_centre = models.TextField(blank=True)
-    secondary_cost_centre = models.TextField(blank=True)
-    budget_line = models.TextField(blank=True)
+    gordian_budget_line = models.IntegerField(blank=True, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey('expenses.Profile', blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
+    snapshot = models.JSONField(blank=True, null=True)
+
+    def _snapshot_budget_line(self):
+        if self.snapshot and self.snapshot.get('budget_line'):
+            return self.snapshot['budget_line']
+        return None
+
+    @property
+    def cost_centre(self):
+        bl = self._snapshot_budget_line()
+        return bl['cost_center'] if bl else None
+
+    @property
+    def secondary_cost_centre(self):
+        bl = self._snapshot_budget_line()
+        return bl['secondary_cost_center'] if bl else None
+
+    @property
+    def budget_line(self):
+        bl = self._snapshot_budget_line()
+        return bl['name'] if bl else None
 
     # Returns string representation of the model
     def __str__(self):
-        return self.invoice.__str__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
-
-    # Returns unicode representation of the model
-    def __unicode__(self):
-        return self.invoice.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
+        return self.invoice.__str__() + " (" + str(self.budget_line) + ": " + str(self.amount) + " kr)"
 
     def attest(self, user):
         self.attested_by = user.profile

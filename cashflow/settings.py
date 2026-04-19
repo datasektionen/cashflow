@@ -62,6 +62,7 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'expenses',
     'invoices',
+    'cashflow',
 )
 
 MIDDLEWARE = (
