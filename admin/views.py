@@ -325,7 +325,7 @@ def expense_overview(request):
         expenses = paginator.page(1)
     except EmptyPage:
         expenses = paginator.page(paginator.num_pages)
-    
+
     pages = {
         'number': expenses.number,
         'previous_page_number': expenses.previous_page_number,
@@ -336,12 +336,13 @@ def expense_overview(request):
     }
     return render(request, 'admin/expenses/overview.html', {
         'expenses': json.dumps(
-            [x.to_dict() for x in expenses], 
+            [x.to_dict() for x in expenses],
             default=json_serial),
         'pages': pages,
         'cost_centres': json.dumps(
-            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
-        'cost_centre': cost_centre if cost_centre is not None else ''
+            list(set(ep.cost_centre for ep in ExpensePart.objects.all()))),
+        'cost_centre': cost_centre if cost_centre else '',
+
     })
 
 

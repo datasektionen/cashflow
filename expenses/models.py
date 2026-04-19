@@ -1,17 +1,17 @@
 import re
 from datetime import date
 
-import requests
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from cashflow import dauth
-from cashflow import settings
 from cashflow import email
+from cashflow import snapshots
 
 
 class Profile(models.Model):
@@ -33,10 +33,6 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name
 
-    # Return a unicode representation of the user
-    def __unicode__(self):
-        return self.user.first_name + " " + self.user.last_name
-
     # Creates a dict from the model
     def to_dict(self):
         person_dict = model_to_dict(self)
@@ -52,18 +48,10 @@ class Profile(models.Model):
 
     # Creates and returns an object with the user's properties
     def user_dict(self):
-        return {
-            'id': self.user.id,
-            'username': self.user.username,
-            'first_name': self.user.first_name,
-            'last_name': self.user.last_name,
-            'email': self.user.email,
-            'bank_info': {
-                'bank_account': self.bank_account,
-                'sorting_number': self.sorting_number,
-                'bank_name': self.bank_name
-            }
-        }
+        return {'id': self.user.id, 'username': self.user.username, 'first_name': self.user.first_name,
+                'last_name': self.user.last_name, 'email': self.user.email,
+                'bank_info': {'bank_account': self.bank_account, 'sorting_number': self.sorting_number,
+                              'bank_name': self.bank_name}}
 
     def may_view_all(self):
         return dauth.has_unscoped_permission("view-all", self.user)
@@ -85,13 +73,8 @@ class Profile(models.Model):
             # don't filter
             return True
 
-        return list(filter(
-            lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
-            [
-                ep['cost_centre']
-                for ep in ExpensePart.objects.values('cost_centre').distinct()
-            ]
-        ))
+        return list(filter(lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
+                           [ep['cost_centre'] for ep in ExpensePart.objects.values('cost_centre').distinct()]))
 
     # Returns whether the user may view attestable expenses
     def may_view_attestable(self):
@@ -145,13 +128,8 @@ class Profile(models.Model):
             # don't filter
             return True
 
-        return list(filter(
-            lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
-            [
-                ep['cost_centre']
-                for ep in ExpensePart.objects.values('cost_centre').distinct()
-            ]
-        ))
+        return list(filter(lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
+                           [ep['cost_centre'] for ep in ExpensePart.objects.values('cost_centre').distinct()]))
 
     # Returns whether the user may view attestable expenses
     def may_view_accountable(self):
@@ -164,57 +142,33 @@ class Profile(models.Model):
         if expense.reimbursement:
             return False
 
-        return (
-            dauth.has_unscoped_permission("delete", self.user)
-            or expense.owner.user.username == self.user.username
-        )
-
-    def may_edit_invoice(self):
-        return dauth.has_unscoped_permission("edit-invoice", self.user)
+        return dauth.has_unscoped_permission("delete", self.user) or expense.owner.user.username == self.user.username
 
     def may_delete_invoice(self, invoice):
         if invoice.is_payed():
             return False
 
-        return (
-            dauth.has_unscoped_permission("delete", self.user)
-            or invoice.owner.user.username == self.user.username
-        )
+        return dauth.has_unscoped_permission("delete", self.user) or invoice.owner.user.username == self.user.username
 
     def may_delete_comment(self):
         return dauth.has_unscoped_permission("moderate-comments", self.user)
 
     def is_admin(self):
         return (
-            self.may_attest_some()
-            or self.may_pay()
-            or self.may_confirm()
-            or self.may_account_some()
-            or self.may_view_all()
-        )
+                self.may_attest_some() or self.may_pay() or self.may_confirm() or self.may_account_some() or self.may_view_all())
 
     def may_be_viewed_by(self, user):
         return user.username == self.user.username or user.profile.is_admin()
 
     def may_view_expense(self, expense):
         return (
-            expense.owner.user.username == self.user.username
-            or self.may_view_all()
-            or self.may_pay()
-            or self.may_confirm()
-            or self.may_account(expense=expense)
-            or any(self.may_attest(ep) for ep in expense.expensepart_set.all())
-        )
+                expense.owner.user.username == self.user.username or self.may_view_all() or self.may_pay() or self.may_confirm() or self.may_account(
+            expense=expense) or any(self.may_attest(ep) for ep in expense.expensepart_set.all()))
 
     def may_view_invoice(self, invoice):
         return (
-            invoice.owner.user.username == self.user.username
-            or self.may_view_all()
-            or self.may_pay()
-            or self.may_confirm()
-            or self.may_account(invoice=invoice)
-            or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all())
-        )
+                invoice.owner.user.username == self.user.username or self.may_view_all() or self.may_pay() or self.may_confirm() or self.may_account(
+            invoice=invoice) or any(self.may_attest(ip) for ip in invoice.invoicepart_set.all()))
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -242,10 +196,6 @@ class Payment(models.Model):
     # Return a string representation of the payment
     def __str__(self):
         return str(self.amount) + " kr on " + str(self.date) + " transferred by " + self.payer.__str__()
-
-    # Return a unicode representation of the payment
-    def __unicode__(self):
-        return str(self.amount) + " kr on " + str(self.date) + " transferred by " + self.payer.__unicode__()
 
     # Return a dict from the model
     def to_dict(self):
@@ -282,16 +232,13 @@ class Expense(models.Model):
     reimbursement = models.ForeignKey(Payment, blank=True, null=True, on_delete=models.DO_NOTHING)
     verification = models.CharField(max_length=7, blank=True)
     is_flagged = models.BooleanField(null=True, blank=True)
+    snapshot = models.JSONField(null=True, blank=True)
 
     # Returns a string representation of the expense
     def __str__(self):
         return self.description
 
-    # Returns a unicode representation of the expense
-    def __unicode__(self):
-        return self.description
-
-    # Returns a json dict from the expense
+    # Returns a JSON dict from the expense
     def __repr__(self):
         return str(self.to_dict())
 
@@ -317,7 +264,7 @@ class Expense(models.Model):
 
     # Returns the cost_centres belonging to the expense as a list [{ cost_centres: 'Name' }, ...]
     def cost_centres(self):
-        return self.expensepart_set.order_by('cost_centre').values('cost_centre').distinct()
+        return [part.cost_centre for part in self.expensepart_set.all()]
 
     def is_attested(self):
         return self.expensepart_set.filter(attested_by__isnull=True).count() == 0
@@ -331,18 +278,22 @@ class Expense(models.Model):
         exp['owner_first_name'] = self.owner.user.first_name
         exp['owner_last_name'] = self.owner.user.last_name
         exp['amount'] = self.total_amount()
-        exp['cost_centres'] = [cost_centre['cost_centre'] for cost_centre in self.cost_centres()]
+        exp['cost_centres'] = self.cost_centres()
         exp['status'] = self.status()
         exp['is_flagged'] = self.is_flagged
         if self.reimbursement is not None:
             exp['reimbursement'] = self.reimbursement.to_dict()
         return exp
 
+    @classmethod
+    def create_snapshot(cls, user):
+        return snapshots.ExpenseSnapshot(captured_at=timezone.now(),
+                                         owner=snapshots.Owner(name=f"{user.first_name} {user.last_name}",
+                                                               email=user.email), )
+
     @staticmethod
     def view_attestable(user):
-        filters = {
-            'expensepart__attested_by': None,
-        }
+        filters = {'expensepart__attested_by': None, }
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
@@ -355,11 +306,8 @@ class Expense(models.Model):
 
     @staticmethod
     def payable():
-        return Expense.objects. \
-            filter(reimbursement=None). \
-            exclude(expensepart__attested_by=None). \
-            exclude(confirmed_by=None). \
-            order_by('owner__user__username')
+        return Expense.objects.filter(reimbursement=None).exclude(expensepart__attested_by=None).exclude(
+            confirmed_by=None).order_by('owner__user__username')
 
     @staticmethod
     def view_accountable(user):
@@ -369,10 +317,11 @@ class Expense(models.Model):
                 'expense_date')
 
         escaped = [re.escape(cc) for cc in cost_centres]
-        return Expense.objects.exclude(reimbursement=None).filter(
-            verification='',
-            expensepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
-        ).distinct().order_by('expense_date')
+        return Expense.objects.exclude(reimbursement=None).filter(verification='',
+                                                                  expensepart__cost_centre__iregex=r'(' + '|'.join(
+                                                                      escaped) + ')').distinct().order_by(
+            'expense_date')
+
 
 FILE_REGEX = re.compile(r".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
 
@@ -395,17 +344,7 @@ class File(models.Model):
 
     # Returns a dict representation of the file
     def to_dict(self):
-        return {
-            'url': self.file.url,
-            'id': self.id
-        }
-
-    # Returns true if image url ends with commit image file names
-    def is_image(self):
-        return FILE_REGEX.match(self.file.name)
-
-    def is_pdf(self):
-        return self.file.name.lower().endswith(".pdf")
+        return {'url': self.file.url, 'id': self.id}
 
 
 class ExpensePart(models.Model):
@@ -413,31 +352,39 @@ class ExpensePart(models.Model):
     Defines an expense part, which is a specification of a part of an expense.
     """
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
-    cost_centre = models.TextField(blank=True)
-    secondary_cost_centre = models.TextField(blank=True)
-    budget_line = models.TextField(blank=True)
+    gordian_budget_line = models.IntegerField(blank=True, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     attested_by = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.DO_NOTHING)
     attest_date = models.DateField(blank=True, null=True)
+    snapshot = models.JSONField(blank=True, null=True)
 
-    # Returns string representation of the model
-    def __str__(self):
-        return self.expense.__str__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
+    def _snapshot_budget_line(self):
+        if self.snapshot and self.snapshot.get('budget_line'):
+            return self.snapshot['budget_line']
+        return None
 
-    # Returns unicode representation of the model
-    def __unicode__(self):
-        return self.expense.__unicode__() + " (" + self.budget_line + ": " + str(self.amount) + " kr)"
+    @property
+    def cost_centre(self):
+        bl = self._snapshot_budget_line()
+        return bl['cost_center'] if bl else None
+
+    @property
+    def secondary_cost_centre(self):
+        bl = self._snapshot_budget_line()
+        return bl['secondary_cost_center'] if bl else None
+
+    @property
+    def budget_line(self):
+        bl = self._snapshot_budget_line()
+        return bl['name'] if bl else None
 
     def attest(self, user):
         self.attested_by = user.profile
         self.attest_date = date.today()
 
         self.save()
-        comment = Comment(
-            author=user.profile,
-            expense=self.expense,
-            content="Attesterar kvittodelen ```" + str(self) + "```"
-        )
+        comment = Comment(author=user.profile, expense=self.expense,
+                          content="Attesterar kvittodelen ```" + str(self) + "```")
         comment.save()
 
     def unattest(self, user):
@@ -446,13 +393,9 @@ class ExpensePart(models.Model):
 
         self.save()
 
-        comment = Comment(
-            author=user.profile,
-            expense=self.expense,
-            content="Avattesterar kvittodelen ```" + str(self) + "```"
-        )
+        comment = Comment(author=user.profile, expense=self.expense,
+                          content="Avattesterar kvittodelen ```" + str(self) + "```")
         comment.save()
-
 
     # Returns dict representation of the model
     def to_dict(self):
@@ -478,11 +421,6 @@ class Comment(models.Model):
     # String representation of comment
     def __str__(self):
         return self.author.__str__() + " - " + str(self.date) + ": " + self.content
-
-    # Unicode representation of comment
-    def __unicode__(self):
-        return self.author.__unicode__() + " - " + \
-               str(self.date) + ": " + self.content
 
     # Dict representation of the comment
     def to_dict(self):

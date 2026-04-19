@@ -126,11 +126,20 @@ else:
             'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
-        }
+        },
     }
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
+
+DATABASES['legacy'] = {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.getenv('LEGACY_DB_NAME', 'cashflow'),
+    'USER': os.getenv('LEGACY_DB_USER', 'cashflow'),
+    'PASSWORD': os.getenv('LEGACY_DB_PASS', 'cashflow'),
+    'HOST': os.getenv('LEGACY_DB_HOST', 'localhost'),
+    'PORT': os.getenv('LEGACY_DB_PORT', '5432'),
+}
 
 # noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days

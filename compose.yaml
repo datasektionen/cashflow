@@ -25,6 +25,11 @@ services:
       S3_BUCKET_NAME: cashflow
       S3_REGION: eu-west-1
       S3_HOST: http://localhost:9090
+      LEGACY_DB_HOST: legacy_db
+      LEGACY_DB_NAME: cashflow
+      LEGACY_DB_USER: cashflow
+      LEGACY_DB_PASS: cashflow
+      LEGACY_DB_PORT: "5432"
     command: /app/run.sh
     init: true
     ports:
@@ -44,8 +49,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      legacy_db:
+        condition: service_healthy
 
-  # Database
+  # New database
   db:
     image: postgres:18
     environment:
@@ -57,6 +64,30 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+
+  # Legacy database (load production data here)
+  legacy_db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: cashflow
+      POSTGRES_PASSWORD: cashflow
+      POSTGRES_DB: cashflow
+    volumes:
+      - legacy_db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cashflow"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+
+  # Postgres browser
+  adminer:
+    image: adminer
+    ports:
+      - 8081:8080
+    depends_on:
+      - db
+      - legacy_db
 
   # S3
   s3:
@@ -107,6 +138,7 @@ services:
     expose:
       - 8005
 
+
   # Our mock systems
   nyckeln:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
@@ -123,6 +155,9 @@ services:
         target: /config.yaml
     ports:
       - 9003:9003
+
+volumes:
+  legacy_db_data:
 
 configs:
   nginx.conf:
