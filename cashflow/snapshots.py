@@ -6,7 +6,7 @@ so for archiving/auditing reasons we want to store the exact information that wa
 """
 
 from datetime import datetime
-from typing import Literal, Final
+from typing import Final
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -32,6 +32,7 @@ class ExpensePartSnapshot(BaseModel):
     schema_version: Final[int] = CURRENT_SCHEMA_VERSION
     captured_at: datetime
     budget_line: Budgetline
+    amount: str
 
 
 class ExpenseSnapshot(BaseModel):
@@ -39,6 +40,8 @@ class ExpenseSnapshot(BaseModel):
     schema_version: Final[int] = CURRENT_SCHEMA_VERSION
     captured_at: datetime
     owner: Owner
+    expense_date: str
+    description: str
 
 
 # == Invoices ==
@@ -47,10 +50,13 @@ class InvoicePartSnapshot(BaseModel):
     schema_version: Final[int] = CURRENT_SCHEMA_VERSION
     captured_at: datetime
     budget_line: Budgetline
+    amount: str
 
 
 class InvoiceSnapshot(BaseModel):
     model_config = ConfigDict(frozen=True)
-    schema_version: Final[1] = CURRENT_SCHEMA_VERSION
+    schema_version: Final[int] = CURRENT_SCHEMA_VERSION
     captured_at: datetime
     owner: Owner
+    description: str
+    invoice_date: str

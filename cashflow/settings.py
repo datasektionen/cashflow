@@ -236,3 +236,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12

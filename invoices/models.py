@@ -90,10 +90,12 @@ class Invoice(models.Model):
         return exp
 
     @classmethod
-    def create_snapshot(cls, user):
+    def create_snapshot(cls, invoice, user):
         return snapshots.InvoiceSnapshot(
             captured_at=timezone.now(),
             owner=snapshots.Owner(name=f"{user.first_name} {user.last_name}", email=user.email),
+            description=invoice.description,
+            invoice_date=str(invoice.invoice_date),
         )
 
     @staticmethod
@@ -104,7 +106,7 @@ class Invoice(models.Model):
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
-            filters['invoicepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
+            filters['invoicepart__snapshot__budget_line__cost_center__iregex'] = r'(' + '|'.join(escaped) + ')'
         return Invoice.objects.order_by('due_date').filter(**filters).distinct()
 
     # TODO
@@ -125,7 +127,7 @@ class Invoice(models.Model):
         escaped = [re.escape(cc) for cc in cost_centres]
         return Invoice.objects.exclude(payed_at__isnull=True).filter(
             verification='',
-            invoicepart__cost_centre__iregex=r'(' + '|'.join(escaped) + ')'
+            invoicepart__snapshot__budget_line__cost_center__iregex=r'(' + '|'.join(escaped) + ')'
         ).distinct()
 
 """

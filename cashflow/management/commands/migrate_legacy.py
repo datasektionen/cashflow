@@ -86,16 +86,18 @@ class Command(BaseCommand):
                 n = copy_table(cursor, table)
                 self.stdout.write(f"Copied {n} rows from {table}")
 
+            captured_at = now()
             self.stdout.write("Migrating expenses and expense parts...")
             for row in expenses:
                 (eid, created_date, expense_date, confirmed_by_id, confirmed_at,
                  owner_id, description, reimbursement_id, verification, is_flagged,
                  first_name, last_name, email) = row
 
-                captured_at = now()
                 expense_snapshot = snapshots.ExpenseSnapshot(
                     captured_at=captured_at,
                     owner=snapshots.Owner(name=f"{first_name} {last_name}", email=email),
+                    expense_date=str(expense_date),
+                    description=description,
                 )
                 Expense.objects.update_or_create(
                     id=eid,
@@ -117,6 +119,7 @@ class Command(BaseCommand):
                             cost_center=cost_centre,
                             secondary_cost_center=secondary_cost_centre,
                         ),
+                        amount=str(amount),
                     )
                     ExpensePart.objects.update_or_create(
                         id=pid,
@@ -134,10 +137,11 @@ class Command(BaseCommand):
                  owner_id, description, file_is_original, verification, payed_at, payed_by_id,
                  first_name, last_name, email) = row
 
-                captured_at = now()
                 invoice_snapshot = snapshots.InvoiceSnapshot(
                     captured_at=captured_at,
                     owner=snapshots.Owner(name=f"{first_name} {last_name}", email=email),
+                    description=description,
+                    invoice_date=str(invoice_date),
                 )
                 Invoice.objects.update_or_create(
                     id=iid,
@@ -159,6 +163,7 @@ class Command(BaseCommand):
                             cost_center=cost_centre,
                             secondary_cost_center=secondary_cost_centre,
                         ),
+                        amount=str(amount),
                     )
                     InvoicePart.objects.update_or_create(
                         id=pid,
@@ -173,6 +178,17 @@ class Command(BaseCommand):
             for table in ["expenses_comment", "expenses_file"]:
                 n = copy_table(cursor, table)
                 self.stdout.write(f"Copied {n} rows from {table}")
+
+        with connection.cursor() as cursor:
+            for table in [
+                'auth_user',
+                'expenses_profile', 'expenses_payment',
+                'expenses_expense', 'expenses_expensepart',
+                'expenses_comment', 'expenses_file',
+                'invoices_invoice', 'invoices_invoicepart',
+            ]:
+                cursor.execute(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), COALESCE((SELECT MAX(id) FROM {table}), 1))")
+            self.stdout.write("Reset sequences for all migrated tables")
 
         self.stdout.write(self.style.SUCCESS(
             f"Done. Migrated {len(expenses)} expenses, {len(parts)} expense parts, "

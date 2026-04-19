@@ -393,7 +393,7 @@ def invoice_overview(request):
     return render(request, 'admin/invoices/overview.html', {
         'invoices': invoices,
         'cost_centres': json.dumps(
-            [x['cost_centre'] for x in ExpensePart.objects.values('cost_centre').distinct()]),
+            list(set(ep.cost_centre for ep in ExpensePart.objects.only('snapshot')))),
         'cost_centre': cost_centre if cost_centre is not None else ''
     })
 

@@ -13,6 +13,9 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
+from django.utils import timezone
+
+from cashflow import gordian, snapshots
 from expenses import models
 
 @require_http_methods(["GET", "POST"])
@@ -62,18 +65,21 @@ def new_expense(request):
             file.save()
 
         # Add the expense parts
-        for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-            request.POST.getlist("costCentres[]"),
-            request.POST.getlist("secondaryCostCentres[]"),
+        for budget_line, amount in zip(
             request.POST.getlist("budgetLines[]"),
             request.POST.getlist("amounts[]"),
         ):
+            bl_id = int(budget_line.split(",")[0])
+            part_snapshot = snapshots.ExpensePartSnapshot(
+                captured_at=timezone.now(),
+                budget_line=gordian.get_budgetline_snapshot(bl_id),
+                amount=str(amount),
+            )
             models.ExpensePart(
                 expense=expense,
-                cost_centre=cost_centre.split(",")[1],
-                secondary_cost_centre=secondary_cost_centre.split(",")[1],
-                budget_line=budget_line.split(",")[1],
+                gordian_budget_line=bl_id,
                 amount=amount,
+                snapshot=part_snapshot.model_dump(mode='json'),
             ).save()
 
     return HttpResponseRedirect(reverse('expenses-new-confirmation', kwargs={'pk': expense.id}))
@@ -131,9 +137,7 @@ def edit_expense(request, pk):
 
     new_ids = []
 
-    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-        request.POST.getlist("costCentres[]"),
-        request.POST.getlist("secondaryCostCentres[]"),
+    for budget_line, amount in zip(
         request.POST.getlist("budgetLines[]"),
         request.POST.getlist("amounts[]"),
     ):
@@ -141,12 +145,17 @@ def edit_expense(request, pk):
             messages.error(request, 'En budgetpost innehåller en felaktig summa och kunde därför inte sparas')
             continue
 
+        bl_id = int(budget_line.split(",")[0])
+        part_snapshot = snapshots.ExpensePartSnapshot(
+            captured_at=timezone.now(),
+            budget_line=gordian.get_budgetline_snapshot(bl_id),
+            amount=str(amount)
+        )
         expense_part = models.ExpensePart(
             expense=expense,
-            cost_centre=cost_centre.split(",")[1],
-            secondary_cost_centre=secondary_cost_centre.split(",")[1],
-            budget_line=budget_line.split(",")[1],
+            gordian_budget_line=bl_id,
             amount=amount,
+            snapshot=part_snapshot.model_dump(mode='json'),
         )
         expense_part.save()
         new_ids.append(expense_part.id)

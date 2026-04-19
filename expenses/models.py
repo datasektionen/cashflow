@@ -74,7 +74,7 @@ class Profile(models.Model):
             return True
 
         return list(filter(lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
-                           [ep['cost_centre'] for ep in ExpensePart.objects.values('cost_centre').distinct()]))
+                           set(ep.cost_centre for ep in ExpensePart.objects.only('snapshot') if ep.cost_centre)))
 
     # Returns whether the user may view attestable expenses
     def may_view_attestable(self):
@@ -129,7 +129,7 @@ class Profile(models.Model):
             return True
 
         return list(filter(lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
-                           [ep['cost_centre'] for ep in ExpensePart.objects.values('cost_centre').distinct()]))
+                           set(ep.cost_centre for ep in ExpensePart.objects.only('snapshot') if ep.cost_centre)))
 
     # Returns whether the user may view attestable expenses
     def may_view_accountable(self):
@@ -286,10 +286,13 @@ class Expense(models.Model):
         return exp
 
     @classmethod
-    def create_snapshot(cls, user):
-        return snapshots.ExpenseSnapshot(captured_at=timezone.now(),
-                                         owner=snapshots.Owner(name=f"{user.first_name} {user.last_name}",
-                                                               email=user.email), )
+    def create_snapshot(cls, expense, user):
+        return snapshots.ExpenseSnapshot(
+            captured_at=timezone.now(),
+            owner=snapshots.Owner(name=f"{user.first_name} {user.last_name}", email=user.email),
+            expense_date=str(expense.expense_date),
+            description=expense.description,
+        )
 
     @staticmethod
     def view_attestable(user):
@@ -297,7 +300,7 @@ class Expense(models.Model):
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             escaped = [re.escape(cc) for cc in cost_centres]
-            filters['expensepart__cost_centre__iregex'] = r'(' + '|'.join(escaped) + ')'
+            filters['expensepart__snapshot__budget_line__cost_center__iregex'] = r'(' + '|'.join(escaped) + ')'
         return Expense.objects.order_by('id', 'expense_date').filter(**filters).exclude(is_flagged=True).distinct()
 
     @staticmethod
@@ -318,7 +321,7 @@ class Expense(models.Model):
 
         escaped = [re.escape(cc) for cc in cost_centres]
         return Expense.objects.exclude(reimbursement=None).filter(verification='',
-                                                                  expensepart__cost_centre__iregex=r'(' + '|'.join(
+                                                                  expensepart__snapshot__budget_line__cost_center__iregex=r'(' + '|'.join(
                                                                       escaped) + ')').distinct().order_by(
             'expense_date')
 

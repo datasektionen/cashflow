@@ -13,8 +13,9 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
-from cashflow import email
-from cashflow import settings
+from django.utils import timezone
+
+from cashflow import email, gordian, settings, snapshots
 from expenses.models import *
 from invoices.models import *
 from invoices.models import Invoice
@@ -74,18 +75,21 @@ def new_invoice(request):
             file.save()
 
         # Add the expenseparts
-        for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-            request.POST.getlist("costCentres[]"),
-            request.POST.getlist("secondaryCostCentres[]"),
+        for budget_line, amount in zip(
             request.POST.getlist("budgetLines[]"),
             request.POST.getlist("amounts[]"),
         ):
+            bl_id = int(budget_line.split(",")[0])
+            part_snapshot = snapshots.InvoicePartSnapshot(
+                captured_at=timezone.now(),
+                budget_line=gordian.get_budgetline_snapshot(bl_id),
+                amount=str(amount),
+            )
             invoice_part = InvoicePart(
                 invoice=invoice,
-                cost_centre=cost_centre.split(",")[1],
-                secondary_cost_centre=secondary_cost_centre.split(",")[1],
-                budget_line=budget_line.split(",")[1],
+                gordian_budget_line=bl_id,
                 amount=amount,
+                snapshot=part_snapshot.model_dump(mode='json'),
             )
             invoice_part.save()
 
@@ -165,18 +169,21 @@ def edit_invoice(request, pk):
     new_ids = []
 
     # Add the expenseparts
-    for cost_centre, secondary_cost_centre, budget_line, amount in zip(
-        request.POST.getlist("costCentres[]"),
-        request.POST.getlist("secondaryCostCentres[]"),
+    for budget_line, amount in zip(
         request.POST.getlist("budgetLines[]"),
         request.POST.getlist("amounts[]"),
     ):
+        bl_id = int(budget_line.split(",")[0])
+        part_snapshot = snapshots.InvoicePartSnapshot(
+            captured_at=timezone.now(),
+            budget_line=gordian.get_budgetline_snapshot(bl_id),
+            amount=str(amount)
+        )
         invoice_part = InvoicePart(
             invoice=invoice,
-            cost_centre=cost_centre.split(",")[1],
-            secondary_cost_centre=secondary_cost_centre.split(",")[1],
-            budget_line=budget_line.split(",")[1],
+            gordian_budget_line=bl_id,
             amount=amount,
+            snapshot=part_snapshot.model_dump(mode='json'),
         )
         invoice_part.save()
         new_ids.append(invoice_part.id)

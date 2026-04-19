@@ -8,6 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
 from rest_framework.viewsets import GenericViewSet
 
+from django.utils import timezone
+
+from cashflow import gordian, snapshots
 from expenses.csrfexemptauth import CsrfExemptSessionAuthentication
 from expenses.models import Expense, ExpensePart, Profile
 
@@ -42,10 +45,17 @@ class ExpenseViewSet(GenericViewSet):
             )
 
             for part in json_args['expense_parts']:
+                bl_id = int(part['budget_line_id'])
+                part_snapshot = snapshots.ExpensePartSnapshot(
+                    captured_at=timezone.now(),
+                    budget_line=gordian.get_budgetline_snapshot(bl_id),
+                    amount=str(part['amount']),
+                )
                 p = ExpensePart(
                     expense=exp,
-                    budget_line_id=part['budget_line_id'],
-                    amount=part['amount']
+                    gordian_budget_line=bl_id,
+                    amount=part['amount'],
+                    snapshot=part_snapshot.model_dump(mode='json'),
                 )
                 parts_to_be_saved.append(p)
         except KeyError:
@@ -87,14 +97,27 @@ class ExpenseViewSet(GenericViewSet):
                             return Response(status=status.HTTP_404_NOT_FOUND)
 
                         if 'budget_line_id' in part:
-                            p.budget_line_id = part['budget_line_id']
+                            bl_id = int(part['budget_line_id'])
+                            p.gordian_budget_line = bl_id
+                            p.snapshot = snapshots.ExpensePartSnapshot(
+                                captured_at=timezone.now(),
+                                budget_line=gordian.get_budgetline_snapshot(bl_id),
+                                amount=str(part.get('amount', p.amount)),
+                            ).model_dump(mode='json')
                         if 'amount' in part:
                             p.amount = part['amount']
                     else:
+                        bl_id = int(part['budget_line_id'])
+                        part_snapshot = snapshots.ExpensePartSnapshot(
+                            captured_at=timezone.now(),
+                            budget_line=gordian.get_budgetline_snapshot(bl_id),
+                            amount=str(part['amount'])
+                        )
                         p = ExpensePart(
                             expense=exp,
-                            budget_line_id=part['budget_line_id'],
-                            amount=part['amount']
+                            gordian_budget_line=bl_id,
+                            amount=part['amount'],
+                            snapshot=part_snapshot.model_dump(mode='json'),
                         )
                     parts_to_be_saved.append(p)
         except KeyError as e:
