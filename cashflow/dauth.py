@@ -1,9 +1,10 @@
-from typing import *
+from enum import Enum
 import json
 
 import requests
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractBaseUser
+from pydantic import BaseModel
 
 from authlib.integrations.django_client import OAuth
 from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
@@ -15,6 +16,26 @@ client = OAuth().register(
     server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
     client_kwargs={"scope": "openid profile email"},
 )
+
+
+
+class Permission(str, Enum):
+    ACCOUNTING = "accounting"
+    ATTEST = "attest"
+    CONFIRM = "confirm"
+    DELETE = "delete"
+    EDIT_INVOICE = "edit-invoice"
+    MODERATE_COMMENTS = "moderate-comments"
+    PAY = "pay"
+    UNATTEST = "unattest"
+    UNCONFIRM = "unconfirm"
+    VIEW_ALL_PAYMENTS = "view-all-payments"
+    VIEW_EXPENSES = "view-expenses"
+
+class HivePermission(BaseModel):
+    id: Permission
+    scope: bool | list[str]
+
 
 
 class DAuth(object):
@@ -70,7 +91,7 @@ class DAuth(object):
             return None
 
 
-def get_permissions(user):
+def get_permissions(user) -> dict[Permission, bool | list[str]]:
     """
     Get permissions for user through the Hive API.
 
@@ -108,7 +129,7 @@ def get_permissions(user):
     return user.__dict__["cached_permissions"]
 
 
-def has_unscoped_permission(perm_id, user):
+def has_unscoped_permission(perm_id: Permission, user: AbstractBaseUser):
     """
     Check if user has a specific unscoped permission.
     """
@@ -116,7 +137,7 @@ def has_unscoped_permission(perm_id, user):
     return get_permissions(user).get(perm_id) is True
 
 
-def has_scoped_permission(perm_id, scope, user):
+def has_scoped_permission(perm_id: Permission, scope: str, user: AbstractBaseUser):
     """
     Check if user has a specific scoped permission.
     """

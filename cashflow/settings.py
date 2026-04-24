@@ -170,7 +170,7 @@ STATIC_URL = "/static/"
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, "staticfiles"),)
 
-STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "unset")
 AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "unset")
@@ -189,7 +189,9 @@ STORAGES = {
             ),
         },
     },
-    "staticfiles": STATICFILES_STORAGE,
+    "staticfiles": {
+        "BACKEND": STATICFILES_STORAGE,
+    },
 }
 
 SPAM_URL = os.getenv("SPAM_URL", "https://spam.datasektionen.se")

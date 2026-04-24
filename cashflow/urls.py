@@ -44,5 +44,6 @@ urlpatterns = [
     path(
         "api/budgetlines/", views.api.BudgetLineList.as_view(), name="budgetline-list"
     ),
+    path("api/", include("expenses.api.urls")),
     path("", include("drf_problems.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

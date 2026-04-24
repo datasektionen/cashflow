@@ -226,6 +226,8 @@ configs:
                 scope: "*"
               - id: manage-fortnox
                 scope: "*"
+              - id: view-expenses
+                scope: "*"
           - name: Konglig Lokalchef
             id: lokalchef
             domain: example.com
