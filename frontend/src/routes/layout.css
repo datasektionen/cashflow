@@ -5,18 +5,28 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
+	--color-money-green-50: #f0faf1;
+	--color-money-green-100: #dcf5de;
+	--color-money-green-200: #bbebbf;
+	--color-money-green-300: #86d98c;
+	--color-money-green-400: #4dbf57;
+	--color-money-green-500: #2ea33a;
 	--color-money-green-600: #278032;
 	--color-money-green-700: #216c2a;
+	--color-money-green-800: #1a5221;
+	--color-money-green-900: #113618;
 
 	--color-base-100: #ffffff;
 	--color-base-200: #f8fafc;
 	--color-base-300: #f1f5f9;
 	--color-base-text: #000000;
+	--color-base-subtle: #6b7280;
 
-	--color-dark-base-100: oklch(14.5% 0 0);
-	--color-dark-base-200: oklch(20.5% 0 0);
-	--color-dark-base-300: oklch(26.9% 0 0);
-	--color-dark-base-text: oklch(98.5% 0 0);
+	--color-dark-base-100: #1c1e22;
+	--color-dark-base-200: #23272f;
+	--color-dark-base-300: #2c313a;
+	--color-dark-base-text: #e2e8f0;
+	--color-dark-base-subtle: #9ca3af;
 
 	--color-secondary-50: #f0f9ff;
 	--color-secondary-100: #e0f2fe;

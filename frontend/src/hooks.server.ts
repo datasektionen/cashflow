@@ -1,3 +1,5 @@
+import type { HandleFetch } from '@sveltejs/kit';
+
 export async function handle({ event, resolve }) {
 	// Retrieve logged in (?) user from backend
 	const res = await fetch('http://localhost:8000/users/me', {
@@ -18,3 +20,16 @@ export async function handle({ event, resolve }) {
 	}
 	return await resolve(event);
 }
+
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+	// Change all requests to the Django backend to include authentication
+	if (request.url.startsWith('http://localhost:8000')) {
+		const headers = new Headers(request.headers);
+		const sessionid = event.cookies.get('sessionid');
+		const csrftoken = event.cookies.get('csrftoken');
+		headers.set('cookie', `sessionid=${sessionid}; csrftoken=${csrftoken}`);
+		if (csrftoken) headers.set('X-CSRFToken', csrftoken);
+		request = new Request(request, { headers });
+	}
+	return fetch(request);
+};
