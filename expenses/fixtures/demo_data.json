@@ -1,0 +1,796 @@
+
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser1$8M0KxH9m2m5B4S3nEWsDo7Q1oN4YI4VqBv45Q3OS9oM=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Admin",
+      "last_name": "Användare",
+      "email": "admin@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-01-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser2$4hVuvbMikqRW95NPKwH/BwW2qfYX4YNYxqjNQ4Nf8fY=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "alice",
+      "first_name": "Alice",
+      "last_name": "Andersson",
+      "email": "alice@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-02T09:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser3$wD9Goh1gQ8j9Y1vBvUdbvHhOPQe8kdfg2XQTVz7K7r0=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "bob",
+      "first_name": "Bob",
+      "last_name": "Berg",
+      "email": "bob@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-03T09:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser4$WQ8m3K9G5k0Wv0mCm/W40aL7tQWT95qgxpt22Nstl2Q=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "carl",
+      "first_name": "Carl",
+      "last_name": "Carlsson",
+      "email": "carl@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-04T09:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser5$6lAzsUeF9QeQ9B4GbJIFe3W5QK8L5EiM6n1uTnmrnEg=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "diana",
+      "first_name": "Diana",
+      "last_name": "Dahl",
+      "email": "diana@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$seeduser6$puIHh3jxv6Kq2fL3mK+YGFuJQ08UJx6dTz17G2ihFF4=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "erik",
+      "first_name": "Erik",
+      "last_name": "Ek",
+      "email": "erik@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-06T09:00:00Z"
+    }
+  },
+  {
+    "model": "expenses.payment",
+    "pk": 1,
+    "fields": {
+      "date": "2026-02-01",
+      "payer": 1,
+      "receiver": 2
+    }
+  },
+  {
+    "model": "expenses.payment",
+    "pk": 2,
+    "fields": {
+      "date": "2026-02-18",
+      "payer": 1,
+      "receiver": 4
+    }
+  },
+  {
+    "model": "expenses.payment",
+    "pk": 3,
+    "fields": {
+      "date": "2026-03-05",
+      "payer": 1,
+      "receiver": 5
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 1,
+    "fields": {
+      "created_date": "2026-02-10",
+      "expense_date": "2026-02-10",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-11",
+      "owner": 2,
+      "description": "Middag efter funktionärskväll",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 2,
+    "fields": {
+      "created_date": "2026-02-05",
+      "expense_date": "2026-02-05",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-06",
+      "owner": 2,
+      "description": "Tryck av affischer",
+      "reimbursement": 1,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 3,
+    "fields": {
+      "created_date": "2026-02-15",
+      "expense_date": "2026-02-15",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-16",
+      "owner": 3,
+      "description": "Kontorsmaterial till styrelserummet",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 4,
+    "fields": {
+      "created_date": "2026-02-20",
+      "expense_date": "2026-02-20",
+      "confirmed_by": null,
+      "confirmed_at": null,
+      "owner": 4,
+      "description": "Fika till planeringsmöte",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 5,
+    "fields": {
+      "created_date": "2026-02-22",
+      "expense_date": "2026-02-22",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-23",
+      "owner": 5,
+      "description": "Inköp av profilkläder",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": true
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 6,
+    "fields": {
+      "created_date": "2026-02-18",
+      "expense_date": "2026-02-17",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-18",
+      "owner": 4,
+      "description": "Reseersättning till workshop",
+      "reimbursement": 2,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 7,
+    "fields": {
+      "created_date": "2026-03-01",
+      "expense_date": "2026-03-01",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-03-02",
+      "owner": 6,
+      "description": "Frukt till sektionslokalen",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 8,
+    "fields": {
+      "created_date": "2026-03-03",
+      "expense_date": "2026-03-02",
+      "confirmed_by": null,
+      "confirmed_at": null,
+      "owner": 3,
+      "description": "Material till valberedningens informationskväll",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 9,
+    "fields": {
+      "created_date": "2026-03-04",
+      "expense_date": "2026-03-04",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-03-05",
+      "owner": 5,
+      "description": "Inköp av medaljer till tackgasque",
+      "reimbursement": 3,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expense",
+    "pk": 10,
+    "fields": {
+      "created_date": "2026-03-06",
+      "expense_date": "2026-03-06",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-03-07",
+      "owner": 2,
+      "description": "Uthyrning av ljus till arrangemang",
+      "reimbursement": null,
+      "verification": "",
+      "is_flagged": false
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 1,
+    "fields": {
+      "expense": 1,
+      "cost_centre": "Näringslivsgruppen",
+      "secondary_cost_centre": "Allmänt",
+      "budget_line": "Representation",
+      "amount": "430.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-10"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 2,
+    "fields": {
+      "expense": 1,
+      "cost_centre": "Kommunikationsgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Marknadsföring",
+      "amount": "120.00",
+      "attested_by": 4,
+      "attest_date": "2026-02-10"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 3,
+    "fields": {
+      "expense": 2,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Allmänt",
+      "budget_line": "Inköp profilkläder",
+      "amount": "150.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-06"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 4,
+    "fields": {
+      "expense": 3,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Kontorsmaterial",
+      "amount": "220.00",
+      "attested_by": null,
+      "attest_date": null
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 5,
+    "fields": {
+      "expense": 4,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Fika",
+      "amount": "310.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-21"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 6,
+    "fields": {
+      "expense": 5,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Inköp profilkläder",
+      "amount": "2100.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-22"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 7,
+    "fields": {
+      "expense": 6,
+      "cost_centre": "Idrottsnämnden",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Resor",
+      "amount": "980.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-18"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 8,
+    "fields": {
+      "expense": 7,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Fika",
+      "amount": "145.00",
+      "attested_by": 4,
+      "attest_date": "2026-03-01"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 9,
+    "fields": {
+      "expense": 8,
+      "cost_centre": "Studienämnden",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Informationsmaterial",
+      "amount": "560.00",
+      "attested_by": null,
+      "attest_date": null
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 10,
+    "fields": {
+      "expense": 8,
+      "cost_centre": "MKM",
+      "secondary_cost_centre": "Allmänt",
+      "budget_line": "Trycksaker",
+      "amount": "240.00",
+      "attested_by": null,
+      "attest_date": null
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 11,
+    "fields": {
+      "expense": 9,
+      "cost_centre": "Qulturnämnden",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Medaljer",
+      "amount": "780.00",
+      "attested_by": 1,
+      "attest_date": "2026-03-04"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 12,
+    "fields": {
+      "expense": 10,
+      "cost_centre": "Systemgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Utrustning",
+      "amount": "650.00",
+      "attested_by": 4,
+      "attest_date": "2026-03-06"
+    }
+  },
+  {
+    "model": "expenses.expensepart",
+    "pk": 13,
+    "fields": {
+      "expense": 10,
+      "cost_centre": "Systemgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Kablage",
+      "amount": "95.00",
+      "attested_by": 1,
+      "attest_date": "2026-03-06"
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 1,
+    "fields": {
+      "created_date": "2026-02-01",
+      "invoice_date": "2026-02-01",
+      "due_date": "2026-02-28",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-02",
+      "owner": 2,
+      "description": "Faktura för lokalhyra",
+      "file_is_original": true,
+      "verification": "",
+      "payed_at": null,
+      "payed_by": null
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 2,
+    "fields": {
+      "created_date": "2026-01-15",
+      "invoice_date": "2026-01-15",
+      "due_date": "2026-02-10",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-01-16",
+      "owner": 3,
+      "description": "Faktura för ljudutrustning",
+      "file_is_original": true,
+      "verification": "",
+      "payed_at": "2026-02-05",
+      "payed_by": 1
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 3,
+    "fields": {
+      "created_date": "2026-02-25",
+      "invoice_date": "2026-02-24",
+      "due_date": "2026-03-25",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-26",
+      "owner": 4,
+      "description": "Faktura för profilmaterial",
+      "file_is_original": false,
+      "verification": "",
+      "payed_at": null,
+      "payed_by": null
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 4,
+    "fields": {
+      "created_date": "2026-03-01",
+      "invoice_date": "2026-03-01",
+      "due_date": "2026-03-20",
+      "confirmed_by": null,
+      "confirmed_at": null,
+      "owner": 5,
+      "description": "Faktura för catering",
+      "file_is_original": true,
+      "verification": "",
+      "payed_at": null,
+      "payed_by": null
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 5,
+    "fields": {
+      "created_date": "2026-03-05",
+      "invoice_date": "2026-03-05",
+      "due_date": "2026-04-05",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-03-06",
+      "owner": 6,
+      "description": "Faktura för serverdrift",
+      "file_is_original": true,
+      "verification": "",
+      "payed_at": null,
+      "payed_by": null
+    }
+  },
+  {
+    "model": "invoices.invoice",
+    "pk": 6,
+    "fields": {
+      "created_date": "2026-02-10",
+      "invoice_date": "2026-02-10",
+      "due_date": "2026-03-10",
+      "confirmed_by": 1,
+      "confirmed_at": "2026-02-11",
+      "owner": 2,
+      "description": "Faktura för marknadsföringspaket",
+      "file_is_original": false,
+      "verification": "",
+      "payed_at": "2026-03-08",
+      "payed_by": 1
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 1,
+    "fields": {
+      "invoice": 1,
+      "cost_centre": "Näringslivsgruppen",
+      "secondary_cost_centre": "Allmänt",
+      "budget_line": "Lokalhyra",
+      "amount": "3000.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-02"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 2,
+    "fields": {
+      "invoice": 2,
+      "cost_centre": "Sektionslokalsgruppen",
+      "secondary_cost_centre": "Allmänt",
+      "budget_line": "Teknik",
+      "amount": "1200.00",
+      "attested_by": 1,
+      "attest_date": "2026-01-16"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 3,
+    "fields": {
+      "invoice": 3,
+      "cost_centre": "Kommunikationsgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Trycksaker",
+      "amount": "950.00",
+      "attested_by": 4,
+      "attest_date": "2026-02-26"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 4,
+    "fields": {
+      "invoice": 3,
+      "cost_centre": "MKM",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Profilmaterial",
+      "amount": "450.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-26"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 5,
+    "fields": {
+      "invoice": 4,
+      "cost_centre": "Qulturnämnden",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Catering",
+      "amount": "4200.00",
+      "attested_by": null,
+      "attest_date": null
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 6,
+    "fields": {
+      "invoice": 5,
+      "cost_centre": "Systemgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Serverdrift",
+      "amount": "5800.00",
+      "attested_by": 1,
+      "attest_date": "2026-03-06"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 7,
+    "fields": {
+      "invoice": 5,
+      "cost_centre": "Systemgruppen",
+      "secondary_cost_centre": "Internt",
+      "budget_line": "Domänkostnad",
+      "amount": "190.00",
+      "attested_by": 4,
+      "attest_date": "2026-03-06"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 8,
+    "fields": {
+      "invoice": 6,
+      "cost_centre": "Kommunikationsgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Marknadsföring",
+      "amount": "2100.00",
+      "attested_by": 1,
+      "attest_date": "2026-02-11"
+    }
+  },
+  {
+    "model": "invoices.invoicepart",
+    "pk": 9,
+    "fields": {
+      "invoice": 6,
+      "cost_centre": "Näringslivsgruppen",
+      "secondary_cost_centre": "Projekt",
+      "budget_line": "Samarbetsmaterial",
+      "amount": "760.00",
+      "attested_by": 4,
+      "attest_date": "2026-02-11"
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 1,
+    "fields": {
+      "expense": 1,
+      "invoice": null,
+      "date": "2026-02-10T10:00:00Z",
+      "author": 1,
+      "content": "Ser bra ut, godkänd för utbetalning."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 2,
+    "fields": {
+      "expense": null,
+      "invoice": 1,
+      "date": "2026-02-02T12:00:00Z",
+      "author": 1,
+      "content": "Fakturadelen är attesterad."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 3,
+    "fields": {
+      "expense": 3,
+      "invoice": null,
+      "date": "2026-02-16T08:15:00Z",
+      "author": 3,
+      "content": "Kan någon attestera den här delen?"
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 4,
+    "fields": {
+      "expense": 4,
+      "invoice": null,
+      "date": "2026-02-21T11:30:00Z",
+      "author": 4,
+      "content": "Kvitto uppladdat och komplett."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 5,
+    "fields": {
+      "expense": 5,
+      "invoice": null,
+      "date": "2026-02-23T09:20:00Z",
+      "author": 1,
+      "content": "Markerad för uppföljning innan utbetalning."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 6,
+    "fields": {
+      "expense": 6,
+      "invoice": null,
+      "date": "2026-02-18T14:00:00Z",
+      "author": 1,
+      "content": "Utbetalning genomförd."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 7,
+    "fields": {
+      "expense": 7,
+      "invoice": null,
+      "date": "2026-03-01T16:45:00Z",
+      "author": 6,
+      "content": "Fika till volontärer under städdag."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 8,
+    "fields": {
+      "expense": 8,
+      "invoice": null,
+      "date": "2026-03-03T07:55:00Z",
+      "author": 3,
+      "content": "Väntar på attest och kassörsbekräftelse."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 9,
+    "fields": {
+      "expense": 9,
+      "invoice": null,
+      "date": "2026-03-05T10:10:00Z",
+      "author": 1,
+      "content": "Utbetalning och attest klar."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 10,
+    "fields": {
+      "expense": 10,
+      "invoice": null,
+      "date": "2026-03-07T13:05:00Z",
+      "author": 2,
+      "content": "Delad kostnad mellan två budgetposter."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 11,
+    "fields": {
+      "expense": null,
+      "invoice": 4,
+      "date": "2026-03-02T09:40:00Z",
+      "author": 5,
+      "content": "Väntar på attest av cateringfakturan."
+    }
+  },
+  {
+    "model": "expenses.comment",
+    "pk": 12,
+    "fields": {
+      "expense": null,
+      "invoice": 5,
+      "date": "2026-03-06T17:20:00Z",
+      "author": 1,
+      "content": "Kontrollerad mot avtal och attesterad."
+    }
+  }
+]
