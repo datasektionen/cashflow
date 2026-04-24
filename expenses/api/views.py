@@ -12,12 +12,13 @@ from enum import Enum
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from cashflow import dauth
-from expenses.models import Expense
+from expenses.models import Expense, File
 
 UserModel = get_user_model()
 
@@ -27,15 +28,35 @@ class Filter(str, Enum):
     COST_CENTER = "cost_center"
 
 
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = "__all__"
+
+
 class ExpenseSerializer(serializers.ModelSerializer):
+    files = FileSerializer(many=True, source='file_set', read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Expense
         fields = "__all__"
 
 
-class ExpenseViewSet(viewsets.ReadOnlyModelViewSet):
+class ExpenseViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        files = request.FILES.getlist('files')
+        if not files:
+            raise serializers.ValidationError({"files": "At least one file is required."})
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        expense = serializer.save(owner=request.user.profile)
+        for f in files:
+            File.objects.create(expense=expense, file=f)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
 

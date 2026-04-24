@@ -43,6 +43,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.append("http://localhost:5173")
+
 # Application definition
 
 INSTALLED_APPS = (

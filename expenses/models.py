@@ -257,23 +257,11 @@ class Payment(models.Model):
 
     # Return a string representation of the payment
     def __str__(self):
-        return (
-            str(self.amount)
-            + " kr on "
-            + str(self.date)
-            + " transferred by "
-            + self.payer.__str__()
-        )
+        return f"Payment #{self.id} on {self.date} to {self.receiver}"
 
     # Return a unicode representation of the payment
     def __unicode__(self):
-        return (
-            str(self.amount)
-            + " kr on "
-            + str(self.date)
-            + " transferred by "
-            + self.payer.__unicode__()
-        )
+        return f"Payment #{self.id} on {self.date} to {self.receiver}"
 
     # Return a dict from the model
     def to_dict(self):

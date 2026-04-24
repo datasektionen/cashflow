@@ -2,8 +2,10 @@ FROM python:3.14.3-alpine AS prod
 
 ENV TZ=Europe/Stockholm
 
-RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2
-RUN pip install --no-cache-dir poetry
+# The poetry version on APK is outdated and does not work with our lockfile
+# => install using pip
+RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 && \
+    pip install --no-cache-dir poetry==2.3.4
 
 WORKDIR /app
 

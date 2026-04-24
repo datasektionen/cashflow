@@ -10,11 +10,12 @@
 import factory
 import pytest
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from factory.django import DjangoModelFactory
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
-from expenses.models import Expense, ExpensePart, Profile
+from expenses.models import Expense, ExpensePart, Profile, File
 
 
 class UserFactory(DjangoModelFactory):
@@ -42,6 +43,16 @@ class ExpenseFactory(DjangoModelFactory):
     owner = factory.SubFactory(ProfileFactory)
     description = factory.Faker("text")
     expense_date = factory.Faker("date")
+    file = factory.RelatedFactory("expenses.tests.ExpenseFileFactory", factory_related_name="expense")
+
+
+class ExpenseFileFactory(DjangoModelFactory):
+    class Meta:
+        model = File
+
+    expense = factory.SubFactory(ExpenseFactory)
+    invoice = None
+    file = factory.django.FileField()
 
 
 class ExpensePartFactory(DjangoModelFactory):
@@ -147,3 +158,30 @@ def test_filter_by_cost_center(user, client, mocker):
     response = client.get("/api/expenses/", {"cost_center": target_cc})
 
     assert len(response.data) == 5
+
+
+def test_expenses_create_accepts_files(user, client):
+    file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
+    file2 = SimpleUploadedFile("receipt2.jpg", b"content", content_type="image/jpeg")
+
+    response = client.post("/api/expenses/",
+                           {"description": "Test expense", "files": [file, file2], "expense_date": "2026-01-01"},
+                           format="multipart")
+
+    assert response.status_code == 201
+
+
+def test_expenses_create_cant_set_other_owner(user, client):
+    target_user = UserFactory()
+    file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
+
+    response = client.post("/api/expenses/", {"description": "Test expense", "expense_date": "2026-01-01",
+        "owner": target_user.profile.id,  # not allowed
+        "files": [file], }, format="multipart")
+
+    assert response.data["owner"] == user.profile.id
+
+
+def test_expenses_create_must_contain_file(user, client):
+    response = client.post("/api/expenses/", {"description": "Test expense", "expense_date": "2026-01-01", })
+    assert response.status_code == 400
