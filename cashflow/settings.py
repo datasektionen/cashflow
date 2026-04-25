@@ -51,15 +51,16 @@ CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 
 INSTALLED_APPS = ('django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
                   'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
-                  'django.contrib.humanize', 'rest_framework', 'storages', 'corsheaders', 'widget_tweaks', 'expenses',
-                  'invoices', 'fortnox',)
+                  'django.contrib.humanize', 'rest_framework', 'storages', 'corsheaders', 'widget_tweaks', 'cashflow',
+                  'expenses', 'invoices', 'fortnox',)
 
 MIDDLEWARE = ('corsheaders.middleware.CorsMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
               'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware',
               'django.contrib.auth.middleware.AuthenticationMiddleware',
               'django.contrib.messages.middleware.MessageMiddleware',
               'django.middleware.clickjacking.XFrameOptionsMiddleware', 'django.middleware.security.SecurityMiddleware',
-              'whitenoise.middleware.WhiteNoiseMiddleware', 'fortnox.django.FortnoxMiddleware',)
+              'whitenoise.middleware.WhiteNoiseMiddleware', 'fortnox.django.FortnoxMiddleware',
+              'fortnox.django.FortnoxServiceMiddleware',)
 
 ROOT_URLCONF = 'cashflow.urls'
 
@@ -181,9 +182,16 @@ GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
 # Fortnox settings
 #
 
+
+# Callback to determine if a user should be able to use the Fortnox integration
+FORTNOX_SERVICE_AUTH = "cashflow.utils.has_accounting_permissions"
+
+# Callback to determine that a user (Kassör) can authenticate the integration
+FORTNOX_ALLOW_AUTHENTICATION_CALLBACK = "cashflow.utils.may_authenticate_fortnox"
+
 # How long to cache (active) accounts and cost centers retrieved from Fortnox
-FORTNOX_ACCOUNT_CACHE_TIMEOUT = 12
-FORTNOX_COST_CENTER_CACHE_TIMEOUT = 12
+FORTNOX_ACCOUNT_CACHE_TIMEOUT = 24
+FORTNOX_COST_CENTER_CACHE_TIMEOUT = 24
 FORTNOX_CLIENT_ID = os.getenv('FORTNOX_CLIENT_ID', 'client_id')
 FORTNOX_CLIENT_SECRET = os.getenv('FORTNOX_CLIENT_SECRET')
 FORTNOX_SCOPE = ['bookkeeping', 'companyinformation', 'settings', 'customer', 'profile', 'costcenter']

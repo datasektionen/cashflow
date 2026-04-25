@@ -224,6 +224,8 @@ configs:
                 scope: "*"
               - id: attest-firmatecknare
                 scope: "*"
+              - id: manage-fortnox
+                scope: "*"
           - name: Konglig Lokalchef
             id: lokalchef
             domain: example.com
@@ -232,3 +234,5 @@ configs:
             permissions:
               - id: attest
                 scope: Sektionslokalsgruppen
+              - id: accounting
+                scope: "*"

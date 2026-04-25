@@ -1,6 +1,7 @@
 {% extends "detail.html" %}
 {% load humanize %}
 {% load admin_counts %}
+{% load fortnox_perms %}
 
 {% block title %}Administration{% endblock %}
 
@@ -65,7 +66,7 @@
                 <li><a href="{% url 'admin-user-overview' %}">Användare</a></li>
                 <li><a href="{% url 'admin-search-verification' %}">Sök verifikation</a></li>
                 <li><a href="{% url 'admin-list-verification' %}">Lista verifikat</a></li>
-                {% if user.profile.may_firmatecknare %}
+                {% if user|may_authenticate_fortnox %}
                 <li><a href="{% url 'fortnox-overview' %}">Fortnox</a></li>
                 {% endif %}
             </ul>

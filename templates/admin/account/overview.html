@@ -46,7 +46,9 @@
                             {% if part.expense == expense %}
                                 <div class="row">
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                        <option label="{{ default_account.Number}} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                        {% if default_account %}
+                                            <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                        {% endif %}
                                         {% for account in accounts %}
                                         	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
                                         {% endfor %}
@@ -105,7 +107,9 @@
                         {% if part.invoice == invoice %}
                             <div class="row">
                                 <select name="part-{{ part.id }}-account" class="col-sm-1">
-                                    <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                    {% if default_account %}
+                                        <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                    {% endif %}
                                     {% for account in accounts %}
                                     	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
                                     {% endfor %}

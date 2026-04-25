@@ -165,8 +165,12 @@ def account_overview(request: FortnoxRequest):
     accountable_expenses = Expense.view_accountable(request.user)
 
 
-    # Retrieves the fortnox account for the given part
-    get_account = lambda part: request.fortnox.retrieve_account(gordian.retrieve_account_from_gordian(part)[0])
+    # Retrieves the fortnox account for the given part, or None if the lookup fails
+    def get_account(part):
+        try:
+            return request.fortnox_service.retrieve_account(gordian.retrieve_account_from_gordian(part)[0])
+        except Exception:
+            return None
 
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default

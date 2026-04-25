@@ -24,11 +24,6 @@ class Migration(migrations.Migration):
             name='is_digital',
         ),
         migrations.AlterField(
-            model_name='bankaccount',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
-        ),
-        migrations.AlterField(
             model_name='comment',
             name='author',
             field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='expenses.profile'),
@@ -80,11 +75,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='payment',
-            name='account',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='expenses.bankaccount'),
-        ),
-        migrations.AlterField(
-            model_name='payment',
             name='id',
             field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
@@ -97,11 +87,6 @@ class Migration(migrations.Migration):
             model_name='payment',
             name='receiver',
             field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='receiver', to='expenses.profile'),
-        ),
-        migrations.AlterField(
-            model_name='profile',
-            name='default_account',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='expenses.bankaccount'),
         ),
         migrations.AlterField(
             model_name='profile',

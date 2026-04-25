@@ -2,7 +2,8 @@ FROM python:3.14.3-alpine AS prod
 
 ENV TZ=Europe/Stockholm
 
-RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 poetry
+RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2
+RUN pip install --no-cache-dir poetry
 
 WORKDIR /app
 

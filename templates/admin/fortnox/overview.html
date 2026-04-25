@@ -1,15 +1,18 @@
 {% extends "../main.html" %}
+{% load fortnox_perms %}
 
 {% block title %}Fortnox{% endblock %}
 
 {% block content %}
 
 
-    {% if fortnox_user_name is not None %}
-        <p>Du är inloggad som {{ fortnox_user_name }}</p>
-        <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox </a>
-    {% else %}
-        <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>
+    {% if user|may_authenticate_fortnox %}
+        {% if fortnox_user_name is not None %}
+            <p>Du är inloggad som {{ fortnox_user_name }}</p>
+            <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox </a>
+        {% else %}
+            <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>
+        {% endif %}
     {% endif %}
 
 
