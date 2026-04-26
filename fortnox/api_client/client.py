@@ -1,7 +1,7 @@
 import base64
 import logging
 from enum import Enum
-from typing import Union, Literal, Any, Optional, Callable
+from typing import Union, Literal, Any, Optional, Callable, Unpack
 from urllib import parse
 
 import requests
@@ -10,8 +10,8 @@ from pydantic import BaseModel, TypeAdapter, RootModel, Field
 from fortnox.api_client.exceptions import CODE_EXCEPTION_MAPPING, FortnoxAPIError, ResponseParsingError, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    ListMetaInformaion, CostCenter, CompanyInformation, VoucherSeriesListItem, VoucherSeries, Expense, Voucher, \
-    VoucherCreate, FinancialYear
+    ListMetaInformaion, CostCenter, CostCenterFields, CompanyInformation, VoucherSeriesListItem, VoucherSeries, \
+    Expense, Voucher, VoucherCreate, FinancialYear
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class FortnoxAPIClient:
         response = self._get("costcenters", {"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, CostCenter, "CostCenters")[0]
 
-    def find_cost_center(self, access_token: str = None, **fields) -> CostCenter:
+    def find_cost_center(self, access_token: str = None, **fields: Unpack[CostCenterFields]) -> CostCenter:
         """Finds the first cost center on Fortnox that matches the given fields."""
         page = 1
         while True:

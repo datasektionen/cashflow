@@ -2,7 +2,7 @@
 This module defines Pydantic data modules that are used to
 validate and (de)serialize data passed to and from the API.
 """
-from typing import Literal, Optional
+from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel, constr, conint, Field, AliasChoices
 
@@ -55,6 +55,15 @@ class CostCenter(BaseModel):
     Code: constr(min_length=1, max_length=6)
     Description: constr(min_length=1)
     Note: Optional[str] = None
+
+
+# This model is used by find_cost_center to give good type hints
+class CostCenterFields(TypedDict, total=False):
+    url: Optional[str]
+    Active: Optional[bool]
+    Code: str
+    Description: str
+    Note: Optional[str]
 
 
 class Expense(BaseModel):
