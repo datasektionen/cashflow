@@ -106,7 +106,6 @@ class FortnoxAPIClient:
         while True:
             response = self._get("costcenters", parameters={"page": page}, access_token=access_token)
             data, meta = self._parse_list_response(response, CostCenter, "CostCenters")
-            page = meta.CurrentPage
             for cc in data:
                 cc_data = cc.model_dump()
 
@@ -116,6 +115,8 @@ class FortnoxAPIClient:
 
             if page >= meta.TotalPages:
                 break
+
+            page += 1
 
         raise FortnoxNotFound(f"Could not find a cost center matching {fields}")
 
