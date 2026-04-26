@@ -28,8 +28,6 @@ dependencies = [
     "pydantic (>=2.12.5,<3.0.0)",
     "setuptools (>=82.0.0,<83.0.0)",
     "boto3 (>=1.42.63,<2.0.0)",
-    "redis (>=7.2.0,<8.0.0)",
-    "djangorestframework-stubs (>=3.16.8,<4.0.0)",
 ]
 
 
@@ -45,5 +43,6 @@ dev = [
     "django-extensions",
     "pytest (>=9.0.3,<10.0.0)",
     "factory-boy (>=3.3.3,<4.0.0)",
-    "pytest-django (>=4.12.0,<5.0.0)"
+    "pytest-django (>=4.12.0,<5.0.0)",
+    "djangorestframework-stubs (>=3.16.8,<4.0.0)",
 ]

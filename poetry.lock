@@ -33,7 +33,7 @@ version = "3.11.0"
 description = "ASGI specs, helper code, and adapters"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "asgiref-3.11.0-py3-none-any.whl", hash = "sha256:1db9021efadb0d9512ce8ffaf72fcef601c7b73a8807a1bb2ef143dc6b14846d"},
     {file = "asgiref-3.11.0.tar.gz", hash = "sha256:13acff32519542a1736223fb79a715acdebe24286d98e8b164a73085f40da2c4"},
@@ -578,7 +578,7 @@ version = "6.0.3"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.12"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "django-6.0.3-py3-none-any.whl", hash = "sha256:2e5974441491ddb34c3f13d5e7a9f97b07ba03bf70234c0a9c68b79bbb235bc3"},
     {file = "django-6.0.3.tar.gz", hash = "sha256:90be765ee756af8a6cbd6693e56452404b5ad15294f4d5e40c0a55a0f4870fe1"},
@@ -651,7 +651,7 @@ version = "5.2.9"
 description = "Mypy stubs for Django"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "django_stubs-5.2.9-py3-none-any.whl", hash = "sha256:2317a7130afdaa76f6ff7f623650d7f3bf1b6c86a60f95840e14e6ec6de1a7cd"},
     {file = "django_stubs-5.2.9.tar.gz", hash = "sha256:c192257120b08785cfe6f2f1c91f1797aceae8e9daa689c336e52c91e8f6a493"},
@@ -674,7 +674,7 @@ version = "5.2.9"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "django_stubs_ext-5.2.9-py3-none-any.whl", hash = "sha256:230c51575551b0165be40177f0f6805f1e3ebf799b835c85f5d64c371ca6cf71"},
     {file = "django_stubs_ext-5.2.9.tar.gz", hash = "sha256:6db4054d1580657b979b7d391474719f1a978773e66c7070a5e246cd445a25a9"},
@@ -720,7 +720,7 @@ version = "3.16.8"
 description = "PEP-484 stubs for django-rest-framework"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "djangorestframework_stubs-3.16.8-py3-none-any.whl", hash = "sha256:c5bf61def0f330a071dd5f470f05710189d06c467b3f3e186b32c5a23d4952fb"},
     {file = "djangorestframework_stubs-3.16.8.tar.gz", hash = "sha256:f6d464b54fa2f929610e957446c04e6ac29558265418e0a2d9f653a4cdd410b5"},
@@ -1348,26 +1348,6 @@ files = [
 six = ">=1.5"
 
 [[package]]
-name = "redis"
-version = "7.2.0"
-description = "Python client for Redis database and key-value store"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "redis-7.2.0-py3-none-any.whl", hash = "sha256:01f591f8598e483f1842d429e8ae3a820804566f1c73dca1b80e23af9fba0497"},
-    {file = "redis-7.2.0.tar.gz", hash = "sha256:4dd5bf4bd4ae80510267f14185a15cba2a38666b941aff68cccf0256b51c1f26"},
-]
-
-[package.extras]
-circuit-breaker = ["pybreaker (>=1.4.0)"]
-hiredis = ["hiredis (>=3.2.0)"]
-jwt = ["pyjwt (>=2.9.0)"]
-ocsp = ["cryptography (>=36.0.1)", "pyopenssl (>=20.0.1)", "requests (>=2.31.0)"]
-otel = ["opentelemetry-api (>=1.39.1)", "opentelemetry-exporter-otlp-proto-http (>=1.39.1)", "opentelemetry-sdk (>=1.39.1)"]
-xxhash = ["xxhash (>=3.6.0,<3.7.0)"]
-
-[[package]]
 name = "requests"
 version = "2.32.5"
 description = "Python HTTP for Humans."
@@ -1446,7 +1426,7 @@ version = "0.5.5"
 description = "A non-validating SQL parser."
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "sqlparse-0.5.5-py3-none-any.whl", hash = "sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba"},
     {file = "sqlparse-0.5.5.tar.gz", hash = "sha256:e20d4a9b0b8585fdf63b10d30066c7c94c5d7a7ec47c889a2d83a3caa93ff28e"},
@@ -1462,7 +1442,7 @@ version = "6.0.12.20250915"
 description = "Typing stubs for PyYAML"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"},
     {file = "types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"},
@@ -1474,7 +1454,7 @@ version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
     {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
@@ -1506,7 +1486,7 @@ files = [
     {file = "tzdata-2025.3-py2.py3-none-any.whl", hash = "sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1"},
     {file = "tzdata-2025.3.tar.gz", hash = "sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7"},
 ]
-markers = {dev = "platform_system == \"Windows\""}
+markers = {dev = "sys_platform == \"win32\" or platform_system == \"Windows\""}
 
 [[package]]
 name = "tzlocal"
@@ -1586,4 +1566,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.14.3"
-content-hash = "b420aca1fb47e586d809a1b754c4855cc430ee06fa796b9f1a5f06444fb2a811"
+content-hash = "75baa32edcc9e2795616fa8f821665bb208a808663d2b8573cc4ecd83372bff9"
