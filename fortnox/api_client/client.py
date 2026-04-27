@@ -10,8 +10,8 @@ from pydantic import BaseModel, TypeAdapter, RootModel, Field
 from fortnox.api_client.exceptions import CODE_EXCEPTION_MAPPING, FortnoxAPIError, ResponseParsingError, \
     FortnoxNotFound, FortnoxAuthenticationError
 from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Error, AccessTokenResponse, Account, \
-    ListMetaInformaion, CostCenter, CostCenterFields, CompanyInformation, VoucherSeriesListItem, VoucherSeries, \
-    Expense, Voucher, VoucherCreate, FinancialYear
+    ListMetaInformaion, CostCenter, _CostCenterFields, CompanyInformation, VoucherSeriesListItem, VoucherSeries, \
+    Expense, Voucher, VoucherCreate, FinancialYear, _VoucherFields
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class FortnoxAPIClient:
         response = self._get("costcenters", {"limit": limit, "page": page}, access_token=access_token)
         return self._parse_list_response(response, CostCenter, "CostCenters")[0]
 
-    def find_cost_center(self, access_token: str = None, **fields: Unpack[CostCenterFields]) -> CostCenter:
+    def find_cost_center(self, access_token: str = None, **fields: Unpack[_CostCenterFields]) -> CostCenter:
         """Finds the first cost center on Fortnox that matches the given fields."""
         page = 1
         while True:
@@ -193,6 +193,26 @@ class FortnoxAPIClient:
     def retrieve_voucher_series(self, code: str, access_token: str = None) -> VoucherSeries:
         response = self._get(f"voucherseries/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, VoucherSeries, "VoucherSeries")
+
+    def find_voucher(self, access_token: str = None, **fields: Unpack[_VoucherFields]) -> Voucher:
+        """Finds the first voucher that matches the given fields"""
+        page = 1
+        while True:
+            response = self._get("vouchers", parameters={"page": page}, access_token=access_token)
+            data, meta = self._parse_list_response(response, Voucher, "Vouchers")
+            for v in data:
+                v_data = v.model_dump()
+
+                # Check that given fields match
+                if all(v_data.get(k) == val for k, val in fields.items()):
+                    return v
+
+            if page >= meta.TotalPages:
+                break
+
+            page += 1
+
+        raise FortnoxNotFound(f"Could not find a voucher matching {fields}")
 
     # ======================
     # Helpers

@@ -202,3 +202,7 @@ FORTNOX_EXPENSE_CREDIT_ACCOUNT = 2820
 FORTNOX_INVOICE_CREDIT_ACCOUNT = 2440
 FORTNOX_EXPENSE_VOUCHER_SERIES = "E"
 FORTNOX_INVOICE_VOUCHER_SERIES = "U"
+
+# When accounting to Fortnox a comment will be added following this format
+# kind = expense | invoice
+FORTNOX_CASHFLOW_COMMENT_FORMAT = "[cashflow:{kind}:{id}]"

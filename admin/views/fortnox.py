@@ -4,13 +4,14 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from expenses.models import Expense
+from fortnox import FortnoxNotFound
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
 from fortnox.django import FortnoxRequest, require_fortnox_auth, require_fortnox_permission
@@ -95,6 +96,18 @@ def disconnect(request):
 def account_expense(request: FortnoxRequest, **kwargs):
     expense = Expense.objects.get(id=kwargs['id'])
 
+    # This is used to uniquely identify the cashflow expense in Fortnox
+    comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='expense', id=expense.id)} {expense.description}"
+
+    # Sanity check in the rare case that the expense has already been accounted in Fortnox
+    try:
+        request.fortnox_service.find_voucher(Comments=comment)
+        logger.warning(f"Expense {expense.id} is already accounted in Fortnox; aborting")
+        return HttpResponse(f"Expense {expense.id} is already accounted in Fortnox", status=409,
+                            content_type="text/plain")
+    except FortnoxNotFound:
+        pass
+
     voucher_rows: list[VoucherRow] = []
     credit_row = VoucherRow(Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT, Credit=float(expense.total_amount()))
     voucher_rows.append(credit_row)
@@ -107,7 +120,7 @@ def account_expense(request: FortnoxRequest, **kwargs):
     created = request.fortnox_service.create_voucher(
         VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
                       VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
-                      Comments=f"Cashflow expense {expense.id}: {expense.description}"))
+                      Comments=comment))
     expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
     expense.save()
     logger.info(f"{request.user} accounted for expense {expense.id}")
@@ -117,6 +130,18 @@ def account_expense(request: FortnoxRequest, **kwargs):
 @require_POST
 def account_invoice(request: FortnoxRequest, **kwargs):
     invoice = Invoice.objects.get(id=kwargs['id'])
+
+    # This is used to uniquely identify the cashflow invoice in Fortnox
+    comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='invoice', id=invoice.id)} {invoice.description}"
+
+    # Sanity check in the rare case that the invoice has already been accounted in Fortnox
+    try:
+        request.fortnox_service.find_voucher(Comments=comment)
+        logger.warning(f"Invoice {invoice.id} is already accounted in Fortnox; aborting")
+        return HttpResponse(f"Invoice {invoice.id} is already accounted in Fortnox", status=409,
+                            content_type="text/plain")
+    except FortnoxNotFound:
+        pass
 
     voucher_rows: list[VoucherRow] = []
     credit_row = VoucherRow(Account=settings.FORTNOX_INVOICE_CREDIT_ACCOUNT, Credit=float(invoice.total_amount()))
@@ -130,7 +155,7 @@ def account_invoice(request: FortnoxRequest, **kwargs):
     created = request.fortnox_service.create_voucher(
         VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
                       VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
-                      Comments=f"Cashflow invoice {invoice.id}: {invoice.description}"))
+                      Comments=comment))
     invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
     invoice.save()
     logger.info(f"{request.user} accounted for invoice {kwargs['id']}")

@@ -58,7 +58,7 @@ class CostCenter(BaseModel):
 
 
 # This model is used by find_cost_center to give good type hints
-class CostCenterFields(TypedDict, total=False):
+class _CostCenterFields(TypedDict, total=False):
     url: Optional[str]
     Active: Optional[bool]
     Code: str
@@ -118,6 +118,23 @@ class Voucher(BaseModel):
     VoucherRows: Optional[list[VoucherRow]] = None
     VoucherSeries: str
     Year: int
+
+
+class _VoucherFields(TypedDict, total=False):
+    url: Optional[str]
+    ApprovalState: Optional[int]
+    Comments: Optional[constr(max_length=1000)]
+    CostCenter: Optional[str]
+    Description: Optional[constr(min_length=1, max_length=200)]
+    Project: Optional[str]
+    ReferenceNumber: Optional[str]
+    ReferenceType: Optional[Literal[
+        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]]
+    TransactionDate: Optional[str]
+    VoucherNumber: Optional[int]
+    VoucherRows: Optional[list[VoucherRow]]
+    VoucherSeries: Optional[str]
+    Year: Optional[int]
 
 
 class VoucherCreate(BaseModel):
