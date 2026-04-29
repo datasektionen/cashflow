@@ -325,3 +325,6 @@ FORTNOX_INVOICE_VOUCHER_SERIES = "U"
 
 # When accounting to Fortnox the description fill follow this format
 FORTNOX_DESCRIPTION_FORMAT = "{description} (cashflow:{kind}:{id})"
+
+# Class to use to determine accounting permissions
+ACCOUNTING_PERMISSION_PROVIDER = "cashflow.dauth.HiveAccountingPermissions"

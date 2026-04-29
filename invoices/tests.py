@@ -1,3 +1,38 @@
-from django.test import TestCase
+import factory
+from factory.django import DjangoModelFactory
 
-# Create your tests here.
+from expenses.models import File
+from expenses.tests import ProfileFactory
+from invoices.models import Invoice, InvoicePart
+
+
+class InvoiceFactory(DjangoModelFactory):
+    class Meta:
+        model = Invoice
+
+    owner = factory.SubFactory(ProfileFactory)
+    description = factory.Faker("text")
+    invoice_date = factory.Faker("date")
+    due_date = factory.Faker("date")
+    file_is_original = True
+    file = factory.RelatedFactory("invoices.tests.InvoiceFileFactory", factory_related_name="invoice")
+
+
+class InvoiceFileFactory(DjangoModelFactory):
+    class Meta:
+        model = File
+
+    expense = None
+    invoice = factory.SubFactory(InvoiceFactory)
+    file = factory.django.FileField()
+
+
+class InvoicePartFactory(DjangoModelFactory):
+    class Meta:
+        model = InvoicePart
+
+    invoice = factory.SubFactory(InvoiceFactory)
+    cost_centre = factory.Faker("word")
+    secondary_cost_centre = factory.Faker("word")
+    budget_line = factory.Faker("word")
+    amount = factory.Faker("pydecimal", left_digits=5, right_digits=2, positive=True)

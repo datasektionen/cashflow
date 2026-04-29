@@ -176,8 +176,8 @@ def test_expenses_create_cant_set_other_owner(user, client):
     file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
 
     response = client.post("/api/expenses/", {"description": "Test expense", "expense_date": "2026-01-01",
-        "owner": target_user.profile.id,  # not allowed
-        "files": [file], }, format="multipart")
+                                              "owner": target_user.profile.id,  # not allowed
+                                              "files": [file], }, format="multipart")
 
     assert response.data["owner"] == user.profile.id
 

@@ -1,13 +1,15 @@
-from enum import Enum
 import json
+from enum import Enum
 
 import requests
+from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
+from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib.auth.models import User, AbstractBaseUser
+from django.db.models import QuerySet
 from pydantic import BaseModel
 
-from authlib.integrations.django_client import OAuth
-from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
+import accounting.permissions
 
 client = OAuth().register(
     name="sso",
@@ -16,7 +18,6 @@ client = OAuth().register(
     server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
     client_kwargs={"scope": "openid profile email"},
 )
-
 
 
 class Permission(str, Enum):
@@ -32,10 +33,42 @@ class Permission(str, Enum):
     VIEW_ALL_PAYMENTS = "view-all-payments"
     VIEW_EXPENSES = "view-expenses"
 
+
 class HivePermission(BaseModel):
     id: Permission
     scope: bool | list[str]
 
+
+class HiveAccountingPermissions(accounting.permissions.AccountingPermissionProvider):
+
+    def _get_accounting_scopes(self, user: User) -> list[str]:
+        return get_permissions(user).get(Permission.ACCOUNTING, [])
+
+    def may_account(self, target, user) -> bool:
+        from expenses.models import Expense
+        from invoices.models import Invoice
+        scopes = self._get_accounting_scopes(user)
+        if "*" in scopes:
+            return True
+        if isinstance(target, Expense):
+            return target.parts.filter(cost_centre__in=scopes).exists()
+        elif isinstance(target, Invoice):
+            return target.parts.filter(cost_centre__in=scopes).exists()
+        raise TypeError(f"Expected an expense or invoice, got {target.__class__.__name__}")
+
+    def accountable_expenses(self, user: User) -> QuerySet:
+        from expenses.models import Expense
+        scopes = self._get_accounting_scopes(user)
+        if "*" in scopes:
+            return Expense.objects.all()
+        return Expense.objects.filter(expensepart__cost_centre__in=scopes).distinct()
+
+    def accountable_invoices(self, user: User) -> QuerySet:
+        from invoices.models import Invoice
+        scopes = self._get_accounting_scopes(user)
+        if "*" in scopes:
+            return Invoice.objects.all()
+        return Invoice.objects.filter(invoicepart__cost_centre__in=scopes).distinct()
 
 
 class DAuth(object):
@@ -121,12 +154,12 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
             elif perm_id not in mapping:
                 mapping[perm_id] = [scope.lower()]
             elif mapping[perm_id] is not True:
-                mapping[perm_id].append(scope.lower())
-            # else: don't overwrite an existing True (do nothing)
+                mapping[perm_id].append(scope.lower())  # else: don't overwrite an existing True (do nothing)
 
         user.__dict__["cached_permissions"] = mapping
 
     return user.__dict__["cached_permissions"]
+
 
 
 def has_unscoped_permission(perm_id: Permission, user: AbstractBaseUser):
