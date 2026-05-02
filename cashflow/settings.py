@@ -61,7 +61,7 @@ MIDDLEWARE = ('corsheaders.middleware.CorsMiddleware', 'django.contrib.sessions.
               'django.contrib.messages.middleware.MessageMiddleware',
               'django.middleware.clickjacking.XFrameOptionsMiddleware', 'django.middleware.security.SecurityMiddleware',
               'whitenoise.middleware.WhiteNoiseMiddleware', 'fortnox.django.FortnoxMiddleware',
-              'fortnox.django.FortnoxServiceMiddleware',)
+              'fortnox.django.FortnoxServiceMiddleware', 'cashflow.middleware.StructlogContextMiddleware')
 
 ROOT_URLCONF = 'cashflow.urls'
 
