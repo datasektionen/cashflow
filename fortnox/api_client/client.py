@@ -3,6 +3,8 @@ import logging
 from enum import Enum
 from typing import Union, Literal, Any, Optional, Callable, Unpack
 from urllib import parse
+from structlog import get_logger
+from structlog.contextvars import bind_contextvars, bound_contextvars, clear_contextvars, merge_contextvars, unbind_contextvars
 
 import requests
 from pydantic import BaseModel, TypeAdapter, RootModel, Field
@@ -13,7 +15,7 @@ from fortnox.api_client.models import Me, AuthCodeGrant, RefreshTokenGrant, Erro
     ListMetaInformaion, CostCenter, _CostCenterFields, CompanyInformation, VoucherSeriesListItem, VoucherSeries, \
     Expense, Voucher, VoucherCreate, FinancialYear, _VoucherFields
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class FortnoxAPIClient:
@@ -224,6 +226,9 @@ class FortnoxAPIClient:
         if isinstance(data.get(label), model):
             return data[label]
         elif isinstance(data.get("ErrorInformation"), Error):
+            error = data["ErrorInformation"]
+            bind_contextvars(fortnox_request_status_code=error.Code)
+            bind_contextvars(fortnox_request_error_message=error.Message)
             raise cls._parse_error(data["ErrorInformation"])
         else:
             raise ResponseParsingError("Unknown or invalid API response from Fortnox")
@@ -253,7 +258,10 @@ class FortnoxAPIClient:
 
         headers = {'Authorization': f'Bearer {access_token}'}
         url_params = "?" + parse.urlencode(parameters) if parameters is not None else ""
-        response = requests.get(f"{self.API_URL}/{endpoint}/{url_params}", headers=headers)
+        url = f"{self.API_URL}/{endpoint}/{url_params}"
+        bind_contextvars(fortnox_request_url=url)
+        response = requests.get(url, headers=headers)
+        bind_contextvars(fortnox_response_status_code=response.status_code)
         logger.debug(response)
 
         # TODO: Handle more errors
@@ -284,7 +292,10 @@ class FortnoxAPIClient:
         if access_token is None:
             access_token = self.token_provider()
         headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.post(f"{self.API_URL}/{endpoint}/", json=json, headers=headers)
+        url = f"{self.API_URL}/{endpoint}/"
+        bind_contextvars(fortnox_request_url=url)
+        response = requests.post(url, json=json, headers=headers)
+        bind_contextvars(fortnox_response_status_code=response.status_code)
         logger.debug(response)
         return response
 

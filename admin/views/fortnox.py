@@ -1,10 +1,11 @@
-import logging
 import secrets
 from datetime import timedelta
 
+import structlog
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db import transaction
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -15,10 +16,11 @@ from fortnox import FortnoxNotFound
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
 from fortnox.django import FortnoxRequest, require_fortnox_auth, require_fortnox_permission
+from fortnox.exceptions import FortnoxRecordMissingError, CashflowVerificationMissingError, AlreadyAccountedError
 from fortnox.models import APIUser
 from invoices.models import Invoice
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class CSRFValidationError(PermissionError):
@@ -72,8 +74,8 @@ def auth_complete(request):
             response = request.fortnox.retrieve_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
             APIUser.objects.all().delete()
             APIUser.objects.create(authenticated_by=request.user, access_token=response.access_token,
-                refresh_token=response.refresh_token,
-                expires_at=timezone.now() + timedelta(seconds=response.expires_in), )
+                                   refresh_token=response.refresh_token,
+                                   expires_at=timezone.now() + timedelta(seconds=response.expires_in), )
             logger.info(f"{request.user} authenticated Fortnox service account")
 
     return redirect(reverse('fortnox-overview'))
@@ -94,71 +96,119 @@ def disconnect(request):
 
 @require_POST
 def account_expense(request: FortnoxRequest, **kwargs):
-    expense = Expense.objects.get(id=kwargs['id'])
+    with transaction.atomic():
+        expense = Expense.objects.select_for_update().get(id=kwargs['id'])
 
-    # This is used to uniquely identify the cashflow expense in Fortnox
-    comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='expense', id=expense.id)} {expense.description}"
+        # This is used to uniquely identify the cashflow expense in Fortnox
+        comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='expense', id=expense.id)} {expense.description}"
 
-    # Sanity check in the rare case that the expense has already been accounted in Fortnox
-    try:
-        request.fortnox_service.find_voucher(Comments=comment)
-        logger.warning(f"Expense {expense.id} is already accounted in Fortnox; aborting")
-        return HttpResponse(f"Expense {expense.id} is already accounted in Fortnox", status=409,
-                            content_type="text/plain")
-    except FortnoxNotFound:
-        pass
+        if expense.verification:
+            # Race condition or sync issue between Cashflow and Fortnox
+            try:
+                request.fortnox_service.retrieve_voucher(settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
+                                                         int(expense.verification[1:]))
+                error_dict = AlreadyAccountedError(
+                    detail=f"Expense [{expense.id}]: '{expense.description}' is already accounted in Fortnox as {expense.verification}").to_dict()
+                return JsonResponse(error_dict, status=409)
+            except FortnoxNotFound:
+                # Possible mismatch between our records and Fortnox
+                # This should probably be extended with some type of warning system for administrators
+                logger.error("fortnox voucher record missing", expense_id=expense.id,
+                             expense_voucher_number=expense.verification, user_id=request.user.id)
+                error_dict = FortnoxRecordMissingError(
+                    detail=f"The expense [{expense.id}]: '{expense.description}' is registered in Cashflow as {expense.verification}, but no matching record was found on Fortnox.").to_dict()
+                return JsonResponse(error_dict, status=409)
 
-    voucher_rows: list[VoucherRow] = []
-    credit_row = VoucherRow(Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT, Credit=float(expense.total_amount()))
-    voucher_rows.append(credit_row)
-    for part in expense.parts.all():
-        acct = int(request.POST[f"part-{part.id}-account"])
-        cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
-        debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount))
-        voucher_rows.append(debit_row)
+        # Sanity check in the rare case that a record exists on Fortnox but not in Cashflow
+        try:
+            voucher = request.fortnox_service.find_voucher(Comments=comment)
+            logger.error("expense missing verification in Cashflow", expense_id=expense.id,
+                         fortnox_voucher_series=voucher.VoucherSeries, fortnox_voucher_number=voucher.VoucherNumber,
+                         fortnox_voucher_comments=voucher.Comments)
 
-    created = request.fortnox_service.create_voucher(
-        VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
-                      VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
-                      Comments=comment))
-    expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
-    expense.save()
+            error_dict = CashflowVerificationMissingError(
+                detail=f"The expense [{expense.id}]: '{expense.description}' was found on Fortnox but it has no registered verification in Cashflow").to_dict()
+            return JsonResponse(error_dict, status=409)
+
+        except FortnoxNotFound:
+            pass
+
+        voucher_rows: list[VoucherRow] = []
+        credit_row = VoucherRow(Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT, Credit=float(expense.total_amount()))
+        voucher_rows.append(credit_row)
+
+        for part in expense.parts.all():
+            acct = int(request.POST[f"part-{part.id}-account"])
+            cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
+            debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount))
+            voucher_rows.append(debit_row)
+
+        created = request.fortnox_service.create_voucher(
+            VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
+                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
+                          Comments=comment))
+        expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
+        expense.save()
     logger.info(f"{request.user} accounted for expense {expense.id}")
     return redirect('admin-account')
 
 
 @require_POST
 def account_invoice(request: FortnoxRequest, **kwargs):
-    invoice = Invoice.objects.get(id=kwargs['id'])
+    with transaction.atomic():
+        invoice = Invoice.objects.select_for_update().get(id=kwargs['id'])
 
-    # This is used to uniquely identify the cashflow invoice in Fortnox
-    comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='invoice', id=invoice.id)} {invoice.description}"
+        # This is used to uniquely identify the cashflow invoice in Fortnox
+        comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='invoice', id=invoice.id)} {invoice.description}"
 
-    # Sanity check in the rare case that the invoice has already been accounted in Fortnox
-    try:
-        request.fortnox_service.find_voucher(Comments=comment)
-        logger.warning(f"Invoice {invoice.id} is already accounted in Fortnox; aborting")
-        return HttpResponse(f"Invoice {invoice.id} is already accounted in Fortnox", status=409,
-                            content_type="text/plain")
-    except FortnoxNotFound:
-        pass
+        if invoice.verification:
+            # Race condition or sync issue between Cashflow and Fortnox
+            try:
+                request.fortnox_service.retrieve_voucher(settings.FORTNOX_INVOICE_VOUCHER_SERIES,
+                                                         int(invoice.verification[1:]))
+                error_dict = AlreadyAccountedError(
+                    detail=f"Invoice [{invoice.id}]: '{invoice.description}' is already accounted in Fortnox as {invoice.verification}").to_dict()
+                return JsonResponse(error_dict, status=409)
+            except FortnoxNotFound:
+                # Possible mismatch between our records and Fortnox
+                # This should probably be extended with some type of warning system for administrators
+                logger.error("fortnox voucher record missing", invoice_id=invoice.id,
+                             invoice_voucher_number=invoice.verification, user_id=request.user.id)
+                error_dict = FortnoxRecordMissingError(
+                    detail=f"The invoice [{invoice.id}]: '{invoice.description}' is registered in Cashflow as {invoice.verification}, but no matching record was found on Fortnox.").to_dict()
+                return JsonResponse(error_dict, status=409)
 
-    voucher_rows: list[VoucherRow] = []
-    credit_row = VoucherRow(Account=settings.FORTNOX_INVOICE_CREDIT_ACCOUNT, Credit=float(invoice.total_amount()))
-    voucher_rows.append(credit_row)
-    for part in invoice.parts.all():
-        acct = int(request.POST[f"part-{part.id}-account"])
-        cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
-        debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount))
-        voucher_rows.append(debit_row)
+        # Sanity check in the rare case that a record exists on Fortnox but not in Cashflow
+        try:
+            voucher = request.fortnox_service.find_voucher(Comments=comment)
+            logger.error("invoice missing verification in Cashflow", invoice_id=invoice.id,
+                         fortnox_voucher_series=voucher.VoucherSeries, fortnox_voucher_number=voucher.VoucherNumber,
+                         fortnox_voucher_comments=voucher.Comments)
 
-    created = request.fortnox_service.create_voucher(
-        VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
-                      VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
-                      Comments=comment))
-    invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
-    invoice.save()
-    logger.info(f"{request.user} accounted for invoice {kwargs['id']}")
+            error_dict = CashflowVerificationMissingError(
+                detail=f"The invoice [{invoice.id}]: '{invoice.description}' was found on Fortnox but it has no registered verification in Cashflow").to_dict()
+            return JsonResponse(error_dict, status=409)
+
+        except FortnoxNotFound:
+            pass
+
+        voucher_rows: list[VoucherRow] = []
+        credit_row = VoucherRow(Account=settings.FORTNOX_INVOICE_CREDIT_ACCOUNT, Credit=float(invoice.total_amount()))
+        voucher_rows.append(credit_row)
+
+        for part in invoice.parts.all():
+            acct = int(request.POST[f"part-{part.id}-account"])
+            cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
+            debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount))
+            voucher_rows.append(debit_row)
+
+        created = request.fortnox_service.create_voucher(
+            VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
+                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
+                          Comments=comment))
+        invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
+        invoice.save()
+    logger.info(f"{request.user} accounted for invoice {invoice.id}")
     return redirect(reverse('admin-account'))
 
 

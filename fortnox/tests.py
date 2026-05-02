@@ -1,11 +1,14 @@
 import datetime
+import json
 from unittest.mock import patch, MagicMock
 
 import factory
 import requests
+import structlog
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from pytest import fixture, raises
+from django.test import RequestFactory
 
 from admin.views.fortnox import account_expense, account_invoice
 from expenses.models import Expense, Profile
@@ -221,11 +224,11 @@ def test_find_nonexisting_voucher_raises_exception(fortnox_client):
             fortnox_client.find_voucher(Description="I don't exist")
 
 
-def test_account_expense_returns_409_when_already_accounted(db, user, profile):
-    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch")
+def test_account_aborts_when_already_accounted(db, user, profile):
+    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch", verification="E123")
 
     fortnox_service = MagicMock()
-    fortnox_service.find_voucher.return_value = VoucherFactory.build()
+    fortnox_service.retrieve_voucher.return_value = VoucherFactory.build(VoucherSeries="E", VoucherNumber=123)
 
     request = RequestFactory().post(f'/admin/fortnox/expenses/account/{expense.id}/')
     request.user = user
@@ -236,7 +239,36 @@ def test_account_expense_returns_409_when_already_accounted(db, user, profile):
     assert response.status_code == 409
     fortnox_service.create_voucher.assert_not_called()
     expense.refresh_from_db()
-    assert expense.verification == ""
+
+def test_account_expense_catches_missing_fortnox_record(db, user, profile):
+    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch", verification="E123")
+    fortnox_service = MagicMock()
+    fortnox_service.retrieve_voucher.side_effect = FortnoxNotFound
+
+    request = RequestFactory().post(f'/admin/fortnox/expenses/account/{expense.id}/')
+    request.user = user
+    request.fortnox_service = fortnox_service
+
+    response = account_expense(request, id=str(expense.id))
+    assert response.status_code == 409
+    error = json.loads(response.content)
+    assert error["type"] == "/problems/fortnox_record_missing"
+    fortnox_service.create_voucher.assert_not_called()
+
+def test_account_expense_catches_missing_cashflow_record(db, user, profile):
+    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch")
+    fortnox_service = MagicMock()
+    fortnox_service.find_voucher.return_value = VoucherFactory.build()
+
+    request = RequestFactory().post(f'/admin/fortnox/expenses/account/{expense.id}/')
+    request.user = user
+    request.fortnox_service = fortnox_service
+
+    response = account_expense(request, id=str(expense.id))
+    assert response.status_code == 409
+    error = json.loads(response.content)
+    assert error["type"] == "/problems/cashflow_verification_missing"
+    fortnox_service.create_voucher.assert_not_called()
 
 
 def test_account_invoice_returns_409_when_already_accounted(db, user, profile):

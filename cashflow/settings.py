@@ -15,6 +15,7 @@ import re
 import sys
 
 import dj_database_url
+import structlog
 
 # https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
 # Fix for broken "django-queued-storage" dependency
@@ -52,7 +53,7 @@ CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 INSTALLED_APPS = ('django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
                   'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
                   'django.contrib.humanize', 'rest_framework', 'storages', 'corsheaders', 'widget_tweaks', 'cashflow',
-                  'expenses', 'invoices', 'fortnox',)
+                  'expenses', 'invoices', 'fortnox', 'drf_problems')
 
 MIDDLEWARE = ('corsheaders.middleware.CorsMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
               'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware',
@@ -99,6 +100,11 @@ else:
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
+
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'drf_problems.exceptions.exception_handler'
+}
 
 # noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
@@ -163,6 +169,7 @@ RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
 
+structlog.configure(processors=[structlog.contextvars.merge_contextvars, structlog.processors.JSONRenderer()],)
 LOG_LEVEL = 'DEBUG' if DEBUG else 'INFO'
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
     'formatters': {'simple': {'format': '{levelname} {asctime} {module}: {message}', 'style': '{', }, }, 'handlers': {

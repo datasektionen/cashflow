@@ -705,7 +705,7 @@ version = "3.16.1"
 description = "Web APIs for Django, made easy."
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "djangorestframework-3.16.1-py3-none-any.whl", hash = "sha256:33a59f47fb9c85ede792cbf88bde71893bcda0667bc573f784649521f1102cec"},
     {file = "djangorestframework-3.16.1.tar.gz", hash = "sha256:166809528b1aced0a17dc66c24492af18049f2c9420dbd0be29422029cfc3ff7"},
@@ -736,6 +736,21 @@ compatible-mypy = ["django-stubs[compatible-mypy]", "mypy (>=1.13,<1.20)"]
 coreapi = ["coreapi (>=2.0.0)"]
 markdown = ["types-markdown (>=0.1.5)"]
 requests = ["types-requests"]
+
+[[package]]
+name = "drf-problems"
+version = "1.0.5"
+description = "Never liked DRF plain old errors? Forget that and accept RFC 7807 - Problem Details!"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "drf_problems-1.0.5-py3-none-any.whl", hash = "sha256:4ead0181d87f0501417c55ac2e37627796095528c76848396a282d1bb91c691e"},
+]
+
+[package.dependencies]
+Django = ">=1.6"
+djangorestframework = ">=3.0.0"
 
 [[package]]
 name = "factory-boy"
@@ -1437,6 +1452,18 @@ dev = ["build"]
 doc = ["sphinx"]
 
 [[package]]
+name = "structlog"
+version = "25.5.0"
+description = "Structured Logging for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "structlog-25.5.0-py3-none-any.whl", hash = "sha256:a8453e9b9e636ec59bd9e79bbd4a72f025981b3ba0f5837aebf48f02f37a7f9f"},
+    {file = "structlog-25.5.0.tar.gz", hash = "sha256:098522a3bebed9153d4570c6d0288abf80a031dfdb2048d59a49e9dc2190fc98"},
+]
+
+[[package]]
 name = "types-pyyaml"
 version = "6.0.12.20250915"
 description = "Typing stubs for PyYAML"
@@ -1566,4 +1593,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.14.3"
-content-hash = "75baa32edcc9e2795616fa8f821665bb208a808663d2b8573cc4ecd83372bff9"
+content-hash = "fd5da528a719ba7cfdaf825f4955d89bd7d2ca33fd308ea81cf42f481b9a97fa"

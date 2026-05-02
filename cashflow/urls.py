@@ -33,4 +33,6 @@ urlpatterns = [re_path(r'^$', expenses_views.index, name='expenses-index'),
                     name="secondarycostcenter-list"),
                path("api/budgetlines/", views.api.BudgetLineList.as_view(), name="budgetline-list"),
 
+               path("", include("drf_problems.urls"))
+
                ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
