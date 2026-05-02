@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import structlog
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
@@ -15,9 +15,9 @@ from expenses.models import Expense
 from fortnox import FortnoxNotFound
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
-from fortnox.django import FortnoxRequest, require_fortnox_auth, require_fortnox_permission
+from fortnox.django import FortnoxRequest, require_fortnox_permission
 from fortnox.exceptions import FortnoxRecordMissingError, CashflowVerificationMissingError, AlreadyAccountedError
-from fortnox.models import APIUser
+from fortnox.models import ServiceAccount
 from invoices.models import Invoice
 
 logger = structlog.get_logger(__name__)
@@ -41,6 +41,8 @@ def get_auth_code(request):
     # Generate a token for CSRF protection
     csrf_token = secrets.token_urlsafe(32)
     request.session['fortnox_csrf_token'] = csrf_token
+
+    logger.info("started authentication flow for Fortnox service account")
 
     redirect_uri = request.build_absolute_uri(reverse('fortnox-auth-complete'))
     return HttpResponseRedirect(request.fortnox.build_auth_code_url(redirect_uri, csrf_token))
@@ -68,15 +70,16 @@ def auth_complete(request):
     # Get auth code from URL parameters
     match request.GET.get('code'), request.GET.get('error'):
         case None, e:
-            logger.error(f"Error when authenticating {request.user} to Fortnox: {e}")
+            # logger.error(f"Error when authenticating {request.user} to Fortnox: {e}")
+            logger.error(f"fortnox error when authenticating", error_message=e, )
             return redirect(reverse('admin-index'))
         case auth_code, _:
             response = request.fortnox.retrieve_access_token(AuthCodeGrant(code=auth_code, redirect_uri=redirect_uri))
-            APIUser.objects.all().delete()
-            APIUser.objects.create(authenticated_by=request.user, access_token=response.access_token,
-                                   refresh_token=response.refresh_token,
-                                   expires_at=timezone.now() + timedelta(seconds=response.expires_in), )
-            logger.info(f"{request.user} authenticated Fortnox service account")
+            ServiceAccount.objects.all().delete()
+            new = ServiceAccount.objects.create(authenticated_by=request.user, access_token=response.access_token,
+                                                refresh_token=response.refresh_token,
+                                                expires_at=timezone.now() + timedelta(seconds=response.expires_in), )
+            logger.info("fortnox successfully authenticated", token_id=new.pk, token_expires_at=new.expires_at, )
 
     return redirect(reverse('fortnox-overview'))
 
@@ -86,10 +89,12 @@ def auth_complete(request):
 def disconnect(request):
     """Disconnects (logs out) the user from Fortnox. Deletes saved tokens and then redirects to main admin page."""
     try:
-        APIUser.objects.get().delete()
-        logger.info(f"{request.user} disconnected Fortnox service account")
-    except APIUser.DoesNotExist:
-        logger.warning(f"{request.user} tried to disconnect Fortnox, but no service account was connected")
+        token = ServiceAccount.objects.get()
+        token_id = token.pk or None
+        ServiceAccount.objects.get().delete()
+        logger.warning("fortnox service manually disconnected", token_id=token_id)
+    except ServiceAccount.DoesNotExist:
+        pass
 
     return redirect(reverse('admin-index'))
 
@@ -149,7 +154,6 @@ def account_expense(request: FortnoxRequest, **kwargs):
                           Comments=comment))
         expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
         expense.save()
-    logger.info(f"{request.user} accounted for expense {expense.id}")
     return redirect('admin-account')
 
 
@@ -208,18 +212,12 @@ def account_invoice(request: FortnoxRequest, **kwargs):
                           Comments=comment))
         invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
         invoice.save()
-    logger.info(f"{request.user} accounted for invoice {invoice.id}")
     return redirect(reverse('admin-account'))
 
 
 @login_required
-@user_passes_test(lambda u: u.profile.may_firmatecknare())
-@require_fortnox_auth
 def overview(request: FortnoxRequest):
-    accounts = request.fortnox_service.list_accounts()
-
-    accounts = [account for account in accounts if account.Active]
-    accounts = [a.model_dump() for a in accounts]
-
+    service_account = ServiceAccount.objects.first()
+    is_connected = service_account is not None and service_account.expires_at > timezone.now()
     return render(request, 'admin/fortnox/overview.html',
-                  {'fortnox_user_name': request.user.get_full_name() or request.user.username, 'accounts': accounts, })
+                  {'service_account': service_account, 'is_connected': is_connected, })

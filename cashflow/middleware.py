@@ -14,10 +14,14 @@ logger = get_logger(__name__)
 
 
 class StructlogContextMiddleware:
-    """Clears structlog contextvars between requests and attaches a unique ID to every request.
+    """Clears structlog contextvars between requests and binds per-request identifiers.
 
-    This prevents old contextvars being placed in logs from newer requests if they have not been overwritten. The
-    request ID makes it easier to trace issues in error logs.
+    Clearing prevents contextvars from one request leaking into log lines emitted by the next request handled by the
+    same worker. On every request the following keys are bound for the duration of the request:
+
+    - ``request_id``: an 8-character ID echoed back as ``X-Request-ID``. If the client supplies a well-formed
+      ``X-Request-ID`` header, that value is used; otherwise a fresh one is generated.
+    - ``user_id`` and ``username``: the authenticated Django user, or ``None`` for anonymous requests.
     """
 
     _ID_ALPHABET = string.ascii_lowercase + string.digits
@@ -46,7 +50,12 @@ class StructlogContextMiddleware:
         else:
             request_id = self.generate_id()
 
-        bind_contextvars(request_id=request.headers.get("X-Request-ID"))
+        bind_contextvars(request_id=request_id)
+        if getattr(request, "user", None) and request.user.is_authenticated:
+            bind_contextvars(user_id=request.user.id, username=request.user.username)
+        else:
+            bind_contextvars(user_id=None, username=None)
+
         response: HttpResponse = self.get_response(request)
         response.headers["X-Request-ID"] = request_id
         return response

@@ -15,7 +15,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from cashflow import gordian
 from cashflow.utils import list_active_accounts
 from expenses.models import Expense, ExpensePart, Comment, Profile
-from fortnox.django import FortnoxRequest, require_fortnox_auth
+from fortnox.django import FortnoxRequest, require_fortnox_service
 from invoices.models import Invoice, InvoicePart
 
 
@@ -157,7 +157,7 @@ def invoice_pay(request, pk):
 @require_GET
 @login_required
 @user_passes_test(lambda u: u.profile.may_view_accountable())
-@require_fortnox_auth
+@require_fortnox_service
 def account_overview(request: FortnoxRequest):
     accounts = list_active_accounts(request)
 

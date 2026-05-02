@@ -7,26 +7,14 @@
 
 
     {% if user|may_authenticate_fortnox %}
-        {% if fortnox_user_name is not None %}
-            <p>Du är inloggad som {{ fortnox_user_name }}</p>
-            <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox </a>
+        {% if is_connected %}
+            <p>Fortnox är auktoriserad av {{ service_account.authenticated_by.get_full_name|default:service_account.authenticated_by.username }}</p>
+            <a href={% url 'fortnox-auth-get' %}>Återautentisera Fortnox</a>
+            <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox</a>
         {% else %}
             <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>
         {% endif %}
     {% endif %}
-
-
-    <h2>Konton</h2>
-    {% for account in accounts %}
-    	<p>{{ account.Number }} - {{ account.Description }}</p>
-    {% endfor %}
-
-    <h2>Kostnadsställen</h2>
-     {% for costcenter in costcenters %}
-     	<p>{{ costcenter.Code }} - {{ costcenter.Description }}</p>
-     {% endfor %}
-
-
 
 
 {% endblock %}

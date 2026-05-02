@@ -14,7 +14,7 @@ from admin.views.fortnox import account_expense, account_invoice
 from expenses.models import Expense, Profile
 from fortnox import FortnoxAPIClient, FortnoxNotFound
 from fortnox.api_client.models import CostCenter, Voucher
-from fortnox.models import APIUser
+from fortnox.models import ServiceAccount
 from invoices.models import Invoice
 
 UserModel = get_user_model()
@@ -56,8 +56,8 @@ def fortnox_client():
 
 
 @fixture
-def api_user(db, user):
-    return APIUser.objects.create(authenticated_by=user, access_token='', refresh_token='',
+def service_account(db, user):
+    return ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
                                   expires_at=timezone.now() + datetime.timedelta(days=1))
 
 
@@ -68,17 +68,17 @@ def profile(db, user):
 
 
 def test_only_one_api_client_allowed(db, user):
-    APIUser.objects.create(authenticated_by=user, access_token='', refresh_token='',
+    ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
                            expires_at=timezone.now() + datetime.timedelta(days=1), )
 
     with raises(ValueError):
-        APIUser.objects.create(authenticated_by=user, access_token='', refresh_token='',
+        ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
                                expires_at=timezone.now() + datetime.timedelta(days=1), )
 
 
-def test_api_user_can_be_updated(db, api_user):
+def test_service_account_can_be_updated(db, service_account):
     new_user = UserModel.objects.create(is_staff=True, is_superuser=True)
-    APIUser.objects.update(authenticated_by=new_user, access_token='', refresh_token='',
+    ServiceAccount.objects.update(authenticated_by=new_user, access_token='', refresh_token='',
                            expires_at=timezone.now() + datetime.timedelta(days=1), )
 
 

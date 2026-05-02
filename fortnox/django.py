@@ -1,19 +1,18 @@
 """
 This module defines Django-specific functionality tied to the Fortnox integration.
 """
-import logging
 from datetime import timedelta
 from functools import wraps
 
 from django.conf import settings
-from django.http import HttpRequest
-from django.shortcuts import redirect
-from django.utils import timezone
 from django.db import transaction
+from django.http import HttpRequest, JsonResponse
+from django.utils import timezone
+from structlog import get_logger
 
-from fortnox import FortnoxAPIClient, RefreshTokenGrant, FortnoxAuthenticationError
+from fortnox import FortnoxAPIClient, RefreshTokenGrant, FortnoxAuthenticationError, exceptions
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class FortnoxRequest(HttpRequest):
@@ -67,24 +66,17 @@ class FortnoxServiceMiddleware:
                 self.auth_callback = None
 
     def __call__(self, request):
-        from .models import APIUser
+        from .models import ServiceAccount
 
-        allowed = (
-            not request.user.is_anonymous
-            and (self.auth_callback is None or self.auth_callback(request.user))
-        )
+        allowed = (not request.user.is_anonymous and (self.auth_callback is None or self.auth_callback(request.user)))
 
         if allowed:
             try:
-                api_user = APIUser.objects.get()
-                client = FortnoxAPIClient(
-                    client_id=settings.FORTNOX_CLIENT_ID,
-                    client_secret=settings.FORTNOX_CLIENT_SECRET,
-                    scope=settings.FORTNOX_SCOPE,
-                )
+                client = FortnoxAPIClient(client_id=settings.FORTNOX_CLIENT_ID,
+                                          client_secret=settings.FORTNOX_CLIENT_SECRET, scope=settings.FORTNOX_SCOPE, )
                 client.token_provider = lambda: retrieve_or_refresh_token(client)
                 request.fortnox_service = client
-            except APIUser.DoesNotExist:
+            except ServiceAccount.DoesNotExist:
                 request.fortnox_service = None
         else:
             request.fortnox_service = None
@@ -92,9 +84,11 @@ class FortnoxServiceMiddleware:
         return self.get_response(request)
 
 
-
 def require_fortnox_permission(view):
-    """Requires the user to pass the FORTNOX_ALLOW_AUTHENTICATION_CALLBACK check."""
+    """Requires the user to pass the FORTNOX_ALLOW_AUTHENTICATION_CALLBACK check.
+
+    Prevents anyone but the Fortnox admin (Kassör) to authenticate the service account.
+    """
 
     @wraps(view)
     def wrap(request, *args, **kwargs):
@@ -110,14 +104,16 @@ def require_fortnox_permission(view):
     return wrap
 
 
-def require_fortnox_auth(view):
+def require_fortnox_service(view):
     """Requires a valid service account token to be present."""
 
     @wraps(view)
     def wrap(request: FortnoxRequest, *args, **kwargs):
         token = retrieve_or_refresh_token(request.fortnox)
         if token is None:
-            return redirect(settings.FORTNOX_AUTH_REDIRECT)
+            error_dict = exceptions.FortnoxServiceNotAvailableError().to_dict()
+            logger.error("fortnox access token not available")
+            return JsonResponse(error_dict)
         return view(request, *args, **kwargs)
 
     return wrap
@@ -125,35 +121,37 @@ def require_fortnox_auth(view):
 
 def retrieve_or_refresh_token(client):
     # Lazy imports to prevent issues when loading apps
-    from .models import APIUser
+    from .models import ServiceAccount
 
     with transaction.atomic():
         try:
-            api_user = APIUser.objects.select_for_update().get()
-        except APIUser.DoesNotExist:
+            service_account = ServiceAccount.objects.select_for_update().get()
+        except ServiceAccount.DoesNotExist:
             return None
 
-        if api_user.expires_at > timezone.now():
-            return api_user.access_token
+        if service_account.expires_at > timezone.now():
+            return service_account.access_token
 
         else:
 
             logger.debug(f"Attempting to refresh access token for Fortnox")
-            grant = RefreshTokenGrant(code=api_user.refresh_token)
+            grant = RefreshTokenGrant(code=service_account.refresh_token)
             try:
                 response = client.retrieve_access_token(grant)
 
-                api_user.access_token = response.access_token
-                api_user.refresh_token = response.refresh_token
-                api_user.expires_at = timezone.now() + timedelta(seconds=response.expires_in)
-                api_user.save(update_fields=["access_token", "refresh_token", "expires_at"])
+                service_account.access_token = response.access_token
+                service_account.refresh_token = response.refresh_token
+                service_account.expires_at = timezone.now() + timedelta(seconds=response.expires_in)
+                service_account.save(update_fields=["access_token", "refresh_token", "expires_at"])
 
-                logger.debug(f"Successfully refreshed access token for Fortnox")
+                logger.info(f"refreshed access token for Fortnox", new_token_id=service_account.pk,
+                            new_token_expires_at=service_account.expires_at, )
                 return response.access_token
-            except FortnoxAuthenticationError as e:
-                logger.debug(f"Failed to refresh access token for Fortnox: {e}")
+            except FortnoxAuthenticationError:
                 # Most likely both tokens are expired
                 # Better to "de-authenticate" user completely
-                logger.error(f"Fortnox tokens are expired or otherwise invalid -- deleting saved tokens")
-                APIUser.objects.get().delete()
+                existing = ServiceAccount.objects.get()
+                logger.error("failed to refresh access token for Fortnox, invalidating tokens", token_id=existing.pk,
+                             access_token_expires_at=existing.expires_at, )
+                ServiceAccount.objects.get().delete()
                 return None

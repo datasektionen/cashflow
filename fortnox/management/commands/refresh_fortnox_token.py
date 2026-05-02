@@ -3,14 +3,14 @@ from django.core.management.base import BaseCommand
 
 from fortnox import FortnoxAPIClient
 from fortnox.django import retrieve_or_refresh_token
-from fortnox.models import APIUser
+from fortnox.models import ServiceAccount
 
 
 class Command(BaseCommand):
     help = "Refresh the Fortnox service account access token."
 
     def handle(self, *args, **options):
-        if not APIUser.objects.exists():
+        if not ServiceAccount.objects.exists():
             self.stdout.write(self.style.WARNING("No Fortnox service account configured; nothing to refresh."))
             return
 

@@ -73,9 +73,8 @@ class FortnoxAPIClient:
         adapter = TypeAdapter(Union[AccessTokenResponse, self._AuthErrorInfo])
         match adapter.validate_python(response.json()):
             case AccessTokenResponse() as response:
-                if logger.level == 'DEBUG':
-                    user_info = self.retrieve_current_user(response.access_token)
-                    logger.debug(f'{user_info.Name} fetched new access token')
+                user_info = self.retrieve_current_user(response.access_token)
+                logger.debug(f'{user_info.Name} fetched new access token')
                 return response
             case self._AuthErrorInfo() as e:
                 raise FortnoxAuthenticationError(f'{e.error}: {e.error_description}')
