@@ -135,7 +135,7 @@
                 <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
             </tr>
             <tr>
-              {% if may_delete or may_unattest %}
+              {% if may_delete or may_unattest or may_flag%}
               <td colspan="2">
                 {% if may_delete %}
                 <a href="{% url 'expenses-delete' expense.id %}">
