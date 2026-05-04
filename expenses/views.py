@@ -329,6 +329,12 @@ def new_payment(request):
             return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
+        for expense in expenses:
+            models.Comment(
+                author=request.user.profile,
+                expense=expense,
+                content="Utbetalning misslyckades: användaren saknar fullständiga bankuppgifter"
+            ).save()
         return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
 
     payment = models.Payment(
@@ -369,6 +375,12 @@ def api_new_payment(request):
             return HttpResponseBadRequest("Alla kvitton måste ha samma ägare")
 
     if expense_owner.bank_name == "" or expense_owner.bank_account == "" or expense_owner.sorting_number == "":
+        for expense in expenses:
+            models.Comment(
+                author=request.user.profile,
+                expense=expense,
+                content="Utbetalning misslyckades: användaren saknar fullständiga bankuppgifter"
+            ).save()
         return HttpResponseBadRequest("Användaren har inte angett alla sina bankuppgifter")
 
     payment = models.Payment(
