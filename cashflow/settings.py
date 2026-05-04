@@ -182,6 +182,16 @@ LOGGING = {'version': 1, 'disable_existing_loggers': False,
 
 
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'cashflow-default',
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000,
+        },
+    },
+}
+
 # How long to cache cost centers from GOrdian
 GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
 

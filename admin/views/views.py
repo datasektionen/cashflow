@@ -160,6 +160,7 @@ def invoice_pay(request, pk):
 @require_fortnox_service
 def account_overview(request: FortnoxRequest):
     accounts = list_active_accounts(request)
+    account_by_number = {a.Number: a for a in accounts} # Lookup dict by account number
 
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
@@ -168,18 +169,19 @@ def account_overview(request: FortnoxRequest):
     # Retrieves the fortnox account for the given part, or None if the lookup fails
     def get_account(part):
         try:
-            return request.fortnox_service.retrieve_account(gordian.retrieve_account_from_gordian(part)[0])
+            number = gordian.retrieve_account_from_gordian(part)[0]
         except Exception:
             return None
+        return account_by_number.get(number)
 
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
     expense_parts = [
         (part, get_account(part))
-        for part in ExpensePart.objects.filter(expense__reimbursement__isnull=False).order_by("expense")]
+        for part in ExpensePart.objects.filter(expense__in=accountable_expenses).order_by("expense")]
     invoice_parts = [
         (part, get_account(part))
-        for part in InvoicePart.objects.filter(invoice__payed_at__isnull=False).order_by("invoice")]
+        for part in InvoicePart.objects.filter(invoice__in=accountable_invoices).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
                   {"accounts": accounts, "invoices": accountable_invoices, "invoice_parts": invoice_parts,

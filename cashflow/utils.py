@@ -58,7 +58,7 @@ def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -
             cached_accounts = cache.get_many(keys)
             return [Account.model_validate(acc) for acc in cached_accounts.values()]
     # Retrieve from fortnox
-    accounts = [acc for acc in request.fortnox_service.list_accounts() if acc.Active]
+    accounts = [acc for acc in request.fortnox_service.list_accounts(limit=999) if acc.Active]
     cache.set_many({f"fortnox:account:{acc.Number}": acc.model_dump() for acc in accounts},
                    timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
     cache.set("fortnox:account:search_keys", [f"fortnox:account:{acc.Number}" for acc in accounts],
