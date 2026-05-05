@@ -4,14 +4,13 @@ from unittest.mock import patch, MagicMock
 
 import factory
 import requests
-import structlog
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from django.utils import timezone
 from pytest import fixture, raises
-from django.test import RequestFactory
 
 from admin.views.fortnox import account_expense, account_invoice
-from expenses.models import Expense, Profile
+from expenses.models import Expense
 from fortnox import FortnoxAPIClient, FortnoxNotFound
 from fortnox.api_client.models import CostCenter, Voucher
 from fortnox.models import ServiceAccount
@@ -58,7 +57,7 @@ def fortnox_client():
 @fixture
 def service_account(db, user):
     return ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
-                                  expires_at=timezone.now() + datetime.timedelta(days=1))
+                                         expires_at=timezone.now() + datetime.timedelta(days=1))
 
 
 @fixture
@@ -69,17 +68,17 @@ def profile(db, user):
 
 def test_only_one_api_client_allowed(db, user):
     ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
-                           expires_at=timezone.now() + datetime.timedelta(days=1), )
+                                  expires_at=timezone.now() + datetime.timedelta(days=1), )
 
     with raises(ValueError):
         ServiceAccount.objects.create(authenticated_by=user, access_token='', refresh_token='',
-                               expires_at=timezone.now() + datetime.timedelta(days=1), )
+                                      expires_at=timezone.now() + datetime.timedelta(days=1), )
 
 
 def test_service_account_can_be_updated(db, service_account):
     new_user = UserModel.objects.create(is_staff=True, is_superuser=True)
     ServiceAccount.objects.update(authenticated_by=new_user, access_token='', refresh_token='',
-                           expires_at=timezone.now() + datetime.timedelta(days=1), )
+                                  expires_at=timezone.now() + datetime.timedelta(days=1), )
 
 
 def _cost_center_page_response(cost_centers, current_page, total_pages):
@@ -88,7 +87,8 @@ def _cost_center_page_response(cost_centers, current_page, total_pages):
     response.status_code = 200
     response.json.return_value = {
         "MetaInformation": {"@TotalResources": total_pages * len(cost_centers), "@TotalPages": total_pages,
-            "@CurrentPage": current_page, }, "CostCenters": [cc.model_dump(by_alias=True) for cc in cost_centers], }
+                            "@CurrentPage": current_page, },
+        "CostCenters": [cc.model_dump(by_alias=True) for cc in cost_centers], }
     return response
 
 
@@ -99,8 +99,8 @@ def test_find_cost_center_walks_all_pages(fortnox_client):
     page_3 = [*CostCenterFactory.create_batch(2), target]
 
     responses = [_cost_center_page_response(page_1, current_page=1, total_pages=3),
-        _cost_center_page_response(page_2, current_page=2, total_pages=3),
-        _cost_center_page_response(page_3, current_page=3, total_pages=3), ]
+                 _cost_center_page_response(page_2, current_page=2, total_pages=3),
+                 _cost_center_page_response(page_3, current_page=3, total_pages=3), ]
 
     with patch.object(fortnox_client, "_get", side_effect=responses) as mock_get:
         result = fortnox_client.find_cost_center(Description="needle")
@@ -135,7 +135,7 @@ def test_find_cost_centers_handles_many_cost_centers(fortnox_client):
     target_page = next(i for i, chunk in enumerate(chunks, start=1) if target in chunk)
 
     responses = [_cost_center_page_response(chunk, current_page=i + 1, total_pages=total_pages) for i, chunk in
-        enumerate(chunks)]
+                 enumerate(chunks)]
 
     with patch.object(fortnox_client, "_get", side_effect=responses) as mock_get:
         result = fortnox_client.find_cost_center(Description="needle")
@@ -159,7 +159,8 @@ def _voucher_page_response(vouchers, current_page, total_pages):
     response.status_code = 200
     response.json.return_value = {
         "MetaInformation": {"@TotalResources": total_pages * len(vouchers), "@TotalPages": total_pages,
-            "@CurrentPage": current_page, }, "Vouchers": [v.model_dump(by_alias=True) for v in vouchers], }
+                            "@CurrentPage": current_page, },
+        "Vouchers": [v.model_dump(by_alias=True) for v in vouchers], }
     return response
 
 
@@ -170,8 +171,8 @@ def test_find_voucher_walks_all_pages(fortnox_client):
     page_3 = [*VoucherFactory.create_batch(2), target]
 
     responses = [_voucher_page_response(page_1, current_page=1, total_pages=3),
-        _voucher_page_response(page_2, current_page=2, total_pages=3),
-        _voucher_page_response(page_3, current_page=3, total_pages=3), ]
+                 _voucher_page_response(page_2, current_page=2, total_pages=3),
+                 _voucher_page_response(page_3, current_page=3, total_pages=3), ]
 
     with patch.object(fortnox_client, "_get", side_effect=responses) as mock_get:
         result = fortnox_client.find_voucher(Description="needle")
@@ -206,7 +207,7 @@ def test_find_vouchers_handles_many_vouchers(fortnox_client):
     target_page = next(i for i, chunk in enumerate(chunks, start=1) if target in chunk)
 
     responses = [_voucher_page_response(chunk, current_page=i + 1, total_pages=total_pages) for i, chunk in
-        enumerate(chunks)]
+                 enumerate(chunks)]
 
     with patch.object(fortnox_client, "_get", side_effect=responses) as mock_get:
         result = fortnox_client.find_voucher(Description="needle")
@@ -225,7 +226,8 @@ def test_find_nonexisting_voucher_raises_exception(fortnox_client):
 
 
 def test_account_aborts_when_already_accounted(db, user, profile):
-    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch", verification="E123")
+    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch",
+                                     verification="E123")
 
     fortnox_service = MagicMock()
     fortnox_service.retrieve_voucher.return_value = VoucherFactory.build(VoucherSeries="E", VoucherNumber=123)
@@ -234,14 +236,18 @@ def test_account_aborts_when_already_accounted(db, user, profile):
     request.user = user
     request.fortnox_service = fortnox_service
 
-    response = account_expense(request, id=str(expense.id))
+    # Pretend the user has proper permissions
+    with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
+        response = account_expense(request, id=str(expense.id))
 
     assert response.status_code == 409
     fortnox_service.create_voucher.assert_not_called()
     expense.refresh_from_db()
 
+
 def test_account_expense_catches_missing_fortnox_record(db, user, profile):
-    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch", verification="E123")
+    expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch",
+                                     verification="E123")
     fortnox_service = MagicMock()
     fortnox_service.retrieve_voucher.side_effect = FortnoxNotFound
 
@@ -249,11 +255,14 @@ def test_account_expense_catches_missing_fortnox_record(db, user, profile):
     request.user = user
     request.fortnox_service = fortnox_service
 
-    response = account_expense(request, id=str(expense.id))
+    with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
+        response = account_expense(request, id=str(expense.id))
+
     assert response.status_code == 409
     error = json.loads(response.content)
     assert error["type"] == "/problems/fortnox_record_missing"
     fortnox_service.create_voucher.assert_not_called()
+
 
 def test_account_expense_catches_missing_cashflow_record(db, user, profile):
     expense = Expense.objects.create(expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch")
@@ -264,7 +273,8 @@ def test_account_expense_catches_missing_cashflow_record(db, user, profile):
     request.user = user
     request.fortnox_service = fortnox_service
 
-    response = account_expense(request, id=str(expense.id))
+    with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
+        response = account_expense(request, id=str(expense.id))
     assert response.status_code == 409
     error = json.loads(response.content)
     assert error["type"] == "/problems/cashflow_verification_missing"
@@ -282,7 +292,8 @@ def test_account_invoice_returns_409_when_already_accounted(db, user, profile):
     request.user = user
     request.fortnox_service = fortnox_service
 
-    response = account_invoice(request, id=str(invoice.id))
+    with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
+        response = account_invoice(request, id=str(invoice.id))
 
     assert response.status_code == 409
     fortnox_service.create_voucher.assert_not_called()

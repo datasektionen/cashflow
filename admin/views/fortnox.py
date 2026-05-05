@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from cashflow.exceptions import AccountingPermissionDeniedError
 from expenses.models import Expense
 from fortnox import FortnoxNotFound
 from fortnox.api_client import AuthCodeGrant
@@ -104,6 +105,11 @@ def account_expense(request: FortnoxRequest, **kwargs):
     with transaction.atomic():
         expense = Expense.objects.select_for_update().get(id=kwargs['id'])
 
+        if not request.user.profile.may_account(expense):
+            error = AccountingPermissionDeniedError(
+                detail=f"{request.user} lacks permission to account the expense {expense}. Most likely this means that no cost centres are within the user's scope(s).")
+            return JsonResponse(error.to_dict(), status=403)
+
         # This is used to uniquely identify the cashflow expense in Fortnox
         comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='expense', id=expense.id)} {expense.description}"
 
@@ -161,6 +167,11 @@ def account_expense(request: FortnoxRequest, **kwargs):
 def account_invoice(request: FortnoxRequest, **kwargs):
     with transaction.atomic():
         invoice = Invoice.objects.select_for_update().get(id=kwargs['id'])
+
+        if not request.user.profile.may_account(invoice=invoice):
+            error = AccountingPermissionDeniedError(
+                detail=f"{request.user} lacks permission to account the invoice {invoice}. Most likely this means that no cost centres are within the user's scope(s).")
+            return JsonResponse(error.to_dict(), status=403)
 
         # This is used to uniquely identify the cashflow invoice in Fortnox
         comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='invoice', id=invoice.id)} {invoice.description}"

@@ -1,13 +1,13 @@
 import hashlib
-import unicodedata
 from typing import Union
 
+import unicodedata
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
 
-from cashflow import gordian
 from cashflow import dauth
+from cashflow import gordian
 from cashflow.gordian import GCostCenter
 from expenses.models import ExpensePart
 from fortnox.api_client.models import CostCenter, Account
@@ -15,12 +15,13 @@ from fortnox.django import FortnoxRequest
 from invoices.models import InvoicePart
 
 
-
 def has_accounting_permissions(user: User):
     return dauth.has_any_permission_scope("accounting", user)
 
+
 def may_authenticate_fortnox(user: User):
     return dauth.has_unscoped_permission("manage-fortnox", user)
+
 
 def build_cache_key(name: str):
     """Creates a cache key that is safe for e.g. memcache
@@ -64,6 +65,22 @@ def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -
     cache.set("fortnox:account:search_keys", [f"fortnox:account:{acc.Number}" for acc in accounts],
               timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60)
     return accounts
+
+
+def list_active_cost_centers(request: FortnoxRequest, force_refresh: bool = False) -> list[CostCenter]:
+    if not force_refresh:
+
+        keys = cache.get("fortnox:costcenter:search_keys", [])
+        if len(keys) != 0:
+            cached_costcenters = cache.get_many(keys)
+            return [CostCenter.model_validate(cc) for cc in cached_costcenters.values()]
+    # Retrieve from fortnox
+    cost_centers = [cc for cc in request.fortnox_service.list_cost_centers(limit=999) if cc.Active]
+    cache.set_many({f"fortnox:costcenter:{cc.Code}": cc.model_dump() for cc in cost_centers},
+                   timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60)
+    cache.set("fortnox:costcenter:search_keys", [f"fortnox:costcenter:{cc.Code}" for cc in cost_centers],
+              timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60)
+    return cost_centers
 
 
 def retrieve_fortnox_cost_center(request: FortnoxRequest, cost_center: Union[GCostCenter, int]) -> CostCenter:

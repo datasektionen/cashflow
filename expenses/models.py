@@ -112,11 +112,15 @@ class Profile(models.Model):
             for ep in expense.parts.all():
                 if dauth.has_scoped_permission("accounting", ep.cost_centre, self.user):
                     return True
+            if dauth.has_scoped_permission("accounting", "*", self.user):
+                return True
 
         if invoice is not None:
             for ip in invoice.parts.all():
                 if dauth.has_scoped_permission("accounting", ip.cost_centre, self.user):
                     return True
+            if dauth.has_scoped_permission("accounting", "*", self.user):
+                return True
 
         return False
 
