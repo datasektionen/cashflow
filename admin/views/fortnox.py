@@ -148,10 +148,11 @@ def account_expense(request: FortnoxRequest, **kwargs):
         credit_row = VoucherRow(Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT, Credit=float(expense.total_amount()))
         voucher_rows.append(credit_row)
 
+
         for part in expense.parts.all():
             acct = int(request.POST[f"part-{part.id}-account"])
-            cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
-            debit_row = VoucherRow(Account=acct, CostCenter=cc.Code, Debit=float(part.amount))
+            cc = request.POST[f"part-{part.id}-cost-center"]
+            debit_row = VoucherRow(Account=acct, CostCenter=cc, Debit=float(part.amount))
             voucher_rows.append(debit_row)
 
         created = request.fortnox_service.create_voucher(

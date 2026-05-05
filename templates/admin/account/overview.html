@@ -3,6 +3,22 @@
 {% block title %}Bokför{% endblock %}
 
 {% block content %}
+    <style>
+        .submit-spinner {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            margin-right: 0.4em;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: submit-spinner-rotate 0.7s linear infinite;
+            vertical-align: -0.15em;
+        }
+        @keyframes submit-spinner-rotate {
+            to { transform: rotate(360deg); }
+        }
+    </style>
     <div id="data">
         <p>
             Här kan du hitta alla kvitton som är klara att bokföras som innehåller kvittodelar som du är ansvarig för.
@@ -42,7 +58,7 @@
                         </div>
                     </div>
                     <div class="container">
-                        {% for part, default_account in expense_parts %}
+                        {% for part, default_account, default_cost_center in expense_parts %}
                             {% if part.expense == expense %}
                                 <div class="row">
                                     <select name="part-{{ part.id }}-account" class="col-sm-1">
@@ -53,6 +69,16 @@
                                         	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
                                         {% endfor %}
 
+                                    </select>
+                                    <select name="part-{{ part.id }}-cost-center" class="col-sm-2" required>
+                                        {% if default_cost_center %}
+                                            <option label="{{ default_cost_center.Code }} | {{ default_cost_center.Description }}" value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code }}</option>
+                                        {% else %}
+                                            <option value="" disabled selected hidden>Välj resultatställe</option>
+                                        {% endif %}
+                                        {% for cost_center in cost_centers %}
+                                            <option label="{{ cost_center.Code }} | {{ cost_center.Description }}" value="{{ cost_center.Code }}">{{ cost_center.Code }}</option>
+                                        {% endfor %}
                                     </select>
                                     <div class="col-sm-6 col-lg-6">
                                         <div class="row">
@@ -103,7 +129,7 @@
                     </div>
                 </div>
                 <div class="container">
-                    {% for part, default_account in invoice_parts %}
+                    {% for part, default_account, default_cost_center in invoice_parts %}
                         {% if part.invoice == invoice %}
                             <div class="row">
                                 <select name="part-{{ part.id }}-account" class="col-sm-1">
@@ -114,6 +140,16 @@
                                     	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
                                     {% endfor %}
 
+                                </select>
+                                <select name="part-{{ part.id }}-cost-center" class="col-sm-2" required>
+                                    {% if default_cost_center %}
+                                        <option label="{{ default_cost_center.Code }} | {{ default_cost_center.Description }}" value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code }}</option>
+                                    {% else %}
+                                        <option value="" disabled selected hidden>Välj resultatställe</option>
+                                    {% endif %}
+                                    {% for cost_center in cost_centers %}
+                                        <option label="{{ cost_center.Code }} | {{ cost_center.Description }}" value="{{ cost_center.Code }}">{{ cost_center.Code }}</option>
+                                    {% endfor %}
                                 </select>
                                 <div class="col-sm-6 col-lg-6">
                                     <div class="row">
@@ -141,5 +177,15 @@
     </div>
 
     <script src="/static/account.js"></script>
+    <script>
+        document.querySelectorAll('form[action^="/admin/fortnox/"]').forEach((form) => {
+            form.addEventListener('submit', () => {
+                const btn = form.querySelector('button[type="submit"]');
+                if (!btn || btn.disabled) return;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="submit-spinner"></span>Bokför...';
+            });
+        });
+    </script>
 
 {% endblock %}

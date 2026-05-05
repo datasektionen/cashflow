@@ -222,4 +222,4 @@ FORTNOX_INVOICE_VOUCHER_SERIES = "U"
 
 # When accounting to Fortnox a comment will be added following this format
 # kind = expense | invoice
-FORTNOX_CASHFLOW_COMMENT_FORMAT = "[cashflow:{kind}:{id}]"
+FORTNOX_CASHFLOW_COMMENT_FORMAT = "(cashflow:{kind}:{id})"
