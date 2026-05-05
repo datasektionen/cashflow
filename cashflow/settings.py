@@ -169,16 +169,67 @@ RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
 # Only send emails if set to true
 SEND_EMAILS = (os.getenv('SEND_EMAILS', True) == 'True')
 
-structlog.configure(processors=[structlog.contextvars.merge_contextvars, structlog.processors.JSONRenderer()],)
+# Make sure the event field comes first in the structured log
+def _event_first(_logger, _method_name, event_dict):
+    if "event" in event_dict:
+        event_dict = {"event": event_dict.pop("event"), **event_dict}
+    return event_dict
+
+
+_renderer = structlog.dev.ConsoleRenderer() if DEBUG else structlog.processors.JSONRenderer()
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        _event_first,
+        _renderer,
+    ],
+)
 LOG_LEVEL = 'DEBUG' if DEBUG else 'INFO'
-LOGGING = {'version': 1, 'disable_existing_loggers': False,
-    'formatters': {'simple': {'format': '{levelname} {asctime} {module}: {message}', 'style': '{', }, }, 'handlers': {
-        'console': {'level': LOG_LEVEL, 'class': 'logging.StreamHandler', 'stream': sys.stdout,
-            'formatter': 'simple', }, }, 'loggers': {
-        'django': {'handlers': ['console'], 'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'), 'propagate': False, },
-        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False, },
-        'fortnox': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False, }},
-    'root': {'handlers': ['console'], 'level': LOG_LEVEL, }, }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': LOG_LEVEL,
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        # Some loggers are very noisy when in debug, so we adjust their levels
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'urllib3': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': LOG_LEVEL,
+    },
+}
 
 
 

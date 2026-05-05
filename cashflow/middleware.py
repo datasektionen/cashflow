@@ -5,6 +5,7 @@ Contains middleware that is not specific to any certain app.
 import random
 import re
 import string
+import time
 
 from django.http import HttpResponse, HttpRequest
 from structlog.contextvars import clear_contextvars, bind_contextvars
@@ -56,8 +57,18 @@ class StructlogContextMiddleware:
         else:
             bind_contextvars(user_id=None, username=None)
 
+        start = time.perf_counter()
         response: HttpResponse = self.get_response(request)
+        duration_ms = (time.perf_counter() - start) * 1000
+
         response.headers["X-Request-ID"] = request_id
+        logger.info(
+            "request completed",
+            method=request.method,
+            path=request.path,
+            status_code=response.status_code,
+            duration_ms=round(duration_ms, 2),
+        )
         return response
 
     def generate_id(self):

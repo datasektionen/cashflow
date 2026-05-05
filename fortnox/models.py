@@ -15,6 +15,6 @@ class ServiceAccount(models.Model):
     expires_at = models.DateTimeField()
 
     def save(self, *args, **kwargs):
-        if ServiceAccount.objects.count() >= 1:
+        if self.pk is None and ServiceAccount.objects.count() >= 1:
             raise ValueError("Only one service account is allowed.")
         super().save(*args, **kwargs)
