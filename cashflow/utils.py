@@ -51,35 +51,34 @@ def find_cost_center(request: FortnoxRequest, part: Union[InvoicePart, ExpensePa
 
 def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -> list[Account]:
     """Lists all active accounts on Fortnox. Caches values for performance"""
-
+    cache_key = "fortnox:accounts:active"
     if not force_refresh:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return [Account.model_validate(acc) for acc in cached]
 
-        keys = cache.get("fortnox:account:search_keys", [])
-        if len(keys) != 0:
-            cached_accounts = cache.get_many(keys)
-            return [Account.model_validate(acc) for acc in cached_accounts.values()]
-    # Retrieve from fortnox
     accounts = [acc for acc in request.fortnox_service.list_accounts(limit=999) if acc.Active]
-    cache.set_many({f"fortnox:account:{acc.Number}": acc.model_dump() for acc in accounts},
-                   timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
-    cache.set("fortnox:account:search_keys", [f"fortnox:account:{acc.Number}" for acc in accounts],
-              timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60)
+    cache.set(
+        cache_key,
+        [acc.model_dump() for acc in accounts],
+        timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60,
+    )
     return accounts
 
 
 def list_active_cost_centers(request: FortnoxRequest, force_refresh: bool = False) -> list[CostCenter]:
+    cache_key = "fortnox:costcenters:active"
     if not force_refresh:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return [CostCenter.model_validate(cc) for cc in cached]
 
-        keys = cache.get("fortnox:costcenter:search_keys", [])
-        if len(keys) != 0:
-            cached_costcenters = cache.get_many(keys)
-            return [CostCenter.model_validate(cc) for cc in cached_costcenters.values()]
-    # Retrieve from fortnox
     cost_centers = [cc for cc in request.fortnox_service.list_cost_centers(limit=999) if cc.Active]
-    cache.set_many({f"fortnox:costcenter:{cc.Code}": cc.model_dump() for cc in cost_centers},
-                   timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60)
-    cache.set("fortnox:costcenter:search_keys", [f"fortnox:costcenter:{cc.Code}" for cc in cost_centers],
-              timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60)
+    cache.set(
+        cache_key,
+        [cc.model_dump() for cc in cost_centers],
+        timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60,
+    )
     return cost_centers
 
 

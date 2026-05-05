@@ -243,6 +243,14 @@ class FortnoxAPIClient:
 
         match adapter.validate_python(response.json()):
             case ResponseModel() as resp:
+                logger.debug(
+                    "fortnox list response",
+                    resource=label,
+                    returned_count=len(resp.Collection),
+                    total_resources=resp.MetaInformation.TotalResources,
+                    total_pages=resp.MetaInformation.TotalPages,
+                    current_page=resp.MetaInformation.CurrentPage,
+                )
                 return resp.Collection, resp.MetaInformation
             case Error() as e:
                 raise cls._parse_error(e)

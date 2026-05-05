@@ -220,6 +220,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.db': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
         'urllib3': {
             'handlers': ['console'],
             'level': 'INFO',
