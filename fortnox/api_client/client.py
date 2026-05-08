@@ -199,7 +199,7 @@ class FortnoxAPIClient:
         """Finds the first voucher that matches the given fields"""
         page = 1
         while True:
-            response = self._get("vouchers", parameters={"page": page}, access_token=access_token)
+            response = self._get("vouchers", parameters={"page": page, "limit": 500}, access_token=access_token)
             data, meta = self._parse_list_response(response, Voucher, "Vouchers")
             for v in data:
                 v_data = v.model_dump()
@@ -269,7 +269,6 @@ class FortnoxAPIClient:
         bind_contextvars(fortnox_request_url=url)
         response = requests.get(url, headers=headers)
         bind_contextvars(fortnox_response_status_code=response.status_code)
-        logger.debug(response)
 
         # TODO: Handle more errors
         if response.status_code != 200:

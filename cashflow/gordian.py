@@ -2,10 +2,13 @@
 
 https://github.com/datasektionen/gordian
 """
-import logging
 import re
 from typing import Literal, Union, Any, Annotated
 from warnings import deprecated
+
+from requests import Response
+from structlog import get_logger
+from structlog.contextvars import bind_contextvars
 
 import requests
 from django.conf import settings
@@ -16,8 +19,7 @@ from expenses.models import ExpensePart
 from invoices.models import InvoicePart
 
 
-logger = logging.getLogger(__name__)
-
+logger = get_logger(__name__)
 
 # ======================
 # Data models
@@ -207,7 +209,7 @@ def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCen
         if len(cost_centers) != 0:
             return cost_centers
 
-    response = requests.get(f"https://budget.datasektionen.se/api/CostCentres")
+    response = _get(f"https://budget.datasektionen.se/api/CostCentres")
     cost_centers = CC_LIST.validate_json(response.text)
     cache.set(COST_CENTER_SEARCH_KEYS, [_cost_center_key(cc) for cc in cost_centers],
               timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
@@ -231,7 +233,7 @@ def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter
             return secondary_cost_centers
 
     if cost_center is not None:
-        response = requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc_id})
+        response = _get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc_id})
         secondary_cost_centers = SCC_LIST.validate_json(response.text)
 
         # (!) We don't want to overwrite the existing search keys -> store cc specific keys separately
@@ -247,7 +249,7 @@ def list_secondary_cost_centres_from_gordian(cost_center: Union[int, GCostCenter
 
         secondary_cost_centers = []
         for cc in cost_centers:
-            response = requests.get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc.id})
+            response = _get(f"https://budget.datasektionen.se/api/SecondaryCostCentres", params={"id": cc.id})
             secondary_cost_centers += SCC_LIST.validate_json(response.text)
 
         cache.set(SND_COST_CENTER_SEARCH_KEYS, [_snd_cost_center_key(scc) for scc in secondary_cost_centers],
@@ -274,7 +276,7 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
             return budget_lines
 
     if secondary_cost_center is not None:
-        response = requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc_id})
+        response = _get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc_id})
         budget_lines = BL_LIST.validate_json(response.text)
 
         cache.set(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", [_budget_line_key(bl) for bl in budget_lines],
@@ -287,7 +289,7 @@ def list_budget_lines_from_gordian(secondary_cost_center: Union[int, GSecondaryC
         secondary_cost_centers = list_secondary_cost_centres_from_gordian(force_refresh=force_refresh)
         budget_lines = []
         for scc in secondary_cost_centers:
-            response = requests.get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
+            response = _get(f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc.id})
             if response.text.strip() == "null":  # No budget lines for this scc
                 continue
             budget_lines += BL_LIST.validate_json(response.text)
@@ -328,6 +330,14 @@ def retrieve_account_from_gordian(part: Union[InvoicePart, ExpensePart]) -> list
 # ======================
 # Helper functions
 # ======================
+
+
+def _get(endpoint: str, **kwargs) -> Response:
+    bind_contextvars(gordian_request_url=endpoint)
+    response = requests.get(endpoint, **kwargs)
+    bind_contextvars(gordian_response_status_code=response.status_code)
+    return response
+
 def _match_regex(input_str: str, patterns: list[str]) -> str:
     # Tries to match a given string against a list of regex patterns
     # and returns the one that matches, otherwise raises ValueError

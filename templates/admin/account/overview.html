@@ -1,4 +1,5 @@
 {% extends "../main.html" %}
+{% load text %}
 
 {% block title %}Bokför{% endblock %}
 
@@ -17,6 +18,10 @@
         }
         @keyframes submit-spinner-rotate {
             to { transform: rotate(360deg); }
+        }
+        select.tabular-options,
+        select.tabular-options option {
+            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important;
         }
     </style>
     <div id="data">
@@ -61,23 +66,27 @@
                         {% for part, default_account, default_cost_center in expense_parts %}
                             {% if part.expense == expense %}
                                 <div class="row">
-                                    <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                    <select name="part-{{ part.id }}-account" class="col-sm-1 tabular-options">
                                         {% if default_account %}
-                                            <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                            <option value="{{ default_account.Number }}" selected>{{ default_account.Number|pad_nbsp:"8" }}{{ default_account.Description }}</option>
                                         {% endif %}
                                         {% for account in accounts %}
-                                        	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
+                                            {% if not default_account or account.Number != default_account.Number %}
+                                                <option value="{{ account.Number }}">{{ account.Number|pad_nbsp:"8" }}{{ account.Description }}</option>
+                                            {% endif %}
                                         {% endfor %}
 
                                     </select>
-                                    <select name="part-{{ part.id }}-cost-center" class="col-sm-2" required>
+                                    <select name="part-{{ part.id }}-cost-center" class="col-sm-2 tabular-options" required>
                                         {% if default_cost_center %}
-                                            <option label="{{ default_cost_center.Code }} | {{ default_cost_center.Description }}" value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code }}</option>
+                                            <option value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code|pad_nbsp:"8" }}{{ default_cost_center.Description }}</option>
                                         {% else %}
                                             <option value="" disabled selected hidden>Välj resultatställe</option>
                                         {% endif %}
                                         {% for cost_center in cost_centers %}
-                                            <option label="{{ cost_center.Code }} | {{ cost_center.Description }}" value="{{ cost_center.Code }}">{{ cost_center.Code }}</option>
+                                            {% if not default_cost_center or cost_center.Code != default_cost_center.Code %}
+                                                <option value="{{ cost_center.Code }}">{{ cost_center.Code|pad_nbsp:"8" }}{{ cost_center.Description }}</option>
+                                            {% endif %}
                                         {% endfor %}
                                     </select>
                                     <div class="col-sm-6 col-lg-6">
@@ -132,23 +141,27 @@
                     {% for part, default_account, default_cost_center in invoice_parts %}
                         {% if part.invoice == invoice %}
                             <div class="row">
-                                <select name="part-{{ part.id }}-account" class="col-sm-1">
+                                <select name="part-{{ part.id }}-account" class="col-sm-1 tabular-options">
                                     {% if default_account %}
-                                        <option label="{{ default_account.Number }} | {{ default_account.Description }}">{{ default_account.Number }}</option>
+                                        <option value="{{ default_account.Number }}" selected>{{ default_account.Number|pad_nbsp:"8" }}{{ default_account.Description }}</option>
                                     {% endif %}
                                     {% for account in accounts %}
-                                    	<option label="{{ account.Number }} | {{ account.Description }}" value="{{ account.Number }}">{{ account.Number }}</option>
+                                        {% if not default_account or account.Number != default_account.Number %}
+                                            <option value="{{ account.Number }}">{{ account.Number|pad_nbsp:"8" }}{{ account.Description }}</option>
+                                        {% endif %}
                                     {% endfor %}
 
                                 </select>
-                                <select name="part-{{ part.id }}-cost-center" class="col-sm-2" required>
+                                <select name="part-{{ part.id }}-cost-center" class="col-sm-2 tabular-options" required>
                                     {% if default_cost_center %}
-                                        <option label="{{ default_cost_center.Code }} | {{ default_cost_center.Description }}" value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code }}</option>
+                                        <option value="{{ default_cost_center.Code }}" selected>{{ default_cost_center.Code|pad_nbsp:"8" }}{{ default_cost_center.Description }}</option>
                                     {% else %}
                                         <option value="" disabled selected hidden>Välj resultatställe</option>
                                     {% endif %}
                                     {% for cost_center in cost_centers %}
-                                        <option label="{{ cost_center.Code }} | {{ cost_center.Description }}" value="{{ cost_center.Code }}">{{ cost_center.Code }}</option>
+                                        {% if not default_cost_center or cost_center.Code != default_cost_center.Code %}
+                                            <option value="{{ cost_center.Code }}">{{ cost_center.Code|pad_nbsp:"8" }}{{ cost_center.Description }}</option>
+                                        {% endif %}
                                     {% endfor %}
                                 </select>
                                 <div class="col-sm-6 col-lg-6">

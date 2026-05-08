@@ -175,9 +175,18 @@ def account_overview(request: FortnoxRequest):
     def get_account(part):
         try:
             number = gordian.retrieve_account_from_gordian(part)[0]
-        except Exception:
+        except IndexError:
+            logger.error("failed to resolve account from gordian", part=part, cost_center=part.cost_centre,
+                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
             return None
-        return account_by_number.get(number)
+        account = account_by_number.get(number)
+        if account is None:
+            logger.error("account number from gordian not found in fortnox active accounts",
+                         account_number=number, cost_center=part.cost_centre,
+                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
+            return None
+        logger.debug("resolved account number", account_number=account.Number)
+        return account
 
     def get_cost_center(part):
         cost_center = cost_center_by_description.get(part.cost_centre, None)

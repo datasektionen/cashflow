@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from cashflow.exceptions import AccountingPermissionDeniedError
-from expenses.models import Expense
+from expenses.models import Expense, Comment
 from fortnox import FortnoxNotFound
 from fortnox.api_client import AuthCodeGrant
 from fortnox.api_client.models import VoucherRow, VoucherCreate
@@ -111,7 +111,7 @@ def account_expense(request: FortnoxRequest, **kwargs):
             return JsonResponse(error.to_dict(), status=403)
 
         # This is used to uniquely identify the cashflow expense in Fortnox
-        comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='expense', id=expense.id)} {expense.description}"
+        description = settings.FORTNOX_DESCRIPTION_FORMAT.format(description=expense.description, kind="expense", id=expense.id)
 
         if expense.verification:
             # Race condition or sync issue between Cashflow and Fortnox
@@ -132,7 +132,7 @@ def account_expense(request: FortnoxRequest, **kwargs):
 
         # Sanity check in the rare case that a record exists on Fortnox but not in Cashflow
         try:
-            voucher = request.fortnox_service.find_voucher(Comments=comment)
+            voucher = request.fortnox_service.find_voucher(Description=description)
             logger.error("expense missing verification in Cashflow", expense_id=expense.id,
                          fortnox_voucher_series=voucher.VoucherSeries, fortnox_voucher_number=voucher.VoucherNumber,
                          fortnox_voucher_comments=voucher.Comments)
@@ -156,11 +156,15 @@ def account_expense(request: FortnoxRequest, **kwargs):
             voucher_rows.append(debit_row)
 
         created = request.fortnox_service.create_voucher(
-            VoucherCreate(Description=expense.description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
-                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
-                          Comments=comment))
+            VoucherCreate(Description=description, TransactionDate=expense.expense_date.strftime('%Y-%m-%d'),
+                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES))
         expense.verification = f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
         expense.save()
+
+    comment = Comment(author=request.user.profile, expense=expense,
+                      content="Bokförde med verifikationsnumret: " + expense.verification)
+    comment.save()
+
     return redirect('admin-account')
 
 
@@ -175,7 +179,7 @@ def account_invoice(request: FortnoxRequest, **kwargs):
             return JsonResponse(error.to_dict(), status=403)
 
         # This is used to uniquely identify the cashflow invoice in Fortnox
-        comment = f"{settings.FORTNOX_CASHFLOW_COMMENT_FORMAT.format(kind='invoice', id=invoice.id)} {invoice.description}"
+        description = settings.FORTNOX_DESCRIPTION_FORMAT.format(description=invoice.description, kind="invoice", id=invoice.id)
 
         if invoice.verification:
             # Race condition or sync issue between Cashflow and Fortnox
@@ -196,7 +200,7 @@ def account_invoice(request: FortnoxRequest, **kwargs):
 
         # Sanity check in the rare case that a record exists on Fortnox but not in Cashflow
         try:
-            voucher = request.fortnox_service.find_voucher(Comments=comment)
+            voucher = request.fortnox_service.find_voucher(Description=description)
             logger.error("invoice missing verification in Cashflow", invoice_id=invoice.id,
                          fortnox_voucher_series=voucher.VoucherSeries, fortnox_voucher_number=voucher.VoucherNumber,
                          fortnox_voucher_comments=voucher.Comments)
@@ -219,11 +223,15 @@ def account_invoice(request: FortnoxRequest, **kwargs):
             voucher_rows.append(debit_row)
 
         created = request.fortnox_service.create_voucher(
-            VoucherCreate(Description=invoice.description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
-                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
-                          Comments=comment))
+            VoucherCreate(Description=description, TransactionDate=invoice.invoice_date.strftime('%Y-%m-%d'),
+                          VoucherRows=voucher_rows, VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES))
         invoice.verification = f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
         invoice.save()
+
+    comment = Comment(author=request.user.profile, invoice=invoice,
+                      content="Bokförde med verifikationsnumret: " + invoice.verification)
+    comment.save()
+
     return redirect(reverse('admin-account'))
 
 
