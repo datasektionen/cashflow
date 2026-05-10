@@ -2,6 +2,33 @@
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
 	import { Plus, BanknoteArrowUp } from '@lucide/svelte';
+	import ComboBox from "$lib/components/ComboBox.svelte";
+
+	const costCenters = [
+		"Sektionslokalsgruppen",
+		"Mottagningen",
+		"D-rektoratet",
+		"Studienämnden",
+		"Näringslivsnämnden",
+		"Internationella nämnden",
+		"Idrottsnämnden",
+		"Jämlikhetsnämnden",
+		"DKM",
+		"METAspexet",
+		"Fanborgen",
+		"Sånggruppen",
+		"METAdorerna",
+		"Valberedningen",
+		"Revisorerna",
+	]
+
+	const budgetLines = [
+		"Lokalskostnader",
+		"Mat och dryck",
+		"Transport",
+		"Trycksaker",
+		"Övrigt",
+	]
 </script>
 
 <form
@@ -51,51 +78,25 @@
 		</span>
 
 		<div class="flex flex-col">
-			<div class="flex flex-row justify-between bg-base-300 p-4 dark:bg-dark-base-300">
+			<div class="flex flex-row justify-between bg-base-300 p-4 space-x-2 dark:bg-dark-base-300">
+
 				<div class="flex flex-col">
 					<label for="part-0-costcenter">
 						{$_('new_expense.form.expense_parts.cost_center_label')}
 					</label>
-					<select
-						name="part-0-costcenter"
-						id="part-0-costcenter"
-						class="form-control border-0 bg-base-300 dark:bg-dark-base-300"
-					>
-						<option value="" disabled selected
-							>{$_('new_expense.form.expense_parts.cost_center_placeholder')}</option
-						>
-						<option value="test">Test</option>
-					</select>
+					<ComboBox name="part-0-costcenter" placeholder={$_('new_expense.form.expense_parts.cost_center_placeholder')} items={costCenters}/>
 				</div>
 				<div class="flex flex-col">
 					<label for="part-0-secondarycostcenter">
 						{$_('new_expense.form.expense_parts.secondary_cost_center_label')}
 					</label>
-					<select
-						name="part-0-secondarycostcenter"
-						id="part-0-secondarycostcenter"
-						class="border-0 bg-base-300 dark:bg-dark-base-300"
-					>
-						<option value="" disabled selected
-							>{$_('new_expense.form.expense_parts.secondary_cost_center_placeholder')}</option
-						>
-						<option value="test">Test</option>
-					</select>
+					<ComboBox name="part-0-secondarycostcenter" placeholder={$_('new_expense.form.expense_parts.secondary_cost_center_placeholder')} items={costCenters}/>
 				</div>
 				<div class="flex flex-col">
 					<label for="part-0-budgetline">
 						{$_('new_expense.form.expense_parts.budget_line_label')}
 					</label>
-					<select
-						name="part-0-budgetline"
-						id="part-0-budgetline"
-						class="border-0 bg-base-300 dark:bg-dark-base-300"
-					>
-						<option value="" disabled selected
-							>{$_('new_expense.form.expense_parts.budget_line_placeholder')}</option
-						>
-						<option value="test">Test</option>
-					</select>
+					<ComboBox name="part-0-budgetline" placeholder={$_('new_expense.form.expense_parts.budget_line_placeholder')} items={budgetLines}/>
 				</div>
 				<div class="flex flex-col">
 					<label for="part-0-amount">
@@ -107,7 +108,7 @@
 						step="0.01"
 						name="part-0-amount"
 						id="part-0-amount"
-						class="border-0 bg-base-300 dark:bg-dark-base-300"
+						class="border-0 bg-base-300 dark:bg-dark-base-200"
 					/>
 				</div>
 			</div>

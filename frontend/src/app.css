@@ -1,8 +1,11 @@
 @import 'tailwindcss';
 
+/*Tailwind is stupid*/
+@source './lib/**/*';
+
 @plugin 'flowbite/plugin';
 
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
 	--color-money-green-50: #f0faf1;
@@ -40,8 +43,8 @@
 	--color-secondary-900: #0c4a6e;
 }
 
-@source '../../node_modules/flowbite-svelte/dist';
-@source '../../node_modules/flowbite-svelte-icons/dist';
+@source '../node_modules/flowbite-svelte/dist';
+@source '../node_modules/flowbite-svelte-icons/dist';
 
 @layer base {
 	/* disable chrome cancel button */

@@ -1,11 +1,13 @@
 <script lang="ts">
-	import './layout.css';
+	import '../app.css';
 	import '$lib/i18n'; // initialize i18n
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import favicon from '$lib/assets/favicon.svg';
 	import { DarkMode } from 'flowbite-svelte';
 	import NavLink from '$lib/components/NavLink.svelte';
+
+
 
 	let { children, data } = $props();
 </script>
@@ -46,7 +48,7 @@
 	</div>
 
 	<main
-		class="mx-64 h-full min-h-screen bg-base-100 md:p-4 lg:p-16 dark:bg-dark-base-100 dark:text-dark-base-text"
+		class="mx-32 h-full min-h-screen bg-base-100 md:p-4 lg:p-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 	>
 		{@render children()}
 	</main>
