@@ -1,4 +1,6 @@
 import hashlib
+from datetime import datetime, date
+from decimal import Decimal
 
 import unicodedata
 from django.conf import settings
@@ -122,3 +124,19 @@ def fortnox_cost_center_for_part(request: FortnoxRequest, part: ExpensePart | In
                          closest_match=description, score=score, score_cutoff=score_cutoff)
 
     return cost_center
+
+# Hack to properly serialize Decimal as a number in json without losing precision
+class FakeFloat(float):
+    def __init__(self, value):
+        self._value = value
+
+    def __repr__(self):
+        return str(self._value)
+
+
+def json_serial(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return FakeFloat(obj)
+    raise TypeError("Type %s not serializable" % type(obj))

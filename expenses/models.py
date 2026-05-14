@@ -25,14 +25,9 @@ class Profile(models.Model):
 
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
-    firebase_instance_id = models.TextField(blank=True)
 
     # Return a string representation of the user
     def __str__(self):
-        return self.user.first_name + " " + self.user.last_name
-
-    # Return a unicode representation of the user
-    def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name
 
     # Creates a dict from the model

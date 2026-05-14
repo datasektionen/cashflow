@@ -1,6 +1,5 @@
 import json
 from datetime import date, datetime
-from decimal import *
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -14,7 +13,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from structlog import get_logger
 
 from cashflow.utils import list_active_accounts, list_active_cost_centers, fortnox_account_for_part, \
-    fortnox_cost_center_for_part
+    fortnox_cost_center_for_part, FakeFloat, json_serial
 from expenses.models import Expense, ExpensePart, Comment, Profile
 from fortnox.django import FortnoxRequest, require_fortnox_service
 from invoices.models import Invoice, InvoicePart
@@ -418,20 +417,3 @@ def list_verification(request):
         verifications = paginator.page(paginator.num_pages)
 
     return render(request, 'admin/list-verification.html', {'expenses': verifications, 'years': years, 'year': year, })
-
-
-class FakeFloat(float):
-    # noinspection PyMissingConstructor
-    def __init__(self, value):
-        self._value = value
-
-    def __repr__(self):
-        return str(self._value)
-
-
-def json_serial(obj):
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    if isinstance(obj, Decimal):
-        return FakeFloat(obj)
-    raise TypeError("Type %s not serializable" % type(obj))

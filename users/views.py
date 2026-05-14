@@ -1,20 +1,17 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden, \
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, \
     HttpResponseServerError
 from django.shortcuts import render
-from django.core import serializers
-from django.forms.models import model_to_dict
-from datetime import date, datetime
 from django.db.models import Sum
-from decimal import *
 import json
 import requests
 from django.urls import reverse
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods, require_GET
 from django.forms import modelform_factory
 
-from cashflow import dauth, settings
+from cashflow import settings
+from cashflow.utils import json_serial
 from expenses import models
 
 """
@@ -104,18 +101,3 @@ def edit_user(request, username):
         'showuser': user,
         'hide_edit': True
     })
-#copy some code teehee
-class FakeFloat(float):
-    # noinspection PyMissingConstructor
-    def __init__(self, value):
-        self._value = value
-
-    def __repr__(self):
-        return str(self._value)
-
-def json_serial(obj):
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    if isinstance(obj, Decimal):
-        return FakeFloat(obj)
-    raise TypeError("Type %s not serializable" % type(obj))
