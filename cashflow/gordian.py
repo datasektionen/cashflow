@@ -4,7 +4,6 @@ https://github.com/datasektionen/gordian
 """
 import re
 from typing import Literal, Union, Any, Annotated
-from warnings import deprecated
 
 from requests import Response
 from structlog import get_logger
@@ -92,108 +91,6 @@ BUDGET_LINE_SEARCH_KEYS = "gordian:budget_line:search_keys"
 # ======================
 # API request functions
 # ======================
-@deprecated("This function is meant to be used temporarily, until a better solution is found")
-def find_cost_center(cc_id: int = None, name: str = None, force_refresh=False) -> GCostCenter:
-    """Finds a cost center on GOrdian based on the given fields"""
-    from .utils import build_cache_key
-
-    if not force_refresh:
-        if cc_id is not None:
-            cost_center = cache.get(f"gordian:cost_center:{cc_id}", None)
-            if cost_center is not None:
-                return GCostCenter.model_validate(cost_center, by_name=True)
-
-    all_cost_centers = list_cost_centres_from_gordian(force_refresh=force_refresh)
-    if cc_id is not None:
-        try:
-            cost_center = GCostCenter.model_validate(next(cc for cc in all_cost_centers if cc.id == cc_id))
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find cost center with {cc_id=}") from e
-
-        return cost_center
-    elif name is not None:
-        cost_center = cache.get(f"gordian:cost_center:search:name:{build_cache_key(name)}", None)
-        if cost_center is not None:
-            logger.debug("Cache hit for cost center with name %s", name)
-            return GCostCenter.model_validate(cost_center, by_name=True)
-        try:
-            cost_center = next(cc for cc in all_cost_centers if cc.name == name)
-            cache.set(f"gordian:cost_center:search:name:{build_cache_key(cost_center.name)}", cost_center.model_dump(),
-                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find cost center with {name=}") from e
-        return GCostCenter.model_validate(cost_center)
-    else:
-        raise ValueError(f"You must specify either a cost center ID or name")
-
-
-@deprecated("This function is meant to be used temporarily, until a better solution is found")
-def find_snd_cost_center(scc_id: int = None, name: str = None, force_refresh=False) -> GSecondaryCostCenter:
-    """Finds a secondary cost center on GOrdian based on the given fields"""
-    from .utils import build_cache_key
-
-    if not force_refresh:
-        if scc_id is not None:
-            secondary_cost_center = cache.get(f"gordian:secondary_cost_center:{scc_id}", None)
-            if secondary_cost_center is not None:
-                return GSecondaryCostCenter.model_validate(secondary_cost_center)
-
-    all_snd_cost_centers = list_secondary_cost_centres_from_gordian(force_refresh=force_refresh)
-    if scc_id is not None:
-        try:
-            secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.id == scc_id)
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find cost secondary center with {scc_id=}") from e
-        return GSecondaryCostCenter.model_validate(secondary_cost_center)
-    elif name is not None:
-        secondary_cost_center = cache.get(f"gordian:secondary_cost_center:search:name:{build_cache_key(name)}", None)
-        if secondary_cost_center is not None:
-            logger.debug("Cache hit for secondary cost center with name %s", name)
-            return GSecondaryCostCenter.model_validate(secondary_cost_center, by_name=True)
-        try:
-            secondary_cost_center = next(scc for scc in all_snd_cost_centers if scc.name == name)
-            cache.set(f"gordian:secondary_cost_center:search:name:{build_cache_key(secondary_cost_center.name)}", secondary_cost_center.model_dump(),
-                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find secondary cost center with {name=}") from e
-        return GSecondaryCostCenter.model_validate(secondary_cost_center)
-    else:
-        raise ValueError(f"You must specify either a secondary cost center ID or name")
-
-
-@deprecated("This function is meant to be used temporarily, until a better solution is found")
-def find_budget_line(bl_id: int = None, name: str = None, force_refresh=False) -> GBudgetLine:
-    """Finds a budget line on GOrdian based on the given fields"""
-    from .utils import build_cache_key
-
-    if not force_refresh:
-        if bl_id is not None:
-            budget_line = cache.get(f"gordian:budget_line:{bl_id}", None)
-            if budget_line is not None:
-                return GBudgetLine.model_validate(budget_line)
-
-    all_budget_lines = list_budget_lines_from_gordian(force_refresh=force_refresh)
-    if bl_id is not None:
-        try:
-            budget_line = next(bl for bl in all_budget_lines if bl.id == bl_id)
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find cost budget line with {bl_id=}") from e
-        return GBudgetLine.model_validate(budget_line)
-    elif name is not None:
-        budget_line = cache.get(f"gordian:budget_line:search:name:{build_cache_key(name)}", None)
-        if budget_line is not None:
-            logger.debug("Cache hit for budget line with name %s", name)
-            return GBudgetLine.model_validate(budget_line, by_name=True)
-        try:
-            budget_line = next(bl for bl in all_budget_lines if bl.name == name)
-            cache.set(f"gordian:budget_line:search:name:{build_cache_key(budget_line.name)}", budget_line.model_dump(),
-                      timeout=settings.GORDIAN_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
-        except StopIteration as e:
-            raise ValueError(f"Couldn't find budget line with {name=}") from e
-        return GBudgetLine.model_validate(budget_line)
-    else:
-        raise ValueError(f"You must specify either a budget line ID or name")
-
 
 def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCenter]:
     """Lists all cost centers on GOrdian.

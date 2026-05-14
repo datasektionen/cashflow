@@ -1,15 +1,14 @@
 import hashlib
-from typing import Union
 
 import unicodedata
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from rapidfuzz import process
 from structlog import get_logger
 
 from cashflow import dauth
 from cashflow import gordian
-from cashflow.gordian import GCostCenter
 from expenses.models import ExpensePart
 from fortnox.api_client.models import CostCenter, Account
 from fortnox.django import FortnoxRequest
@@ -37,21 +36,6 @@ def build_cache_key(name: str):
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
-def find_cost_center(request: FortnoxRequest, part: Union[InvoicePart, ExpensePart, str],
-                     force_refresh: bool = False) -> CostCenter:
-    """Finds a cost center on Fortnox that is connected to the given expense or invoice part."""
-    query = part if isinstance(part, str) else part.cost_centre
-
-    if not force_refresh:
-        cached_cost_center = cache.get(f"fortnox:cost_center:search:by_name:{build_cache_key(query)}", None)
-        if cached_cost_center is not None:
-            return CostCenter.model_validate(cached_cost_center)
-    cost_center = request.fortnox_service.find_cost_center(Description=query)
-    cache.set(f"fortnox:cost_center:search:by_name:{build_cache_key(cost_center.Description)}",
-              cost_center.model_dump(), timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60 * 60)
-    return cost_center
-
-
 def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -> list[Account]:
     """Lists all active accounts on Fortnox. Caches values for performance"""
     cache_key = "fortnox:accounts:active"
@@ -71,7 +55,7 @@ def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -
     accounts = [acc for acc in all_accounts if acc.Active]
 
     cache.set(cache_key, [acc.model_dump() for acc in accounts],
-        timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60, )
+              timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60, )
     return accounts
 
 
@@ -93,12 +77,48 @@ def list_active_cost_centers(request: FortnoxRequest, force_refresh: bool = Fals
     cost_centers = [cc for cc in all_cost_centers if cc.Active]
 
     cache.set(cache_key, [cc.model_dump() for cc in cost_centers],
-        timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60, )
+              timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60, )
     return cost_centers
 
 
-def retrieve_fortnox_cost_center(request: FortnoxRequest, cost_center: Union[GCostCenter, int]) -> CostCenter:
-    """Retrieves the corresponding cost center from Fortnox for this GOrdian cost center"""
-    if isinstance(cost_center, int):
-        cost_center = gordian.find_cost_center(cc_id=cost_center)
-    return request.fortnox_service.find_cost_center(Description=cost_center.name)
+def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
+    """Retrieves the Fortnox account that the part should be accounted on, based on GOrdian."""
+    active_accounts = list_active_accounts(request)
+    account_by_number = {a.Number: a for a in active_accounts}
+
+    try:
+        number = gordian.retrieve_account_from_gordian(part)[0]
+    except IndexError:
+        logger.error("failed to resolve account from gordian", part=part, cost_center=part.cost_centre,
+                     secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
+        return None
+    account = account_by_number.get(number)
+    if account is None:
+        logger.error("account number from gordian not found in fortnox active accounts", account_number=number,
+                     cost_center=part.cost_centre, secondary_cost_center=part.secondary_cost_centre,
+                     budget_line=part.budget_line)
+        return None
+    logger.debug("resolved account number", account_number=account.Number)
+    return account
+
+
+def fortnox_cost_center_for_part(request: FortnoxRequest, part: ExpensePart | InvoicePart) -> Account | None:
+    """Retrieves the Fortnox cost center that the part should be accounted in, based on Gordian."""
+    cost_centers = list_active_cost_centers(request)
+    cost_center_by_description = {cc.Description: cc for cc in cost_centers}
+    cost_center = cost_center_by_description.get(part.cost_centre, None)
+    if not cost_center:
+        # Fuzzy search
+        # Some cost centers are composed as "Cost center - Secondary" in Fortnox
+        query, score_cutoff = (f"{part.cost_centre} - {part.secondary_cost_centre}", 90)
+        description, score, _ = process.extractOne(query, [cc.Description for cc in cost_centers])
+        if score >= score_cutoff:
+            logger.debug("fuzzy match on cost center", query=query, match=description, score=score,
+                         score_cutoff=score_cutoff)
+            cost_center = cost_center_by_description.get(description, None)
+        else:
+            logger.error("unable to resolve cost center fuzzily", cost_center=part.cost_centre,
+                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line, query=query,
+                         closest_match=description, score=score, score_cutoff=score_cutoff)
+
+    return cost_center

@@ -11,11 +11,10 @@ from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpRespons
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
-from rapidfuzz import process
 from structlog import get_logger
 
-from cashflow import gordian
-from cashflow.utils import list_active_accounts, list_active_cost_centers
+from cashflow.utils import list_active_accounts, list_active_cost_centers, fortnox_account_for_part, \
+    fortnox_cost_center_for_part
 from expenses.models import Expense, ExpensePart, Comment, Profile
 from fortnox.django import FortnoxRequest, require_fortnox_service
 from invoices.models import Invoice, InvoicePart
@@ -163,55 +162,18 @@ def invoice_pay(request, pk):
 @require_fortnox_service
 def account_overview(request: FortnoxRequest):
     accounts = list_active_accounts(request)
-    account_by_number = {a.Number: a for a in accounts}  # Lookup dict by account number
 
     cost_centers = list_active_cost_centers(request)
-    cost_center_by_description = {cc.Description: cc for cc in cost_centers}
 
     accountable_invoices = Invoice.view_accountable(request.user)
     accountable_expenses = Expense.view_accountable(request.user)
 
-    # Retrieves the fortnox account for the given part, or None if the lookup fails
-    def get_account(part):
-        try:
-            number = gordian.retrieve_account_from_gordian(part)[0]
-        except IndexError:
-            logger.error("failed to resolve account from gordian", part=part, cost_center=part.cost_centre,
-                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
-            return None
-        account = account_by_number.get(number)
-        if account is None:
-            logger.error("account number from gordian not found in fortnox active accounts",
-                         account_number=number, cost_center=part.cost_centre,
-                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
-            return None
-        logger.debug("resolved account number", account_number=account.Number)
-        return account
-
-    def get_cost_center(part):
-        cost_center = cost_center_by_description.get(part.cost_centre, None)
-        if not cost_center:
-            # Fuzzy search
-            # Some cost centers are composed as "Cost center - Secondary" in Fortnox
-            query, score_cutoff = (f"{part.cost_centre} - {part.secondary_cost_centre}", 90)
-            description, score, _ = process.extractOne(query, [cc.Description for cc in cost_centers])
-            if score >= score_cutoff:
-                logger.debug("fuzzy match on cost center", query=query, match=description, score=score,
-                             score_cutoff=score_cutoff)
-                cost_center = cost_center_by_description.get(description, None)
-            else:
-                logger.error("unable to resolve cost center fuzzily", cost_center=part.cost_centre,
-                             secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line,
-                             query=query, closest_match=description, score=score, score_cutoff=score_cutoff)
-
-        return cost_center
-
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default
-    expense_parts = [(part, get_account(part), get_cost_center(part)) for part in
-                     ExpensePart.objects.filter(expense__in=accountable_expenses).order_by("expense")]
-    invoice_parts = [(part, get_account(part), get_cost_center(part)) for part in
-                     InvoicePart.objects.filter(invoice__in=accountable_invoices).order_by("invoice")]
+    expense_parts = [(part, fortnox_account_for_part(request, part), fortnox_cost_center_for_part(request, part)) for
+                     part in ExpensePart.objects.filter(expense__in=accountable_expenses).order_by("expense")]
+    invoice_parts = [(part, fortnox_account_for_part(request, part), fortnox_cost_center_for_part(request, part)) for
+                     part in InvoicePart.objects.filter(invoice__in=accountable_invoices).order_by("invoice")]
 
     return render(request, 'admin/account/overview.html',
                   {"accounts": accounts, "cost_centers": cost_centers, "invoices": accountable_invoices,
