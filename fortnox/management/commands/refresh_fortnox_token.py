@@ -11,7 +11,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not ServiceAccount.objects.exists():
-            self.stdout.write(self.style.WARNING("No Fortnox service account configured; nothing to refresh."))
+            self.stdout.write(
+                self.style.WARNING(
+                    "No Fortnox service account configured; nothing to refresh."
+                )
+            )
             return
 
         client = FortnoxAPIClient(
@@ -21,7 +25,11 @@ class Command(BaseCommand):
         )
         token = retrieve_or_refresh_token(client)
         if token is None:
-            self.stderr.write(self.style.ERROR("Failed to refresh Fortnox token; tokens may be expired."))
+            self.stderr.write(
+                self.style.ERROR(
+                    "Failed to refresh Fortnox token; tokens may be expired."
+                )
+            )
             raise SystemExit(1)
 
         self.stdout.write(self.style.SUCCESS("Fortnox token refreshed."))

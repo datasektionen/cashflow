@@ -2,6 +2,7 @@
 This module defines Pydantic data modules that are used to
 validate and (de)serialize data passed to and from the API.
 """
+
 from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel, constr, conint, Field, AliasChoices
@@ -14,17 +15,19 @@ class Account(BaseModel):
     BalanceBroughtForward: Optional[float] = None
     BalanceCarriedForward: Optional[float] = None
     CostCenter: Optional[str] = None
-    CostCenterSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    CostCenterSettings: Optional[Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]] = None
     Description: constr(min_length=1, max_length=200)
     Number: conint(ge=1000, le=9999)
     OpeningQuantities: Optional[list[OpeningQuantity]] = None
     Project: Optional[str] = None
-    ProjectSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
-    QuantitySettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    ProjectSettings: Optional[Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]] = None
+    QuantitySettings: Optional[Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]] = None
     QuantityUnit: Optional[str] = None
     SRU: Optional[int] = None
     TransactionInformation: Optional[str] = None
-    TransactionInformationSettings: Optional[Literal['ALLOWED', 'MANDATORY', 'NOTALLOWED']] = None
+    TransactionInformationSettings: Optional[
+        Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]
+    ] = None
     VATCode: Optional[str] = None
     Year: Optional[int] = None
 
@@ -111,8 +114,17 @@ class Voucher(BaseModel):
     Description: constr(min_length=1, max_length=200)
     Project: Optional[str] = None
     ReferenceNumber: Optional[str] = None
-    ReferenceType: Optional[Literal[
-        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    ReferenceType: Optional[
+        Literal[
+            "INVOICE",
+            "SUPPLIERINVOICE",
+            "INVOICEPAYMENT",
+            "SUPPLIERPAYMENT",
+            "MANUAL",
+            "CASHINVOICE",
+            "ACCRUAL",
+        ]
+    ] = None
     TransactionDate: str
     VoucherNumber: int
     VoucherRows: Optional[list[VoucherRow]] = None
@@ -128,8 +140,17 @@ class _VoucherFields(TypedDict, total=False):
     Description: Optional[constr(min_length=1, max_length=200)]
     Project: Optional[str]
     ReferenceNumber: Optional[str]
-    ReferenceType: Optional[Literal[
-        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]]
+    ReferenceType: Optional[
+        Literal[
+            "INVOICE",
+            "SUPPLIERINVOICE",
+            "INVOICEPAYMENT",
+            "SUPPLIERPAYMENT",
+            "MANUAL",
+            "CASHINVOICE",
+            "ACCRUAL",
+        ]
+    ]
     TransactionDate: Optional[str]
     VoucherNumber: Optional[int]
     VoucherRows: Optional[list[VoucherRow]]
@@ -145,8 +166,17 @@ class VoucherCreate(BaseModel):
     Description: constr(min_length=1, max_length=200)
     Project: Optional[str] = None
     ReferenceNumber: Optional[str] = None
-    ReferenceType: Optional[Literal[
-        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    ReferenceType: Optional[
+        Literal[
+            "INVOICE",
+            "SUPPLIERINVOICE",
+            "INVOICEPAYMENT",
+            "SUPPLIERPAYMENT",
+            "MANUAL",
+            "CASHINVOICE",
+            "ACCRUAL",
+        ]
+    ] = None
     TransactionDate: str
     VoucherNumber: Optional[int] = None
     VoucherRows: list[VoucherRow]
@@ -159,8 +189,17 @@ class VoucherListItem(BaseModel):
     Comments: Optional[str] = None
     Description: Optional[str] = None
     ReferenceNumber: Optional[str] = None
-    ReferenceType: Optional[Literal[
-        "INVOICE", "SUPPLIERINVOICE", "INVOICEPAYMENT", "SUPPLIERPAYMENT", "MANUAL", "CASHINVOICE", "ACCRUAL"]] = None
+    ReferenceType: Optional[
+        Literal[
+            "INVOICE",
+            "SUPPLIERINVOICE",
+            "INVOICEPAYMENT",
+            "SUPPLIERPAYMENT",
+            "MANUAL",
+            "CASHINVOICE",
+            "ACCRUAL",
+        ]
+    ] = None
     TransactionDate: Optional[str] = None
     VoucherNumber: Optional[int] = None
     VoucherSeries: Optional[str] = None

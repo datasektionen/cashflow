@@ -11,6 +11,7 @@ from invoices.models import InvoicePart, Invoice
 #                        InvoicePart.list_budget_lines_from_gordian()]
 #
 
+
 class InvoicePartForm(ModelForm):
 
     account = IntegerField()
@@ -18,7 +19,7 @@ class InvoicePartForm(ModelForm):
     class Meta:
         model = InvoicePart
         # fields = ["cost_centre", "secondary_cost_centre", "budget_line"]
-        exclude = ('cost_centre', 'secondary_cost_centre', 'budget_line')
+        exclude = ("cost_centre", "secondary_cost_centre", "budget_line")
 
         # widgets = {"cost_centre": Select(choices=COST_CENTRE_CHOICES),
         #            "secondary_cost_centre": Select(choices=SND_COST_CENTRE_CHOICES),
@@ -32,4 +33,9 @@ class InvoicePartForm(ModelForm):
         # self.fields["budget_line"].initial = self.instance.budget_line
 
 
-InvoicePartFormSet = inlineformset_factory(Invoice, InvoicePart, form=InvoicePartForm, extra=0, )
+InvoicePartFormSet = inlineformset_factory(
+    Invoice,
+    InvoicePart,
+    form=InvoicePartForm,
+    extra=0,
+)

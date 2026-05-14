@@ -2,6 +2,7 @@
 
 Contains middleware that is not specific to any certain app.
 """
+
 import random
 import re
 import string
@@ -73,4 +74,4 @@ class StructlogContextMiddleware:
 
     def generate_id(self):
 
-        return ''.join(random.choices(self._ID_ALPHABET, k=8))
+        return "".join(random.choices(self._ID_ALPHABET, k=8))

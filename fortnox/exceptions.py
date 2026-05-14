@@ -4,7 +4,7 @@ from rest_framework import exceptions, status
 from fortnox.api_client.exceptions import FortnoxDomainError
 
 
-class ErrorToDictMixin():
+class ErrorToDictMixin:
     # (!) The following methods are meant as a "compatability" layer to allow these exceptions to work with
     # normal Django views, before we switch over to DRF only
     def __init__(self, detail: str | None = None):
@@ -12,12 +12,18 @@ class ErrorToDictMixin():
         super().__init__(self.detail)
 
     def to_dict(self) -> dict:
-        return {"type": f"/problems/{self.default_code}", "title": self.title, "detail": self.detail,
-                "status_code": self.status_code, }
+        return {
+            "type": f"/problems/{self.default_code}",
+            "title": self.title,
+            "detail": self.detail,
+            "status_code": self.status_code,
+        }
 
 
 @register
-class FortnoxRecordMissingError(exceptions.APIException, FortnoxDomainError, ErrorToDictMixin):
+class FortnoxRecordMissingError(
+    exceptions.APIException, FortnoxDomainError, ErrorToDictMixin
+):
     status_code = status.HTTP_409_CONFLICT
     default_code = "fortnox_record_missing"
     title = "Voucher record missing in Fortnox"
@@ -26,7 +32,9 @@ class FortnoxRecordMissingError(exceptions.APIException, FortnoxDomainError, Err
 
 
 @register
-class CashflowVerificationMissingError(exceptions.APIException, FortnoxDomainError, ErrorToDictMixin):
+class CashflowVerificationMissingError(
+    exceptions.APIException, FortnoxDomainError, ErrorToDictMixin
+):
     status_code = status.HTTP_409_CONFLICT
     default_code = "cashflow_verification_missing"
     title = "Verification missing in Cashflow"
@@ -35,7 +43,9 @@ class CashflowVerificationMissingError(exceptions.APIException, FortnoxDomainErr
 
 
 @register
-class AlreadyAccountedError(exceptions.APIException, FortnoxDomainError, ErrorToDictMixin):
+class AlreadyAccountedError(
+    exceptions.APIException, FortnoxDomainError, ErrorToDictMixin
+):
     status_code = status.HTTP_409_CONFLICT
     default_code = "already_accounted"
     title = "Record is already accounted in Fortnox"

@@ -38,7 +38,9 @@ def build_cache_key(name: str):
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
-def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -> list[Account]:
+def list_active_accounts(
+    request: FortnoxRequest, force_refresh: bool = False
+) -> list[Account]:
     """Lists all active accounts on Fortnox. Caches values for performance"""
     cache_key = "fortnox:accounts:active"
     if not force_refresh:
@@ -56,12 +58,17 @@ def list_active_accounts(request: FortnoxRequest, force_refresh: bool = False) -
         page += 1
     accounts = [acc for acc in all_accounts if acc.Active]
 
-    cache.set(cache_key, [acc.model_dump() for acc in accounts],
-              timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60, )
+    cache.set(
+        cache_key,
+        [acc.model_dump() for acc in accounts],
+        timeout=settings.FORTNOX_ACCOUNT_CACHE_TIMEOUT * 60 * 60,
+    )
     return accounts
 
 
-def list_active_cost_centers(request: FortnoxRequest, force_refresh: bool = False) -> list[CostCenter]:
+def list_active_cost_centers(
+    request: FortnoxRequest, force_refresh: bool = False
+) -> list[CostCenter]:
     cache_key = "fortnox:costcenters:active"
     if not force_refresh:
         cached = cache.get(cache_key)
@@ -71,15 +78,20 @@ def list_active_cost_centers(request: FortnoxRequest, force_refresh: bool = Fals
     all_cost_centers = []
     page = 1
     while True:
-        page_cost_centers = request.fortnox_service.list_cost_centers(limit=500, page=page)
+        page_cost_centers = request.fortnox_service.list_cost_centers(
+            limit=500, page=page
+        )
         all_cost_centers.extend(page_cost_centers)
         if len(page_cost_centers) < 500:
             break
         page += 1
     cost_centers = [cc for cc in all_cost_centers if cc.Active]
 
-    cache.set(cache_key, [cc.model_dump() for cc in cost_centers],
-              timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60, )
+    cache.set(
+        cache_key,
+        [cc.model_dump() for cc in cost_centers],
+        timeout=settings.FORTNOX_COST_CENTER_CACHE_TIMEOUT * 60,
+    )
     return cost_centers
 
 
@@ -91,20 +103,31 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
     try:
         number = gordian.retrieve_account_from_gordian(part)[0]
     except IndexError:
-        logger.error("failed to resolve account from gordian", part=part, cost_center=part.cost_centre,
-                     secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line)
+        logger.error(
+            "failed to resolve account from gordian",
+            part=part,
+            cost_center=part.cost_centre,
+            secondary_cost_center=part.secondary_cost_centre,
+            budget_line=part.budget_line,
+        )
         return None
     account = account_by_number.get(number)
     if account is None:
-        logger.error("account number from gordian not found in fortnox active accounts", account_number=number,
-                     cost_center=part.cost_centre, secondary_cost_center=part.secondary_cost_centre,
-                     budget_line=part.budget_line)
+        logger.error(
+            "account number from gordian not found in fortnox active accounts",
+            account_number=number,
+            cost_center=part.cost_centre,
+            secondary_cost_center=part.secondary_cost_centre,
+            budget_line=part.budget_line,
+        )
         return None
     logger.debug("resolved account number", account_number=account.Number)
     return account
 
 
-def fortnox_cost_center_for_part(request: FortnoxRequest, part: ExpensePart | InvoicePart) -> Account | None:
+def fortnox_cost_center_for_part(
+    request: FortnoxRequest, part: ExpensePart | InvoicePart
+) -> Account | None:
     """Retrieves the Fortnox cost center that the part should be accounted in, based on Gordian."""
     cost_centers = list_active_cost_centers(request)
     cost_center_by_description = {cc.Description: cc for cc in cost_centers}
@@ -113,17 +136,32 @@ def fortnox_cost_center_for_part(request: FortnoxRequest, part: ExpensePart | In
         # Fuzzy search
         # Some cost centers are composed as "Cost center - Secondary" in Fortnox
         query, score_cutoff = (f"{part.cost_centre} - {part.secondary_cost_centre}", 90)
-        description, score, _ = process.extractOne(query, [cc.Description for cc in cost_centers])
+        description, score, _ = process.extractOne(
+            query, [cc.Description for cc in cost_centers]
+        )
         if score >= score_cutoff:
-            logger.debug("fuzzy match on cost center", query=query, match=description, score=score,
-                         score_cutoff=score_cutoff)
+            logger.debug(
+                "fuzzy match on cost center",
+                query=query,
+                match=description,
+                score=score,
+                score_cutoff=score_cutoff,
+            )
             cost_center = cost_center_by_description.get(description, None)
         else:
-            logger.error("unable to resolve cost center fuzzily", cost_center=part.cost_centre,
-                         secondary_cost_center=part.secondary_cost_centre, budget_line=part.budget_line, query=query,
-                         closest_match=description, score=score, score_cutoff=score_cutoff)
+            logger.error(
+                "unable to resolve cost center fuzzily",
+                cost_center=part.cost_centre,
+                secondary_cost_center=part.secondary_cost_centre,
+                budget_line=part.budget_line,
+                query=query,
+                closest_match=description,
+                score=score,
+                score_cutoff=score_cutoff,
+            )
 
     return cost_center
+
 
 # Hack to properly serialize Decimal as a number in json without losing precision
 class FakeFloat(float):

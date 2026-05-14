@@ -66,9 +66,15 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "ServiceAccount": ("fortnox.models", "ServiceAccount"),
     # Cashflow-specific domain exceptions (DRF-flavored)
     "AlreadyAccountedError": ("fortnox.exceptions", "AlreadyAccountedError"),
-    "CashflowVerificationMissingError": ("fortnox.exceptions", "CashflowVerificationMissingError"),
+    "CashflowVerificationMissingError": (
+        "fortnox.exceptions",
+        "CashflowVerificationMissingError",
+    ),
     "FortnoxRecordMissingError": ("fortnox.exceptions", "FortnoxRecordMissingError"),
-    "FortnoxServiceNotAvailableError": ("fortnox.exceptions", "FortnoxServiceNotAvailableError"),
+    "FortnoxServiceNotAvailableError": (
+        "fortnox.exceptions",
+        "FortnoxServiceNotAvailableError",
+    ),
 }
 
 
@@ -78,7 +84,9 @@ def __getattr__(name: str):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module_name, attr_name = target
     value = getattr(importlib.import_module(module_name), attr_name)
-    globals()[name] = value  # cache on the module so subsequent access skips __getattr__
+    globals()[
+        name
+    ] = value  # cache on the module so subsequent access skips __getattr__
     return value
 
 

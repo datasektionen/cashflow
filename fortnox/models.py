@@ -8,6 +8,7 @@ class ServiceAccount(models.Model):
     We only allow one instance since we are only using a service account to perform all actions.
     This account should be authenticated by Kassör to allow Cashflow to interact with Fortnox.
     """
+
     authenticated_by = models.OneToOneField(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     access_token = models.TextField(null=False)

@@ -20,7 +20,7 @@ def login_with_token(request):
     """
     Handles a login redirect and authenticates user.
     """
-    if request.method != 'GET':
+    if request.method != "GET":
         raise Http404()
     user = auth.authenticate(request)
     if user is not None:

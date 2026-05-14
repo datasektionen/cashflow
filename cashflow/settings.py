@@ -17,16 +17,9 @@ import sys
 import dj_database_url
 import structlog
 
-# https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
-# Fix for broken "django-queued-storage" dependency
-# TODO: Replace this dependency
-# from urllib.parse import quote
-# django.utils.http.urlquote = quote
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = BASE_DIR
 
-# noinspection PyRedeclaration
 AUTHENTICATION_BACKENDS = ["cashflow.dauth.DAuth"]
 
 # Quick-start development settings - unsuitable for production
