@@ -1,0 +1,81 @@
+{
+	"new_invoice": "Ny faktura",
+	"user_expenses": "Mina utlägg",
+	"admin": "Administrera",
+	"login": "Logga in",
+	"chapter": "Konglig Datasektionen",
+	"help": "Hjälp",
+
+	"browse_files": "Välj filer",
+	"cancel": "Avbryt",
+	"no_results": "Inga resultat",
+
+	"footer": {
+		"about": {
+			"title": "Om",
+			"body": "Cashflow är ett faktura- och utläggshanteringssystem på {compsciwebsite}."
+		},
+		"help": {
+			"title": "Hjälp",
+			"body": "Om du behöver hjälp med att använda Cashflow kan du kontakta din nämndansvarig eller sektionens kassör."
+		},
+		"issues": {
+			"title": "Något som inte funkar?",
+			"body": "Skapa ett issue på Github, så brukar det lösas så snabbt som möjligt. Vill du vara med och utveckla sektionens system kan du komma förbi någon Hackerkväll som anordnas vissa torsdagar av Informationsorganet. Säg hej vetja!"
+		}
+	},
+	"welcome": {
+		"title": "Cashflow",
+		"intro": "Är det första gången du använder systemet?",
+		"process": {
+			"title": "Hur använder jag Cashflow och vad händer med kvittot?",
+			"registration": {
+				"title": "Registrering",
+				"description": "Du som köpt något åt sektionen registrerar ditt kvitto här i Cashflow"
+			},
+			"validation": {
+				"title": "Kvittobekräftelse",
+				"description": "Sektionens kassör bekräftar att kvittot uppfyller kravet för ett kvitto samt ser att det inscannde kvittot är av god kvalitet"
+			},
+			"attestation": {
+				"title": "Attestering",
+				"description": "Din nämndordförande, kassören eller ekonomiansvarig godkänner ditt kvitto."
+			},
+			"payment": {
+				"title": "Utbetalning",
+				"description": "Din nämndordförande, kassören eller ekonomiansvarig betalar ut kvittot. Flera kvitton kan betalas ut samtidigt."
+			},
+			"accounting": {
+				"title": "Bokföring",
+				"description": "Kassören eller någon ekonomiansvarig bokför kvittot"
+			}
+		}
+	},
+
+	"new_expense": {
+		"title": "Nytt utlägg",
+		"upload_prompt": "Ladda upp minst en bild på ditt kvitto här",
+		"form": {
+			"description": {
+				"label": "Beskrivning",
+				"help": "En beskrivning av innehållet och varför det köptes"
+			},
+			"date": {
+				"label": "Inköpsdatum",
+				"help": "Det datum då inköpet gjordes (samma som på kvittot)"
+			},
+			"expense_parts": {
+				"label": "Kvittodelar",
+				"help": "Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.",
+				"cost_center_label": "Kostnadsställe",
+				"cost_center_placeholder": "Välj kostnadsställe",
+				"secondary_cost_center_label": "Sekundärt kostnadsställe",
+				"secondary_cost_center_placeholder": "Välj sekundärt kostnadsställe",
+				"budget_line_label": "Budgetpost",
+				"budget_line_placeholder": "Välj budgetpost",
+				"amount_label": "Belopp"
+			},
+			"submit": "Spara och registrera kvitto"
+		}
+	}
+}

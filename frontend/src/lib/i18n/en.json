@@ -1,0 +1,54 @@
+{
+	"new_invoice": "New invoice",
+	"user_expenses": "My expenses",
+	"admin": "Administration",
+	"login": "Login",
+
+	"chapter": "Konglig Datasektionen",
+	"help": "Help",
+	"about": "About",
+
+	"browse_files": "Browse files",
+	"cancel": "Cancel",
+	"no_results": "No results",
+
+	"welcome": {
+		"title": "Cashflow",
+		"intro": "Is this your first time using Cashflow?",
+		"process": {
+			"title": "How does it work?",
+			"steps": {
+				"registration": {
+					"title": "Registration"
+				}
+			}
+		}
+	},
+
+	"new_expense": {
+		"title": "New expense",
+		"upload_prompt": "Upload one or more photos of your receipt",
+		"form": {
+			"description": {
+				"label": "Description",
+				"help": "A description of the purchase"
+			},
+			"date": {
+				"label": "Purchase date",
+				"help": "The date on which the purchase was made (same as on the receipt)"
+			},
+			"expense_parts": {
+				"label": "Expense parts",
+				"help": "Here you specify what portion of the receipt was purchased for each budget line. The total of the receipt must be greater than or exactly equal to the sum of the rows below, without rounding to the nearest cent.",
+				"cost_center_label": "Cost center",
+				"cost_center_placeholder": "Choose cost center",
+				"secondary_cost_center_label": "Secondary cost center",
+				"secondary_cost_center_placeholder": "Choose secondary cost center",
+				"budget_line_label": "Budget line",
+				"budget_line_placeholder": "Choose budget line",
+				"amount_label": "Amount"
+			},
+			"submit": "Save and register expense"
+		}
+	}
+}
