@@ -7,8 +7,6 @@
 	import { DarkMode } from 'flowbite-svelte';
 	import NavLink from '$lib/components/NavLink.svelte';
 
-
-
 	let { children, data } = $props();
 </script>
 

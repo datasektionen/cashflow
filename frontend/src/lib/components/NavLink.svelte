@@ -9,7 +9,7 @@
 
 <a
 	href={props.to}
-	class={'relative flex h-full items-center p-2 text-xl transition-colors hover:bg-green-600 dark:hover:bg-white' +
+	class={'relative flex h-full items-center p-2 text-xl transition-colors hover:bg-green-600 dark:hover:bg-dark-base-300' +
 		(active ? ' hover:text-white dark:text-green-600' : '')}
 	>{props.text}
 	<span
