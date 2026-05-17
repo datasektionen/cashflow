@@ -3,13 +3,13 @@ from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
 
 from cashflow import dauth, email_util
-from invoices.models import Invoice
 
 
 class Profile(models.Model):
@@ -284,11 +284,45 @@ class Payment(models.Model):
         return "Data" + str(self.id)
 
 
+class ExpenseQuerySet(models.QuerySet["Expense"]):
+
+    def attestable_for(self, user: User) -> "ExpenseQuerySet":
+        qs = self.filter(expensepart__attested_by__isnull=True).exclude(is_flagged=True)
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            qs = qs.filter(expensepart__cost_centre__in=cost_centres)
+        return qs.order_by("id", "expense_date").distinct()
+
+    def accountable_for(self, user: User) -> "ExpenseQuerySet":
+        qs = self.exclude(reimbursement=None).filter(verification="")
+        cost_centres = user.profile.accountable_cost_centres()
+        if cost_centres is not True:
+            qs = qs.filter(expensepart__cost_centre__in=cost_centres)
+        return qs.order_by("expense_date").distinct()
+
+    def viewable_by(self, user: User) -> "ExpenseQuerySet":
+
+        if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", user):
+            # Can view all
+            return self.all()
+
+        # Find all cost centers that user may view expenses for
+        cc_scopes = dauth.get_permissions(user).get(dauth.Permission.VIEW_EXPENSES, [])
+
+        # Q allows you to perform "OR" filtering. A user will have access to (1) their own expenses, OR (2)
+        # expenses in a cost center for which they have permissions for
+        return self.filter(
+            Q(expensepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
+        ).distinct()
+
+
 class Expense(models.Model):
     """
     Represents an expense. An expense contains expense parts and information
     about the expense.
     """
+
+    objects = ExpenseQuerySet.as_manager()
 
     created_date = models.DateField(auto_now_add=True)
     expense_date = models.DateField()
@@ -364,22 +398,6 @@ class Expense(models.Model):
         return exp
 
     @staticmethod
-    def view_attestable(user):
-        filters = {
-            "expensepart__attested_by": None,
-        }
-        cost_centres = user.profile.attestable_cost_centres()
-        if cost_centres is not True:
-            escaped = [re.escape(cc) for cc in cost_centres]
-            filters["expensepart__cost_centre__iregex"] = r"(" + "|".join(escaped) + ")"
-        return (
-            Expense.objects.order_by("id", "expense_date")
-            .filter(**filters)
-            .exclude(is_flagged=True)
-            .distinct()
-        )
-
-    @staticmethod
     def confirmable():
         return (
             Expense.objects.filter(confirmed_by__isnull=True)
@@ -394,28 +412,6 @@ class Expense(models.Model):
             .exclude(expensepart__attested_by=None)
             .exclude(confirmed_by=None)
             .order_by("owner__user__username")
-        )
-
-    @staticmethod
-    def view_accountable(user):
-        cost_centres = user.profile.accountable_cost_centres()
-        if cost_centres is True:
-            return (
-                Expense.objects.exclude(reimbursement=None)
-                .filter(verification="")
-                .distinct()
-                .order_by("expense_date")
-            )
-
-        escaped = [re.escape(cc) for cc in cost_centres]
-        return (
-            Expense.objects.exclude(reimbursement=None)
-            .filter(
-                verification="",
-                expensepart__cost_centre__iregex=r"(" + "|".join(escaped) + ")",
-            )
-            .distinct()
-            .order_by("expense_date")
         )
 
 

@@ -4,8 +4,10 @@ import re
 import requests
 
 from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import (
@@ -216,13 +218,19 @@ def delete_expense(request, pk):
         return HttpResponseRedirect(reverse("expenses-index"))
 
 
+def _may_flag(user: AbstractBaseUser | AnonymousUser) -> bool:
+    assert isinstance(user, User)
+    return user.profile.may_flag()
+
+
 @require_POST
 @login_required
-@user_passes_test(lambda u: u.profile.may_flag())
+@user_passes_test(lambda u: _may_flag(u))
 def flag_expense(request, pk):
     """
     Flag a problematic expense
     """
+    assert request.user.is_authenticated
     try:
         expense = models.Expense.objects.get(pk=pk)
     except ObjectDoesNotExist:
@@ -337,9 +345,14 @@ def get_payment(request, pk):
         raise Http404("Utbetalningen finns inte")
 
 
+def _may_pay(user: AbstractBaseUser | AnonymousUser):
+    assert isinstance(user, User)
+    return user.profile.may_pay()
+
+
 @login_required
 @require_POST
-@user_passes_test(lambda u: u.profile.may_pay())
+@user_passes_test(lambda u: _may_pay(u))
 def new_payment(request):
     """
     Performs a payment
@@ -386,7 +399,7 @@ def new_payment(request):
 
 @login_required
 @require_POST
-@user_passes_test(lambda u: u.profile.may_pay())
+@user_passes_test(lambda u: _may_pay(u))
 def api_new_payment(request):
     try:
         expenses = [

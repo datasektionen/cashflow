@@ -57,14 +57,14 @@ def attest_overview(request):
             "expenses": json.dumps(
                 [
                     expense.to_dict()
-                    for expense in Expense.view_attestable(request.user)
+                    for expense in Expense.objects.attestable_for(request.user)
                 ],
                 default=json_serial,
             ),
             "invoices": json.dumps(
                 [
                     invoice.to_dict()
-                    for invoice in Invoice.view_attestable(request.user)
+                    for invoice in Invoice.objects.attestable_for(request.user)
                 ],
                 default=json_serial,
             ),
@@ -226,8 +226,8 @@ def account_overview(request: FortnoxRequest):
 
     cost_centers = list_active_cost_centers(request)
 
-    accountable_invoices = Invoice.view_accountable(request.user)
-    accountable_expenses = Expense.view_accountable(request.user)
+    accountable_invoices = Invoice.objects.accountable_for(request.user)
+    accountable_expenses = Expense.objects.accountable_for(request.user)
 
     # Note that several accounts can be specified for the same budget line, for now the first one will
     # be chosen by default

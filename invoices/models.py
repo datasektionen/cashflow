@@ -1,4 +1,3 @@
-import re
 from datetime import date
 
 from django.contrib.auth.models import User
@@ -6,10 +5,28 @@ from django.db import models
 from django.forms.models import model_to_dict
 
 
+class InvoiceQuerySet(models.QuerySet["Invoice"]):
+    def attestable_for(self, user: User) -> "InvoiceQuerySet":
+        qs = self.filter(invoicepart__attested_by__isnull=True)
+        cost_centres = user.profile.attestable_cost_centres()
+        if cost_centres is not True:
+            qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
+        return qs.order_by("due_date").distinct()
+
+    def accountable_for(self, user: User) -> "InvoiceQuerySet":
+        qs = self.exclude(payed_at__isnull=True).filter(verification="")
+        cost_centres = user.profile.accountable_cost_centres()
+        if cost_centres is not True:
+            qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
+        return qs.order_by("invoice_date").distinct()
+
+
 class Invoice(models.Model):
     """
     Represents an invoice.
     """
+
+    objects = InvoiceQuerySet.as_manager()
 
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
@@ -104,17 +121,6 @@ class Invoice(models.Model):
         ]
         return exp
 
-    @staticmethod
-    def view_attestable(user):
-        filters = {
-            "invoicepart__attested_by": None,
-        }
-        cost_centres = user.profile.attestable_cost_centres()
-        if cost_centres is not True:
-            escaped = [re.escape(cc) for cc in cost_centres]
-            filters["invoicepart__cost_centre__iregex"] = r"(" + "|".join(escaped) + ")"
-        return Invoice.objects.order_by("due_date").filter(**filters).distinct()
-
     # # TODO
     @staticmethod
     def payable():
@@ -125,14 +131,6 @@ class Invoice(models.Model):
             .order_by("due_date")
         )
 
-    # TODO
-    @staticmethod
-    def view_accountable(user):
-        return (
-            Invoice.objects.exclude(payed_at__isnull=True)
-            .filter(verification="")
-            .order_by("invoice_date")
-        )
 
 
 class InvoicePart(models.Model):

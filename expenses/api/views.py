@@ -8,19 +8,25 @@ handles HTTP request validation, permission checks, and returns JSON responses.
 New endpoints should be registered in api/urls.py and follow the existing
 patterns for authentication and error handling found in this file.
 """
+
+import json
 from enum import Enum
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.contrib.auth.models import User
+from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.response import Response
+from structlog import get_logger
 
-from cashflow import dauth
-from expenses.models import Expense, File
+from expenses.models import Expense, ExpensePart, File, Profile
 
 UserModel = get_user_model()
+
+logger = get_logger(__name__)
 
 
 class Filter(str, Enum):
@@ -34,13 +40,37 @@ class FileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ExpensePartSerializer(serializers.ModelSerializer):
+    expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ExpensePart
+        fields = [
+            "expense",
+            "cost_centre",
+            "secondary_cost_centre",
+            "budget_line",
+            "amount",
+        ]
+
+
 class ExpenseSerializer(serializers.ModelSerializer):
-    files = FileSerializer(many=True, source='file_set', read_only=True)
-    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    files = FileSerializer(many=True, source="file_set", read_only=True)
+    owner: serializers.PrimaryKeyRelatedField[Profile] = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
+    parts = ExpensePartSerializer(many=True, required=True, allow_empty=False)
 
     class Meta:
         model = Expense
         fields = "__all__"
+
+    def create(self, validated_data):
+        parts_data = validated_data.pop("parts", [])
+        expense = Expense.objects.create(**validated_data)
+        for part in parts_data:
+            ExpensePart.objects.create(expense=expense, **part)
+        return expense
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
@@ -48,40 +78,62 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        files = request.FILES.getlist('files')
+        user = request.user
+        assert isinstance(user, User)
+
+        files = request.FILES.getlist("files")
+        print(files)
         if not files:
-            raise serializers.ValidationError({"files": "At least one file is required."})
-        serializer = self.get_serializer(data=request.data)
+            raise serializers.ValidationError(
+                {"files": "At least one file is required."}
+            )
+
+        data = (
+            request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
+        )
+        if isinstance(data.get("parts"), str):
+            try:
+                data["parts"] = json.loads(data["parts"])
+            except json.JSONDecodeError:
+                raise serializers.ValidationError({"parts": "Must be valid JSON."})
+
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        expense = serializer.save(owner=request.user.profile)
-        for f in files:
-            File.objects.create(expense=expense, file=f)
+
+        with transaction.atomic():
+            expense = serializer.save(owner=user.profile)
+            for f in files:
+                File.objects.create(expense=expense, file=f)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
+        user = self.request.user
+        assert isinstance(user, User)
 
         filter_map = {}
         if self.request.GET.get(Filter.USER):
             try:
-                filtered_user = UserModel.objects.get(username=self.request.GET.get(Filter.USER))
+                filtered_user = UserModel.objects.get(
+                    username=self.request.GET.get(Filter.USER)
+                )
                 filter_map["owner__user"] = filtered_user
             except UserModel.DoesNotExist:
                 pass
         if self.request.GET.get(Filter.COST_CENTER):
-            filter_map["expensepart__cost_centre__in"] = [self.request.GET.get(Filter.COST_CENTER)]
+            filter_map["expensepart__cost_centre__in"] = [
+                self.request.GET.get(Filter.COST_CENTER)
+            ]
 
-        if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", self.request.user):
-            # User may view all expenses
-            return Expense.objects.filter(**filter_map).distinct()
+        return Expense.objects.viewable_by(user).filter(**filter_map).distinct()
 
-        else:
 
-            # Find all cost centers that user may view expenses for
-            cc_scopes = dauth.get_permissions(self.request.user).get(dauth.Permission.VIEW_EXPENSES, [])
+class ExpensePartViewSet(viewsets.ModelViewSet):
+    serializer_class = ExpensePartSerializer
+    permission_classes = [IsAuthenticated]
 
-            # Q allows you to perform "OR" filtering. A user will have access to (1) their own expenses, OR (2)
-            # expenses in a cost center for which they have permissions for
-            base_query = Expense.objects.filter(
-                Q(owner__user=self.request.user) | Q(expensepart__cost_centre__in=cc_scopes)).distinct()
+    def get_queryset(self):
+        user = self.request.user
+        assert isinstance(user, User)
 
-            return base_query.filter(**filter_map)
+        return ExpensePart.objects.filter(expense__in=Expense.objects.viewable_by(user))

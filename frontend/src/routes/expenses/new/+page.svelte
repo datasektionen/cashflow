@@ -54,7 +54,7 @@
 		<input
 			class="border-0 bg-base-300 inset-shadow-sm dark:bg-dark-base-300"
 			type="date"
-			name="expense_date"
+			name="expense-date"
 			id="date"
 		/>
 		<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
