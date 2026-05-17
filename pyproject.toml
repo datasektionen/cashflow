@@ -44,9 +44,6 @@ python_files = ["tests.py", "test_*.py", "*_test.py"]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "cashflow.test_settings"
-
 [dependency-groups]
 dev = [
     "django-extensions",
