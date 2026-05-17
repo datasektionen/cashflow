@@ -25,6 +25,17 @@
 		}
 	},
 
+	"admin_expenses": {
+		"title": "Expenses",
+		"columns": {
+			"id": "ID",
+			"voucher": "Voucher",
+			"description": "Description",
+			"owner": "Owner",
+			"expense_date": "Expense date"
+		}
+	},
+
 	"new_expense": {
 		"title": "New expense",
 		"upload_prompt": "Upload one or more photos of your receipt",
@@ -48,6 +59,7 @@
 				"budget_line_placeholder": "Choose budget line",
 				"amount_label": "Amount"
 			},
+ 			"add_part": "Add part",
 			"submit": "Save and register expense"
 		}
 	}

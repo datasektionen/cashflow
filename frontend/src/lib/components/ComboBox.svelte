@@ -23,10 +23,10 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 </script>
 
 <Combobox.Root type="single" {name} bind:value={selected} inputValue={searchValue}>
-	<div class="relative">
+	<div class="relative ">
 		<div class="flex flex-row">
 			<Combobox.Input
-				class="inseet-shadow-sm bg-base-100 p-2 placeholder:text-sm placeholder:text-base-subtle dark:bg-dark-base-200 dark:placeholder:text-dark-base-subtle"
+				class="p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
 				oninput={(e) => (searchValue = e.currentTarget.value)}
 				onkeydown={(e) => {
 					if (e.key === 'Tab' && searchValue !== '') {
@@ -37,7 +37,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 				{placeholder}
 				aria-label={placeholder}
 			></Combobox.Input>
-			<Combobox.Trigger class="bg-base-200 dark:bg-dark-base-200">
+			<Combobox.Trigger>
 				<ChevronsUpDown />
 			</Combobox.Trigger>
 		</div>

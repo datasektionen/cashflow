@@ -82,7 +82,6 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         assert isinstance(user, User)
 
         files = request.FILES.getlist("files")
-        print(files)
         if not files:
             raise serializers.ValidationError(
                 {"files": "At least one file is required."}

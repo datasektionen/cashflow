@@ -1,3 +1,4 @@
+
 /**
  * Base API client class, gets subclassed for specific resources.
  */
@@ -26,6 +27,13 @@ export class ApiClient {
 		}
 
 		return response.json();
+	}
+
+	get<T>(path: string, options: RequestInit = {}): Promise<T> {
+		return this.request<T>(path, {
+			...options,
+			method: 'GET',
+		})
 	}
 
 	post<T>(path: string, body: unknown) {

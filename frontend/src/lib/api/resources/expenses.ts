@@ -8,6 +8,11 @@ export class ExpensesAPI {
 		this.apiClient = apiClient;
 	}
 
+	list(): Promise<Expense[]> {
+		return this.apiClient.get('expenses/');
+	}
+
+
 	create(data: ExpenseCreate): Promise<Expense> {
 		const body = new FormData();
 		body.append('description', data.description);

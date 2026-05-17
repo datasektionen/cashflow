@@ -4,7 +4,12 @@
 	let props: { to: string; text: string } = $props();
 	const normalizePath = (path: string) => path.replace(/\/+$/, '') || '/';
 
-	let active = $derived(normalizePath(props.to) === normalizePath(page.url.pathname));
+	let active = $derived.by(() => {
+		const target = normalizePath(props.to);
+		const current = normalizePath(page.url.pathname);
+		if (target === '/') return current === '/';
+		return current === target || current.startsWith(target + '/');
+	});
 </script>
 
 <a
