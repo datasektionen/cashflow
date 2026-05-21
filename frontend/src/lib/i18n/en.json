@@ -48,6 +48,9 @@
 				"label": "Purchase date",
 				"help": "The date on which the purchase was made (same as on the receipt)"
 			},
+			"receipts": {
+				"label": "Receipts"
+			},
 			"expense_parts": {
 				"label": "Expense parts",
 				"help": "Here you specify what portion of the receipt was purchased for each budget line. The total of the receipt must be greater than or exactly equal to the sum of the rows below, without rounding to the nearest cent.",

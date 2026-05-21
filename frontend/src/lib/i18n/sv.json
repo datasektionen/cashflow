@@ -75,6 +75,9 @@
 				"label": "Inköpsdatum",
 				"help": "Det datum då inköpet gjordes (samma som på kvittot)"
 			},
+			"receipts": {
+				"label": "Kvitton"
+			},
 			"expense_parts": {
 				"label": "Kvittodelar",
 				"help": "Här anger du hur stor andel av kvittot som köptes in på respektive budgetpost. Summan på kvittot måste vara större eller exakt lika med summan av nedanstående rader, utan öresavrundning.",
