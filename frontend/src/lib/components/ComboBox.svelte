@@ -12,17 +12,25 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 	let {
 		name,
 		items,
-		placeholder = ''
-	}: { name: string; items: string[]; placeholder?: string } = $props();
+		placeholder = '',
+		value = $bindable(''),
+		onblur
+	}: {
+		name: string;
+		items: string[];
+		placeholder?: string;
+		value?: string;
+		onblur?: (e: FocusEvent) => void;
+	} = $props();
 
 	let searchValue = $state('');
-	let selected: string = $state('');
+	let open = $state(false);
 
 	const fuse = $derived(new Fuse(items));
 	let filtered = $derived(fuse.search(searchValue));
 </script>
 
-<Combobox.Root type="single" {name} bind:value={selected} inputValue={searchValue}>
+<Combobox.Root type="single" {name} bind:value bind:open inputValue={searchValue}>
 	<div class="relative ">
 		<div class="flex flex-row">
 			<Combobox.Input
@@ -30,9 +38,12 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 				oninput={(e) => (searchValue = e.currentTarget.value)}
 				onkeydown={(e) => {
 					if (e.key === 'Tab' && searchValue !== '') {
-						selected = filtered[0] ? filtered[0].item : '';
+						value = filtered[0] ? filtered[0].item : '';
 						searchValue = filtered[0] ? filtered[0].item : searchValue;
 					}
+				}}
+				onblur={(e) => {
+					setTimeout(() => { if (!open) onblur?.(e); }, 0);
 				}}
 				{placeholder}
 				aria-label={placeholder}

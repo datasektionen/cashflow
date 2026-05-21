@@ -2,35 +2,35 @@
     import {File as FileIcon, HardDriveUpload, X} from '@lucide/svelte';
     import {_} from 'svelte-i18n';
 
+    let { files = $bindable<File[]>([]) }: { files?: File[] } = $props();
     let fileInput: HTMLInputElement;
-    let receiptFiles: File[] = $state([]);
 
     function syncInput() {
         const dt = new DataTransfer();
-        receiptFiles.forEach(f => dt.items.add(f));
+        files.forEach(f => dt.items.add(f));
         fileInput.files = dt.files;
     }
 
     function addFiles(e: Event) {
         const input = e.currentTarget as HTMLInputElement;
         if (!input.files?.length) return;
-        receiptFiles = [...receiptFiles, ...Array.from(input.files)];
+        files = [...files, ...Array.from(input.files)];
         syncInput();
     }
 
     function removeFile(i: number) {
-        receiptFiles = receiptFiles.filter((_, j) => j !== i);
+        files = files.filter((_, j) => j !== i);
         syncInput();
     }
 </script>
 
 
-<div class="flex flex-col md:flex-row  md:max-h-56 bg-base-300 dark:bg-dark-base-300 w-full h-full">
+<div class="flex flex-col md:flex-row bg-base-300 dark:bg-dark-base-300 w-full h-full">
 
     <!--    Uploaded file list-->
-    <div class={receiptFiles.length > 0 ? "relative flex flex-col sm:w-full md:w-md" : "hidden"}>
+    <div class={files.length > 0 ? "relative flex flex-col sm:w-full md:w-md" : "hidden"}>
         <div class="flex flex-col overflow-y-auto max-h-56">
-            {#each receiptFiles as file, i}
+            {#each files as file, i}
                 <div class="flex flex-row space-x-4 mx-4 border-b border-base-600 dark:border-b-dark-base-200">
                     <span class="flex h-16 w-12">
                         <FileIcon class="m-auto my-auto"/>
@@ -68,11 +68,11 @@
                 accept="application/pdf"
                 class="hidden"
         />
-        <HardDriveUpload class="mx-auto mt-auto mb-4 size-10 transition-all"/>
+        <HardDriveUpload class="mx-auto mb-4 size-10 transition-all"/>
         <span class="mb-2 w-24 bg-money-green-600 p-2 text-center text-base-100 group-hover:bg-money-green-500 transition-all">
 		{$_('browse_files')}
 	</span>
-        <span class="dark:text-base-sublte mb-auto text-base-subtle">
+        <span class="dark:text-base-sublte text-base-subtle">
 		{$_('new_expense.upload_prompt')}
 	</span>
     </label>

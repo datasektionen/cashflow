@@ -9,6 +9,14 @@
 	"browse_files": "Välj filer",
 	"cancel": "Avbryt",
 	"no_results": "Inga resultat",
+	"description_required": "Beskrivning krävs",
+	"expense_date_required": "Inköpsdatum krävs",
+	"expense_date_future": "Inköpsdatum får inte vara i framtiden",
+	"files_required": "Minst ett kvitto krävs",
+	"cost_center_required": "Kostnadsställe krävs",
+	"secondary_cost_center_required": "Sekundärt kostnadsställe krävs",
+	"budget_line_required": "Budgetpost krävs",
+	"amount_required": "Belopp krävs",
 
 	"footer": {
 		"about": {

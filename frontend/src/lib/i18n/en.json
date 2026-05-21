@@ -11,6 +11,14 @@
 	"browse_files": "Browse files",
 	"cancel": "Cancel",
 	"no_results": "No results",
+	"description_required": "Description is required",
+	"expense_date_required": "Expense date is required",
+	"expense_date_future": "Expense date cannot be in the future",
+	"files_required": "At least one receipt is required",
+	"cost_center_required": "Cost center is required",
+	"secondary_cost_center_required": "Secondary cost center is required",
+	"budget_line_required": "Budget line is required",
+	"amount_required": "Amount is required",
 
 	"welcome": {
 		"title": "Cashflow",
