@@ -1,15 +1,11 @@
 from datetime import datetime
 
 from decimal import Decimal
-from django.db.models import Sum, Count, DecimalField
+from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth, Coalesce
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.conf import settings
-
-import json
 
 from expenses import models
 
@@ -40,140 +36,7 @@ def index(request):
         'month_sum': month_sum,
         'month_count_total': sum(month_count),
         'month_sum_total': str(sum(month_sum)), # prevent django from formatting decimal as , in JS
-        'budget_url': settings.BUDGET_URL,
     })
-
-@require_GET
-def summary(request):
-    expense_parts = None
-
-    cost_centre = request.GET.get('cost_centre')
-    year = request.GET.get('year')
-    secondary_cost_centre = request.GET.get('secondary_cost_centre')
-    budget_line = request.GET.get('budget_line')
-
-    if not cost_centre or not year:
-        return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
-    if secondary_cost_centre == '':
-        # Filter ExpensePart by cost_centre and year
-        expense_parts = models.ExpensePart.objects.filter(
-            cost_centre=cost_centre,
-            expense__expense_date__year=year
-        ).all()
-    elif budget_line == '':
-        # Filter ExpensePart by cost_centre and year
-        expense_parts = models.ExpensePart.objects.filter(
-            cost_centre=cost_centre,
-            expense__expense_date__year=year,
-            secondary_cost_centre=secondary_cost_centre
-        ).all()
-    else:
-        # Filter ExpensePart by cost_centre and year
-        expense_parts = models.ExpensePart.objects.filter(
-            cost_centre=cost_centre,
-            expense__expense_date__year=year,
-            secondary_cost_centre=secondary_cost_centre,
-            budget_line = budget_line
-        ).all()
-
-    sum_amount = 0
-    expense_parts_list = []  # To store each expense part for debugging or detailed view
-
-    for expense_part in expense_parts:
-        sum_amount += expense_part.amount
-        # Optionally add the expense part details to the response
-        expense_parts_list.append({
-            'expense': str(expense_part.expense),  # String representation of the expense
-            'amount': float(expense_part.amount),  # Convert to float for JSON compatibility
-            'budget_line': expense_part.budget_line
-        })
-
-    return JsonResponse({
-        'amount': sum_amount,
-    })
-
-
-@require_GET
-def sec_cost_centres(request):
-    expense_parts = None
-
-    cost_centre = request.GET.get('cost_centre')
-    year = request.GET.get('year')
-    if not cost_centre or not year:
-        return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
-
-    # Filter ExpensePart by cost_centre and year
-    expense_parts = models.ExpensePart.objects.filter(
-        cost_centre=cost_centre,
-        expense__expense_date__year=year
-    ).all()
-    
-    sec_cost_centres = set()
-
-    for expense_part in expense_parts:
-        sec_cost_centres.add(expense_part.secondary_cost_centre)
-        # Optionally add the expense part details to the response
-
-    sec_cost_centres_list = list(sec_cost_centres)
-
-    return JsonResponse({
-        'sec_cost_centres': sec_cost_centres_list
-    })
-
-@require_GET
-def budget_lines(request):
-    expense_parts = None
-
-    cost_centre = request.GET.get('cost_centre')
-    year = request.GET.get('year')
-    secondary_cost_centre = request.GET.get('secondary_cost_centre')
-    if not cost_centre or not year or not secondary_cost_centre:
-        return JsonResponse({'error': 'cost_centre and year are required'}, status=400)
-
-    # Filter ExpensePart by cost_centre and year
-    expense_parts = models.ExpensePart.objects.filter(
-        cost_centre=cost_centre,
-        expense__expense_date__year=year,
-        secondary_cost_centre = secondary_cost_centre
-    ).all()
-    
-    budget_lines = set()
-
-    for expense_part in expense_parts:
-        budget_lines.add(expense_part.budget_line)
-
-    budget_lines_list = list(budget_lines)
-
-    return JsonResponse({
-        'budget_lines': budget_lines_list
-    })
-
-
-
-@require_GET
-def cost_centres(request):
-    """
-    Returns the distinct cost centres (committees) from all expenses.
-    """
-    expense_queryset = models.Expense.objects.all()
-    # expense_queryset is a list of expenses 
-
-    
-    # Collecting cost centres from each expense
-    cost_centres = set()  # Use a set to avoid duplicates
-
-    for expense in expense_queryset:
-        for cost_centre in expense.cost_centres():
-            cost_centres.add(cost_centre['cost_centre'])
-
-    # Convert the set back to a list
-    cost_centres_list = list(cost_centres)
-
-    return JsonResponse({
-        'cost_centres': cost_centres_list
-    })
-
-
 
 @require_GET
 def monthly(_request, year):
