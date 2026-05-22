@@ -41,6 +41,10 @@
 			"description": "Description",
 			"owner": "Owner",
 			"expense_date": "Expense date"
+		},
+		"pagination": {
+			"showing": "Showing {start} to {end} of {total}",
+			"show": "Show"
 		}
 	},
 
@@ -70,7 +74,7 @@
 				"budget_line_placeholder": "Choose budget line",
 				"amount_label": "Amount"
 			},
- 			"add_part": "Add part",
+			"add_part": "Add part",
 			"submit": "Save and register expense"
 		}
 	}

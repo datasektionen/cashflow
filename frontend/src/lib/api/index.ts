@@ -11,3 +11,5 @@ export class API {
 		this.expenses = new ExpensesAPI(client);
 	}
 }
+
+export const api = new API('http://localhost:8000/api/', fetch);

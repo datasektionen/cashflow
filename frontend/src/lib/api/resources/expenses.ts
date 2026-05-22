@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { ExpenseCreate, Expense } from '$lib/api/types';
+import type { Expense, ExpenseCreate, PaginatedResponse } from '$lib/api/types';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -8,10 +8,33 @@ export class ExpensesAPI {
 		this.apiClient = apiClient;
 	}
 
-	list(): Promise<Expense[]> {
-		return this.apiClient.get('expenses/');
-	}
+	async list(page: number, perPage: number): Promise<PaginatedResponse<Expense>> {
+		// The response format from DRF
+		type RawResponse = {
+			data: Expense[];
+			pagination: {
+				total: number;
+				page: number;
+				per_page: number;
+				total_pages: number;
+			};
+		};
 
+		const res = await this.apiClient.get<RawResponse>('expenses/', {
+			page: page,
+			per_page: perPage
+		});
+
+		return {
+			data: res.data,
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
+	}
 
 	create(data: ExpenseCreate): Promise<Expense> {
 		const body = new FormData();

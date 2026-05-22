@@ -68,6 +68,10 @@
 			"description": "Beskrivning",
 			"owner": "Ägare",
 			"expense_date": "Inköpsdatum"
+		},
+		"pagination": {
+			"showing": "Visar {start} till {end} av {total}",
+			"show": "Visa"
 		}
 	},
 

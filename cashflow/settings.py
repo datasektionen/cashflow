@@ -140,7 +140,10 @@ db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES["default"].update(db_from_env)
 
 
-REST_FRAMEWORK = {"EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler"}
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "cashflow.api.pagination.DefaultPagination",
+}
 
 # noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days

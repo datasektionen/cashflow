@@ -77,15 +77,27 @@ class TestHiveAccountingPermissions:
         for e in expense_set:
             assert provider.may_account(e, user) == False
 
-    def test_user_with_wildcard_scope_may_account_all_expenses(self, provider, user, expense_set, mocker):
-        mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={Permission.ACCOUNTING: "*"})
+    def test_user_with_wildcard_scope_may_account_all_expenses(
+        self, provider, user, expense_set, mocker
+    ):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: "*"},
+        )
 
         assert provider.accountable_expenses(user).count() == 20
         for e in expense_set:
             assert provider.may_account(e, user) == True
 
-    def test_user_with_scope_may_account_expenses(self, provider, user, expense_set, mocker):
-        mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={Permission.ACCOUNTING: ["Test"]})
+    def test_user_with_scope_may_account_expenses(
+        self, provider, user, expense_set, mocker
+    ):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: ["Test"]},
+        )
         cc_expenses = ExpenseFactory.create_batch(5)
         for e in cc_expenses:
             ExpensePartFactory.create(expense=e, cost_centre="Test")
@@ -94,21 +106,35 @@ class TestHiveAccountingPermissions:
         for e in cc_expenses:
             assert provider.may_account(e, user) == True
 
-    def test_user_with_no_scopes_may_not_account_invoices(self, provider, user, invoice_set, mocker):
+    def test_user_with_no_scopes_may_not_account_invoices(
+        self, provider, user, invoice_set, mocker
+    ):
         mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={})
         assert provider.accountable_invoices(user).count() == 0
         for i in invoice_set:
             assert provider.may_account(i, user) == False
 
-    def test_user_with_wildcard_scope_may_account_all_invoices(self, provider, user, invoice_set, mocker):
-        mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={Permission.ACCOUNTING: "*"})
+    def test_user_with_wildcard_scope_may_account_all_invoices(
+        self, provider, user, invoice_set, mocker
+    ):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: "*"},
+        )
 
         assert provider.accountable_invoices(user).count() == 20
         for i in invoice_set:
             assert provider.may_account(i, user) == True
 
-    def test_user_with_scope_may_account_invoices(self, provider, user, invoice_set, mocker):
-        mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={Permission.ACCOUNTING: ["Test"]})
+    def test_user_with_scope_may_account_invoices(
+        self, provider, user, invoice_set, mocker
+    ):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: ["Test"]},
+        )
         cc_invoices = InvoiceFactory.create_batch(5)
         for i in cc_invoices:
             InvoicePartFactory.create(invoice=i, cost_centre="Test")

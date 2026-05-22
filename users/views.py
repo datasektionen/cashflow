@@ -76,7 +76,6 @@ class CurrentUserView(generics.RetrieveAPIView):
         return self.request.user
 
 
-
 """
 Shows one user's receipts.
 """

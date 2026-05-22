@@ -31,7 +31,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 </script>
 
 <Combobox.Root type="single" {name} bind:value bind:open inputValue={searchValue}>
-	<div class="relative ">
+	<div class="relative">
 		<div class="flex flex-row">
 			<Combobox.Input
 				class="p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
@@ -43,7 +43,9 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 					}
 				}}
 				onblur={(e) => {
-					setTimeout(() => { if (!open) onblur?.(e); }, 0);
+					setTimeout(() => {
+						if (!open) onblur?.(e);
+					}, 0);
 				}}
 				{placeholder}
 				aria-label={placeholder}

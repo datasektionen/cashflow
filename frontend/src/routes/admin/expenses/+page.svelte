@@ -1,10 +1,20 @@
 <script lang="ts">
-	import type { Expense } from '$lib/api/types.ts';
-	import ExpenseTable from "$lib/components/ExpenseTable.svelte";
+	import type { PageProps } from './$types';
+	import { api } from '$lib/api';
+	import ExpenseTable from '$lib/components/ExpenseTable.svelte';
 
-	let { data } = $props();
-	const expenses: Expense[] = data.expenses;
+	let { data }: PageProps = $props();
+
+	// svelte-ignore state_referenced_locally
+	let expenses = $state(data.expenses);
+
+	async function handlePageChange(page: number) {
+		expenses = await api.expenses.list(page, expenses.pagination.perPage);
+	}
+
+	async function handlePerPageChange(perPage: number) {
+		expenses = await api.expenses.list(1, perPage);
+	}
 </script>
 
-<ExpenseTable {expenses} />
-
+<ExpenseTable {expenses} onPageChange={handlePageChange} onPerPageChange={handlePerPageChange} />

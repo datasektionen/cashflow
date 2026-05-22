@@ -1,4 +1,3 @@
-
 /**
  * Base API client class, gets subclassed for specific resources.
  */
@@ -14,6 +13,7 @@ export class ApiClient {
 	private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		const isFormData = options.body instanceof FormData;
 		const response = await this.fetch(`${this.apiUrl}${path}`, {
+			credentials: 'include',
 			...options,
 			headers: {
 				...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -29,11 +29,23 @@ export class ApiClient {
 		return response.json();
 	}
 
-	get<T>(path: string, options: RequestInit = {}): Promise<T> {
-		return this.request<T>(path, {
+	get<T>(
+		path: string,
+		params?: Record<string, string | number | boolean | undefined>,
+		options: RequestInit = {}
+	): Promise<T> {
+		const qs = params
+			? '?' +
+				new URLSearchParams(
+					Object.entries(params)
+						.filter(([, v]) => v !== undefined)
+						.map(([k, v]) => [k, String(v)])
+				).toString()
+			: '';
+		return this.request<T>(`${path}${qs}`, {
 			...options,
-			method: 'GET',
-		})
+			method: 'GET'
+		});
 	}
 
 	post<T>(path: string, body: unknown) {

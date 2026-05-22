@@ -23,7 +23,10 @@ export const actions: Actions = {
 			return fail(400, { error: 'expense_date is required' });
 		}
 		const files = data.getAll('files').filter((f): f is File => f instanceof File);
-		console.log('[new-expense] files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+		console.log(
+			'[new-expense] files:',
+			files.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+		);
 
 		// We need to parse expense parts into a JSON string for the API post request
 		const parts: ExpensePart[] = [];

@@ -112,8 +112,9 @@ class TestExpenseListPermissions:
         ExpenseFactory.create_batch(5, owner=user.profile)
         response = client.get("/api/expenses/")
         assert response.status_code == 200
-        assert len(response.data) == 5
-        assert all([e["owner"] == user.profile.id for e in response.data])
+        assert response.data["pagination"]["total"] == 5
+        assert len(response.data["data"]) == 5
+        assert all([e["owner"] == user.profile.id for e in response.data["data"]])
 
     def test_user_with_scope_receives_cc_expenses(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: ["TestCostCenter"]}
@@ -131,7 +132,8 @@ class TestExpenseListPermissions:
 
         response = client.get("/api/expenses/")
         assert response.status_code == 200
-        assert len(response.data) == 2
+        assert response.data["pagination"]["total"] == 2
+        assert len(response.data["data"]) == 2
 
     def test_view_all_permission_returns_all_expenses(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: "*"}
@@ -142,7 +144,8 @@ class TestExpenseListPermissions:
         ExpenseFactory.create_batch(20)
         response = client.get("/api/expenses/")
         assert response.status_code == 200
-        assert len(response.data) == 20
+        assert response.data["pagination"]["total"] == 20
+        assert len(response.data["data"]) == 20
 
 
 class TestExpenseListFilters:
@@ -156,8 +159,9 @@ class TestExpenseListFilters:
         ExpenseFactory.create_batch(5, owner=target_user.profile)
         response = client.get("/api/expenses/", {"user": target_user.username})
         assert response.status_code == 200
-        assert len(response.data) == 5
-        assert all(e["owner"] == target_user.profile.id for e in response.data)
+        assert response.data["pagination"]["total"] == 5
+        assert len(response.data["data"]) == 5
+        assert all(e["owner"] == target_user.profile.id for e in response.data["data"])
 
     def test_filter_by_cost_center(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: "*"}
@@ -172,7 +176,9 @@ class TestExpenseListFilters:
 
         response = client.get("/api/expenses/", {"cost_center": target_cc})
 
-        assert len(response.data) == 5
+        assert response.status_code == 200
+        assert response.data["pagination"]["total"] == 5
+        assert len(response.data["data"]) == 5
 
 
 class TestExpenseCreate:

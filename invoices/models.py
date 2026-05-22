@@ -132,7 +132,6 @@ class Invoice(models.Model):
         )
 
 
-
 class InvoicePart(models.Model):
     """
     Defines an invoice part, which is a specification of a part of an invoice.
