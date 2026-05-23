@@ -1,7 +1,5 @@
 from datetime import datetime
-import json
 import re
-import requests
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -15,7 +13,6 @@ from django.http import (
     HttpResponseRedirect,
     HttpResponseBadRequest,
     HttpResponseForbidden,
-    HttpResponseServerError,
     JsonResponse,
 )
 from django.shortcuts import render
@@ -23,6 +20,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from expenses import models
+from cashflow.rfinger import rfinger_client
 
 
 @require_http_methods(["GET", "POST"])
@@ -264,18 +262,7 @@ def get_expense(request, pk):
         if not comment.author.user.username in commenters:
             commenters.add(comment.author.user.username)
 
-    pictures_req = requests.post(
-        settings.RFINGER_API_URL + "/api/batch",
-        data=json.dumps(list(commenters)),
-        headers={
-            "Authorization": "Bearer " + settings.RFINGER_API_KEY,
-        },
-    )
-    if not pictures_req.status_code == 200:
-        return HttpResponseServerError(
-            f"Misslyckades att hämta bilder från rfinger ({pictures_req.status_code} {pictures_req.text})"
-        )
-    pictures = json.loads(pictures_req.text)
+    pictures = rfinger_client.batch(list(commenters))
 
     # This is stupid, but so is Django template support for dictionaries.
     comments = []
@@ -286,7 +273,7 @@ def get_expense(request, pk):
                 "full_name": comment.author.user.get_full_name(),
                 "date": comment.date,
                 "content": comment.content,
-                "picture": pictures[comment.author.user.username],
+                "picture": pictures[comment.author.user.username].url,
             }
         )
 

@@ -40,6 +40,19 @@ class FileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+
+    class Meta:
+        model = Profile
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+        ]
+
+
 class ExpensePartSerializer(serializers.ModelSerializer):
     expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
 
@@ -56,9 +69,7 @@ class ExpensePartSerializer(serializers.ModelSerializer):
 
 class ExpenseSerializer(serializers.ModelSerializer):
     files = FileSerializer(many=True, source="file_set", read_only=True)
-    owner: serializers.PrimaryKeyRelatedField[Profile] = (
-        serializers.PrimaryKeyRelatedField(read_only=True)
-    )
+    owner = ProfileSerializer(read_only=True)
     parts = ExpensePartSerializer(many=True, required=True, allow_empty=False)
 
     class Meta:
