@@ -12,6 +12,7 @@ from django.http import (
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET
+from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics
 
 from cashflow.rfinger import rfinger_client
@@ -52,7 +53,16 @@ def get_user(request, username):
     )
 
 
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get current user",
+        operation_id="get_current_user",
+        tags=["Users"],
+    )
+)
 class CurrentUserView(generics.RetrieveAPIView):
+    """Retrieves the current user's information based on the authentication credentials."""
+
     serializer_class = UserSerializer
 
     def get_object(self):

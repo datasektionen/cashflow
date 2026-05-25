@@ -15,6 +15,7 @@ from enum import Enum
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.db import transaction
+from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import serializers, status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -84,6 +85,61 @@ class ExpenseSerializer(serializers.ModelSerializer):
         return expense
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List expenses",
+        description=(
+            "Returns the paginated set of expenses the requesting user is "
+            "allowed to see. Supports optional filtering by owner via "
+            "`?user=<username>` and by cost centre via `?cost_center=<name>`."
+        ),
+        operation_id="list_expenses",
+        tags=["Expenses"],
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve an expense",
+        description=(
+            "Returns a single expense by ID, including its parts, owner "
+            "profile, and attached files."
+        ),
+        operation_id="retrieve_expense",
+        tags=["Expenses"],
+    ),
+    create=extend_schema(
+        summary="Create a new expense",
+        description=(
+            "Creates an expense together with its parts and one or more "
+            "attached receipt files. Submit as `multipart/form-data` with "
+            "the `parts` field as a JSON-encoded array; at least one file "
+            "is required."
+        ),
+        operation_id="create_expense",
+        tags=["Expenses"],
+    ),
+    update=extend_schema(
+        summary="Update an expense",
+        description=(
+            "Replaces an expense in full. All writable fields must be " "provided."
+        ),
+        operation_id="update_expense",
+        tags=["Expenses"],
+    ),
+    partial_update=extend_schema(
+        summary="Partially update an expense",
+        description=(
+            "Updates a subset of fields on an existing expense. Only the "
+            "fields included in the request body are changed."
+        ),
+        operation_id="partial_update_expense",
+        tags=["Expenses"],
+    ),
+    destroy=extend_schema(
+        summary="Delete an expense",
+        description="Permanently deletes an expense and its associated parts.",
+        operation_id="delete_expense",
+        tags=["Expenses"],
+    ),
+)
 class ExpenseViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]

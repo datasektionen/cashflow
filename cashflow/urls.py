@@ -18,7 +18,6 @@ from django.urls import include, re_path, path
 
 from cashflow import settings
 from expenses import views as expenses_views
-from . import views
 from .authviews import login, logout
 
 app_name = "cashflow"
@@ -32,18 +31,6 @@ urlpatterns = [
     re_path(r"^invoices/", include("invoices.urls")),
     re_path(r"^stats/", include("stats.urls")),
     re_path(r"^users/", include("users.urls")),
-    re_path(r"^api/files/", include("file_api.urls")),
-    path(
-        "api/costcenters/", views.api.CostCenterList.as_view(), name="costcenter-list"
-    ),
-    path(
-        "api/secondarycostcenters/",
-        views.api.SecondaryCostCenterList.as_view(),
-        name="secondarycostcenter-list",
-    ),
-    path(
-        "api/budgetlines/", views.api.BudgetLineList.as_view(), name="budgetline-list"
-    ),
-    path("api/", include("expenses.api.urls")),
+    path("api/", include("cashflow.api.urls")),
     path("", include("drf_problems.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

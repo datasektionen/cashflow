@@ -12,10 +12,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import re
-import sys
 
 import dj_database_url
 import structlog
+import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = BASE_DIR
@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     "invoices",
     "fortnox",
     "drf_problems",
+    "drf_spectacular",
 )
 
 MIDDLEWARE = (
@@ -143,6 +144,29 @@ DATABASES["default"].update(db_from_env)
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "cashflow.api.pagination.DefaultPagination",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Cashflow API",
+    "DESCRIPTION": """\
+HTTP API for **Cashflow**, Datasektionen's receipt, reimbursement, and invoice management system.
+
+## Authentication
+
+All endpoints require an authenticated session. Sign in via Datasektionen's SSO at `/login/`; the resulting `sessionid` cookie authenticates subsequent API calls.
+
+## Permissions
+
+Permissions are resolved against [Hive](https://github.com/datasektionen/hive) on each request and may be scoped to specific cost centres.
+
+## Errors
+
+Error responses follow [RFC 7807 (Problem Details)](https://datatracker.ietf.org/doc/html/rfc7807).
+""",
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_URLCONF": "cashflow.api.urls",
 }
 
 # noinspection PyRedeclaration
