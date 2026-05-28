@@ -8,8 +8,14 @@
 	import NavLink from '$lib/components/NavLink.svelte';
 	import { Separator } from 'bits-ui';
 	import type { LayoutProps } from './$types';
+	import { type Alert, alerts } from '$lib/stores/alerts';
+	import AlertToast from '$lib/components/AlertToast.svelte';
 
 	let { children, data }: LayoutProps = $props();
+
+	let currentAlerts: Alert[] = $state([]);
+
+	alerts.subscribe((val) => (currentAlerts = val));
 </script>
 
 <nav
@@ -41,8 +47,15 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
+<!-- Alerts -->
+<div class="fixed right-20 bottom-20 z-50 flex flex-col gap-2">
+	{#each currentAlerts as alert}
+		<AlertToast {alert} />
+	{/each}
+</div>
+
 <div
-	class="base-text-base-text flex h-full flex-col justify-between bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
+	class="base-text-base-text flex min-h-screen flex-col bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
 	{#if page.data.title_key != null}
 		<header class="mx-auto w-full max-w-7xl px-4 lg:px-8">
@@ -56,9 +69,7 @@
 		</header>
 	{/if}
 
-	<main
-		class="mx-auto h-full min-h-screen w-full max-w-7xl px-4 py-8 lg:px-8 dark:text-dark-base-text"
-	>
+	<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 lg:px-8 dark:text-dark-base-text">
 		{@render children()}
 	</main>
 

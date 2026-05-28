@@ -3,6 +3,7 @@
 	"user_expenses": "My expenses",
 	"admin": "Administration",
 	"login": "Login",
+	"login_with_sso": "Log in with SSO",
 
 	"chapter": "Konglig Datasektionen",
 	"help": "Help",
@@ -19,6 +20,10 @@
 	"secondary_cost_center_required": "Secondary cost center is required",
 	"budget_line_required": "Budget line is required",
 	"amount_required": "Amount is required",
+
+	"errors": {
+		"network": "Could not reach the server. Please try again later."
+	},
 
 	"welcome": {
 		"title": "Cashflow",

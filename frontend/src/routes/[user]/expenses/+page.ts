@@ -6,7 +6,7 @@ import type { Expense, PaginatedResponse } from '$lib/api/types';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-export const load: PageLoad = async ({ fetch, url, parent }) => {
+export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
 
 	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
@@ -19,8 +19,7 @@ export const load: PageLoad = async ({ fetch, url, parent }) => {
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		const { user } = await parent();
-		expenses = await api.expenses.list(page, perPage, user?.username);
+		expenses = await api.expenses.list(page, perPage);
 	} catch (e) {
 		if (e instanceof APIError) {
 			let msg = e.message;
@@ -35,7 +34,7 @@ export const load: PageLoad = async ({ fetch, url, parent }) => {
 	}
 
 	return {
-		title_key: 'admin_expenses.title',
+		title_key: 'user_expenses',
 		expenses
 	};
 };

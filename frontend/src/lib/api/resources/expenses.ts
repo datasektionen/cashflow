@@ -8,7 +8,11 @@ export class ExpensesAPI {
 		this.apiClient = apiClient;
 	}
 
-	async list(page: number, perPage: number): Promise<PaginatedResponse<Expense>> {
+	async list(
+		page: number,
+		perPage: number,
+		username: string | undefined = undefined
+	): Promise<PaginatedResponse<Expense>> {
 		// The response format from DRF
 		type RawResponse = {
 			data: Expense[];
@@ -22,7 +26,8 @@ export class ExpensesAPI {
 
 		const res = await this.apiClient.get<RawResponse>('expenses/', {
 			page: page,
-			per_page: perPage
+			per_page: perPage,
+			...(username ? { username: username } : {})
 		});
 
 		return {

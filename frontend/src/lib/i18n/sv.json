@@ -3,6 +3,7 @@
 	"user_expenses": "Mina utlägg",
 	"admin": "Administrera",
 	"login": "Logga in",
+	"login_with_sso": "Logga in med SSO",
 	"chapter": "Konglig Datasektionen",
 	"help": "Hjälp",
 
@@ -17,6 +18,10 @@
 	"secondary_cost_center_required": "Sekundärt kostnadsställe krävs",
 	"budget_line_required": "Budgetpost krävs",
 	"amount_required": "Belopp krävs",
+
+	"errors": {
+		"network": "Ett nätverksfel inträffade."
+	},
 
 	"footer": {
 		"about": {

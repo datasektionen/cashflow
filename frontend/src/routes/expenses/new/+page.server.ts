@@ -1,12 +1,16 @@
 import type { Actions } from './$types';
 import { API } from '$lib/api';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
 import type { ExpenseCreate, ExpensePart } from '$lib/api/types';
 
 export const actions: Actions = {
 	// This action handles the form submit when creating new expenses
 	default: async (event) => {
+		const user = event.locals.user;
+		if (!user) {
+			throw redirect(303, '/login');
+		}
 		const api = new API('http://localhost:8000/api/', event.fetch);
 
 		const data = await event.request.formData();
@@ -69,5 +73,7 @@ export const actions: Actions = {
 			logger.error({ err }, 'failed to create expense');
 			throw err;
 		}
+
+		throw redirect(303, `/${user.username}/expenses/`);
 	}
 };

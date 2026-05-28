@@ -3,6 +3,9 @@
 /*Tailwind is stupid*/
 @source './lib/**/*';
 
+/* Toast accent border + timer bar colors are composed dynamically, so force-generate them */
+@source inline('{bg,border}-{money-green,amber,secondary,red}-500');
+
 @plugin 'flowbite/plugin';
 
 @custom-variant dark (&:where(.dark, .dark *));

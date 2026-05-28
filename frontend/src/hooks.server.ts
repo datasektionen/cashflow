@@ -7,6 +7,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	logger.debug({ method, url }, 'incoming request');
 	const api = new API('http://localhost:8000/api/', event.fetch);
 	event.locals.user = await api.users.getCurrent().catch(() => null);
+
 	return resolve(event, {
 		filterSerializedResponseHeaders: (name) => name.toLowerCase() === 'x-request-id'
 	});
