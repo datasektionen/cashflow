@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import generics
+from rest_framework import generics, exceptions
 
 from .serializers import UserSerializer
 
@@ -17,4 +17,7 @@ class CurrentUserView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
+        if not self.request.user.is_authenticated:
+            raise exceptions.NotAuthenticated()
+
         return self.request.user

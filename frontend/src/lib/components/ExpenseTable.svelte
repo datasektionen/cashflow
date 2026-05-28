@@ -50,7 +50,7 @@
 		{
 			key: 'owner',
 			header: $_('admin_expenses.columns.owner'),
-			render: (e) => e.owner.toString(),
+			render: (e) => e.owner.first_name + ' ' + e.owner.last_name,
 			width: 'w-32'
 		},
 		{

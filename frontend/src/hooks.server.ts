@@ -1,28 +1,16 @@
-import type { HandleFetch } from '@sveltejs/kit';
+import type { Handle, HandleFetch } from '@sveltejs/kit';
+import { logger } from '$lib/logger';
+import { API } from '$lib/api';
 
-export async function handle({ event, resolve }) {
-	// Retrieve logged in (?) user from backend
-	const res = await fetch('http://localhost:8000/users/me', {
-		headers: {
-			// The Django backend uses session authentication, so we need to send the session cookie with the request
-			cookie: 'sessionid=' + event.cookies.get('sessionid')
-		}
-	}).catch((err) => {
-		console.error('Error fetching user:', err);
-		return { ok: false, json: JSON.parse(err) };
-	});
-
-	if (!res.ok) {
-		event.locals.user = null;
-	} else {
-		const user = await res.json();
-		event.locals.user = user?.username ? user : null;
-	}
-	return await resolve(event);
-}
+export const handle: Handle = async ({ event, resolve }) => {
+	const { method, url } = event.request;
+	logger.debug({ method, url }, 'incoming request');
+	const api = new API('http://localhost:8000/api/', event.fetch);
+	event.locals.user = await api.users.getCurrent().catch(() => null);
+	return resolve(event);
+};
 
 export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
-	// Change all requests to the Django backend to include authentication
 	if (request.url.startsWith('http://localhost:8000')) {
 		const headers = new Headers(request.headers);
 		const sessionid = event.cookies.get('sessionid');

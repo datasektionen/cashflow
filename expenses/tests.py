@@ -114,7 +114,7 @@ class TestExpenseListPermissions:
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
-        assert all([e["owner"] == user.profile.id for e in response.data["data"]])
+        assert all([e["owner"]["id"] == user.profile.id for e in response.data["data"]])
 
     def test_user_with_scope_receives_cc_expenses(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: ["TestCostCenter"]}
@@ -161,7 +161,7 @@ class TestExpenseListFilters:
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
-        assert all(e["owner"] == target_user.profile.id for e in response.data["data"])
+        assert all(e["owner"]["id"] == target_user.profile.id for e in response.data["data"])
 
     def test_filter_by_cost_center(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: "*"}
@@ -231,7 +231,7 @@ class TestExpenseCreate:
             format="multipart",
         )
 
-        assert response.data["owner"] == user.profile.id
+        assert response.data["owner"]["id"] == user.profile.id
 
     def test_must_contain_file(self, user, client):
         response = client.post(

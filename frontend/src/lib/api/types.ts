@@ -5,6 +5,12 @@ export type ExpenseFile = {
 	invoice: number | null;
 };
 
+export type Profile = {
+	id: number;
+	first_name: string;
+	last_name: string;
+};
+
 export type Expense = {
 	id: number;
 	description: string;
@@ -12,7 +18,7 @@ export type Expense = {
 	created_date: string;
 	confirmed_at: string | null;
 	confirmed_by: number | null;
-	owner: number;
+	owner: Profile;
 	reimbursement: number | null;
 	verification: string;
 	is_flagged: boolean | null;
@@ -43,4 +49,23 @@ export type PaginatedResponse<T> = {
 		perPage: number;
 		totalPages: number;
 	};
+};
+
+export type Permissions = {
+	attest: string[];
+	accounting: string[];
+	pay: boolean;
+	confirm: boolean;
+	unconfirm: boolean;
+	unattest: boolean;
+	'edit-invoice': boolean;
+	'view-all-payments': boolean;
+};
+
+export type User = {
+	username: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	permissions: Permissions;
 };

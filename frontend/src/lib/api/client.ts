@@ -1,3 +1,5 @@
+import { logger } from '$lib/logger';
+
 /**
  * Base API client class, gets subclassed for specific resources.
  */
@@ -12,7 +14,7 @@ export class ApiClient {
 
 	private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		const isFormData = options.body instanceof FormData;
-		const response = await this.fetch(`${this.apiUrl}${path}`, {
+		const response = await this.fetch(`${this.apiUrl}${path.replace(/^\/+/, '')}`, {
 			credentials: 'include',
 			...options,
 			headers: {
@@ -22,7 +24,7 @@ export class ApiClient {
 		});
 		if (!response.ok) {
 			const error = await response.json().catch(() => ({}));
-			console.log('API error response:', error);
+			logger.error({ path, status: response.status, error }, 'API request failed');
 			throw new Error(error.message ?? `Request failed with status ${response.status}`);
 		}
 
