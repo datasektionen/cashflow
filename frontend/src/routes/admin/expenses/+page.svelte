@@ -1,19 +1,24 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { api } from '$lib/api';
 	import ExpenseTable from '$lib/components/ExpenseTable.svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	let { data }: PageProps = $props();
 
-	// svelte-ignore state_referenced_locally
-	let expenses = $state(data.expenses);
+	let expenses = $derived(data.expenses);
 
-	async function handlePageChange(page: number) {
-		expenses = await api.expenses.list(page, expenses.pagination.perPage);
+	function handlePageChange(p: number) {
+		const url = new URL(page.url);
+		url.searchParams.set('page', p.toString());
+		goto(url, { keepFocus: true, noScroll: true });
 	}
 
-	async function handlePerPageChange(perPage: number) {
-		expenses = await api.expenses.list(1, perPage);
+	function handlePerPageChange(perPage: number) {
+		const url = new URL(page.url);
+		url.searchParams.set('per_page', perPage.toString());
+		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true });
 	}
 </script>
 

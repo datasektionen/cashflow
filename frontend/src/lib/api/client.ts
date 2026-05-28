@@ -22,12 +22,16 @@ export class ApiClient {
 				...options.headers
 			}
 		});
+		const requestId = response.headers.get('X-Request-ID');
+		const log = requestId ? logger.child({ request_id: requestId }) : logger;
+
 		if (!response.ok) {
 			const error = await response.json().catch(() => ({}));
-			logger.error({ path, status: response.status, error }, 'API request failed');
+			log.error({ path, status: response.status, error }, 'API request failed');
 			throw new Error(error.message ?? `Request failed with status ${response.status}`);
 		}
 
+		log.debug({ path, status: response.status }, 'API request succeeded');
 		return response.json();
 	}
 
