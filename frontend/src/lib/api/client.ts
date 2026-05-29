@@ -29,6 +29,9 @@ export class ApiClient {
 			response = await this.fetch(`${this.apiUrl}${path.replace(/^\/+/, '')}`, {
 				credentials: 'include',
 				...options,
+				// FormData and JSON data requires different headers
+				// If we pass a Content-Type header with FormData, we will get errors that can be hard
+				// to diagnose
 				headers: {
 					...(isFormData ? {} : { 'Content-Type': 'application/json' }),
 					...options.headers

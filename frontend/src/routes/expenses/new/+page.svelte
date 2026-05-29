@@ -104,9 +104,7 @@
 	let errors = $derived(validationResult.getErrors());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		console.log('blur');
 		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
-		console.log(validationResult.getErrors().description);
 	}
 
 	function onDateBlur(e: FocusEvent) {
@@ -139,7 +137,7 @@
 						<span
 							class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 						>
-							<span>{errors.description![0]}</span>
+							<span>{$_(errors.description![0])}</span>
 							<CircleAlert class="size-4" />
 						</span>
 					{/if}
@@ -170,7 +168,7 @@
 						<span
 							class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 						>
-							<span>{errors['expense-date']![0]}</span>
+							<span>{$_(errors['expense-date']![0])}</span>
 							<CircleAlert class="size-4" />
 						</span>
 					{/if}
@@ -267,7 +265,7 @@
 					<span
 						class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 					>
-						<span>{errors.files![0]}</span>
+						<span>{$_(errors.files![0])}</span>
 						<CircleAlert class="size-4" />
 					</span>
 				{/if}
@@ -316,7 +314,7 @@
 								<span
 									class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 								>
-									<span>{errors[`part-${i}-costcenter`]![0]}</span>
+									<span>{$_(errors[`part-${i}-costcenter`]![0])}</span>
 									<CircleAlert class="size-4" />
 								</span>
 							{/if}
@@ -340,7 +338,7 @@
 								<span
 									class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 								>
-									<span>{errors[`part-${i}-secondarycostcenter`]![0]}</span>
+									<span>{$_(errors[`part-${i}-secondarycostcenter`]![0])}</span>
 									<CircleAlert class="size-4" />
 								</span>
 							{/if}
@@ -364,7 +362,7 @@
 								<span
 									class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 								>
-									<span>{errors[`part-${i}-budgetline`]![0]}</span>
+									<span>{$_(errors[`part-${i}-budgetline`]![0])}</span>
 									<CircleAlert class="size-4" />
 								</span>
 							{/if}
@@ -393,7 +391,7 @@
 								<span
 									class="flex flex-row items-center justify-end gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
 								>
-									<span>{errors[`part-${i}-amount`]![0]}</span>
+									<span>{$_(errors[`part-${i}-amount`]![0])}</span>
 									<CircleAlert class="size-4" />
 								</span>
 							{/if}

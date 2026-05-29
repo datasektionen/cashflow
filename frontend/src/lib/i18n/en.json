@@ -7,7 +7,6 @@
 
 	"chapter": "Konglig Datasektionen",
 	"help": "Help",
-	"about": "About",
 
 	"browse_files": "Browse files",
 	"cancel": "Cancel",
@@ -28,15 +27,45 @@
 		"network": "Could not reach the server. Please try again later."
 	},
 
+	"footer": {
+		"about": {
+			"title": "About",
+			"body": "Cashflow is an invoice and expense management system at {compsciwebsite}."
+		},
+		"help": {
+			"title": "Help",
+			"body": "If you need help using Cashflow, you can contact your committee manager or the chapter's treasurer."
+		},
+		"issues": {
+			"title": "Something not working?",
+			"body": "Create an issue on Github and it'll usually be resolved as quickly as possible. If you'd like to help develop the chapter's systems, drop by one of the Hacker evenings organized on some Thursdays by the Information organ. Say hi!"
+		}
+	},
+
 	"welcome": {
 		"title": "Cashflow",
 		"intro": "Is this your first time using Cashflow?",
 		"process": {
-			"title": "How does it work?",
-			"steps": {
-				"registration": {
-					"title": "Registration"
-				}
+			"title": "How do I use Cashflow and what happens to the receipt?",
+			"registration": {
+				"title": "Registration",
+				"description": "You who bought something for the chapter register your receipt here in Cashflow"
+			},
+			"validation": {
+				"title": "Receipt confirmation",
+				"description": "The chapter's treasurer confirms that the receipt meets the requirements for a receipt and that the scanned receipt is of good quality"
+			},
+			"attestation": {
+				"title": "Attestation",
+				"description": "Your committee chair, the treasurer or the finance officer approves your receipt."
+			},
+			"payment": {
+				"title": "Payment",
+				"description": "Your committee chair, the treasurer or the finance officer pays out the receipt. Several receipts can be paid out at once."
+			},
+			"accounting": {
+				"title": "Accounting",
+				"description": "The treasurer or a finance officer books the receipt"
 			}
 		}
 	},
