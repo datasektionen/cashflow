@@ -52,6 +52,12 @@ const validation = create((data: ExpenseFormData, currentField?: string) => {
 		test(`part-${i}-amount`, t('amount_required'), () => {
 			enforce(part.amount).isNotNull();
 		});
+		test(`part-${i}-amount`, t('amount_negative'), () => {
+			enforce(part.amount).isNumber().greaterThan(0);
+		});
+		test(`part-${i}-amount`, t('amount_too_large'), () => {
+			enforce(part.amount).isNumber().lessThanOrEquals(9999999.99);
+		});
 	});
 });
 

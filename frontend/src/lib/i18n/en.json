@@ -19,7 +19,10 @@
 	"cost_center_required": "Cost center is required",
 	"secondary_cost_center_required": "Secondary cost center is required",
 	"budget_line_required": "Budget line is required",
+	"expense_created": "Expense submitted successfully",
 	"amount_required": "Amount is required",
+	"amount_negative": "Amount must be greater than zero",
+	"amount_too_large": "Amount exceeds maximum allowed value",
 
 	"errors": {
 		"network": "Could not reach the server. Please try again later."

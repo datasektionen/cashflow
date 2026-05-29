@@ -17,7 +17,10 @@
 	"cost_center_required": "Kostnadsställe krävs",
 	"secondary_cost_center_required": "Sekundärt kostnadsställe krävs",
 	"budget_line_required": "Budgetpost krävs",
+	"expense_created": "Utlägget har skapats",
 	"amount_required": "Belopp krävs",
+	"amount_negative": "Beloppet måste vara större än noll",
+	"amount_too_large": "Beloppet överstiger det maximalt tillåtna värdet",
 
 	"errors": {
 		"network": "Ett nätverksfel inträffade."

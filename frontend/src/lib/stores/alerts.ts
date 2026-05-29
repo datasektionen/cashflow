@@ -23,6 +23,29 @@ export const error = (message: string, duration: number = 5000): Alert => {
 	};
 };
 
+export const success = (message: string, duration: number = 5000): Alert => {
+	return {
+		id: crypto.randomUUID(),
+		type: AlertType.Success,
+		message,
+		duration
+	};
+};
+
+export const warning = (message: string, duration: number = 5000): Alert => ({
+	id: crypto.randomUUID(),
+	type: AlertType.Warning,
+	message,
+	duration
+});
+
+export const info = (message: string, duration: number = 5000): Alert => ({
+	id: crypto.randomUUID(),
+	type: AlertType.Info,
+	message,
+	duration
+});
+
 export const alerts: Writable<Alert[]> = writable<Alert[]>([]);
 
 export const dismiss = (id: string) => {

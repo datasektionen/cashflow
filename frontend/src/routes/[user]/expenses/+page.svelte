@@ -3,8 +3,14 @@
 	import ExpenseTable from '$lib/components/ExpenseTable.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { alerts, success } from '$lib/stores/alerts';
+	import { _ } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
+
+	if (page.url.searchParams.get('createSuccess') === 'true') {
+		alerts.update((a) => [...a, success($_('expense_created'))]);
+	}
 
 	let expenses = $derived(data.expenses);
 

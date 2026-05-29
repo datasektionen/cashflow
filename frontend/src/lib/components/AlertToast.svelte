@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Alert, AlertType, dismiss } from '$lib/stores/alerts';
-	import { X } from '@lucide/svelte';
-	import { logger } from '$lib/logger.ts';
+	import { CircleAlert, CircleDollarSign, CircleX, Lightbulb, X } from '@lucide/svelte';
+	import { logger } from '$lib/logger';
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { linear } from 'svelte/easing';
@@ -40,15 +40,31 @@
 </script>
 
 <div
-	class={['relative flex h-20 w-64 flex-row justify-between bg-base-400 p-4 dark:bg-dark-base-150']}
+	class={[
+		'relative flex h-20 w-64 flex-row items-center justify-between bg-base-400 p-4 shadow-xl dark:bg-dark-base-150'
+	]}
 >
-	<span class="text-base-text dark:text-dark-base-text">{alert.message}</span>
-	<button
-		class={['absolute top-2 right-2 cursor-pointer text-base-text dark:text-dark-base-text']}
-		onclick={handleDismiss}
-	>
-		<X class="transition-all hover:scale-110" />
-	</button>
+	{#if alert.type === AlertType.Success}
+		<CircleDollarSign class="mr-2 shrink-0 text-money-green-500" />
+	{:else if alert.type === AlertType.Warning}
+		<CircleAlert class="mr-2 shrink-0 text-amber-500" />
+	{:else if alert.type === AlertType.Error}
+		<CircleX class="mr-2 shrink-0 text-red-500" />
+	{:else if alert.type === AlertType.Info}
+		<Lightbulb class="mr-2 shrink-0 text-secondary-500" />
+	{/if}
+	<div class="flex-1 text-base text-base-subtle dark:text-dark-base-subtle">
+		{alert.message}
+	</div>
+	<div class="shrink-0">
+		<button
+			class={['cursor-pointer text-base-subtle dark:text-dark-base-subtle']}
+			onclick={handleDismiss}
+		>
+			<X class="transition-all hover:scale-110" />
+		</button>
+	</div>
+
 	<div
 		class={`absolute bottom-0 left-0 h-1 bg-${colors}-500`}
 		style="width: {progress.current}%"

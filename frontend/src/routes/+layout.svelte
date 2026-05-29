@@ -49,7 +49,7 @@
 
 <!-- Alerts -->
 <div class="fixed right-20 bottom-20 z-50 flex flex-col gap-2">
-	{#each currentAlerts as alert}
+	{#each currentAlerts as alert (alert.id)}
 		<AlertToast {alert} />
 	{/each}
 </div>
@@ -73,29 +73,31 @@
 		{@render children()}
 	</main>
 
-	<footer class="bg-money-green-700 text-white dark:bg-dark-base-200 dark:text-dark-base-text">
-		<div class="mx-auto flex h-64 max-w-7xl flex-row justify-between px-4 py-4 lg:px-8">
-			<div class="w-96">
-				<h2 class="font-bold">{$_('footer.about.title')}</h2>
-				<p>
-					{@html $_('footer.about.body').replaceAll(
-						'{compsciwebsite}',
-						'<a class="font-bold" href="https://datasektionen.se/">Konglig Datasektionen</a>'
-					)}
-				</p>
+	{#if data.user == null}
+		<footer class="bg-money-green-700 text-white dark:bg-dark-base-200 dark:text-dark-base-text">
+			<div class="mx-auto flex h-64 max-w-7xl flex-row justify-between px-4 py-4 lg:px-8">
+				<div class="w-96">
+					<h2 class="font-bold">{$_('footer.about.title')}</h2>
+					<p>
+						{@html $_('footer.about.body').replaceAll(
+							'{compsciwebsite}',
+							'<a class="font-bold" href="https://datasektionen.se/">Konglig Datasektionen</a>'
+						)}
+					</p>
+				</div>
+				<div class="w-96">
+					<h2 class="font-bold">{$_('footer.help.title')}</h2>
+					<p>
+						{$_('footer.help.body')}
+					</p>
+				</div>
+				<div class="w-96">
+					<h2 class="font-bold">{$_('footer.issues.title')}</h2>
+					<p>
+						{$_('footer.issues.body')}
+					</p>
+				</div>
 			</div>
-			<div class="w-96">
-				<h2 class="font-bold">{$_('footer.help.title')}</h2>
-				<p>
-					{$_('footer.help.body')}
-				</p>
-			</div>
-			<div class="w-96">
-				<h2 class="font-bold">{$_('footer.issues.title')}</h2>
-				<p>
-					{$_('footer.issues.body')}
-				</p>
-			</div>
-		</div>
-	</footer>
+		</footer>
+	{/if}
 </div>
