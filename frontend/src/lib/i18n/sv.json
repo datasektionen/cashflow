@@ -1,5 +1,4 @@
 {
-	"new_invoice": "Ny faktura",
 	"user_expenses": "Mina utlägg",
 	"admin": "Administrera",
 	"login": "Logga in",
@@ -112,5 +111,9 @@
 			"add_part": "Lägg till kvittodel",
 			"submit": "Spara och registrera kvitto"
 		}
+	},
+
+	"new_invoice": {
+		"title": "Ny faktura"
 	}
 }

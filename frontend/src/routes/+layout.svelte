@@ -25,7 +25,7 @@
 		<div class="flex h-full">
 			{#if data.user != null}
 				<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
-				<NavLink to="/invoices/new" text={$_('new_invoice')}></NavLink>
+				<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
 				<NavLink to="/{data.user.username}/expenses/" text={$_('user_expenses')}></NavLink>
 				<NavLink to="/admin/" text={$_('admin')}></NavLink>
 			{/if}

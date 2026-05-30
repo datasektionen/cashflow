@@ -1,5 +1,4 @@
 {
-	"new_invoice": "New invoice",
 	"user_expenses": "My expenses",
 	"admin": "Administration",
 	"login": "Login",
@@ -114,5 +113,9 @@
 			"add_part": "Add part",
 			"submit": "Save and register expense"
 		}
+	},
+
+	"new_invoice": {
+		"title": "New invoice"
 	}
 }
