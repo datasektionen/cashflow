@@ -1,0 +1,137 @@
+import datetime
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
+
+from core.api.serializers import ProfileSerializer
+from invoices.models import Invoice, InvoicePart
+from .exceptions import (
+    InvalidDateFormatError,
+    InvalidInvoiceDateError,
+    InvalidDueDateError,
+    InvoicePartRequiredError,
+    VerificationRequiredError,
+)
+
+
+@extend_schema_field(OpenApiTypes.BINARY)
+class UploadField(serializers.FileField):
+    pass
+
+
+class InvoiceDateField(serializers.DateField):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("input_formats", ["%Y-%m-%d"])
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, value):
+        try:
+            return super().to_internal_value(value)
+        except serializers.ValidationError:
+            raise InvalidDateFormatError()
+
+
+class InvoiceCreateRequestSerializer(serializers.Serializer):
+    """Schema-only serializer describing the multipart/form-data payload for invoice creation."""
+
+    files = serializers.ListField(
+        child=UploadField(),
+        help_text="One or more images or PDFs of the invoice.",
+    )
+    description = serializers.CharField()
+    invoice_date = serializers.DateField(
+        help_text="Date the invoice was issued (YYYY-MM-DD)."
+    )
+    due_date = serializers.DateField(help_text="Payment due date (YYYY-MM-DD).")
+    parts = serializers.CharField(
+        help_text="JSON-encoded array of invoice parts: [{cost_centre, secondary_cost_centre, budget_line, amount}]."
+    )
+    accounted = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Whether the invoice has already been booked.",
+    )
+    verification = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Verification number, required when accounted=true.",
+    )
+
+
+class InvoicePartSerializer(serializers.ModelSerializer):
+    attested_by = ProfileSerializer(source="attested_by.profile")
+
+    class Meta:
+        model = InvoicePart
+        fields = [
+            "invoice",
+            "cost_centre",
+            "secondary_cost_centre",
+            "budget_line",
+            "amount",
+            "attested_by",
+            "attest_date",
+        ]
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+
+    owner = ProfileSerializer(read_only=True)
+    confirmed_by = ProfileSerializer(
+        source="confirmed_by.profile", allow_null=True, read_only=True
+    )
+    parts = InvoicePartSerializer(many=True, read_only=True)
+    invoice_date = InvoiceDateField(allow_null=True)
+    due_date = InvoiceDateField(allow_null=True)
+
+    # There is a typo in the Invoice model
+    # https://github.com/datasektionen/cashflow/issues/311#issue-4554872870
+    paid_by = ProfileSerializer(
+        source="payed_by.profile", allow_null=True, read_only=True
+    )
+    paid_at = serializers.DateField(source="payed_at", allow_null=True, read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = [
+            "created_date",
+            "invoice_date",
+            "due_date",
+            "confirmed_by",
+            "confirmed_at",
+            "owner",
+            "description",
+            "verification",
+            "paid_at",
+            "paid_by",
+            "parts",
+        ]
+
+    def validate(self, data):
+
+        invoice_date = data.get("invoice_date")
+        if invoice_date and invoice_date > datetime.date.today():
+            raise InvalidInvoiceDateError()
+
+        due_date = data.get("due_date")
+        if due_date and due_date < datetime.date.today():
+            raise InvalidDueDateError()
+
+        parts = data.get("parts")
+        if parts and len(parts) <= 0:
+            raise InvoicePartRequiredError()
+
+        accounted = self.initial_data.get("accounted") in (True, "True", "true", "1")
+        verification = data.get("verification")
+        if accounted and not verification:
+            raise VerificationRequiredError()
+
+        return data
+
+    def create(self, validated_data):
+        parts_data = validated_data.pop("parts", [])
+        invoice = Invoice.objects.create(file_is_original=True, **validated_data)
+        for part in parts_data:
+            InvoicePart.objects.create(invoice=invoice, **part)
+        return invoice

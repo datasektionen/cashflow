@@ -1,18 +1,7 @@
 from drf_problems.utils import register
 from rest_framework import exceptions
 
-
-class ErrorToDictMixin:
-    # (!) The following methods are meant as a "compatability" layer to allow these exceptions to work with
-    # normal Django views, before we switch over to DRF only
-
-    def to_dict(self) -> dict:
-        return {
-            "type": f"/problems/{self.default_code}",
-            "title": self.title,
-            "detail": self.detail,
-            "status_code": self.status_code,
-        }
+from core.exceptions import ErrorToDictMixin
 
 
 @register

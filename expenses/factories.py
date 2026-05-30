@@ -8,6 +8,7 @@ from expenses.models import Expense, ExpensePart, File
 class ExpenseFactory(DjangoModelFactory):
     class Meta:
         model = Expense
+        skip_postgeneration_save = True
 
     owner = factory.SubFactory(ProfileFactory)
     description = factory.Faker("text")

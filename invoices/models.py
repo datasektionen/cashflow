@@ -2,7 +2,10 @@ from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 from django.forms.models import model_to_dict
+
+from cashflow import dauth
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -19,6 +22,18 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
         if cost_centres is not True:
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
         return qs.order_by("invoice_date").distinct()
+
+    def viewable_by(self, user: User) -> "InvoiceQuerySet":
+        
+        if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", user):
+            # Can view all
+            return self.all()
+
+        cc_scopes = dauth.get_permissions(user).get(dauth.Permission.VIEW_EXPENSES, [])
+
+        return self.filter(
+            Q(invoicepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
+        ).distinct()
 
 
 class Invoice(models.Model):

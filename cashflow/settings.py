@@ -168,6 +168,7 @@ Error responses follow [RFC 7807 (Problem Details)](https://datatracker.ietf.org
     "SCHEMA_PATH_PREFIX": "/api/",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_URLCONF": "cashflow.api.urls",
+    "PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
 }
 
 # noinspection PyRedeclaration

@@ -9,6 +9,7 @@ from invoices.models import Invoice, InvoicePart
 class InvoiceFactory(DjangoModelFactory):
     class Meta:
         model = Invoice
+        skip_postgeneration_save = True
 
     owner = factory.SubFactory(ProfileFactory)
     description = factory.Faker("text")

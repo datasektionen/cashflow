@@ -31,6 +31,28 @@ class DefaultPagination(PageNumberPagination):
         previous_page = self.page.previous_page_number()
         return replace_query_param(path, self.page_query_param, previous_page)
 
+    # Used to generate proper Redoc schemas
+    def get_paginated_response_schema(self, schema):
+        return {
+            "type": "object",
+            "required": ["data", "pagination"],
+            "properties": {
+                "data": schema,
+                "pagination": {
+                    "type": "object",
+                    "required": ["total", "page", "per_page", "total_pages"],
+                    "properties": {
+                        "total": {"type": "integer"},
+                        "page": {"type": "integer"},
+                        "per_page": {"type": "integer"},
+                        "total_pages": {"type": "integer"},
+                        "next": {"type": "string", "nullable": True},
+                        "previous": {"type": "string", "nullable": True},
+                    },
+                },
+            },
+        }
+
     def get_paginated_response(self, data):
         assert isinstance(self.page, Page)
         assert isinstance(self.request, Request)

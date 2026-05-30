@@ -10,7 +10,7 @@ from pydantic import BaseModel, RootModel, HttpUrl, TypeAdapter
 from rest_framework.exceptions import APIException
 from structlog import get_logger
 
-from cashflow.exceptions import ErrorToDictMixin
+from core.exceptions import ErrorToDictMixin
 
 logger = get_logger(__name__)
 

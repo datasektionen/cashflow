@@ -168,6 +168,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             Expense.objects.viewable_by(self.current_user)
             .filter(**filter_map)
             .distinct()
+            .order_by("expense_date")
         )
 
 
