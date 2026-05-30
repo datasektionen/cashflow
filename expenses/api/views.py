@@ -10,10 +10,8 @@ patterns for authentication and error handling found in this file.
 """
 
 import json
-from enum import Enum
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.db import transaction
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import serializers, status
@@ -23,35 +21,14 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.response import Response
 from structlog import get_logger
 
-from expenses.models import Expense, ExpensePart, File, Profile
+from core.api.filters import Filter
+from core.api.serializers import FileSerializer, ProfileSerializer
+from core.api.utils import AuthenticatedUserMixin
+from expenses.models import Expense, ExpensePart, File
 
 UserModel = get_user_model()
 
 logger = get_logger(__name__)
-
-
-class Filter(str, Enum):
-    USER = "user"
-    COST_CENTER = "cost_center"
-
-
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = "__all__"
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source="user.first_name")
-    last_name = serializers.CharField(source="user.last_name")
-
-    class Meta:
-        model = Profile
-        fields = [
-            "id",
-            "first_name",
-            "last_name",
-        ]
 
 
 class ExpensePartSerializer(serializers.ModelSerializer):
@@ -140,13 +117,11 @@ class ExpenseSerializer(serializers.ModelSerializer):
         tags=["Expenses"],
     ),
 )
-class ExpenseViewSet(viewsets.ModelViewSet):
+class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        user = request.user
-        assert isinstance(user, User)
 
         files = request.FILES.getlist("files")
         if not files:
@@ -167,15 +142,13 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
-            expense = serializer.save(owner=user.profile)
+            expense = serializer.save(owner=self.current_user.profile)
             for f in files:
                 File.objects.create(expense=expense, file=f)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
-        user = self.request.user
-        assert isinstance(user, User)
 
         filter_map = {}
         if self.request.GET.get(Filter.USER):
@@ -191,15 +164,19 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 self.request.GET.get(Filter.COST_CENTER)
             ]
 
-        return Expense.objects.viewable_by(user).filter(**filter_map).distinct()
+        return (
+            Expense.objects.viewable_by(self.current_user)
+            .filter(**filter_map)
+            .distinct()
+        )
 
 
-class ExpensePartViewSet(viewsets.ModelViewSet):
+class ExpensePartViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpensePartSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        assert isinstance(user, User)
 
-        return ExpensePart.objects.filter(expense__in=Expense.objects.viewable_by(user))
+        return ExpensePart.objects.filter(
+            expense__in=Expense.objects.viewable_by(self.current_user)
+        )

@@ -8,76 +8,15 @@
 # Better late than never
 import json
 
-import factory
 import pytest
-from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.serializers.json import DjangoJSONEncoder
-from factory.django import DjangoModelFactory
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
-from expenses.models import Expense, ExpensePart, Profile, File
-
-
-class UserFactory(DjangoModelFactory):
-    class Meta:
-        model = User
-
-    username = factory.Faker("user_name")
-    email = factory.Faker("email")
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
-
-
-class ProfileFactory(DjangoModelFactory):
-    class Meta:
-        model = Profile
-        django_get_or_create = ("user",)
-
-    user = factory.SubFactory(UserFactory)
-
-
-class ExpenseFactory(DjangoModelFactory):
-    class Meta:
-        model = Expense
-
-    owner = factory.SubFactory(ProfileFactory)
-    description = factory.Faker("text")
-    expense_date = factory.Faker("date")
-    file = factory.RelatedFactory(
-        "expenses.tests.ExpenseFileFactory", factory_related_name="expense"
-    )
-
-
-class ExpenseFileFactory(DjangoModelFactory):
-    class Meta:
-        model = File
-
-    expense = factory.SubFactory(ExpenseFactory)
-    invoice = None
-    file = factory.django.FileField()
-
-
-class ExpensePartFactory(DjangoModelFactory):
-    class Meta:
-        model = ExpensePart
-
-    expense = factory.SubFactory(ExpenseFactory)
-    cost_centre = factory.Faker("word")
-    secondary_cost_centre = factory.Faker("word")
-    budget_line = factory.Faker("word")
-    amount = factory.Faker("pydecimal", left_digits=5, right_digits=2, positive=True)
-
-
-@pytest.fixture
-def user(db):
-    return UserFactory()
-
-
-@pytest.fixture
-def profile(user):
-    return ProfileFactory(user=user)
+from core.factories import UserFactory
+from expenses.factories import ExpenseFactory, ExpensePartFactory
+from expenses.models import Profile
 
 
 @pytest.fixture
@@ -161,7 +100,9 @@ class TestExpenseListFilters:
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
-        assert all(e["owner"]["id"] == target_user.profile.id for e in response.data["data"])
+        assert all(
+            e["owner"]["id"] == target_user.profile.id for e in response.data["data"]
+        )
 
     def test_filter_by_cost_center(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: "*"}

@@ -7,8 +7,8 @@ from pytest import fixture
 
 from cashflow.dauth import HiveAccountingPermissions, Permission
 from cashflow.utils import may_authenticate_fortnox
-from expenses.tests import ExpenseFactory, ExpensePartFactory
-from invoices.tests import InvoiceFactory, InvoicePartFactory
+from expenses.factories import ExpenseFactory, ExpensePartFactory
+from invoices.factories import InvoiceFactory, InvoicePartFactory
 
 UserModel = get_user_model()
 

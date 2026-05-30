@@ -2,7 +2,7 @@ from django.core.paginator import Page
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.utils.urls import remove_query_param, replace_query_param
+from rest_framework.utils.urls import replace_query_param
 
 
 class DefaultPagination(PageNumberPagination):

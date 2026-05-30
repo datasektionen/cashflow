@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     "corsheaders",
     "widget_tweaks",
     "cashflow",
+    "core",
     "expenses",
     "invoices",
     "fortnox",
@@ -80,7 +81,7 @@ MIDDLEWARE = (
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "fortnox.django.FortnoxMiddleware",
     "fortnox.django.FortnoxServiceMiddleware",
-    "cashflow.middleware.StructlogContextMiddleware",
+    "core.middleware.StructlogContextMiddleware",
 )
 
 ROOT_URLCONF = "cashflow.urls"
@@ -143,7 +144,7 @@ DATABASES["default"].update(db_from_env)
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "cashflow.api.pagination.DefaultPagination",
+    "DEFAULT_PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
