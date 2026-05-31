@@ -14,52 +14,40 @@ import json
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.response import Response
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_201_CREATED,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 from structlog import get_logger
 
+from core.api.exceptions import (
+    PartInvalidJSONError,
+    FileRequiredError,
+    PartRequiredError,
+)
 from core.api.filters import Filter
-from core.api.serializers import FileSerializer, ProfileSerializer
+from core.api.openapi import problem, problems
 from core.api.utils import AuthenticatedUserMixin
+from expenses.api.exceptions import InvalidExpenseDateError
+from expenses.api.serializers import (
+    ExpensePartSerializer,
+    ExpenseSerializer,
+    ExpenseAdminSerializer,
+    ExpenseCreateSerializer,
+)
 from expenses.models import Expense, ExpensePart, File
 
 UserModel = get_user_model()
 
 logger = get_logger(__name__)
-
-
-class ExpensePartSerializer(serializers.ModelSerializer):
-    expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = ExpensePart
-        fields = [
-            "expense",
-            "cost_centre",
-            "secondary_cost_centre",
-            "budget_line",
-            "amount",
-        ]
-
-
-class ExpenseSerializer(serializers.ModelSerializer):
-    files = FileSerializer(many=True, source="file_set", read_only=True)
-    owner = ProfileSerializer(read_only=True)
-    parts = ExpensePartSerializer(many=True, required=True, allow_empty=False)
-
-    class Meta:
-        model = Expense
-        fields = "__all__"
-
-    def create(self, validated_data):
-        parts_data = validated_data.pop("parts", [])
-        expense = Expense.objects.create(**validated_data)
-        for part in parts_data:
-            ExpensePart.objects.create(expense=expense, **part)
-        return expense
 
 
 @extend_schema_view(
@@ -72,6 +60,10 @@ class ExpenseSerializer(serializers.ModelSerializer):
         ),
         operation_id="list_expenses",
         tags=["Expenses"],
+        responses={
+            HTTP_200_OK: ExpenseAdminSerializer,
+            HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
+        },
     ),
     retrieve=extend_schema(
         summary="Retrieve an expense",
@@ -84,12 +76,21 @@ class ExpenseSerializer(serializers.ModelSerializer):
     ),
     create=extend_schema(
         summary="Create a new expense",
+        request={"multipart/form-data": ExpenseCreateSerializer},
         description=(
             "Creates an expense together with its parts and one or more "
             "attached receipt files. Submit as `multipart/form-data` with "
             "the `parts` field as a JSON-encoded array; at least one file "
             "is required."
         ),
+        responses={
+            HTTP_201_CREATED: ExpenseSerializer,
+            HTTP_400_BAD_REQUEST: problems(
+                FileRequiredError, PartRequiredError, PartInvalidJSONError
+            ),
+            HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
+            HTTP_422_UNPROCESSABLE_ENTITY: problem(InvalidExpenseDateError),
+        },
         operation_id="create_expense",
         tags=["Expenses"],
     ),
@@ -121,13 +122,16 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.current_user.profile.may_attest_some():
+            return ExpenseAdminSerializer
+        return ExpenseSerializer
+
     def create(self, request, *args, **kwargs):
 
         files = request.FILES.getlist("files")
         if not files:
-            raise serializers.ValidationError(
-                {"files": "At least one file is required."}
-            )
+            raise FileRequiredError()
 
         data = (
             request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
@@ -136,8 +140,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             try:
                 data["parts"] = json.loads(data["parts"])
             except json.JSONDecodeError:
-                raise serializers.ValidationError({"parts": "Must be valid JSON."})
-
+                raise PartInvalidJSONError()
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 

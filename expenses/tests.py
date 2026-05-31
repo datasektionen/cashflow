@@ -44,6 +44,7 @@ class TestExpenseListPermissions:
     def test_unauthenticated_get_returns_403(self):
         response = APIClient().get("/api/expenses/")
         assert response.status_code == 403
+        assert response.data["detail"].code == "not_authenticated"
 
     def test_normal_user_only_receives_own_expenses(self, user, client, mocker):
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
@@ -123,7 +124,8 @@ class TestExpenseListFilters:
 
 
 class TestExpenseCreate:
-    def test_accepts_files(self, user, client):
+    def test_accepts_files(self, user, client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
         file2 = SimpleUploadedFile(
             "receipt2.jpg", b"content", content_type="image/jpeg"
@@ -149,7 +151,8 @@ class TestExpenseCreate:
 
         assert response.status_code == 201, response.json()
 
-    def test_cant_set_other_owner(self, user, client):
+    def test_cant_set_other_owner(self, user, client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         target_user = UserFactory()
         file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
 
@@ -172,6 +175,7 @@ class TestExpenseCreate:
             format="multipart",
         )
 
+        assert response.status_code == 201
         assert response.data["owner"]["id"] == user.profile.id
 
     def test_must_contain_file(self, user, client):
@@ -183,8 +187,10 @@ class TestExpenseCreate:
             },
         )
         assert response.status_code == 400
+        assert response.data["detail"].code == "file_required"
 
-    def test_must_contain_part(self, user, client):
+    def test_must_contain_part(self, user, client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
         response = client.post(
             "/api/expenses/",
@@ -195,3 +201,19 @@ class TestExpenseCreate:
             },
         )
         assert response.status_code == 400
+        assert response.data["parts"][0].code == "required"
+
+    def test_rejects_invalid_parts_json(self, user, client):
+        file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
+        response = client.post(
+            "/api/expenses/",
+            {
+                "description": "Test expense",
+                "expense_date": "2026-01-01",
+                "files": [file],
+                "parts": "not valid json{",
+            },
+            format="multipart",
+        )
+        assert response.status_code == 400
+        assert response.data["detail"].code == "part_invalid_json"

@@ -1,5 +1,6 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.exceptions import APIException
 
 from expenses.models import File, Profile
 
@@ -29,3 +30,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
         ]
+
+
+@extend_schema_field(OpenApiTypes.BINARY)
+class UploadField(serializers.FileField):
+    pass

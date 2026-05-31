@@ -5,6 +5,7 @@ from .serializers import ProblemDetailSerializer
 
 
 def problems(*exceptions: type[APIException]) -> OpenApiResponse:
+    """Works like `problem` but enables multiple exceptions for the same HTTP code."""
     instances = [exc() for exc in exceptions]
     return OpenApiResponse(
         response=ProblemDetailSerializer,
@@ -27,6 +28,16 @@ def problems(*exceptions: type[APIException]) -> OpenApiResponse:
 
 
 def problem(exception: type[APIException]) -> OpenApiResponse:
+    """Helper function to annotate error responses for the OpenAPI schema.
+
+    Will also include an example response based on the drf_problem format.
+
+    Example::
+
+        @extend_schema(responses={404: problem(NotFound)})
+        def retrieve(self, request, pk):
+            ...
+    """
     instance = exception()
     return OpenApiResponse(
         response=ProblemDetailSerializer,

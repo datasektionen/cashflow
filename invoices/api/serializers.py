@@ -1,23 +1,15 @@
 import datetime
 
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from core.api.serializers import ProfileSerializer
+from core.api.serializers import ProfileSerializer, UploadField
 from invoices.models import Invoice, InvoicePart
 from .exceptions import (
-    InvalidDateFormatError,
     InvalidInvoiceDateError,
     InvalidDueDateError,
-    InvoicePartRequiredError,
     VerificationRequiredError,
 )
-
-
-@extend_schema_field(OpenApiTypes.BINARY)
-class UploadField(serializers.FileField):
-    pass
+from core.api.exceptions import InvalidDateFormatError, PartRequiredError
 
 
 class InvoiceDateField(serializers.DateField):
@@ -120,7 +112,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
         parts = data.get("parts")
         if parts and len(parts) <= 0:
-            raise InvoicePartRequiredError()
+            raise PartRequiredError()
 
         accounted = self.initial_data.get("accounted") in (True, "True", "true", "1")
         verification = data.get("verification")

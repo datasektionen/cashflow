@@ -17,12 +17,14 @@ from core.api.openapi import problems
 from core.api.utils import AuthenticatedUserMixin
 from expenses.models import File
 from .exceptions import (
-    InvoiceFileRequiredError,
-    InvoicePartInvalidJSONError,
-    InvoicePartRequiredError,
     InvalidInvoiceDateError,
     InvalidDueDateError,
     VerificationRequiredError,
+)
+from core.api.exceptions import (
+    PartInvalidJSONError,
+    FileRequiredError,
+    PartRequiredError,
 )
 from .serializers import InvoiceCreateRequestSerializer, InvoiceSerializer
 from ..models import Invoice
@@ -46,9 +48,9 @@ logger = get_logger(__name__)
         responses={
             status.HTTP_201_CREATED: InvoiceSerializer,
             status.HTTP_400_BAD_REQUEST: problems(
-                InvoiceFileRequiredError,
-                InvoicePartInvalidJSONError,
-                InvoicePartRequiredError,
+                FileRequiredError,
+                PartInvalidJSONError,
+                PartRequiredError,
                 VerificationRequiredError,
             ),
             status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
@@ -85,15 +87,15 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         files = request.FILES.getlist("files")
         if not files:
-            raise InvoiceFileRequiredError()
+            raise FileRequiredError()
         data = cast(QueryDict, request.data).dict()
         try:
             parts_raw = cast("str | None", data.get("parts"))
             if parts_raw is None:
-                raise InvoicePartRequiredError()
+                raise PartRequiredError()
             data["parts"] = json.loads(parts_raw)
-        except (json.JSONDecodeError, TypeError):
-            raise InvoicePartInvalidJSONError(
+        except json.JSONDecodeError, TypeError:
+            raise PartInvalidJSONError(
                 detail="There was a problem decoding the parts field. Invoice parts should be submitted as a JSON encoded array."
             )
         serializer = self.get_serializer(data=data)

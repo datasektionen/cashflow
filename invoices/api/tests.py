@@ -84,7 +84,7 @@ class TestInvoiceCreate:
         response = api_client.post("/api/invoices/", data=data, format="multipart")
 
         assert response.status_code == 400
-        assert response.data["detail"].code == "invoice_file_required"
+        assert response.data["detail"].code == "file_required"
 
     def test_rejects_missing_file_field(self, api_client):
         data = {
@@ -95,7 +95,7 @@ class TestInvoiceCreate:
         }
         response = api_client.post("/api/invoices/", data=data, format="multipart")
         assert response.status_code == 400
-        assert response.data["detail"].code == "invoice_file_required"
+        assert response.data["detail"].code == "file_required"
 
     def test_rejects_malformed_parts_json(self, api_client):
 
@@ -114,7 +114,7 @@ class TestInvoiceCreate:
         response = api_client.post("/api/invoices/", data=data, format="multipart")
 
         assert response.status_code == 400
-        assert response.data["detail"].code == "invoice_part_invalid_json"
+        assert response.data["detail"].code == "part_invalid_json"
 
     def test_rejects_missing_parts_field(self, api_client):
         data = {
@@ -126,7 +126,7 @@ class TestInvoiceCreate:
         }
         response = api_client.post("/api/invoices/", data=data, format="multipart")
         assert response.status_code == 400
-        assert response.data["detail"].code == "invoice_part_required"
+        assert response.data["detail"].code == "part_required"
 
     def test_rejects_malformed_date(self, api_client):
         data = {
