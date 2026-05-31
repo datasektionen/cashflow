@@ -10,7 +10,13 @@
 	};
 
 	export function newPart(): Part {
-		return { amountRaw: null, amountDisplay: '', costcenter: '', secondarycostcenter: '', budgetline: '' };
+		return {
+			amountRaw: null,
+			amountDisplay: '',
+			costcenter: '',
+			secondarycostcenter: '',
+			budgetline: ''
+		};
 	}
 </script>
 
@@ -26,6 +32,7 @@
 		errors: Record<string, string[]>;
 		showErrors: (field: string) => boolean;
 		onValidate: (field: string) => void;
+		addPartPrompt?: string;
 	};
 
 	let {
@@ -34,7 +41,8 @@
 		budgetLines,
 		errors,
 		showErrors,
-		onValidate
+		onValidate,
+		addPartPrompt
 	}: Props = $props();
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
@@ -119,11 +127,11 @@
 							>{$_('new_expense.form.expense_parts.amount_label')}</span
 						>{/if}
 					<div class="relative flex items-center">
-						<input type="hidden" name="part-{i}-amount" value={part.raw ?? ''} />
+						<input type="hidden" name="part-{i}-amount" value={part.amountRaw ?? ''} />
 						<input
 							type="text"
 							id="part-{i}-amount"
-							bind:value={part.display}
+							bind:value={part.amountDisplay}
 							onfocus={() => onAmountFocus(i)}
 							onblur={(e) => onAmountBlur(i, (e.currentTarget as HTMLInputElement).value)}
 							placeholder="0,00"
@@ -159,7 +167,7 @@
 			<Plus class="m-auto" />
 		</span>
 		<span class="text-center text-xs font-medium text-base-subtle dark:text-dark-base-subtle">
-			{$_('new_expense.form.add_part')}
+			{addPartPrompt}
 		</span>
 	</button>
 </div>

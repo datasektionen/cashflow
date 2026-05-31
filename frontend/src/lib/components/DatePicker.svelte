@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { DatePicker } from 'bits-ui';
 	import { locale } from 'svelte-i18n';
-	import { type DateValue, getLocalTimeZone, today } from '@internationalized/date';
+	import { type DateValue } from '@internationalized/date';
 	import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from '@lucide/svelte';
 
 	type DatePickerProps = {
 		value: DateValue | undefined;
+		maxValue?: DateValue;
+		minValue?: DateValue;
 		errors?: string[];
 		invalid?: boolean;
 		onBlur: (e: FocusEvent) => void;
@@ -13,13 +15,15 @@
 
 	let {
 		value = $bindable<DateValue | undefined>(),
+		maxValue = undefined,
+		minValue = undefined,
 		errors,
 		invalid = false,
 		onBlur
 	}: DatePickerProps = $props();
 </script>
 
-<DatePicker.Root maxValue={today(getLocalTimeZone())} bind:value locale={$locale ?? 'sv'}>
+<DatePicker.Root {maxValue} {minValue} disableDaysOutsideMonth={false} bind:value locale={$locale ?? 'sv'}>
 	<div
 		onfocusout={onBlur}
 		class={[

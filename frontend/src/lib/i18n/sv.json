@@ -114,6 +114,38 @@
 	},
 
 	"new_invoice": {
-		"title": "Ny faktura"
-	}
+		"title": "Ny faktura",
+		"disclaimer":  "Här registrerar du fakturor som sektionen ska betala eller redan har betalat. Om du själv har betalat en faktura ska du {new_expense_link}.",
+		"disclaimer_link_text": "istället registrera den som ett utlägg",
+		"form": {
+			"description": {
+				"label": "Beskrivning",
+				"help": "En beskrivning av fakturan och varför den ska betalas"
+			},
+			"invoice_date": {
+				"label": "Fakturadatum",
+				"help": "Det datum då fakturan utfärdades."
+			},
+			"due_date": {
+				"label": "Förfallodatum",
+				"help": "Det datum då fakturan ska betalas."
+			},
+			"files": {
+				"label": "Bild eller PDF av fakturan"
+			},
+			"invoice_parts": {
+				"label": "Fakturadelar",
+				"help": "Här anger du hur stor andel av fakturan som har köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.",
+				"cost_center_label": "Kostnadsställe",
+				"cost_center_placeholder": "Välj kostnadsställe",
+				"secondary_cost_center_label": "Sekundärt kostnadsställe",
+				"secondary_cost_center_placeholder": "Välj sekundärt kostnadsställe",
+				"budget_line_label": "Budgetpost",
+				"budget_line_placeholder": "Välj budgetpost",
+				"amount_label": "Belopp",
+				"add_part": "Lägg till fakturadel"
+			},
+			"submit": "Spara och registrera faktura"
+		}
+		}
 }

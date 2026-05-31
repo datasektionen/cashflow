@@ -1,8 +1,8 @@
 {
-	"user_expenses": "My expenses",
-	"admin": "Administration",
-	"login": "Login",
-	"login_with_sso": "Log in with SSO",
+	"user_expenses": "my expenses",
+	"admin": "administration",
+	"login": "login",
+	"login_with_sso": "log in with sso",
 
 	"chapter": "Konglig Datasektionen",
 	"help": "Help",
@@ -116,6 +116,8 @@
 	},
 
 	"new_invoice": {
-		"title": "New invoice"
+		"title": "New invoice",
+		"disclaimer": "Here you register invoices that the chapter is due to pay or has already paid. If you paid an invoice yourself, you should {new_expense_link} instead.",
+		"disclaimer_link_text": "register it as an expense"
 	}
 }
