@@ -115,7 +115,7 @@
 
 	"new_invoice": {
 		"title": "Ny faktura",
-		"disclaimer":  "Här registrerar du fakturor som sektionen ska betala eller redan har betalat. Om du själv har betalat en faktura ska du {new_expense_link}.",
+		"disclaimer": "Här registrerar du fakturor som sektionen ska betala eller redan har betalat. Om du själv har betalat en faktura ska du {new_expense_link}.",
 		"disclaimer_link_text": "istället registrera den som ett utlägg",
 		"form": {
 			"description": {
@@ -147,5 +147,5 @@
 			},
 			"submit": "Spara och registrera faktura"
 		}
-		}
+	}
 }

@@ -23,7 +23,13 @@
 	}: DatePickerProps = $props();
 </script>
 
-<DatePicker.Root {maxValue} {minValue} disableDaysOutsideMonth={false} bind:value locale={$locale ?? 'sv'}>
+<DatePicker.Root
+	{maxValue}
+	{minValue}
+	disableDaysOutsideMonth={false}
+	bind:value
+	locale={$locale ?? 'sv'}
+>
 	<div
 		onfocusout={onBlur}
 		class={[

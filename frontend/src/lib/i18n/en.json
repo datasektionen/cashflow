@@ -118,6 +118,36 @@
 	"new_invoice": {
 		"title": "New invoice",
 		"disclaimer": "Here you register invoices that the chapter is due to pay or has already paid. If you paid an invoice yourself, you should {new_expense_link} instead.",
-		"disclaimer_link_text": "register it as an expense"
+		"disclaimer_link_text": "register it as an expense",
+		"form": {
+			"description": {
+				"label": "Description",
+				"help": "A description of the invoice and why it should be paid"
+			},
+			"invoice_date": {
+				"label": "Invoice date",
+				"help": "The date on which the invoice was issued."
+			},
+			"due_date": {
+				"label": "Due date",
+				"help": "The date on which the invoice is due."
+			},
+			"files": {
+				"label": "Image or PDF files of the invoice"
+			},
+			"invoice_parts": {
+				"label": "Invoice parts",
+				"help": "Here you specify what portion of the invoice should be paid for each budget line. The total amount of the invoice must be exactly equal to the sum of the rows.",
+				"cost_center_label": "Cost center",
+				"cost_center_placeholder": "Choose cost center",
+				"secondary_cost_center_label": "Secondary cost center",
+				"secondary_cost_center_placeholder": "Choose secondary cost center",
+				"budget_line_label": "Budget line",
+				"budget_line_placeholder": "Choose budget line",
+				"amount_label": "Amount",
+				"add_part": "Add invoice part"
+			},
+			"submit": "Save and register invoice"
+		}
 	}
 }
