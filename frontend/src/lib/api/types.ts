@@ -26,6 +26,41 @@ export type Expense = {
 	files: ExpenseFile[];
 };
 
+export type InvoicePart = {
+	invoice: number;
+	cost_centre: string;
+	secondary_cost_centre: string;
+	budget_line: string;
+	amount: number;
+	attested_by: number | null;
+	attest_date: string;
+};
+
+export type Invoice = {
+	id: number;
+	created_date: string;
+	invoice_date: string;
+	due_date: string;
+	confirmed_by: number | null;
+	confirmed_at: string | null;
+	owner: Profile;
+	description: string;
+	verification: string | null;
+	paid_at: string | null;
+	paid_by: number | null;
+	parts: InvoicePart[];
+};
+
+export interface InvoiceCreate {
+	description: string;
+	invoice_date: string;
+	due_date: string;
+	files: File[];
+	parts: InvoicePart[];
+	accounted?: boolean;
+	verification?: string;
+}
+
 export interface ExpenseCreate {
 	description: string;
 	expense_date: string;

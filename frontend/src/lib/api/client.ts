@@ -1,21 +1,12 @@
 import { logger } from '$lib/logger';
-
-export class APIError extends Error {
-	constructor(
-		message: string,
-		public status: number
-	) {
-		super(message);
-		this.name = 'APIError';
-	}
-}
+import type { ErrorResponse } from '$lib/api/errors';
 
 /**
  * Base API client class, gets subclassed for specific resources.
  */
 export class ApiClient {
-	private apiUrl: string;
-	private fetch: typeof globalThis.fetch;
+	private readonly apiUrl: string;
+	private readonly fetch: typeof globalThis.fetch;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		this.apiUrl = apiUrl;
@@ -39,18 +30,22 @@ export class ApiClient {
 			});
 		} catch (e) {
 			logger.error({ path, e }, 'API request failed');
-			throw new APIError('API request failed', 0);
+			throw {
+				type: 'about:blank',
+				title: 'Network error',
+				detail: 'API request failed',
+				status: 0,
+				code: 'network_error'
+			} satisfies ErrorResponse;
 		}
 
 		const requestId = response.headers.get('X-Request-ID');
 		const log = requestId ? logger.child({ request_id: requestId }) : logger;
 
 		if (!response.ok) {
-			const error = await response.json().catch(() => ({}));
-			const message =
-				error.detail ?? error.title ?? `Request failed with status ${response.status}`;
+			const error = (await response.json()) as ErrorResponse;
 			log.error({ path, status: response.status, error }, 'API request failed');
-			throw new APIError(message, response.status);
+			throw error;
 		}
 
 		log.debug({ path, status: response.status }, 'API request succeeded');
@@ -76,10 +71,11 @@ export class ApiClient {
 		});
 	}
 
-	post<T>(path: string, body: unknown) {
+	post<T>(path: string, body: unknown, contentType?: string) {
 		return this.request<T>(path, {
 			method: 'POST',
-			body: body instanceof FormData ? body : JSON.stringify(body)
+			body: body instanceof FormData ? body : JSON.stringify(body),
+			...(contentType && { headers: { 'Content-Type': contentType } })
 		});
 	}
 }
