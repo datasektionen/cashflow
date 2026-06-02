@@ -27,13 +27,13 @@ export type Expense = {
 };
 
 export type InvoicePart = {
-	invoice: number;
+	invoice?: number;
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
-	amount: number;
-	attested_by: number | null;
-	attest_date: string;
+	amount: string;
+	attested_by?: number;
+	attest_date?: string;
 };
 
 export type Invoice = {

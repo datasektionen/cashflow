@@ -1,32 +1,37 @@
 import type { Actions } from './$types';
-import { API } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
+import { type InvoiceCreate, type InvoicePart } from '$lib/api/types';
+import { API, ApiClient } from '$lib/api';
 import { logger } from '$lib/logger';
-import type { ExpenseCreate, ExpensePart } from '$lib/api/types';
 
 export const actions: Actions = {
-	// This action handles the form submit when creating new expenses
 	default: async (event) => {
+		const api = new API('http://localhost:8000/api/', event.fetch);
 		const user = event.locals.user;
 		if (!user) {
-			throw redirect(303, '/login');
+			redirect(303, 'login/');
 		}
-		const api = new API('http://localhost:8000/api/', event.fetch);
 
 		const data = await event.request.formData();
 
 		const description = data.get('description');
-		if (description == null || description.toString().trim() === '') {
+		if (!description || description.toString().trim() === '') {
 			return fail(400, { error: 'Description is required' });
 		}
-		const expenseDate = data.get('expense-date');
-		if (expenseDate == null) {
-			return fail(400, { error: 'expense_date is required' });
-		}
 		const files = data.getAll('files').filter((f): f is File => f instanceof File);
+		if (!files || files.length < 1) {
+			return fail(400, { error: 'A file is required.' });
+		}
+		const invoice_date = data.get('invoice-date');
+		if (!invoice_date) {
+			return fail(400, { error: 'Invoice date is required' });
+		}
+		const due_date = data.get('due-date');
+		if (!due_date) {
+			return fail(400, { error: 'Due date is required' });
+		}
 
-		// We need to parse expense parts into a JSON string for the API post request
-		const parts: ExpensePart[] = [];
+		const parts: InvoicePart[] = [];
 		let i = 0;
 		for (const field of data) {
 			if (field[0].startsWith(`part-${i}-`)) {
@@ -57,23 +62,23 @@ export const actions: Actions = {
 				i++;
 			}
 		}
-
-		const expense: ExpenseCreate = {
+		const Invoice: InvoiceCreate = {
 			description: description.toString(),
-			expense_date: expenseDate.toString(),
-			parts: parts,
-			files: files
+			invoice_date: invoice_date.toString(),
+			due_date: due_date.toString(),
+			parts,
+			files
 		};
 
-		logger.debug({ parts: parts.length, files: files.length }, 'creating expense');
+		logger.debug({ parts: parts.length, files: files.length }, 'creating invoice');
 		try {
-			const result = await api.expenses.create(expense);
-			logger.info({ id: result.id }, 'expense created');
+			const result = await api.invoices.create(Invoice);
+			logger.info({ id: result.id }, 'invoice created');
 		} catch (err) {
-			logger.error({ err }, 'failed to create expense');
+			logger.error({ err }, 'failed to create invoice');
 			throw err;
 		}
 
-		throw redirect(303, `/${user.username}/expenses/?createSuccess=true`);
+		redirect(303, `/${user.username}/expenses/?createSuccess=true`);
 	}
 };

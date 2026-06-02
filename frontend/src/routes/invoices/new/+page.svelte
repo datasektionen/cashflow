@@ -45,6 +45,7 @@
 		return {
 			description,
 			'invoice-date': invoiceDate?.toString(),
+			'due-date': dueDate?.toString(),
 			files: invoiceFiles,
 			parts: invoiceParts.map((p) => ({
 				costcenter: p.costcenter,
@@ -70,10 +71,6 @@
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
 		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
 	}
-
-	// function onDateBlur(e: FocusEvent) {
-	// 	validationResult = validation.run(buildValidationData(), 'expense-date');
-	// }
 
 	function validateField(field: string) {
 		validationResult = validation.run(buildValidationData(), field);
@@ -168,11 +165,25 @@
 
 			<div class="flex flex-col space-y-2">
 				<label for="invoice-date" class="text-s mb-1 font-medium"> Fakturadatum </label>
-				<DatePicker maxValue={today(getLocalTimeZone())} />
+				<input type="hidden" name="invoice-date" value={invoiceDate?.toString() ?? ''} />
+				<DatePicker
+					bind:value={invoiceDate}
+					maxValue={today(getLocalTimeZone())}
+					invalid={showErrors('invoice-date')}
+					errors={errors['invoice-date']}
+					onBlur={() => validateField('invoice-date')}
+				/>
 			</div>
 			<div class="flex flex-col space-y-2">
 				<label for="due-date" class="text-s mb-1 font-medium"> Förfallodatum </label>
-				<DatePicker minValue={today(getLocalTimeZone())} />
+				<input type="hidden" name="due-date" value={dueDate?.toString() ?? ''} />
+				<DatePicker
+					bind:value={dueDate}
+					minValue={today(getLocalTimeZone())}
+					invalid={showErrors('due-date')}
+					errors={errors['due-date']}
+					onBlur={() => validateField('due-date')}
+				/>
 			</div>
 		</fieldset>
 

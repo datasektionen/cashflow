@@ -1,7 +1,7 @@
 import { ApiClient } from '$lib/api';
 import type { Invoice, InvoiceCreate, PaginatedResponse } from '$lib/api/types';
 
-class InvoicesAPI {
+export class InvoicesAPI {
 	private apiClient: ApiClient;
 
 	constructor(apiClient: ApiClient) {
@@ -33,6 +33,16 @@ class InvoicesAPI {
 	}
 
 	async create(data: InvoiceCreate): Promise<Invoice> {
-		return await this.apiClient.post<Invoice>('/invoices/', data, 'multipart/form-data');
+		const body = new FormData();
+		body.append('description', data.description);
+		body.append('invoice_date', data.invoice_date);
+		body.append('due_date', data.due_date);
+		body.append('parts', JSON.stringify(data.parts));
+		if (data.accounted !== undefined) body.append('accounted', String(data.accounted));
+		if (data.verification) body.append('verification', data.verification);
+		for (const file of data.files) {
+			body.append('files', file, file.name);
+		}
+		return await this.apiClient.post<Invoice>('invoices/', body);
 	}
 }
