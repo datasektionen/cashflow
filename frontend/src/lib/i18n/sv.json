@@ -82,6 +82,20 @@
 		}
 	},
 
+	"admin_invoices": {
+		"title": "Fakturor",
+		"columns": {
+			"id": "ID",
+			"description": "Beskrivning",
+			"owner": "Ägare",
+			"invoice_date": "Fakturadatum",
+			"due_date": "Förfallodatum",
+			"verification": "Verifikat",
+			"confirmed_at": "Bekräftad",
+			"paid_at": "Betald"
+		}
+	},
+
 	"new_expense": {
 		"title": "Nytt utlägg",
 		"upload_prompt": "Ladda upp minst en bild på ditt kvitto här",

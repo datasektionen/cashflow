@@ -56,7 +56,7 @@ class ExpenseAdminSerializer(ExpenseSerializer):
     )
 
     class Meta(ExpenseSerializer.Meta):
-        fields = ExpenseSerializer.Meta.fields + ["is_flagged"]
+        fields = [*ExpenseSerializer.Meta.fields, "is_flagged"]
 
 
 class ExpenseCreateSerializer(serializers.ModelSerializer):

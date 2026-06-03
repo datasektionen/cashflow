@@ -84,6 +84,20 @@
 		}
 	},
 
+	"admin_invoices": {
+		"title": "Invoices",
+		"columns": {
+			"id": "ID",
+			"description": "Description",
+			"owner": "Owner",
+			"invoice_date": "Invoice date",
+			"due_date": "Due date",
+			"verification": "Voucher",
+			"confirmed_at": "Confirmed",
+			"paid_at": "Paid"
+		}
+	},
+
 	"new_expense": {
 		"title": "New expense",
 		"upload_prompt": "Upload one or more photos of your receipt",

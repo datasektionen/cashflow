@@ -1,10 +1,9 @@
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import { isErrorResponse } from '$lib/api/errors';
 import { alerts, error } from '$lib/stores/alerts';
-import type { Expense, PaginatedResponse } from '$lib/api/types';
-import { _, waitLocale } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import type { Invoice, PaginatedResponse } from '$lib/api/types';
+import { isErrorResponse } from '$lib/api/errors';
+import { logger } from '$lib/logger';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
@@ -14,23 +13,23 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 10;
 
-	let expenses: PaginatedResponse<Expense> = {
+	let invoices: PaginatedResponse<Invoice> = {
 		data: [],
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		expenses = await api.expenses.list(page, perPage);
+		invoices = await api.invoices.list(page, perPage);
 	} catch (e) {
 		if (isErrorResponse(e)) {
-			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
-			alerts.update((a) => [...a, error(msg)]);
+			logger.error(e);
+			alerts.update((a) => [...a, error(e.detail)]);
 		} else {
 			throw e;
 		}
 	}
 
 	return {
-		title_key: 'user_expenses',
-		expenses
+		title_key: 'admin_invoices.title',
+		invoices
 	};
 };

@@ -123,6 +123,8 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
+        if self.action == "create":
+            return ExpenseSerializer
         if self.current_user.profile.may_attest_some():
             return ExpenseAdminSerializer
         return ExpenseSerializer
@@ -149,7 +151,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             for f in files:
                 File.objects.create(expense=expense, file=f)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
 

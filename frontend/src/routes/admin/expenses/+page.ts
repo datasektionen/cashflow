@@ -1,12 +1,11 @@
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import { APIError } from '$lib/api/client';
 import { alerts, error } from '$lib/stores/alerts';
 import type { Expense, PaginatedResponse } from '$lib/api/types';
-import { _, waitLocale } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import { isErrorResponse } from '$lib/api/errors';
+import { logger } from '$lib/logger';
 
-export const load: PageLoad = async ({ fetch, url, parent }) => {
+export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
 
 	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
@@ -19,16 +18,11 @@ export const load: PageLoad = async ({ fetch, url, parent }) => {
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		const { user } = await parent();
-		expenses = await api.expenses.list(page, perPage, user?.username);
+		expenses = await api.expenses.list(page, perPage);
 	} catch (e) {
-		if (e instanceof APIError) {
-			let msg = e.message;
-			if (e.status === 0) {
-				await waitLocale();
-				msg = get(_)('errors.network');
-			}
-			alerts.update((a) => [...a, error(msg)]);
+		if (isErrorResponse(e)) {
+			logger.error(e);
+			alerts.update((a) => [...a, error(e.detail)]);
 		} else {
 			throw e;
 		}
