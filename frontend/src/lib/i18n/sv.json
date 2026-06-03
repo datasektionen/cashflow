@@ -82,6 +82,13 @@
 		}
 	},
 
+	"admin_paginatedResponse": {
+		"pagination": {
+			"showing": "Visar {start} till {end} av {total}",
+			"show": "Visa"
+		}
+	},
+
 	"admin_invoices": {
 		"title": "Fakturor",
 		"columns": {

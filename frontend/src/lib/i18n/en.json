@@ -84,6 +84,13 @@
 		}
 	},
 
+	"admin_paginatedResponse": {
+		"pagination": {
+			"showing": "Showing {start} to {end} of {total}",
+			"show": "Show"
+		}
+	},
+
 	"admin_invoices": {
 		"title": "Invoices",
 		"columns": {

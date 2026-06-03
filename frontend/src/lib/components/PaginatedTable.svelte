@@ -4,15 +4,17 @@
 	import { Pagination } from 'bits-ui';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
+	import CashSpinner from '$lib/CashSpinner.svelte';
 
 	interface Props {
 		paginatedResponse: PaginatedResponse<T>;
 		columns: TableColumn<T>[];
 		onPageChange: (page: number) => void;
 		onPerPageChange: (perPage: number) => void;
+		loading?: boolean;
 	}
 
-	let { paginatedResponse, columns, onPageChange, onPerPageChange }: Props = $props();
+	let { paginatedResponse, columns, onPageChange, onPerPageChange, loading }: Props = $props();
 
 	const perPageOptions = [10, 20, 50, 100];
 
@@ -30,32 +32,50 @@
 </script>
 
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
-	<table class="w-full table-fixed">
-		<thead>
-			<tr>
-				{#each columns as column}
-					<th
-						class="{column.width} px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-					>
-						{column.header}
-					</th>
-				{/each}
-			</tr>
-		</thead>
-		<tbody>
-			{#each paginatedResponse.data as expense}
-				<tr
-					class="border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-				>
+	<div class="relative overflow-hidden rounded">
+		<table class="w-full table-fixed">
+			<thead>
+				<tr>
 					{#each columns as column}
-						<td class="px-4 py-3">
-							{column.render(expense)}
-						</td>
+						<th
+							class="{column.width} px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+						>
+							{column.header}
+						</th>
 					{/each}
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each paginatedResponse.data as expense}
+					<tr
+						class="border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
+					>
+						{#each columns as column}
+							<td class="truncate px-4 py-3">
+								{column.render(expense)}
+							</td>
+						{/each}
+					</tr>
+				{/each}
+				{#each { length: Math.max(0, paginatedResponse.pagination.perPage - paginatedResponse.data.length) } as _}
+					<tr class="border-b border-b-base-400 dark:border-dark-base-150">
+						{#each columns as column}
+							<td class="px-4 py-3">&nbsp;</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+		<!-- Loading overlay -->
+		<div
+			class={[
+				'absolute top-0 left-0 z-20 flex size-full items-center justify-center bg-white/30 text-money-green-500 backdrop-blur-sm transition-opacity duration-200 dark:bg-black/30',
+				loading ? 'opacity-100' : 'pointer-events-none opacity-0'
+			]}
+		>
+			<CashSpinner />
+		</div>
+	</div>
 
 	<div class="mt-4 flex flex-row items-center justify-center md:justify-between">
 		<div class="hidden text-sm text-base-subtle md:flex dark:text-dark-base-subtle">

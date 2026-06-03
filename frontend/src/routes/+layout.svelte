@@ -19,7 +19,7 @@
 </script>
 
 <nav
-	class="fixed h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-dark-base-200 dark:text-dark-base-text"
+	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-dark-base-200 dark:text-dark-base-text"
 >
 	<div class="mx-auto flex h-full max-w-7xl flex-row justify-between px-4 lg:px-8">
 		<div class="flex h-full">

@@ -15,6 +15,7 @@ export class ApiClient {
 
 	private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		const isFormData = options.body instanceof FormData;
+		const start = performance.now();
 		let response: Response;
 		try {
 			response = await this.fetch(`${this.apiUrl}${path.replace(/^\/+/, '')}`, {
@@ -42,13 +43,18 @@ export class ApiClient {
 		const requestId = response.headers.get('X-Request-ID');
 		const log = requestId ? logger.child({ request_id: requestId }) : logger;
 
+		const duration = Math.round(performance.now() - start);
+
 		if (!response.ok) {
 			const error = (await response.json()) as ErrorResponse;
-			log.error({ path, status: response.status, error }, 'API request failed');
+			log.error(
+				{ path, status: response.status, duration_ms: duration, error },
+				'API request failed'
+			);
 			throw error;
 		}
 
-		log.debug({ path, status: response.status }, 'API request succeeded');
+		log.debug({ path, status: response.status, duration_ms: duration }, 'API request succeeded');
 		return response.json();
 	}
 

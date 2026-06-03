@@ -52,7 +52,7 @@ class InvoiceCreateRequestSerializer(serializers.Serializer):
 
 
 class InvoicePartSerializer(serializers.ModelSerializer):
-    attested_by = ProfileSerializer(source="attested_by.profile")
+    attested_by = ProfileSerializer(read_only=True)
 
     class Meta:
         model = InvoicePart
