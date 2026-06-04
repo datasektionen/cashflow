@@ -2,8 +2,10 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from . import views
+from core.api.views import ClaimsList
 
 urlpatterns = [
+    path("<str:username>/claims/", ClaimsList.as_view(), name="claims-list"),
     path(
         "cost-centres/",
         views.CostCentreList.as_view(),

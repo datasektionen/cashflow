@@ -91,7 +91,7 @@ class Profile(models.Model):
             )
         )
 
-    # Returns whether the user may view attestable expenses
+    # Returns whether the user may view attestable claims
     def may_view_attestable(self):
         return self.may_view_all() or self.may_attest_some()
 
@@ -102,20 +102,20 @@ class Profile(models.Model):
     def may_pay(self):
         return dauth.has_unscoped_permission("pay", self.user)
 
-    # Returns whether the user may view payable expenses
+    # Returns whether the user may view payable claims
     def may_view_payable(self):
         return self.may_view_all() or self.may_pay()
 
-    # Returns whether the user may confirm expenses
+    # Returns whether the user may confirm claims
     def may_confirm(self):
         return dauth.has_unscoped_permission("confirm", self.user)
 
-    # Returns whether the user may unconfirm expenses
+    # Returns whether the user may unconfirm claims
     def may_unconfirm(self):
         # until proven that a separate unconfirm perm is actually needed
         return self.may_confirm()
 
-    # Returns whether the user may view confirmable expenses
+    # Returns whether the user may view confirmable claims
     def may_view_confirmable(self):
         return self.may_view_all() or self.may_confirm()
 
@@ -157,7 +157,7 @@ class Profile(models.Model):
             )
         )
 
-    # Returns whether the user may view attestable expenses
+    # Returns whether the user may view attestable claims
     def may_view_accountable(self):
         return self.may_view_all() or self.may_account_some()
 
@@ -177,7 +177,7 @@ class Profile(models.Model):
         return dauth.has_unscoped_permission("edit-invoice", self.user)
 
     def may_delete_invoice(self, invoice):
-        if invoice.is_payed():
+        if invoice.is_paid():
             return False
 
         return (
@@ -306,11 +306,11 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             # Can view all
             return self.all()
 
-        # Find all cost centers that user may view expenses for
+        # Find all cost centers that user may view claims for
         cc_scopes = dauth.get_permissions(user).get(dauth.Permission.VIEW_EXPENSES, [])
 
-        # Q allows you to perform "OR" filtering. A user will have access to (1) their own expenses, OR (2)
-        # expenses in a cost center for which they have permissions for
+        # Q allows you to perform "OR" filtering. A user will have access to (1) their own claims, OR (2)
+        # claims in a cost center for which they have permissions for
         return self.filter(
             Q(expensepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
         ).distinct()
@@ -376,6 +376,9 @@ class Expense(models.Model):
 
     def is_attested(self):
         return self.parts.filter(attested_by__isnull=True).count() == 0
+
+    def is_paid(self):
+        return self.reimbursement is not None
 
     # Returns a dict representation of the model
     def to_dict(self):

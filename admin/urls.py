@@ -19,7 +19,7 @@ urlpatterns = [
         name="fortnox-account-invoice",
     ),
     path(
-        "fortnox/expenses/account/<id>/",
+        "fortnox/claims/account/<id>/",
         views.fortnox.account_expense,
         name="fortnox-account-expense",
     ),
@@ -63,7 +63,7 @@ urlpatterns = [
         views.attest_invoice_part,
         name="admin-invoicepart-attest",
     ),
-    re_path(r"^expenses/$", views.expense_overview, name="admin-expense-overview"),
+    re_path(r"^claims/$", views.expense_overview, name="admin-expense-overview"),
     re_path(r"^invoices/$", views.invoice_overview, name="admin-invoice-overview"),
     re_path(r"^invoices/(?P<pk>\d+)/pay$", views.invoice_pay, name="admin-invoice-pay"),
     re_path(

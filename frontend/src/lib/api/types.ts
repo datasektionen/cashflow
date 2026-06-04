@@ -76,6 +76,18 @@ export type ExpensePart = {
 	amount: string;
 };
 
+
+export type ClaimStatus = 'submitted' | 'paid';
+
+export type Claim = {
+	id: number;
+	type: 'expense' | 'invoice';
+	description: string;
+	amount: string;
+	status: ClaimStatus;
+	date: string;
+};
+
 export type PaginatedResponse<T> = {
 	data: T[];
 	pagination: {

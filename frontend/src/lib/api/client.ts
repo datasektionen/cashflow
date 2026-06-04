@@ -46,7 +46,16 @@ export class ApiClient {
 		const duration = Math.round(performance.now() - start);
 
 		if (!response.ok) {
-			const error = (await response.json()) as ErrorResponse;
+			const isJson = response.headers.get('Content-Type')?.includes('application/json');
+			const error: ErrorResponse = isJson
+				? ((await response.json()) as ErrorResponse)
+				: {
+						type: 'about:blank',
+						title: response.statusText || 'Error',
+						detail: `Unexpected response from server (status ${response.status})`,
+						status: response.status,
+						code: 'unexpected_response'
+					};
 			log.error(
 				{ path, status: response.status, duration_ms: duration, error },
 				'API request failed'

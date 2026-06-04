@@ -195,14 +195,14 @@ class FortnoxAPIClient:
         self, access_token: str = None, limit: int = 100, page: int = 1
     ) -> list[Expense]:
         response = self._get(
-            "expenses",
+            "claims",
             parameters={"limit": limit, "page": page},
             access_token=access_token,
         )
         return self._parse_list_response(response, Expense, "Expenses")[0]
 
     def retrieve_expense(self, code: str, access_token: str = None) -> Expense:
-        response = self._get(f"expenses/{code}", access_token=access_token)
+        response = self._get(f"claims/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, Expense, "Expense")
 
     # ======================

@@ -50,6 +50,6 @@ export class ExpensesAPI {
 			body.append('files', file, file.name);
 		}
 
-		return this.apiClient.post('expenses/', body);
+		return this.apiClient.post('claims/', body);
 	}
 }

@@ -22,12 +22,11 @@ from .authviews import login, logout
 
 app_name = "cashflow"
 urlpatterns = [
-    re_path(r"^$", expenses_views.index, name="expenses-index"),
+    re_path(r"^$", expenses_views.index, name="claims-index"),
     re_path(r"^accounts/login/$", login, name="login"),
     re_path(r"^login/$", login, name="login"),
     re_path(r"^logout/", logout, name="logout"),
     re_path(r"^admin/", include("admin.urls")),
-    re_path(r"^expenses/", include("expenses.urls")),
     re_path(r"^invoices/", include("invoices.urls")),
     re_path(r"^stats/", include("stats.urls")),
     re_path(r"^users/", include("users.urls")),

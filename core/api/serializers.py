@@ -5,6 +5,14 @@ from rest_framework import serializers
 from expenses.models import File, Profile
 
 
+class ClaimSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    description = serializers.CharField()
+    amount = serializers.CharField()
+    status = serializers.CharField()
+    date = serializers.DateField()
+
+
 class ProblemDetailSerializer(serializers.Serializer):
     type = serializers.URLField()
     title = serializers.CharField()

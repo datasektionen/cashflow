@@ -5,7 +5,7 @@ import { logger } from '$lib/logger';
 import type { ExpenseCreate, ExpensePart } from '$lib/api/types';
 
 export const actions: Actions = {
-	// This action handles the form submit when creating new expenses
+	// This action handles the form submit when creating new claims
 	default: async (event) => {
 		const user = event.locals.user;
 		if (!user) {
@@ -74,6 +74,6 @@ export const actions: Actions = {
 			throw err;
 		}
 
-		throw redirect(303, `/${user.username}/expenses/?createSuccess=true`);
+		throw redirect(303, `/${user.username}/claims/?createSuccess=true`);
 	}
 };

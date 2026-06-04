@@ -1,8 +1,11 @@
 {
-	"user_expenses": "my expenses",
-	"admin": "administration",
-	"login": "login",
-	"login_with_sso": "log in with sso",
+	"expense": "Expense",
+	"invoice": "Invoice",
+	"user_expenses": "My expenses",
+	"user_claims": "My claims",
+	"admin": "Administration",
+	"login": "Login",
+	"login_with_sso": "Log in with SSO",
 
 	"chapter": "Konglig Datasektionen",
 	"help": "Help",
@@ -83,6 +86,8 @@
 			"show": "Show"
 		}
 	},
+
+	"claims_type": "Type",
 
 	"admin_paginatedResponse": {
 		"pagination": {

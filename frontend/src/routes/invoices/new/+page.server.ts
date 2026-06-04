@@ -79,6 +79,6 @@ export const actions: Actions = {
 			throw err;
 		}
 
-		redirect(303, `/${user.username}/expenses/?createSuccess=true`);
+		redirect(303, `/${user.username}/claims/?createSuccess=true`);
 	}
 };

@@ -54,7 +54,7 @@ def attest_overview(request):
         request,
         "admin/attest/overview.html",
         {
-            "expenses": json.dumps(
+            "claims": json.dumps(
                 [
                     expense.to_dict()
                     for expense in Expense.objects.attestable_for(request.user)
@@ -84,13 +84,13 @@ def attest_expense_part(request, pk):
     if not request.user.profile.may_attest(expense_part):
         messages.error(request, "Du får inte attestera denna kvittodel")
         return HttpResponseRedirect(
-            reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
+            reverse("claims-show", kwargs={"pk": expense_part.expense.id})
         )
 
     if request.user.username == expense_part.expense.owner.user.username:
         messages.error(request, "Du kan inte attestera dina egna kvitton")
         return HttpResponseRedirect(
-            reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
+            reverse("claims-show", kwargs={"pk": expense_part.expense.id})
         )
 
     expense_part.attest(request.user)
@@ -98,7 +98,7 @@ def attest_expense_part(request, pk):
     if expense_part.expense.is_attested():
         return HttpResponseRedirect(reverse("admin-attest"))
     return HttpResponseRedirect(
-        reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
+        reverse("claims-show", kwargs={"pk": expense_part.expense.id})
     )
 
 
@@ -118,7 +118,7 @@ def unattest_expense(request, pk):
 
         if not request.user.profile.is_admin():
             return HttpResponseRedirect(
-                reverse("expenses-show", kwargs={"pk": int(pk)})
+                reverse("claims-show", kwargs={"pk": int(pk)})
             )
 
         for part in expense_parts:
@@ -126,7 +126,7 @@ def unattest_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Kvittodelarna finns inte")
 
-    return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": int(pk)}))
+    return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": int(pk)}))
 
 
 @require_POST
@@ -182,7 +182,7 @@ def confirm_overview(request):
 @user_passes_test(lambda u: u.profile.may_view_payable())
 def pay_overview(request):
     """
-    Shows a list of all payable expenses and lets user pay them.
+    Shows a list of all payable claims and lets user pay them.
     """
     return render(
         request,
@@ -192,7 +192,7 @@ def pay_overview(request):
                 [invoice.to_dict() for invoice in Invoice.payable()],
                 default=json_serial,
             ),
-            "expenses": json.dumps(
+            "claims": json.dumps(
                 [expense.to_dict() for expense in Expense.payable()],
                 default=json_serial,
             ),
@@ -260,7 +260,7 @@ def account_overview(request: FortnoxRequest):
             "cost_centers": cost_centers,
             "invoices": accountable_invoices,
             "invoice_parts": invoice_parts,
-            "expenses": accountable_expenses,
+            "claims": accountable_expenses,
             "expense_parts": expense_parts,
         },
     )
@@ -290,11 +290,11 @@ def edit_expense_verification(request, pk):
             content="Ändrade verifikationsnumret till: " + expense.verification,
         ).save()
 
-        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": expense.id}))
+        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": expense.id}))
     else:
         return render(
             request,
-            "expenses/edit-verification.html",
+            "claims/edit-verification.html",
             {"expense": expense, "expense_parts": expense.parts.all()},
         )
 
@@ -410,7 +410,7 @@ def invoice_set_verification(request, invoice_pk):
 @user_passes_test(lambda u: u.profile.is_admin())
 def expense_overview(request):
     """
-    Lists all expenses.
+    Lists all claims.
     """
     cost_centre = request.GET.get("cost_centre")
     expenses_list = Expense.objects.order_by("-id", "-expense_date").distinct()
@@ -437,9 +437,9 @@ def expense_overview(request):
     }
     return render(
         request,
-        "admin/expenses/overview.html",
+        "admin/claims/overview.html",
         {
-            "expenses": json.dumps(
+            "claims": json.dumps(
                 [x.to_dict() for x in expenses], default=json_serial
             ),
             "pages": pages,
@@ -524,7 +524,7 @@ def search_verification(request):
 @user_passes_test(lambda u: u.profile.is_admin())
 def search_verification_response(request):
     if len(request.POST["query"]) < 1:
-        return JsonResponse({"invoices": [], "expenses": []})
+        return JsonResponse({"invoices": [], "claims": []})
 
     invoices = Invoice.objects.filter(
         verification__contains=request.POST["query"]
@@ -535,7 +535,7 @@ def search_verification_response(request):
     return JsonResponse(
         {
             "invoices": [invoice.to_dict() for invoice in invoices[:10]],
-            "expenses": [expense.to_dict() for expense in expenses[:10]],
+            "claims": [expense.to_dict() for expense in expenses[:10]],
         }
     )
 
@@ -569,7 +569,7 @@ def list_verification(request):
         request,
         "admin/list-verification.html",
         {
-            "expenses": verifications,
+            "claims": verifications,
             "years": years,
             "year": year,
         },

@@ -2,11 +2,11 @@ import type { PageLoad } from './$types';
 import { API } from '$lib/api';
 import { isErrorResponse } from '$lib/api/errors';
 import { alerts, error } from '$lib/stores/alerts';
-import type { Expense, PaginatedResponse } from '$lib/api/types';
+import type { Claim, PaginatedResponse } from '$lib/api/types';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-export const load: PageLoad = async ({ fetch, url }) => {
+export const load: PageLoad = async ({ fetch, url, params }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
 
 	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
@@ -14,12 +14,12 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 10;
 
-	let expenses: PaginatedResponse<Expense> = {
+	let claims: PaginatedResponse<Claim> = {
 		data: [],
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		expenses = await api.expenses.list(page, perPage);
+		claims = await api.claims.list(params.user, page, perPage);
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
@@ -29,8 +29,5 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		}
 	}
 
-	return {
-		title_key: 'user_expenses',
-		expenses
-	};
+	return { claims };
 };

@@ -1,6 +1,6 @@
 """API exceptions that are shared between other applications.
 
-E.g. errors that can occur both for expenses and invoices.
+E.g. errors that can occur both for claims and invoices.
 """
 
 from drf_problems.utils import register_exception

@@ -1,3 +1,7 @@
+<!--
+@component
+A table that accepts either a paginated response or other data. Uses bits-ui Pagination
+-->
 <script lang="ts" generics="T">
 	import type { PaginatedResponse } from '$lib/api/types';
 	import type { TableColumn } from './types';
@@ -7,26 +11,35 @@
 	import CashSpinner from '$lib/CashSpinner.svelte';
 
 	interface Props {
-		paginatedResponse: PaginatedResponse<T>;
+		paginatedResponse?: PaginatedResponse<T>;
+		data?: T[];
 		columns: TableColumn<T>[];
-		onPageChange: (page: number) => void;
-		onPerPageChange: (perPage: number) => void;
+		onPageChange?: (page: number) => void;
+		onPerPageChange?: (perPage: number) => void;
 		loading?: boolean;
 	}
 
-	let { paginatedResponse, columns, onPageChange, onPerPageChange, loading }: Props = $props();
+	let { paginatedResponse, data, columns, onPageChange, onPerPageChange, loading }: Props = $props();
+
+	const resolved = $derived<PaginatedResponse<T>>(
+		paginatedResponse ?? {
+			data: data ?? [],
+			pagination: { total: data?.length ?? 0, page: 1, perPage: data?.length ?? 0, totalPages: 1 }
+		}
+
+		);
 
 	const perPageOptions = [10, 20, 50, 100];
 
 	const rangeStart = $derived(
-		paginatedResponse.pagination.total === 0
+		resolved.pagination.total === 0
 			? 0
-			: (paginatedResponse.pagination.page - 1) * paginatedResponse.pagination.perPage + 1
+			: (resolved.pagination.page - 1) * resolved.pagination.perPage + 1
 	);
 	const rangeEnd = $derived(
 		Math.min(
-			paginatedResponse.pagination.page * paginatedResponse.pagination.perPage,
-			paginatedResponse.pagination.total
+			resolved.pagination.page * resolved.pagination.perPage,
+			resolved.pagination.total
 		)
 	);
 </script>
@@ -46,18 +59,18 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each paginatedResponse.data as expense}
+				{#each resolved.data as row}
 					<tr
 						class="border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
 					>
 						{#each columns as column}
 							<td class="truncate px-4 py-3">
-								{column.render(expense)}
+								{column.render(row)}
 							</td>
 						{/each}
 					</tr>
 				{/each}
-				{#each { length: Math.max(0, paginatedResponse.pagination.perPage - paginatedResponse.data.length) } as _}
+				{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
 					<tr class="border-b border-b-base-400 dark:border-dark-base-150">
 						{#each columns as column}
 							<td class="px-4 py-3">&nbsp;</td>
@@ -83,17 +96,17 @@
 				values: {
 					start: rangeStart,
 					end: rangeEnd,
-					total: paginatedResponse.pagination.total.toLocaleString()
+					total: resolved.pagination.total.toLocaleString()
 				}
 			})}
 		</div>
 
 		<Pagination.Root
 			class="flex flex-row items-center space-x-2"
-			count={paginatedResponse.pagination.total}
-			perPage={paginatedResponse.pagination.perPage}
-			page={paginatedResponse.pagination.page}
-			{onPageChange}
+			count={resolved.pagination.total}
+			perPage={resolved.pagination.perPage}
+			page={resolved.pagination.page}
+			onPageChange={onPageChange ?? (() => {})}
 		>
 			{#snippet children({ pages, range })}
 				<Pagination.PrevButton
@@ -128,8 +141,8 @@
 			</label>
 			<select
 				id="per-page"
-				value={paginatedResponse.pagination.perPage}
-				onchange={(e) => onPerPageChange(Number((e.target as HTMLSelectElement).value))}
+				value={resolved.pagination.perPage}
+				onchange={(e) => onPerPageChange?.(Number((e.target as HTMLSelectElement).value))}
 				class="bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] cursor-pointer appearance-none rounded border border-base-500 bg-transparent bg-position-[right_0.5rem_center] bg-no-repeat py-1 pr-7 pl-2 dark:border-dark-base-200"
 			>
 				{#each perPageOptions as option}

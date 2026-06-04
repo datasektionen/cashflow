@@ -127,5 +127,5 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             Invoice.objects.viewable_by(self.current_user)
             .filter(**filter_map)
             .distinct()
-            .order_by("invoice_date")
+            .order_by("-invoice_date")
         )

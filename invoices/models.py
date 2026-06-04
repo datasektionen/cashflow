@@ -24,7 +24,7 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
         return qs.order_by("invoice_date").distinct()
 
     def viewable_by(self, user: User) -> "InvoiceQuerySet":
-        
+
         if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", user):
             # Can view all
             return self.all()
@@ -107,10 +107,8 @@ class Invoice(models.Model):
     def is_attested(self):
         return self.parts.filter(attested_by__isnull=True).count() == 0
 
-    def is_payed(self):
-        if self.payed_at and self.payed_by:
-            return True
-        return False
+    def is_paid(self):
+        return bool(self.payed_at and self.payed_by)
 
     # TODO
     def is_payable(self):

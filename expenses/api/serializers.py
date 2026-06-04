@@ -49,7 +49,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
 
 class ExpenseAdminSerializer(ExpenseSerializer):
-    """Dedicated serializers for creating expenses, provides proper annotations for OpenAPI."""
+    """Dedicated serializers for creating claims, provides proper annotations for OpenAPI."""
 
     is_flagged = serializers.BooleanField(
         help_text="Whether the expense is flagged. Only included for users with attesting permissions.",
@@ -60,7 +60,7 @@ class ExpenseAdminSerializer(ExpenseSerializer):
 
 
 class ExpenseCreateSerializer(serializers.ModelSerializer):
-    """Dedicated serializer for creating expenses, provides proper annotations for OpenAPI."""
+    """Dedicated serializer for creating claims, provides proper annotations for OpenAPI."""
 
     files = serializers.ListField(child=UploadField())
     parts = serializers.CharField(

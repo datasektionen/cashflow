@@ -1,5 +1,10 @@
 {
+
+	"expense": "Utlägg",
+	"invoice": "Faktura",
+
 	"user_expenses": "Mina utlägg",
+	"user_claims": "Mina utlägg",
 	"admin": "Administrera",
 	"login": "Logga in",
 	"login_with_sso": "Logga in med SSO",
@@ -66,6 +71,8 @@
 			}
 		}
 	},
+
+	"claims_type": "Typ",
 
 	"admin_expenses": {
 		"title": "Utlägg",

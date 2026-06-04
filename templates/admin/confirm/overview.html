@@ -61,7 +61,7 @@
         /*
         methods: {
             conf: function (expense, e) {
-                let idx = this.expenses.findIndex(x => x.id === expense.id)
+                let idx = this.claims.findIndex(x => x.id === expense.id)
                 if (idx === -1) {
                     return
                 }
@@ -80,9 +80,9 @@
                     return res.text()
                 })
                 .then(res => {
-                    let exp = this.expenses[idx]
+                    let exp = this.claims[idx]
                     exp.confirmed = true
-                    this.$set(this.expenses, idx, exp)
+                    this.$set(this.claims, idx, exp)
                 })
                 if (e) e.preventDefault()
             },

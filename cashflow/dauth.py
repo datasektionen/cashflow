@@ -31,7 +31,7 @@ class Permission(str, Enum):
     UNATTEST = "unattest"
     UNCONFIRM = "unconfirm"
     VIEW_ALL_PAYMENTS = "view-all-payments"
-    VIEW_EXPENSES = "view-expenses"
+    VIEW_EXPENSES = "view-claims"
 
 
 class HivePermission(BaseModel):

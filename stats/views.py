@@ -162,10 +162,10 @@ def budget_lines(request):
 @require_GET
 def cost_centres(request):
     """
-    Returns the distinct cost centres (committees) from all expenses.
+    Returns the distinct cost centres (committees) from all claims.
     """
     expense_queryset = models.Expense.objects.all()
-    # expense_queryset is a list of expenses
+    # expense_queryset is a list of claims
 
     # Collecting cost centres from each expense
     cost_centres = set()  # Use a set to avoid duplicates

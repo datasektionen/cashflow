@@ -14,7 +14,7 @@ class ExpenseFactory(DjangoModelFactory):
     description = factory.Faker("text")
     expense_date = factory.Faker("date")
     file = factory.RelatedFactory(
-        "expenses.factories.ExpenseFileFactory", factory_related_name="expense"
+        "claims.factories.ExpenseFileFactory", factory_related_name="expense"
     )
 
 
