@@ -19,7 +19,6 @@ export class API {
 		this.users = new UsersAPI(client);
 		this.claims = new ClaimsAPI(client);
 	}
-
 }
 
 export const api = new API('http://localhost:8000/api/', fetch);

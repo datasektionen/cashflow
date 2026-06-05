@@ -4,3 +4,8 @@ export type TableColumn<T> = {
 	render: (row: T) => string;
 	width: string;
 };
+
+export type TableRowProps<T> = {
+	onClick?: (row: T) => void;
+	class?: string | ((row: T) => string);
+};

@@ -1,7 +1,6 @@
 import { ApiClient } from '$lib/api';
 import type { Claim, PaginatedResponse } from '$lib/api/types';
 
-
 export class ClaimsAPI {
 	private apiClient: ApiClient;
 
@@ -20,7 +19,10 @@ export class ClaimsAPI {
 			};
 		};
 
-		const res = await this.apiClient.get<RawResponse>(`${username}/claims/`, { page, per_page: perPage });
+		const res = await this.apiClient.get<RawResponse>(`${username}/claims/`, {
+			page,
+			per_page: perPage
+		});
 
 		return {
 			data: res.data,

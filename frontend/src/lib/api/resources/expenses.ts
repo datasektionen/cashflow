@@ -8,6 +8,10 @@ export class ExpensesAPI {
 		this.apiClient = apiClient;
 	}
 
+	async get(id: number): Promise<Expense> {
+		return await this.apiClient.get<Expense>(`/expenses/${id}`);
+	}
+
 	async list(
 		page: number,
 		perPage: number,
@@ -50,6 +54,6 @@ export class ExpensesAPI {
 			body.append('files', file, file.name);
 		}
 
-		return this.apiClient.post('claims/', body);
+		return this.apiClient.post('expenses/', body);
 	}
 }

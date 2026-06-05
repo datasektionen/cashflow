@@ -175,5 +175,31 @@
 			},
 			"submit": "Save and register invoice"
 		}
-	}
+	},
+	"file": "File",
+	"expense_date": "Purchase date",
+	"expense_created_at": "Registered",
+	"expense_no_files": "No files attached",
+	"expense_owner": "Purchased by",
+	"expense_attested": "Attested",
+	"expense_confirmed": "Confirmed",
+	"expense_paid": "Reimbursed",
+	"expense_verification": "Voucher number",
+	"expense_status": {
+		"unconfirmed": "Not confirmed",
+		"paid": "Reimbursed",
+		"unpaid": "Not reimbursed",
+		"not_booked": "Not booked"
+	},
+	"total": "Total",
+	"expense_comments": "Comments",
+	"add_comment": "Add comment",
+	"add_comment_placeholder": "Write a comment...",
+	"cancel": "Cancel",
+	"submit": "Submit",
+	"expense_parts": "Expense parts",
+	"amount": "Amount",
+	"cost_centre": "Cost centre",
+	"secondary_cost_centre": "Secondary cost centre",
+	"budget_line": "Budget line"
 }

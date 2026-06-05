@@ -1,5 +1,4 @@
 {
-
 	"expense": "Utlägg",
 	"invoice": "Faktura",
 
@@ -175,5 +174,31 @@
 			},
 			"submit": "Spara och registrera faktura"
 		}
-	}
+	},
+	"file": "Fil",
+	"expense_date": "Inköpsdatum",
+	"expense_created_at": "Registrerat",
+	"expense_no_files": "Inga filer bifogade",
+	"expense_owner": "Köpt av",
+	"expense_attested": "Attesterad",
+	"expense_confirmed": "Bekräftad",
+	"expense_paid": "Utbetald",
+	"expense_verification": "Verifikationsnummer",
+	"expense_status": {
+		"unconfirmed": "Ej bekräftad",
+		"paid": "Utbetald",
+		"unpaid": "Ej utbetald",
+		"not_booked": "Ej bokförd"
+	},
+	"total": "Totalt",
+	"expense_comments": "Kommentarer",
+	"add_comment": "Lägg till kommentar",
+	"add_comment_placeholder": "Skriv en kommentar...",
+	"cancel": "Avbryt",
+	"submit": "Skicka",
+	"expense_parts": "Kvittodelar",
+	"amount": "Belopp",
+	"cost_centre": "Kostnadsställe",
+	"secondary_cost_centre": "Sekundärt kostnadsställe",
+	"budget_line": "Budgetpost"
 }

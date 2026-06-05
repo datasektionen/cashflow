@@ -9,7 +9,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = await api.users.getCurrent().catch(() => null);
 
 	return resolve(event, {
-		filterSerializedResponseHeaders: (name) => name.toLowerCase() === 'x-request-id'
+		filterSerializedResponseHeaders: (name) =>
+			name.toLowerCase() === 'x-request-id' || name.toLowerCase() === 'content-type'
 	});
 };
 

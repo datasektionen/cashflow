@@ -28,7 +28,7 @@
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = falsw)
+			() => (loading = false)
 		);
 	}
 

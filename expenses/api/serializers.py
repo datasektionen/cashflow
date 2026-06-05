@@ -1,12 +1,19 @@
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from core.api.serializers import FileSerializer, ProfileSerializer, UploadField
+from core.api.serializers import (
+    FileSerializer,
+    ProfileSerializer,
+    UploadField,
+    CommentSerializer,
+    PaymentSerializer,
+)
 from expenses.models import Expense, ExpensePart
 
 
 class ExpensePartSerializer(serializers.ModelSerializer):
     expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
+    attested_by = ProfileSerializer(read_only=True)
 
     class Meta:
         model = ExpensePart
@@ -16,6 +23,8 @@ class ExpensePartSerializer(serializers.ModelSerializer):
             "secondary_cost_centre",
             "budget_line",
             "amount",
+            "attested_by",
+            "attest_date",
         ]
 
 
@@ -23,6 +32,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
     files = FileSerializer(many=True, source="file_set", read_only=True)
     owner = ProfileSerializer(read_only=True)
     parts = ExpensePartSerializer(many=True, required=True, allow_empty=False)
+    confirmed_by = ProfileSerializer(read_only=True, source="confirmed_by.profile")
+    comments = CommentSerializer(many=True, read_only=True, source="comment_set")
+    payment = PaymentSerializer(read_only=True, source="payment_set")
 
     class Meta:
         model = Expense
@@ -38,6 +50,8 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "verification",
             "files",
             "parts",
+            "comments",
+            "payment",
         ]
 
     def create(self, validated_data):

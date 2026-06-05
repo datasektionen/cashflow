@@ -31,7 +31,7 @@ class Permission(str, Enum):
     UNATTEST = "unattest"
     UNCONFIRM = "unconfirm"
     VIEW_ALL_PAYMENTS = "view-all-payments"
-    VIEW_EXPENSES = "view-claims"
+    VIEW_EXPENSES = "view-expenses"
 
 
 class HivePermission(BaseModel):
@@ -47,6 +47,7 @@ class HiveAccountingPermissions(accounting.permissions.AccountingPermissionProvi
     def may_account(self, target, user) -> bool:
         from expenses.models import Expense
         from invoices.models import Invoice
+
         scopes = self._get_accounting_scopes(user)
         if "*" in scopes:
             return True
@@ -54,10 +55,13 @@ class HiveAccountingPermissions(accounting.permissions.AccountingPermissionProvi
             return target.parts.filter(cost_centre__in=scopes).exists()
         elif isinstance(target, Invoice):
             return target.parts.filter(cost_centre__in=scopes).exists()
-        raise TypeError(f"Expected an expense or invoice, got {target.__class__.__name__}")
+        raise TypeError(
+            f"Expected an expense or invoice, got {target.__class__.__name__}"
+        )
 
     def accountable_expenses(self, user: User) -> QuerySet:
         from expenses.models import Expense
+
         scopes = self._get_accounting_scopes(user)
         if "*" in scopes:
             return Expense.objects.all()
@@ -65,6 +69,7 @@ class HiveAccountingPermissions(accounting.permissions.AccountingPermissionProvi
 
     def accountable_invoices(self, user: User) -> QuerySet:
         from invoices.models import Invoice
+
         scopes = self._get_accounting_scopes(user)
         if "*" in scopes:
             return Invoice.objects.all()
@@ -154,12 +159,13 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
             elif perm_id not in mapping:
                 mapping[perm_id] = [scope.lower()]
             elif mapping[perm_id] is not True:
-                mapping[perm_id].append(scope.lower())  # else: don't overwrite an existing True (do nothing)
+                mapping[perm_id].append(
+                    scope.lower()
+                )  # else: don't overwrite an existing True (do nothing)
 
         user.__dict__["cached_permissions"] = mapping
 
     return user.__dict__["cached_permissions"]
-
 
 
 def has_unscoped_permission(perm_id: Permission, user: AbstractBaseUser):

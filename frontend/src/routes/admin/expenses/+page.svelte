@@ -1,12 +1,46 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import ExpenseTable from '$lib/components/ExpenseTable.svelte';
+	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import type { TableColumn } from '$lib/components/types';
+	import type { Expense } from '$lib/api/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { _ } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 
-	let expenses = $derived(data.expenses);
+	const columns: TableColumn<Expense>[] = $derived([
+		{
+			key: 'id',
+			header: $_('admin_expenses.columns.id'),
+			render: (e) => e.id.toString(),
+			width: 'w-16'
+		},
+		{
+			key: 'verification',
+			header: $_('admin_expenses.columns.voucher'),
+			render: (e) => e.verification,
+			width: 'w-32'
+		},
+		{
+			key: 'description',
+			header: $_('admin_expenses.columns.description'),
+			render: (e) => e.description,
+			width: 'w-auto'
+		},
+		{
+			key: 'owner',
+			header: $_('admin_expenses.columns.owner'),
+			render: (e) => `${e.owner.first_name} ${e.owner.last_name}`,
+			width: 'w-56'
+		},
+		{
+			key: 'expense_date',
+			header: $_('admin_expenses.columns.expense_date'),
+			render: (e) => e.expense_date,
+			width: 'w-32'
+		}
+	]);
 
 	function handlePageChange(p: number) {
 		const url = new URL(page.url);
@@ -22,4 +56,13 @@
 	}
 </script>
 
-<ExpenseTable {expenses} onPageChange={handlePageChange} onPerPageChange={handlePerPageChange} />
+<PaginatedTable
+	paginatedResponse={data.expenses}
+	{columns}
+	onPageChange={handlePageChange}
+	onPerPageChange={handlePerPageChange}
+	rowProps={{
+		onClick: (e) => goto(`/${e.owner.username}/expenses/${e.id}`),
+		class: 'cursor-pointer'
+	}}
+/>

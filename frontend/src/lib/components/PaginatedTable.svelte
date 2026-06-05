@@ -4,7 +4,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 -->
 <script lang="ts" generics="T">
 	import type { PaginatedResponse } from '$lib/api/types';
-	import type { TableColumn } from './types';
+	import type { TableColumn, TableRowProps } from './types';
 	import { Pagination } from 'bits-ui';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
@@ -17,17 +17,25 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		onPageChange?: (page: number) => void;
 		onPerPageChange?: (perPage: number) => void;
 		loading?: boolean;
+		rowProps?: TableRowProps<T>;
 	}
 
-	let { paginatedResponse, data, columns, onPageChange, onPerPageChange, loading }: Props = $props();
+	let {
+		paginatedResponse,
+		data,
+		columns,
+		onPageChange,
+		onPerPageChange,
+		loading,
+		rowProps
+	}: Props = $props();
 
 	const resolved = $derived<PaginatedResponse<T>>(
 		paginatedResponse ?? {
 			data: data ?? [],
 			pagination: { total: data?.length ?? 0, page: 1, perPage: data?.length ?? 0, totalPages: 1 }
 		}
-
-		);
+	);
 
 	const perPageOptions = [10, 20, 50, 100];
 
@@ -37,10 +45,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 			: (resolved.pagination.page - 1) * resolved.pagination.perPage + 1
 	);
 	const rangeEnd = $derived(
-		Math.min(
-			resolved.pagination.page * resolved.pagination.perPage,
-			resolved.pagination.total
-		)
+		Math.min(resolved.pagination.page * resolved.pagination.perPage, resolved.pagination.total)
 	);
 </script>
 
@@ -59,9 +64,13 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 				</tr>
 			</thead>
 			<tbody>
-				{#each resolved.data as row}
+				{#each resolved.data as row, i}
 					<tr
-						class="border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
+						class={[
+							'border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+							rowProps.class
+						]}
+						onclick={(e) => rowProps.onClick(row)}
 					>
 						{#each columns as column}
 							<td class="truncate px-4 py-3">

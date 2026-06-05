@@ -57,10 +57,10 @@
 <div
 	class="base-text-base-text flex min-h-screen flex-col bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
-	{#if page.data.title_key != null}
+	{#if page.data.title_key != null || page.data.title != null}
 		<header class="mx-auto w-full max-w-7xl px-4 lg:px-8">
 			<h1 class="pt-12 pb-6 text-3xl font-semibold tracking-tight">
-				{$_(page.data.title_key)}
+				{page.data.title ?? $_(page.data.title_key)}
 			</h1>
 			<Separator.Root
 				orientation="horizontal"
