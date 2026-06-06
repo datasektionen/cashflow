@@ -4,7 +4,7 @@
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
 	import { type DateValue } from '@internationalized/date';
-	import CashSpinner from '$lib/CashSpinner.svelte';
+	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { Label, RadioGroup } from 'bits-ui';
 	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';

@@ -3,7 +3,7 @@
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
 	import { type DateValue, getLocalTimeZone, today } from '@internationalized/date';
-	import CashSpinner from '$lib/CashSpinner.svelte';
+	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
 	import validation from './validation.ts';

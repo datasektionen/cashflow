@@ -8,7 +8,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	import { Pagination } from 'bits-ui';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import CashSpinner from '$lib/CashSpinner.svelte';
+	import CashSpinner from '$lib/components/CashSpinner.svelte';
 
 	interface Props {
 		paginatedResponse?: PaginatedResponse<T>;
