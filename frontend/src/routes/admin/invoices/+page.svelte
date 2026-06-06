@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { Invoice } from '$lib/api/types';
-	import type { TableColumn } from '$lib/components/types';
+	import type { TableColumn, TableRowProps } from '$lib/components/types';
 	import { _ } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
@@ -31,6 +31,11 @@
 			() => (loading = false)
 		);
 	}
+
+	const rowProps: TableRowProps<Invoice> = {
+		onClick: (invoice) => goto(`/${data.user}/invoices/${invoice.id}`),
+		class: 'cursor-pointer'
+	};
 
 	const columns: TableColumn<Invoice>[] = $derived([
 		{
@@ -90,4 +95,5 @@
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}
+	{rowProps}
 />

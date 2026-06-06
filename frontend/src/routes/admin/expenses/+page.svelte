@@ -9,6 +9,8 @@
 
 	let { data }: PageProps = $props();
 
+	let loading = $state(false);
+
 	const columns: TableColumn<Expense>[] = $derived([
 		{
 			key: 'id',
@@ -43,16 +45,22 @@
 	]);
 
 	function handlePageChange(p: number) {
+		loading = true;
 		const url = new URL(page.url);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
 	}
 
 	function handlePerPageChange(perPage: number) {
+		loading = true;
 		const url = new URL(page.url);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
 	}
 </script>
 
@@ -61,6 +69,7 @@
 	{columns}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
+	{loading}
 	rowProps={{
 		onClick: (e) => goto(`/${e.owner.username}/expenses/${e.id}`),
 		class: 'cursor-pointer'

@@ -8,6 +8,10 @@ export class InvoicesAPI {
 		this.apiClient = apiClient;
 	}
 
+	async get(id: number): Promise<Invoice> {
+		return await this.apiClient.get<Invoice>(`invoices/${id}`);
+	}
+
 	async list(page: number, perPage: number): Promise<PaginatedResponse<Invoice>> {
 		type RawResponse = {
 			data: Invoice[];

@@ -68,9 +68,9 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 					<tr
 						class={[
 							'border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-							rowProps.class
+							rowProps?.class
 						]}
-						onclick={(e) => rowProps.onClick(row)}
+						onclick={(e) => rowProps?.onClick(row)}
 					>
 						{#each columns as column}
 							<td class="truncate px-4 py-3">

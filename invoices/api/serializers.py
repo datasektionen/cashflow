@@ -2,7 +2,13 @@ import datetime
 
 from rest_framework import serializers
 
-from core.api.serializers import ProfileSerializer, UploadField
+from core.api.serializers import (
+    ProfileSerializer,
+    UploadField,
+    CommentSerializer,
+    PaymentSerializer,
+    FileSerializer,
+)
 from invoices.models import Invoice, InvoicePart
 from .exceptions import (
     InvalidInvoiceDateError,
@@ -69,6 +75,7 @@ class InvoicePartSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
 
+    files = FileSerializer(many=True, source="file_set", read_only=True)
     owner = ProfileSerializer(read_only=True)
     confirmed_by = ProfileSerializer(
         source="confirmed_by.profile", allow_null=True, read_only=True
@@ -87,6 +94,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
 
+    comments = CommentSerializer(many=True, read_only=True, source="comment_set")
+
     class Meta:
         model = Invoice
         fields = [
@@ -99,9 +108,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "owner",
             "description",
             "verification",
-            "paid_at",
-            "paid_by",
             "parts",
+            "comments",
+            "files",
+            "paid_by",
+            "paid_at",
         ]
 
     def validate(self, data):

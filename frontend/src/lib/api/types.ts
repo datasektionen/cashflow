@@ -48,8 +48,8 @@ export type InvoicePart = {
 	secondary_cost_centre: string;
 	budget_line: string;
 	amount: string;
-	attested_by?: number;
-	attest_date?: string;
+	attested_by: Profile | null;
+	attest_date: string | null;
 };
 
 export type Invoice = {
@@ -57,14 +57,16 @@ export type Invoice = {
 	created_date: string;
 	invoice_date: string;
 	due_date: string;
-	confirmed_by: number | null;
+	confirmed_by: Profile | null;
 	confirmed_at: string | null;
 	owner: Profile;
 	description: string;
 	verification: string | null;
+	paid_by: Profile | null;
 	paid_at: string | null;
-	paid_by: number | null;
 	parts: InvoicePart[];
+	comments: Comment[];
+	files: ExpenseFile[];
 };
 
 export interface InvoiceCreate {
