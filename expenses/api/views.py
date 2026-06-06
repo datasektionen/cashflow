@@ -1,7 +1,7 @@
 """
 API views for expense management.
 
-This module contains all REST API endpoints related to claims, including
+This module contains all REST API endpoints related to expenses, including
 creating, retrieving, updating, and deleting expense records. Each view
 handles HTTP request validation, permission checks, and returns JSON responses.
 
@@ -52,7 +52,7 @@ logger = get_logger(__name__)
 
 @extend_schema_view(
     list=extend_schema(
-        summary="List claims",
+        summary="List expenses",
         description=(
             "Returns the paginated set of claims the requesting user is "
             "allowed to see. Supports optional filtering by owner via "

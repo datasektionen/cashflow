@@ -35,6 +35,8 @@ class ExpenseSerializer(serializers.ModelSerializer):
     confirmed_by = ProfileSerializer(read_only=True, source="confirmed_by.profile")
     comments = CommentSerializer(many=True, read_only=True, source="comment_set")
     payment = PaymentSerializer(read_only=True, source="payment_set")
+    # Note that DRF serializers strip whitespace by default
+    verification = serializers.RegexField(r"[A-Z]\d+", required=False)
 
     class Meta:
         model = Expense

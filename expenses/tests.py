@@ -11,10 +11,12 @@ import json
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.serializers.json import DjangoJSONEncoder
+from hypothesis import given, strategies as st
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
 from core.factories import UserFactory
+from expenses.api.serializers import ExpenseSerializer
 from expenses.factories import ExpenseFactory, ExpensePartFactory
 from expenses.models import Profile
 
@@ -42,7 +44,7 @@ class TestProfileSignal:
 
 class TestExpenseListPermissions:
     def test_unauthenticated_get_returns_403(self):
-        response = APIClient().get("/api/claims/")
+        response = APIClient().get("/api/expenses/")
         assert response.status_code == 403
         assert response.data["detail"].code == "not_authenticated"
 
@@ -50,7 +52,7 @@ class TestExpenseListPermissions:
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         ExpenseFactory.create_batch(20)
         ExpenseFactory.create_batch(5, owner=user.profile)
-        response = client.get("/api/claims/")
+        response = client.get("/api/expenses/")
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
@@ -70,7 +72,7 @@ class TestExpenseListPermissions:
             2, expense=cc_expenses[1], cost_centre="TestCostCenter"
         )
 
-        response = client.get("/api/claims/")
+        response = client.get("/api/expenses/")
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 2
         assert len(response.data["data"]) == 2
@@ -82,7 +84,7 @@ class TestExpenseListPermissions:
         )
 
         ExpenseFactory.create_batch(20)
-        response = client.get("/api/claims/")
+        response = client.get("/api/expenses/")
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 20
         assert len(response.data["data"]) == 20
@@ -97,7 +99,7 @@ class TestExpenseListFilters:
         ExpenseFactory.create_batch(20)
         target_user = UserFactory()
         ExpenseFactory.create_batch(5, owner=target_user.profile)
-        response = client.get("/api/claims/", {"user": target_user.username})
+        response = client.get("/api/expenses/", {"user": target_user.username})
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
@@ -116,7 +118,7 @@ class TestExpenseListFilters:
         for expense in expenses:
             ExpensePartFactory.create_batch(2, expense=expense, cost_centre=target_cc)
 
-        response = client.get("/api/claims/", {"cost_center": target_cc})
+        response = client.get("/api/expenses/", {"cost_center": target_cc})
 
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
@@ -139,7 +141,7 @@ class TestExpenseCreate:
         }
 
         response = client.post(
-            "/api/claims/",
+            "/api/expenses/",
             {
                 "description": "Test expense",
                 "files": [file, file2],
@@ -164,7 +166,7 @@ class TestExpenseCreate:
         }
 
         response = client.post(
-            "/api/claims/",
+            "/api/expenses/",
             {
                 "description": "Test expense",
                 "expense_date": "2026-01-01",
@@ -180,7 +182,7 @@ class TestExpenseCreate:
 
     def test_must_contain_file(self, user, client):
         response = client.post(
-            "/api/claims/",
+            "/api/expenses/",
             {
                 "description": "Test expense",
                 "expense_date": "2026-01-01",
@@ -193,7 +195,7 @@ class TestExpenseCreate:
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
         response = client.post(
-            "/api/claims/",
+            "/api/expenses/",
             {
                 "description": "Test expense",
                 "expense_date": "2026-01-01",
@@ -206,7 +208,7 @@ class TestExpenseCreate:
     def test_rejects_invalid_parts_json(self, user, client):
         file = SimpleUploadedFile("receipt.jpg", b"content", content_type="image/jpeg")
         response = client.post(
-            "/api/claims/",
+            "/api/expenses/",
             {
                 "description": "Test expense",
                 "expense_date": "2026-01-01",
@@ -217,3 +219,32 @@ class TestExpenseCreate:
         )
         assert response.status_code == 400
         assert response.data["detail"].code == "part_invalid_json"
+
+
+class TestExpenseSerializer:
+
+    @pytest.mark.django_db
+    @given(st.from_regex(r"[A-Z]\d+", fullmatch=True))
+    def test_accepts_valid_verification(self, verification):
+        expense = ExpenseFactory.create()
+        data = {**ExpenseSerializer(expense).data, "verification": verification}
+        serializer = ExpenseSerializer(data=data)
+        assert serializer.is_valid(raise_exception=True)
+
+    @pytest.mark.django_db
+    @given((st.from_regex(r"[a-z]\d+", fullmatch=True)))
+    def test_rejects_lowercase_verification(self, verification):
+        expense = ExpenseFactory.create()
+        data = {**ExpenseSerializer(expense).data, "verification": verification}
+        serializer = ExpenseSerializer(data=data)
+        assert not serializer.is_valid()
+
+    @pytest.mark.django_db
+    @given(st.from_regex(r"[ \t\n]*[A-Z]\d+[ \t\n]*", fullmatch=True))
+    def test_strips_whitespace_in_verification(self, verification):
+        expense = ExpenseFactory.create()
+        data = {**ExpenseSerializer(expense).data, "verification": verification}
+        serializer = ExpenseSerializer(data=data)
+        assert serializer.is_valid(raise_exception=True)
+        assert serializer.validated_data["verification"] == verification.strip()
+        assert not any(c.isspace() for c in serializer.validated_data["verification"])

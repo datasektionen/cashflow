@@ -84,6 +84,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
     )
     paid_at = serializers.DateField(source="payed_at", allow_null=True, read_only=True)
 
+    # Note that DRF serializers strip whitespace by default
+    verification = serializers.RegexField(r"[A-Z]\d+", required=False)
+
     class Meta:
         model = Invoice
         fields = [

@@ -29,10 +29,10 @@ class FileSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source="user.first_name")
-    last_name = serializers.CharField(source="user.last_name")
-    email = serializers.EmailField(source="user.email")
-    username = serializers.CharField(source="user.username")
+    first_name = serializers.CharField(source="user.first_name", allow_blank=False)
+    last_name = serializers.CharField(source="user.last_name", allow_blank=False)
+    email = serializers.EmailField(source="user.email", allow_blank=False)
+    username = serializers.CharField(source="user.username", allow_blank=False)
 
     class Meta:
         model = Profile

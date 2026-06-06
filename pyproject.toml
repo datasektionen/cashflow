@@ -55,6 +55,7 @@ dev = [
     "django-stubs (>=6.0,<7.0)",
     "djangorestframework-stubs (>=3.17,<4.0)",
     "types-requests",
+    "hypothesis (>=6.155.2,<7.0.0)",
 ]
 
 [tool.mypy]
