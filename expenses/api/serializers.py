@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import DateField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.api.serializers import (
@@ -14,6 +15,7 @@ from expenses.models import Expense, ExpensePart
 class ExpensePartSerializer(serializers.ModelSerializer):
     expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
     attested_by = ProfileSerializer(read_only=True)
+    attest_date = DateField(read_only=True)
 
     class Meta:
         model = ExpensePart

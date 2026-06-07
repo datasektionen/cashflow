@@ -44,3 +44,15 @@ class PartRequiredError(APIException):
 
 
 register_exception(PartRequiredError)
+
+
+class AttestationPermissionDenied(APIException):
+    status_code = 403
+    title = "Attestation permission denied"
+    default_detail = (
+        "You do not have permission to attest this expense or invoice part."
+    )
+    default_code = "attestation_permission_denied"
+
+
+register_exception(AttestationPermissionDenied)

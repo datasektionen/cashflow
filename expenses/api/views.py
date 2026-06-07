@@ -12,10 +12,10 @@ patterns for authentication and error handling found in this file.
 import json
 
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import transaction, IntegrityError
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -25,6 +25,8 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_201_CREATED,
     HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_403_FORBIDDEN,
+    HTTP_204_NO_CONTENT,
 )
 from structlog import get_logger
 
@@ -32,6 +34,7 @@ from core.api.exceptions import (
     PartInvalidJSONError,
     FileRequiredError,
     PartRequiredError,
+    AttestationPermissionDenied,
 )
 from core.api.filters import Filter
 from core.api.openapi import problem, problems
@@ -177,12 +180,49 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         )
 
 
-class ExpensePartViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
+class ExpensePartAttestView(
+    generics.GenericAPIView[ExpensePart], AuthenticatedUserMixin
+):
     serializer_class = ExpensePartSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
         return ExpensePart.objects.filter(
             expense__in=Expense.objects.viewable_by(self.current_user)
+        )
+
+    @extend_schema(
+        tags=["Expenses"],
+        summary="Attest an expense part",
+        description="Attests an expense part. Submit as an empty POST request.",
+        operation_id="attest",
+        request=None,
+        responses={
+            HTTP_204_NO_CONTENT: ExpensePartSerializer,
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDenied),
+        },
+    )
+    def post(self, request, pk: int):
+        expense_part = self.get_object()
+
+        if (
+            expense_part.cost_centre
+            not in self.current_user.profile.attestable_cost_centres()
+        ):
+            raise AttestationPermissionDenied(
+                detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
+            )
+        if expense_part.expense.owner == self.current_user.profile:
+            raise AttestationPermissionDenied(
+                detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
+            )
+
+        with transaction.atomic():
+            expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
+            expense_part.attested_by = self.current_user.profile
+            expense_part.attest_date = timezone.localdate()
+            expense_part.save()
+
+        return Response(
+            ExpensePartSerializer(expense_part).data, status=status.HTTP_204_NO_CONTENT
         )
