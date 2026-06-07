@@ -3,6 +3,7 @@ import { UsersAPI } from '$lib/api/resources/users';
 import { ApiClient } from '$lib/api/client';
 import { InvoicesAPI } from '$lib/api/resources/invoices';
 import { ClaimsAPI } from '$lib/api/resources/claims';
+import { ProfilePictureAPI } from '$lib/api/resources/profilePictures';
 
 export { ApiClient } from './client';
 
@@ -11,6 +12,7 @@ export class API {
 	users: UsersAPI;
 	invoices: InvoicesAPI;
 	claims: ClaimsAPI;
+	profilePictures: ProfilePictureAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl, fetch);
@@ -18,6 +20,7 @@ export class API {
 		this.invoices = new InvoicesAPI(client);
 		this.users = new UsersAPI(client);
 		this.claims = new ClaimsAPI(client);
+		this.profilePictures = new ProfilePictureAPI(client);
 	}
 }
 

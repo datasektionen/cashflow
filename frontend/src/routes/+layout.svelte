@@ -21,6 +21,7 @@
 		Banknote,
 		BookText
 	} from '@lucide/svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	let { children, data }: LayoutProps = $props();
 
@@ -43,10 +44,11 @@
 			{/if}
 		</div>
 
-		<div class="flex h-full items-center">
+		<div class="flex h-full items-center space-x-2">
 			<DarkMode class="items-center" />
 			{#if data.user != null}
 				<p>{data.user.first_name} {data.user.last_name}</p>
+				<UserAvatar class="bg-white dark:bg-dark-base-50" username={data.user.username} />
 			{:else}
 				<a href="http://localhost:8000/login?next=http%3A%2F%2Flocalhost%3A5173%2F">{$_('login')}</a
 				>
