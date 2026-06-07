@@ -5,6 +5,12 @@
 	"user_expenses": "Mina utlägg",
 	"user_claims": "Mina utlägg",
 	"admin": "Administrera",
+	"tasks": {
+		"confirm": "Bekräfta",
+		"attest": "Attestera",
+		"pay": "Betala",
+		"account": "Bokför"
+	},
 	"login": "Logga in",
 	"login_with_sso": "Logga in med SSO",
 	"chapter": "Konglig Datasektionen",
@@ -75,6 +81,7 @@
 
 	"admin_expenses": {
 		"title": "Utlägg",
+		"nav_title": "Alla utlägg",
 		"columns": {
 			"id": "ID",
 			"voucher": "Verifikat",
@@ -97,6 +104,7 @@
 
 	"admin_invoices": {
 		"title": "Fakturor",
+		"nav_title": "Alla fakturor",
 		"columns": {
 			"id": "ID",
 			"description": "Beskrivning",

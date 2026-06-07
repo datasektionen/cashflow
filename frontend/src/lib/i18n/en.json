@@ -4,6 +4,12 @@
 	"user_expenses": "My expenses",
 	"user_claims": "My claims",
 	"admin": "Administration",
+	"tasks": {
+		"confirm": "Confirm",
+		"attest": "Attest",
+		"pay": "Pay",
+		"account": "Account"
+	},
 	"login": "Login",
 	"login_with_sso": "Log in with SSO",
 
@@ -11,7 +17,6 @@
 	"help": "Help",
 
 	"browse_files": "Browse files",
-	"cancel": "Cancel",
 	"no_results": "No results",
 	"description_required": "Description is required",
 	"expense_date_required": "Expense date is required",
@@ -74,6 +79,7 @@
 
 	"admin_expenses": {
 		"title": "Expenses",
+		"nav_title": "All expenses",
 		"columns": {
 			"id": "ID",
 			"voucher": "Voucher",
@@ -98,6 +104,7 @@
 
 	"admin_invoices": {
 		"title": "Invoices",
+		"nav_title": "All invoices",
 		"columns": {
 			"id": "ID",
 			"description": "Description",

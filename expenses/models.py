@@ -80,15 +80,15 @@ class Profile(models.Model):
 
     # Returns a list of known cost centres that the user may attest, or True
     def attestable_cost_centres(self):
-        if dauth.get_permissions(self.user).get("attest") is True:
-            # don't filter
-            return True
-
         from invoices.models import InvoicePart
 
         cost_centres = set(
             ExpensePart.objects.values_list("cost_centre", flat=True)
         ) | set(InvoicePart.objects.values_list("cost_centre", flat=True))
+
+        if dauth.get_permissions(self.user).get(Permission.ATTEST) is True:
+            return list(cost_centres)
+
         return [
             cc
             for cc in cost_centres
@@ -145,21 +145,21 @@ class Profile(models.Model):
     def may_account_some(self):
         return dauth.has_any_permission_scope("accounting", self.user)
 
-    # Returns a list of known cost centres that the user may bookkeep, or True
     def accountable_cost_centres(self):
-        if dauth.get_permissions(self.user).get("accounting") is True:
-            # don't filter
-            return True
+        from invoices.models import InvoicePart
 
-        return list(
-            filter(
-                lambda cc: dauth.has_scoped_permission("accounting", cc, self.user),
-                [
-                    ep["cost_centre"]
-                    for ep in ExpensePart.objects.values("cost_centre").distinct()
-                ],
-            )
-        )
+        cost_centres = set(
+            ExpensePart.objects.values_list("cost_centre", flat=True)
+        ) | set(InvoicePart.objects.values_list("cost_centre", flat=True))
+
+        if dauth.get_permissions(self.user).get(Permission.ACCOUNTING) is True:
+            return list(cost_centres)
+
+        return [
+            cc
+            for cc in cost_centres
+            if dauth.has_scoped_permission(Permission.ACCOUNTING, cc, self.user)
+        ]
 
     # Returns whether the user may view attestable claims
     def may_view_accountable(self):

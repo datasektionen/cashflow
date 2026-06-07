@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
-	import type { Comment } from '$lib/api/types';
-	import type { User } from '$lib/types/auth';
+	import type { Comment, User } from '$lib/api/types';
 	import { ScrollArea } from 'bits-ui';
 
 	function formatComment(text: string): string {
