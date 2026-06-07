@@ -5,7 +5,7 @@ from django.test import Client
 from django.urls import reverse
 from pytest import fixture
 
-from cashflow.dauth import HiveAccountingPermissions, Permission
+from cashflow.dauth import Hive, Permission
 from cashflow.utils import may_authenticate_fortnox
 from expenses.factories import ExpenseFactory, ExpensePartFactory
 from invoices.factories import InvoiceFactory, InvoicePartFactory
@@ -67,7 +67,7 @@ def invoice_set(db):
 
 @fixture
 def provider():
-    return HiveAccountingPermissions()
+    return Hive()
 
 
 class TestHiveAccountingPermissions:

@@ -39,7 +39,7 @@ class HivePermission(BaseModel):
     scope: bool | list[str]
 
 
-class HiveAccountingPermissions(accounting.permissions.AccountingPermissionProvider):
+class Hive(accounting.permissions.AccountingPermissionProvider):
 
     def _get_accounting_scopes(self, user: User) -> list[str]:
         return get_permissions(user).get(Permission.ACCOUNTING, [])

@@ -356,4 +356,6 @@ FORTNOX_INVOICE_VOUCHER_SERIES = "U"
 FORTNOX_DESCRIPTION_FORMAT = "{description} (cashflow:{kind}:{id})"
 
 # Class to use to determine accounting permissions
-ACCOUNTING_PERMISSION_PROVIDER = "cashflow.dauth.HiveAccountingPermissions"
+ACCOUNTING_PERMISSION_PROVIDER = "cashflow.dauth.Hive"
+
+PROFILE_PICTURE_PROVIDER = "cashflow.rfinger.RFinger"

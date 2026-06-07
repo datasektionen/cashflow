@@ -44,3 +44,16 @@ class UserSerializer(serializers.ModelSerializer):
             Permission.EDIT_INVOICE: p.may_edit_invoice(),
             Permission.VIEW_ALL_PAYMENTS: p.may_view_all_payments(),
         }
+
+
+class ProfilePictureQuerySerializer(serializers.Serializer):
+    usernames = serializers.RegexField(
+        r"^\s*[\w.@+-]+(\s*,\s*[\w.@+-]+)*\s*$",
+        help_text="Comma-separated list of usernames, e.g. `hfja,turetek,marmed`",
+    )
+
+    def validate_usernames(self, value):
+        names = [u.strip() for u in value.split(",")]
+        if len(names) == 0:
+            raise serializers.ValidationError("Usernames must not be empty")
+        return names
