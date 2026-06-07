@@ -8,8 +8,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
+from django.utils.timezone import localdate
 
 from cashflow import dauth, email_util
+from cashflow.dauth import Permission
+from core.exceptions import UnauthorizedAttestationError, SelfAttestationError
 
 
 class Profile(models.Model):
@@ -81,15 +84,16 @@ class Profile(models.Model):
             # don't filter
             return True
 
-        return list(
-            filter(
-                lambda cc: dauth.has_scoped_permission("attest", cc, self.user),
-                [
-                    ep["cost_centre"]
-                    for ep in ExpensePart.objects.values("cost_centre").distinct()
-                ],
-            )
-        )
+        from invoices.models import InvoicePart
+
+        cost_centres = set(
+            ExpensePart.objects.values_list("cost_centre", flat=True)
+        ) | set(InvoicePart.objects.values_list("cost_centre", flat=True))
+        return [
+            cc
+            for cc in cost_centres
+            if dauth.has_scoped_permission(Permission.ATTEST, cc, self.user)
+        ]
 
     # Returns whether the user may view attestable claims
     def may_view_attestable(self):
@@ -496,10 +500,15 @@ class ExpensePart(models.Model):
             + " kr)"
         )
 
-    def attest(self, user):
-        self.attested_by = user.profile
-        self.attest_date = date.today()
+    def attest(self, user: User):
 
+        if self.cost_centre not in user.profile.attestable_cost_centres():
+            raise UnauthorizedAttestationError()
+        if self.expense.owner == user.profile:
+            raise SelfAttestationError()
+
+        self.attested_by = user.profile
+        self.attest_date = localdate()
         self.save()
         comment = Comment(
             author=user.profile,

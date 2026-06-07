@@ -22,7 +22,7 @@ from cashflow.dauth import Permission
 from core.factories import UserFactory
 from expenses.api.serializers import ExpenseSerializer, ExpensePartSerializer
 from expenses.factories import ExpenseFactory, ExpensePartFactory
-from expenses.models import Profile, ExpensePart, Expense
+from expenses.models import Profile, ExpensePart, Expense, Comment
 
 
 @pytest.fixture
@@ -246,6 +246,11 @@ class TestExpensePartAttestation:
         assert response.status_code == 204
         assert response.data["attest_date"] == today.strftime("%Y-%m-%d")
         assert response.data["attested_by"]["id"] == user.profile.id
+
+        comment = Comment.objects.filter(
+            expense=expense_part.expense, author=user.profile
+        )
+        assert comment.exists()
 
     def test_rejects_unauthorized(self, user, client, mocker):
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)

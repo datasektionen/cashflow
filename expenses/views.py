@@ -37,21 +37,21 @@ def new_expense(request):
         and len((request.POST.getlist("fileIds[]"))) < 1
     ):
         messages.error(request, "Du måste ladda upp minst en fil som verifikat")
-        return HttpResponseRedirect(reverse("claims-new"))
+        return HttpResponseRedirect(reverse("expenses-new"))
 
     if datetime.now() < datetime.strptime(request.POST["expense-date"], "%Y-%m-%d"):
         messages.error(request, "Du har angivit ett datum i framtiden")
-        return HttpResponseRedirect(reverse("claims-new"))
+        return HttpResponseRedirect(reverse("expenses-new"))
 
     if any(map(lambda x: float(x) <= 0, request.POST.getlist("amounts[]"))) > 0:
         messages.error(
             request, "Du har angivit en icke-positiv summa i någon av kvittodelarna"
         )
-        return HttpResponseRedirect(reverse("claims-new"))
+        return HttpResponseRedirect(reverse("expenses-new"))
 
     if len(request.POST.getlist("amounts[]")) == 0:
         messages.error(request, "Du måste lägga till minst en del på kvittot")
-        return HttpResponseRedirect(reverse("claims-new"))
+        return HttpResponseRedirect(reverse("expenses-new"))
 
     with transaction.atomic():
         expense = models.Expense(
@@ -90,7 +90,7 @@ def new_expense(request):
             ).save()
 
     return HttpResponseRedirect(
-        reverse("claims-new-confirmation", kwargs={"pk": expense.id})
+        reverse("expenses-new-confirmation", kwargs={"pk": expense.id})
     )
 
 
@@ -104,7 +104,7 @@ def expense_new_confirmation(request, pk):
         expense = models.Expense.objects.get(pk=int(pk))
     except ObjectDoesNotExist:
         messages.error(request, "Ett fel uppstod och kvittot skapades inte.")
-        return HttpResponseRedirect(reverse("claims-new"))
+        return HttpResponseRedirect(reverse("expenses-new"))
 
     return render(request, "claims/confirmation.html", {"expense": expense})
 
@@ -123,11 +123,11 @@ def edit_expense(request, pk):
 
     if expense.reimbursement:
         messages.error(request, "Kan inte ändra utlägg som har blivit utbetald")
-        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": pk}))
+        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": pk}))
 
     if expense.owner.user.username != request.user.username:
         messages.error(request, "Kan inte ändra på någon annans utlägg")
-        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": pk}))
+        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": pk}))
 
     # Show the form on GET, otherwise handle as POST
     if request.method == "GET":
@@ -175,13 +175,13 @@ def edit_expense(request, pk):
 
     if len(new_ids) < 1:
         messages.warning(request, "Något gick fel med inladdning av budgetposterna")
-        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": pk}))
+        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": pk}))
 
     models.ExpensePart.objects.filter(expense=expense).exclude(id__in=new_ids).delete()
 
     messages.success(request, "Kvittot ändrades")
 
-    return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": pk}))
+    return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": pk}))
 
 
 @require_http_methods(["GET", "POST"])
@@ -213,7 +213,7 @@ def delete_expense(request, pk):
         ).save()
         expense.delete()
         messages.success(request, "Kvittot raderades.")
-        return HttpResponseRedirect(reverse("claims-index"))
+        return HttpResponseRedirect(reverse("expenses-index"))
 
 
 def _may_flag(user: AbstractBaseUser | AnonymousUser) -> bool:
@@ -235,7 +235,7 @@ def flag_expense(request, pk):
         raise Http404("Utlägget finns inte")
     expense.is_flagged = True
     expense.save()
-    return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": int(pk)}))
+    return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": int(pk)}))
 
 
 @require_GET
@@ -307,13 +307,13 @@ def new_comment(request, expense_pk):
     if not request.user.profile.may_view_expense(expense):
         return HttpResponseForbidden()
     if re.match(r"^\s*$", request.POST["content"]):
-        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": expense_pk}))
+        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": expense_pk}))
 
     models.Comment(
         expense=expense, author=request.user.profile, content=request.POST["content"]
     ).save()
 
-    return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": expense_pk}))
+    return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": expense_pk}))
 
 
 def index(request):
@@ -380,7 +380,7 @@ def new_payment(request):
         ).save()
 
     return HttpResponseRedirect(
-        reverse("claims-action-pay") + "?payment=" + str(payment.id)
+        reverse("expenses-action-pay") + "?payment=" + str(payment.id)
     )
 
 

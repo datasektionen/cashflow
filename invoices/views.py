@@ -354,4 +354,4 @@ def delete_invoice(request, pk):
                 },
             )
             email_util.send_mail(recipient, subject, content)
-        return HttpResponseRedirect(reverse("claims-index"))
+        return HttpResponseRedirect(reverse("expenses-index"))

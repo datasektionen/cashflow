@@ -1,11 +1,14 @@
 import datetime
 import json
 
+import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
-from ..factories import InvoiceFactory
+from core.factories import UserFactory
+from expenses.models import Comment
+from ..factories import InvoiceFactory, InvoicePartFactory
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
 TODAY = datetime.date.today()
@@ -185,3 +188,31 @@ class TestInvoiceCreate:
         response = api_client.post("/api/invoices/", data=data, format="multipart")
         assert response.status_code == 400
         assert response.data["detail"].code == "invoice_verification_required"
+
+
+class TestInvoicePartAttestation:
+
+    @pytest.mark.django_db
+    def test_correct_attestation(self, today, mocker):
+        user = UserFactory.create()
+        client = APIClient()
+        client.force_authenticate(user=user)
+        invoice_part = InvoicePartFactory.create(invoice__owner=user.profile)
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={
+                Permission.ATTEST: [invoice_part.cost_centre],
+                Permission.VIEW_EXPENSES: [invoice_part.cost_centre],
+            },
+        )
+
+        response = client.post(f"/api/invoice-parts/{invoice_part.id}/attest/")
+
+        assert response.status_code == 204
+        assert response.data["attest_date"] == today.strftime("%Y-%m-%d")
+        assert response.data["attested_by"]["id"] == user.profile.id
+
+        comment = Comment.objects.filter(
+            invoice=invoice_part.invoice, author=user.profile
+        )
+        assert comment.exists()

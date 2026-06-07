@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import QueryDict
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse
-from rest_framework import viewsets, status
+from rest_framework import generics, viewsets, status
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -25,9 +25,16 @@ from core.api.exceptions import (
     PartInvalidJSONError,
     FileRequiredError,
     PartRequiredError,
+    AttestationPermissionDenied,
 )
-from .serializers import InvoiceCreateRequestSerializer, InvoiceSerializer
-from ..models import Invoice
+from .serializers import (
+    InvoiceCreateRequestSerializer,
+    InvoiceSerializer,
+    InvoicePartSerializer,
+)
+from ..models import Invoice, InvoicePart
+from core.exceptions import UnauthorizedAttestationError
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 
 logger = get_logger(__name__)
 
@@ -128,4 +135,43 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .filter(**filter_map)
             .distinct()
             .order_by("-invoice_date")
+        )
+
+
+class InvoicePartAttestView(
+    generics.GenericAPIView[InvoicePart], AuthenticatedUserMixin
+):
+    serializer_class = InvoicePartSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return InvoicePart.objects.filter(
+            invoice__in=Invoice.objects.viewable_by(self.current_user)
+        )
+
+    @extend_schema(
+        tags=["Invoices"],
+        summary="Attest an invoice part",
+        description="Attests an invoice part. Submit as an empty POST request.",
+        operation_id="attest_invoice_part",
+        request=None,
+        responses={
+            HTTP_204_NO_CONTENT: InvoicePartSerializer,
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDenied),
+        },
+    )
+    def post(self, request, pk: int):
+        invoice_part = self.get_object()
+
+        with transaction.atomic():
+            invoice_part = InvoicePart.objects.select_for_update().get(pk=pk)
+            try:
+                invoice_part.attest(self.current_user)
+            except UnauthorizedAttestationError:
+                raise AttestationPermissionDenied(
+                    detail=f"You do not have permission to attest this invoice part, {invoice_part.cost_centre} is not a cost centre for which you can attest."
+                )
+
+        return Response(
+            InvoicePartSerializer(invoice_part).data, status=status.HTTP_204_NO_CONTENT
         )

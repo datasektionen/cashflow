@@ -84,13 +84,13 @@ def attest_expense_part(request, pk):
     if not request.user.profile.may_attest(expense_part):
         messages.error(request, "Du får inte attestera denna kvittodel")
         return HttpResponseRedirect(
-            reverse("claims-show", kwargs={"pk": expense_part.expense.id})
+            reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
         )
 
     if request.user.username == expense_part.expense.owner.user.username:
         messages.error(request, "Du kan inte attestera dina egna kvitton")
         return HttpResponseRedirect(
-            reverse("claims-show", kwargs={"pk": expense_part.expense.id})
+            reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
         )
 
     expense_part.attest(request.user)
@@ -98,7 +98,7 @@ def attest_expense_part(request, pk):
     if expense_part.expense.is_attested():
         return HttpResponseRedirect(reverse("admin-attest"))
     return HttpResponseRedirect(
-        reverse("claims-show", kwargs={"pk": expense_part.expense.id})
+        reverse("expenses-show", kwargs={"pk": expense_part.expense.id})
     )
 
 
@@ -118,7 +118,7 @@ def unattest_expense(request, pk):
 
         if not request.user.profile.is_admin():
             return HttpResponseRedirect(
-                reverse("claims-show", kwargs={"pk": int(pk)})
+                reverse("expenses-show", kwargs={"pk": int(pk)})
             )
 
         for part in expense_parts:
@@ -126,7 +126,7 @@ def unattest_expense(request, pk):
     except ObjectDoesNotExist:
         raise Http404("Kvittodelarna finns inte")
 
-    return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": int(pk)}))
+    return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": int(pk)}))
 
 
 @require_POST
@@ -290,7 +290,7 @@ def edit_expense_verification(request, pk):
             content="Ändrade verifikationsnumret till: " + expense.verification,
         ).save()
 
-        return HttpResponseRedirect(reverse("claims-show", kwargs={"pk": expense.id}))
+        return HttpResponseRedirect(reverse("expenses-show", kwargs={"pk": expense.id}))
     else:
         return render(
             request,
@@ -439,9 +439,7 @@ def expense_overview(request):
         request,
         "admin/claims/overview.html",
         {
-            "claims": json.dumps(
-                [x.to_dict() for x in expenses], default=json_serial
-            ),
+            "claims": json.dumps([x.to_dict() for x in expenses], default=json_serial),
             "pages": pages,
             "cost_centres": json.dumps(
                 [

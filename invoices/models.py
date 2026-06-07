@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 
 from cashflow import dauth
+from core.exceptions import UnauthorizedAttestationError
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -187,7 +188,10 @@ class InvoicePart(models.Model):
             + " kr)"
         )
 
-    def attest(self, user):
+    def attest(self, user: User):
+        if self.cost_centre not in user.profile.attestable_cost_centres():
+            raise UnauthorizedAttestationError()
+
         self.attested_by = user.profile
         self.attest_date = date.today()
 

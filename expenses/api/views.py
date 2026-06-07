@@ -39,6 +39,7 @@ from core.api.exceptions import (
 from core.api.filters import Filter
 from core.api.openapi import problem, problems
 from core.api.utils import AuthenticatedUserMixin
+from core.exceptions import UnauthorizedAttestationError, SelfAttestationError
 from expenses.api.exceptions import InvalidExpenseDateError
 from expenses.api.serializers import (
     ExpensePartSerializer,
@@ -205,23 +206,18 @@ class ExpensePartAttestView(
     def post(self, request, pk: int):
         expense_part = self.get_object()
 
-        if (
-            expense_part.cost_centre
-            not in self.current_user.profile.attestable_cost_centres()
-        ):
-            raise AttestationPermissionDenied(
-                detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
-            )
-        if expense_part.expense.owner == self.current_user.profile:
-            raise AttestationPermissionDenied(
-                detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
-            )
-
         with transaction.atomic():
             expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
-            expense_part.attested_by = self.current_user.profile
-            expense_part.attest_date = timezone.localdate()
-            expense_part.save()
+            try:
+                expense_part.attest(self.current_user)
+            except UnauthorizedAttestationError:
+                raise AttestationPermissionDenied(
+                    detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
+                )
+            except SelfAttestationError:
+                raise AttestationPermissionDenied(
+                    detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
+                )
 
         return Response(
             ExpensePartSerializer(expense_part).data, status=status.HTTP_204_NO_CONTENT

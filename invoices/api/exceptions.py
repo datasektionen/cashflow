@@ -26,6 +26,14 @@ class VerificationRequiredError(APIException):
     title = "Missing verification code"
 
 
+class AttestationPermissionDenied(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "You do not have permission to attest this invoice part."
+    default_code = "attestation_permission_denied"
+    title = "Attestation permission denied"
+
+
 register_exception(InvalidInvoiceDateError)
 register_exception(InvalidDueDateError)
 register_exception(VerificationRequiredError)
+register_exception(AttestationPermissionDenied)

@@ -9,3 +9,15 @@ class ErrorToDictMixin:
             "detail": self.detail,
             "status_code": self.status_code,
         }
+
+
+class AttestationError(Exception):
+    pass
+
+
+class SelfAttestationError(AttestationError):
+    pass
+
+
+class UnauthorizedAttestationError(AttestationError):
+    pass
