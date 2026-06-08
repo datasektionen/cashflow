@@ -49,10 +49,17 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
+    date = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Comment
         fields = ["date", "author", "content"]
+
+
+class CommentCreateSerializer(serializers.Serializer):
+    content = serializers.CharField(
+        allow_blank=False, help_text="The body of the comment, must be non-empty."
+    )
 
 
 @extend_schema_field(OpenApiTypes.BINARY)

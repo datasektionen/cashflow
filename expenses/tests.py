@@ -14,7 +14,7 @@ import pytest
 from freezegun import freeze_time
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.serializers.json import DjangoJSONEncoder
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, HealthCheck, strategies as st
 from hypothesis.extra.django import from_model
 from rest_framework.test import APIClient
 
@@ -279,10 +279,15 @@ class TestExpensePartAttestation:
 
 class TestExpenseSerializer:
 
+    # These serialize the same expense once per example. Serialization is
+    # read-only, so we mutate `verification` in memory rather than creating a row
+    # per example — a fresh create() per example eventually hits a UserFactory
+    # username collision that poisons the shared @given transaction.
     @pytest.mark.django_db
+    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(st.from_regex(r"[A-Z]\d+", fullmatch=True))
-    def test_accepts_valid_verification(self, verification):
-        expense = ExpenseFactory.create(verification=verification)
+    def test_accepts_valid_verification(self, expense, verification):
+        expense.verification = verification
         serializer = ExpenseSerializer(expense)
         assert serializer.data["verification"] == verification
 
@@ -293,9 +298,10 @@ class TestExpenseSerializer:
         assert "verification" in serializer.errors
 
     @pytest.mark.django_db
+    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(st.from_regex(r"[ \t\n]*[A-Z]\d+[ \t\n]*", fullmatch=True))
-    def test_strips_whitespace_in_verification(self, verification):
-        expense = ExpenseFactory.create(verification=verification.strip())
+    def test_strips_whitespace_in_verification(self, expense, verification):
+        expense.verification = verification.strip()
         serializer = ExpenseSerializer(expense)
         assert serializer.data["verification"] == verification.strip()
         assert not any(c.isspace() for c in serializer.data["verification"])

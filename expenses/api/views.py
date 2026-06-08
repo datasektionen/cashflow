@@ -12,12 +12,13 @@ patterns for authentication and error handling found in this file.
 import json
 
 from django.contrib.auth import get_user_model
-from django.db import transaction, IntegrityError
-from django.utils import timezone
+from django.db import transaction
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, serializers
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
@@ -38,8 +39,13 @@ from core.api.exceptions import (
 )
 from core.api.filters import Filter
 from core.api.openapi import problem, problems
+from core.api.serializers import CommentSerializer, CommentCreateSerializer
 from core.api.utils import AuthenticatedUserMixin
-from core.exceptions import UnauthorizedAttestationError, SelfAttestationError
+from core.exceptions import (
+    UnauthorizedAttestationError,
+    SelfAttestationError,
+    EmptyCommentError,
+)
 from expenses.api.exceptions import InvalidExpenseDateError
 from expenses.api.serializers import (
     ExpensePartSerializer,
@@ -47,7 +53,7 @@ from expenses.api.serializers import (
     ExpenseAdminSerializer,
     ExpenseCreateSerializer,
 )
-from expenses.models import Expense, ExpensePart, File
+from expenses.models import Expense, ExpensePart, File, Comment
 
 UserModel = get_user_model()
 
@@ -121,6 +127,17 @@ logger = get_logger(__name__)
         operation_id="delete_expense",
         tags=["Expenses"],
     ),
+    comment=extend_schema(
+        summary="Comment on an expense",
+        description="Adds a comment to an expense. The author and date will be set automatically.",
+        request=CommentCreateSerializer,
+        responses={
+            status.HTTP_201_CREATED: CommentSerializer,
+            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentError),
+        },
+        operation_id="add_expense_comment",
+        tags=["Expenses"],
+    ),
 )
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
@@ -179,6 +196,28 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .distinct()
             .order_by("-expense_date")
         )
+
+    @action(detail=True, methods=["POST"], url_path="comments")
+    def comment(self, request: Request, pk=None) -> Response:
+        expense = self.get_object()
+
+        serializer = CommentCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            comment = Comment.objects.create(
+                expense=expense,
+                content=serializer.validated_data["content"],
+                author=self.current_user.profile,
+            )
+            return Response(
+                CommentSerializer(comment).data, status=status.HTTP_201_CREATED
+            )
+        else:
+            errors = serializer.errors
+            if errors.get("content"):
+                if errors["content"][0].code == "blank":
+                    raise EmptyCommentError()
+
+            raise serializers.ValidationError(errors)
 
 
 class ExpensePartAttestView(

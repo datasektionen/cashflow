@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import QueryDict
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, viewsets, status, serializers
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -14,8 +15,9 @@ from structlog import get_logger
 
 from core.api.filters import Filter
 from core.api.openapi import problems
+from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
-from expenses.models import File
+from expenses.models import File, Comment
 from .exceptions import (
     InvalidInvoiceDateError,
     InvalidDueDateError,
@@ -33,7 +35,7 @@ from .serializers import (
     InvoicePartSerializer,
 )
 from ..models import Invoice, InvoicePart
-from core.exceptions import UnauthorizedAttestationError
+from core.exceptions import UnauthorizedAttestationError, EmptyCommentError
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 
 logger = get_logger(__name__)
@@ -84,6 +86,17 @@ logger = get_logger(__name__)
     destroy=extend_schema(
         tags=["Invoices"],
         summary="Delete an invoice",
+    ),
+    comment=extend_schema(
+        tags=["Invoices"],
+        summary="Comment on an invoice",
+        description="Adds a comment to an invoice. The author and date will be set automatically.",
+        operation_id="comment_invoice",
+        request=CommentCreateSerializer,
+        responses={
+            status.HTTP_201_CREATED: CommentSerializer,
+            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentError),
+        },
     ),
 )
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
@@ -136,6 +149,26 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .distinct()
             .order_by("-invoice_date")
         )
+
+    @action(detail=True, methods=["post"], url_path="comments")
+    def comment(self, request: Request, pk=None) -> Response:
+        invoice = self.get_object()
+        serializer = CommentCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            comment = Comment.objects.create(
+                content=serializer.data["content"],
+                invoice=invoice,
+                author=self.current_user.profile,
+            )
+            return Response(
+                CommentSerializer(comment).data, status=status.HTTP_201_CREATED
+            )
+        else:
+            errors = serializer.errors
+            if errors.get("content"):
+                if errors["content"][0].code == "blank":
+                    raise EmptyCommentError()
+            raise serializers.ValidationError(errors)
 
 
 class InvoicePartAttestView(
