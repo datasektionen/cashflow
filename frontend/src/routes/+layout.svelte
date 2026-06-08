@@ -49,8 +49,12 @@
 			{#if data.user != null}
 				<p>{data.user.first_name} {data.user.last_name}</p>
 				<UserAvatar class="bg-white dark:bg-dark-base-50" username={data.user.username} />
+				<form method="POST" action="/logout">
+					<button type="submit" class="cursor-pointer">{$_('logout')}</button>
+				</form>
 			{:else}
-				<a href="http://localhost:8000/login?next=http%3A%2F%2Flocalhost%3A5173%2F">{$_('login')}</a
+				<a href="http://localhost:8000/oidc/authenticate/?next=http%3A%2F%2Flocalhost%3A5173%2F"
+					>{$_('login')}</a
 				>
 			{/if}
 		</div>

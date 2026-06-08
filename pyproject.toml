@@ -23,7 +23,6 @@ dependencies = [
     "celery (>=5.6.2,<6.0.0)",
     "pi-heif (>=1.1.1,<2.0.0)",
     "pillow (>=12.1.0,<13.0.0)",
-    "authlib (>=1.6.9,<2.0.0)",
     "legacy-cgi (>=2.6.4,<3.0.0)",
     "pydantic (>=2.13.3,<3.0.0)",
     "setuptools (>=82.0.0,<83.0.0)",
@@ -33,6 +32,7 @@ dependencies = [
     "black (>=26.3.1,<27.0.0)",
     "factory-boy (>=3.3.3,<4.0.0)",
     "drf-spectacular (>=0.29.0,<0.30.0)",
+    "mozilla-django-oidc (>=5.0.2,<6.0.0)",
 ]
 
 

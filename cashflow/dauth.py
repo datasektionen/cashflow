@@ -2,22 +2,14 @@ import json
 from enum import Enum
 
 import requests
-from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
-from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib.auth.models import User, AbstractBaseUser
 from django.db.models import QuerySet
 from pydantic import BaseModel
 
-import accounting.permissions
+from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-client = OAuth().register(
-    name="sso",
-    client_id=settings.OIDC_ID,
-    client_secret=settings.OIDC_SECRET,
-    server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email"},
-)
+import accounting.permissions
 
 
 class Permission(str, Enum):
@@ -76,57 +68,27 @@ class Hive(accounting.permissions.AccountingPermissionProvider):
         return Invoice.objects.filter(invoicepart__cost_centre__in=scopes).distinct()
 
 
-class DAuth(object):
-    """
-    Authenticates user through the sso API.
-    """
+class SSO(OIDCAuthenticationBackend):
 
-    @staticmethod
-    def authenticate(request):
-        """
-        Do the authentication via the sso system.
-        Save user in database if did not exist before.
-        """
+    def get_username(self, claims):
+        return claims.get("sub")
 
-        try:
-            token = client.authorize_access_token(request)
-        except (OAuthError, MismatchingStateError) as error:
-            # These errors are generated for various kinds of invalid codes.
-            print(f"Authentication failed: {error}")
-            return None
+    def filter_users_by_claims(self, claims):
+        sub = claims.get("sub")
+        if not sub:
+            return self.UserModel.objects.none()
+        return self.UserModel.objects.filter(username=sub)
 
-        ssoUser = client.userinfo(token=token)
+    def create_user(self, claims):
+        user = super().create_user(claims)
+        return self.update_user(user, claims)
 
-        try:
-            user = User.objects.get(username=ssoUser["sub"])
-            if (
-                user.first_name != ssoUser["given_name"]
-                or user.last_name != ssoUser["family_name"]
-                or user.email != ssoUser["email"]
-            ):
-                user.first_name = ssoUser["given_name"]
-                user.last_name = ssoUser["family_name"]
-                user.email = ssoUser["email"]
-                user.save()
-        except User.DoesNotExist:
-            user = User(
-                first_name=ssoUser["given_name"],
-                last_name=ssoUser["family_name"],
-                username=ssoUser["sub"],
-                email=ssoUser["email"],
-            )
-            user.save()
+    def update_user(self, user, claims):
+        user.first_name = claims.get("given_name", "")
+        user.last_name = claims.get("family_name", "")
+        user.email = claims.get("email", "")
+        user.save()
         return user
-
-    @staticmethod
-    def get_user(user_id):
-        """
-        Get user from kth user id.
-        """
-        try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return None
 
 
 def get_permissions(user) -> dict[Permission, bool | list[str]]:

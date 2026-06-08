@@ -12,6 +12,7 @@
 	},
 	"login": "Login",
 	"login_with_sso": "Log in with SSO",
+	"logout": "Log out",
 
 	"chapter": "Konglig Datasektionen",
 	"help": "Help",

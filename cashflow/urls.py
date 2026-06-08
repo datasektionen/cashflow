@@ -18,19 +18,16 @@ from django.urls import include, re_path, path
 
 from cashflow import settings
 from expenses import views as expenses_views
-from .authviews import login, logout
 
 app_name = "cashflow"
 urlpatterns = [
     re_path(r"^$", expenses_views.index, name="expenses-index"),
     re_path(r"^claims/", include("expenses.urls")),
-    re_path(r"^accounts/login/$", login, name="login"),
-    re_path(r"^login/$", login, name="login"),
-    re_path(r"^logout/", logout, name="logout"),
     re_path(r"^admin/", include("admin.urls")),
     re_path(r"^invoices/", include("invoices.urls")),
     re_path(r"^stats/", include("stats.urls")),
     re_path(r"^users/", include("users.urls")),
     path("api/", include("cashflow.api.urls")),
     path("", include("drf_problems.urls")),
+    path("oidc/", include("mozilla_django_oidc.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

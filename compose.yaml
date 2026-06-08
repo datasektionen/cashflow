@@ -11,10 +11,10 @@ services:
       SECRET_KEY: something-super-secret
       BUDGET_URL: https://budget.datasektionen.se
       DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
-      OIDC_PROVIDER: http://nyckeln:7003
+      OIDC_PROVIDER: http://localhost:7003
       OIDC_ID: client-id
       OIDC_SECRET: client-secret
-      REDIRECT_URL: http://localhost:8000/login/
+      REDIRECT_URL: http://localhost:5173/
       HIVE_URL: http://nyckeln:7004
       HIVE_SECRET: cashflow-secret
       SPAM_URL: http://spam:3000
@@ -171,7 +171,7 @@ configs:
         - id: "client-id"
           secret: "client-secret"
           redirect_uris:
-            - http://localhost:8000/login/
+            - http://localhost:8000/oidc/callback/
 
       users:
         - ug_kth_id: some-id
