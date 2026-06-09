@@ -8,11 +8,19 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.timezone import localdate
 
 from cashflow import dauth, email_util
 from cashflow.dauth import Permission
-from core.exceptions import UnauthorizedAttestationError, SelfAttestationError
+from core.exceptions import (
+    UnauthorizedAttestationError,
+    SelfAttestationError,
+    UnauthorizedConfirmationError,
+    NotConfirmableError,
+    DuplicateConfirmationError,
+    FlaggedConfirmationError,
+)
 
 
 class Profile(models.Model):
@@ -411,6 +419,16 @@ class Expense(models.Model):
             .exclude(is_flagged=True)
             .distinct()
         )
+
+    def confirm(self, user: User):
+        if not user.profile.may_confirm():
+            raise UnauthorizedConfirmationError()
+        if self.confirmed_by:
+            raise DuplicateConfirmationError()
+        if self.is_flagged:
+            raise FlaggedConfirmationError()
+        self.confirmed_by = user
+        self.confirmed_at = date.today()
 
     @staticmethod
     def payable():

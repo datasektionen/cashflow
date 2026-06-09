@@ -6,7 +6,11 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 
 from cashflow import dauth
-from core.exceptions import UnauthorizedAttestationError
+from core.exceptions import (
+    UnauthorizedAttestationError,
+    UnauthorizedConfirmationError,
+    DuplicateConfirmationError,
+)
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -134,6 +138,15 @@ class Invoice(models.Model):
             cost_centre["cost_centre"] for cost_centre in self.cost_centres()
         ]
         return exp
+
+    def confirm(self, user: User):
+        if not user.profile.may_confirm():
+            raise UnauthorizedConfirmationError()
+        if self.confirmed_by:
+            raise DuplicateConfirmationError()
+        self.confirmed_by = user
+        self.confirmed_at = date.today()
+        self.save()
 
     # # TODO
     @staticmethod

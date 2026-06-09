@@ -15,7 +15,7 @@ from .exceptions import (
     InvalidDueDateError,
     VerificationRequiredError,
 )
-from core.api.exceptions import InvalidDateFormatError, PartRequiredError
+from core.api.exceptions import InvalidDateFormatProblem, PartRequiredProblem
 
 
 class InvoiceDateField(serializers.DateField):
@@ -27,7 +27,7 @@ class InvoiceDateField(serializers.DateField):
         try:
             return super().to_internal_value(value)
         except serializers.ValidationError:
-            raise InvalidDateFormatError()
+            raise InvalidDateFormatProblem()
 
 
 class InvoiceCreateRequestSerializer(serializers.Serializer):
@@ -127,7 +127,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
         parts = data.get("parts")
         if parts and len(parts) <= 0:
-            raise PartRequiredError()
+            raise PartRequiredProblem()
 
         accounted = self.initial_data.get("accounted") in (True, "True", "true", "1")
         verification = data.get("verification")

@@ -7,5 +7,9 @@ from expenses.api.views import ExpenseViewSet, ExpensePartAttestView
 router = SimpleRouter()
 router.register(r"expenses", ExpenseViewSet, basename="expense")
 urlpatterns = router.urls + [
-    path("expense-parts/<int:pk>/attest/", ExpensePartAttestView.as_view(), name="expense-part-attest"),
+    path(
+        "expense-parts/<int:pk>/attest/",
+        ExpensePartAttestView.as_view(),
+        name="expense-part-attest",
+    ),
 ]

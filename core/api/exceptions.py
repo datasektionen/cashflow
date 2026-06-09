@@ -8,14 +8,14 @@ from rest_framework import status
 from rest_framework.exceptions import APIException
 
 
-class PartInvalidJSONError(APIException):
+class PartInvalidJSONProblem(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Invalid JSON format for expense or invoice parts."
     default_code = "part_invalid_json"
     title = "Invalid JSON for expense or invoice parts"
 
 
-class FileRequiredError(APIException):
+class FileRequiredProblem(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
         "At least one image or PDF file is required to create an expense or invoice."
@@ -24,30 +24,30 @@ class FileRequiredError(APIException):
     title = "Missing file for expense or invoice"
 
 
-class InvalidDateFormatError(APIException):
+class InvalidDateFormatProblem(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "A provided date is malformed. Dates should be given as plain strings in the following format: YYYY-MM-DD"
     default_code = "invalid_date_format"
     title = "Invalid date format"
 
 
-register_exception(PartInvalidJSONError)
-register_exception(FileRequiredError)
-register_exception(InvalidDateFormatError)
+register_exception(PartInvalidJSONProblem)
+register_exception(FileRequiredProblem)
+register_exception(InvalidDateFormatProblem)
 
 
-class PartRequiredError(APIException):
+class PartRequiredProblem(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "At least one part is required to create an expense or invoice."
     default_code = "part_required"
     title = "Missing expense or invoice parts"
 
 
-register_exception(PartRequiredError)
+register_exception(PartRequiredProblem)
 
 
-class AttestationPermissionDenied(APIException):
-    status_code = 403
+class AttestationPermissionDeniedProblem(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
     title = "Attestation permission denied"
     default_detail = (
         "You do not have permission to attest this expense or invoice part."
@@ -55,4 +55,61 @@ class AttestationPermissionDenied(APIException):
     default_code = "attestation_permission_denied"
 
 
-register_exception(AttestationPermissionDenied)
+register_exception(AttestationPermissionDeniedProblem)
+
+
+class AlreadyAttestedProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    title = "Resource already attested"
+    default_detail = "This expense or invoice part is already attested"
+    default_code = "already_attested"
+
+
+class EmptyCommentProblem(APIException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    default_detail = "A comment cannot be blank or consist only of whitespace."
+    default_code = "empty_comment"
+    title = "Empty comment"
+
+
+register_exception(EmptyCommentProblem)
+
+
+class ConfirmationPermissionDeniedProblem(APIException):
+    status_code = 403
+    title = "Confirmation permission denied"
+    default_detail = "You do not have permission to confirm this expense or invoice."
+    default_code = "confirmation_permission_denied"
+
+
+register_exception(ConfirmationPermissionDeniedProblem)
+
+
+class AlreadyConfirmedProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    title = "Resource already confirmed"
+    default_detail = "This expense or invoice is already confirmed"
+    default_code = "already_confirmed"
+
+
+register_exception(AlreadyConfirmedProblem)
+
+
+class NotConfirmableProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    title = "Resource cannot be confirmed"
+    default_detail = "This expense or invoice cannot be confirmed."
+    default_code = "not_confirmable"
+
+
+register_exception(NotConfirmableProblem)
+
+
+class IsFlaggedProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    title = "Resource is flagged"
+    default_detail = "This expense or invoice is flagged and cannot be confirmed."
+    default_code = "resource_is_flagged"
+
+
+register_exception(IsFlaggedProblem)

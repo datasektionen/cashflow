@@ -24,10 +24,14 @@ from .exceptions import (
     VerificationRequiredError,
 )
 from core.api.exceptions import (
-    PartInvalidJSONError,
-    FileRequiredError,
-    PartRequiredError,
-    AttestationPermissionDenied,
+    PartInvalidJSONProblem,
+    FileRequiredProblem,
+    PartRequiredProblem,
+    AttestationPermissionDeniedProblem,
+    EmptyCommentProblem,
+    ConfirmationPermissionDeniedProblem,
+    NotConfirmableProblem,
+    AlreadyConfirmedProblem,
 )
 from .serializers import (
     InvoiceCreateRequestSerializer,
@@ -35,7 +39,11 @@ from .serializers import (
     InvoicePartSerializer,
 )
 from ..models import Invoice, InvoicePart
-from core.exceptions import UnauthorizedAttestationError, EmptyCommentError
+from core.exceptions import (
+    UnauthorizedAttestationError,
+    UnauthorizedConfirmationError,
+    DuplicateConfirmationError,
+)
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 
 logger = get_logger(__name__)
@@ -57,9 +65,9 @@ logger = get_logger(__name__)
         responses={
             status.HTTP_201_CREATED: InvoiceSerializer,
             status.HTTP_400_BAD_REQUEST: problems(
-                FileRequiredError,
-                PartInvalidJSONError,
-                PartRequiredError,
+                FileRequiredProblem,
+                PartInvalidJSONProblem,
+                PartRequiredProblem,
                 VerificationRequiredError,
             ),
             status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
@@ -95,7 +103,21 @@ logger = get_logger(__name__)
         request=CommentCreateSerializer,
         responses={
             status.HTTP_201_CREATED: CommentSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentError),
+            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentProblem),
+        },
+    ),
+    confirm=extend_schema(
+        tags=["Invoices"],
+        summary="Confirm an invoice",
+        description="Confirms an invoice. Submit as an empty POST request.",
+        operation_id="confirm_invoice",
+        request=None,
+        responses={
+            status.HTTP_200_OK: InvoiceSerializer,
+            status.HTTP_403_FORBIDDEN: problems(ConfirmationPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(
+                NotConfirmableProblem, AlreadyConfirmedProblem
+            ),
         },
     ),
 )
@@ -107,15 +129,15 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         files = request.FILES.getlist("files")
         if not files:
-            raise FileRequiredError()
+            raise FileRequiredProblem()
         data = cast(QueryDict, request.data).dict()
         try:
             parts_raw = cast("str | None", data.get("parts"))
             if parts_raw is None:
-                raise PartRequiredError()
+                raise PartRequiredProblem()
             data["parts"] = json.loads(parts_raw)
         except json.JSONDecodeError, TypeError:
-            raise PartInvalidJSONError(
+            raise PartInvalidJSONProblem(
                 detail="There was a problem decoding the parts field. Invoice parts should be submitted as a JSON encoded array."
             )
         serializer = self.get_serializer(data=data)
@@ -167,8 +189,25 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             errors = serializer.errors
             if errors.get("content"):
                 if errors["content"][0].code == "blank":
-                    raise EmptyCommentError()
+                    raise EmptyCommentProblem()
             raise serializers.ValidationError(errors)
+
+    @action(detail=True, methods=["POST"])
+    def confirm(self, request: Request, pk=None) -> Response:
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            try:
+                invoice.confirm(self.current_user)
+            except UnauthorizedConfirmationError as e:
+                raise ConfirmationPermissionDeniedProblem(
+                    detail="You are not authorized to confirm this invoice."
+                ) from e
+            except DuplicateConfirmationError as e:
+                raise AlreadyConfirmedProblem(
+                    detail="This invoice has already been confirmed."
+                ) from e
+
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
 
 
 class InvoicePartAttestView(
@@ -190,7 +229,7 @@ class InvoicePartAttestView(
         request=None,
         responses={
             HTTP_204_NO_CONTENT: InvoicePartSerializer,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDenied),
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
         },
     )
     def post(self, request, pk: int):
@@ -201,7 +240,7 @@ class InvoicePartAttestView(
             try:
                 invoice_part.attest(self.current_user)
             except UnauthorizedAttestationError:
-                raise AttestationPermissionDenied(
+                raise AttestationPermissionDeniedProblem(
                     detail=f"You do not have permission to attest this invoice part, {invoice_part.cost_centre} is not a cost centre for which you can attest."
                 )
 

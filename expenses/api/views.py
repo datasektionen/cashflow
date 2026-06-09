@@ -32,10 +32,15 @@ from rest_framework.status import (
 from structlog import get_logger
 
 from core.api.exceptions import (
-    PartInvalidJSONError,
-    FileRequiredError,
-    PartRequiredError,
-    AttestationPermissionDenied,
+    PartInvalidJSONProblem,
+    FileRequiredProblem,
+    PartRequiredProblem,
+    AttestationPermissionDeniedProblem,
+    EmptyCommentProblem,
+    ConfirmationPermissionDeniedProblem,
+    IsFlaggedProblem,
+    NotConfirmableProblem,
+    AlreadyConfirmedProblem,
 )
 from core.api.filters import Filter
 from core.api.openapi import problem, problems
@@ -44,7 +49,10 @@ from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
-    EmptyCommentError,
+    UnauthorizedConfirmationError,
+    NotConfirmableError,
+    FlaggedConfirmationError,
+    DuplicateConfirmationError,
 )
 from expenses.api.exceptions import InvalidExpenseDateError
 from expenses.api.serializers import (
@@ -96,7 +104,7 @@ logger = get_logger(__name__)
         responses={
             HTTP_201_CREATED: ExpenseSerializer,
             HTTP_400_BAD_REQUEST: problems(
-                FileRequiredError, PartRequiredError, PartInvalidJSONError
+                FileRequiredProblem, PartRequiredProblem, PartInvalidJSONProblem
             ),
             HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
             HTTP_422_UNPROCESSABLE_ENTITY: problem(InvalidExpenseDateError),
@@ -128,15 +136,29 @@ logger = get_logger(__name__)
         tags=["Expenses"],
     ),
     comment=extend_schema(
+        tags=["Expenses"],
         summary="Comment on an expense",
         description="Adds a comment to an expense. The author and date will be set automatically.",
         request=CommentCreateSerializer,
         responses={
             status.HTTP_201_CREATED: CommentSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentError),
+            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentProblem),
         },
         operation_id="add_expense_comment",
+    ),
+    confirm=extend_schema(
         tags=["Expenses"],
+        summary="Confirm an expense",
+        description="Marks an expense as confirmed. Submit as an empty POST request.",
+        request=None,
+        responses={
+            status.HTTP_200_OK: ExpenseSerializer,
+            status.HTTP_403_FORBIDDEN: problem(ConfirmationPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(
+                AlreadyConfirmedProblem, IsFlaggedProblem, NotConfirmableProblem
+            ),
+        },
+        operation_id="confirm_expense",
     ),
 )
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
@@ -154,7 +176,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         files = request.FILES.getlist("files")
         if not files:
-            raise FileRequiredError()
+            raise FileRequiredProblem()
 
         data = (
             request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
@@ -163,7 +185,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             try:
                 data["parts"] = json.loads(data["parts"])
             except json.JSONDecodeError:
-                raise PartInvalidJSONError()
+                raise PartInvalidJSONProblem()
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
@@ -215,9 +237,32 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             errors = serializer.errors
             if errors.get("content"):
                 if errors["content"][0].code == "blank":
-                    raise EmptyCommentError()
+                    raise EmptyCommentProblem()
 
             raise serializers.ValidationError(errors)
+
+    @action(detail=True, methods=["POST"])
+    def confirm(self, request: Request, pk=None) -> Response:
+        with transaction.atomic():
+            expense = Expense.objects.select_for_update().get(pk=pk)
+            try:
+                expense.confirm(self.current_user)
+            except UnauthorizedConfirmationError as e:
+                raise ConfirmationPermissionDeniedProblem(
+                    detail="You are not authorized to confirm this expense."
+                ) from e
+            except NotConfirmableError as e:
+                if isinstance(e, FlaggedConfirmationError):
+                    raise IsFlaggedProblem(
+                        detail="This expense is flagged and cannot be confirmed."
+                    ) from e
+                raise NotConfirmableProblem() from e
+            except DuplicateConfirmationError as e:
+                raise AlreadyConfirmedProblem(
+                    detail="This expense has already been confirmed."
+                ) from e
+            expense.save()
+        return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
 
 
 class ExpensePartAttestView(
@@ -239,7 +284,7 @@ class ExpensePartAttestView(
         request=None,
         responses={
             HTTP_204_NO_CONTENT: ExpensePartSerializer,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDenied),
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
         },
     )
     def post(self, request, pk: int):
@@ -250,11 +295,11 @@ class ExpensePartAttestView(
             try:
                 expense_part.attest(self.current_user)
             except UnauthorizedAttestationError:
-                raise AttestationPermissionDenied(
+                raise AttestationPermissionDeniedProblem(
                     detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
                 )
             except SelfAttestationError:
-                raise AttestationPermissionDenied(
+                raise AttestationPermissionDeniedProblem(
                     detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
                 )
 

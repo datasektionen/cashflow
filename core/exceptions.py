@@ -1,7 +1,3 @@
-from rest_framework import status
-from rest_framework.exceptions import APIException
-
-
 class ErrorToDictMixin:
     # (!) The following methods are meant as a "compatability" layer to allow these exceptions to work with
     # normal Django views, before we switch over to DRF only
@@ -27,8 +23,21 @@ class UnauthorizedAttestationError(AttestationError):
     pass
 
 
-class EmptyCommentError(APIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "A comment cannot be blank or consist only of whitespace."
-    default_code = "empty_comment"
-    default_title = "Empty comment"
+class ConfirmationError(Exception):
+    pass
+
+
+class UnauthorizedConfirmationError(ConfirmationError):
+    pass
+
+
+class NotConfirmableError(ConfirmationError):
+    pass
+
+
+class FlaggedConfirmationError(NotConfirmableError):
+    pass
+
+
+class DuplicateConfirmationError(ConfirmationError):
+    pass

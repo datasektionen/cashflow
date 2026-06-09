@@ -1,8 +1,13 @@
 import pytest
 from hypothesis import given, settings, HealthCheck, strategies as st
 
+from cashflow.dauth import Permission
 from expenses.factories import ExpenseFactory
 from invoices.factories import InvoiceFactory
+
+
+def implies(a: bool, b: bool) -> bool:
+    return not a or b
 
 
 @pytest.fixture
@@ -63,5 +68,56 @@ class TestComment:
             {"content": comment},
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 422
         assert response.data["detail"].code == "empty_comment"
+
+
+class TestConfirmation:
+
+    @pytest.fixture
+    def confirm_permission(self, mocker):
+        return mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.CONFIRM: True},
+            autospec=True,
+        )
+
+    @pytest.mark.django_db
+    def test_confirm_succeeds(self, api_client, user, confirm_permission, today):
+        expense = ExpenseFactory()
+
+        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+
+        assert response.status_code == 200
+        assert response.data["confirmed_by"]["username"] == user.username
+        assert response.data["confirmed_at"] == today.strftime("%Y-%m-%d")
+
+    @pytest.mark.django_db
+    def test_confirm_rejects_unauthorized(self, api_client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        expense = ExpenseFactory()
+
+        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+
+        assert response.status_code == 403
+        assert response.data["detail"].code == "confirmation_permission_denied"
+
+    @pytest.mark.django_db
+    def test_confirm_rejects_already_confirmed(
+        self, api_client, user, confirm_permission
+    ):
+        expense = ExpenseFactory(confirmed_by=user)
+
+        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+
+        assert response.status_code == 409
+        assert response.data["detail"].code == "already_confirmed"
+
+    @pytest.mark.django_db
+    def test_confirm_rejects_flagged(self, api_client, confirm_permission):
+        expense = ExpenseFactory(is_flagged=True)
+
+        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+
+        assert response.status_code == 409
+        assert response.data["detail"].code == "resource_is_flagged"
