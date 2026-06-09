@@ -6,6 +6,10 @@
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
+	import { api } from '$lib/api';
+	import { logger } from '$lib/logger.ts';
+	import { alerts, error, success } from '$lib/stores/alerts.ts';
+	import { isErrorResponse } from '$lib/api/errors.ts';
 
 	let { data }: { data: PageData } = $props();
 	let { invoice }: { invoice: Invoice } = data;
@@ -34,7 +38,24 @@
 		setTimeout(() => (copied = false), 2000);
 	}
 
+	let comments = $state(invoice.comments);
 	let showCommentForm = $state(false);
+	let commentContent: string = $state('');
+
+	const commentSubmit = async () => {
+		await api.invoices
+			.comment(invoice.id, commentContent)
+			.then((comment) => {
+				comments.push(comment);
+				showCommentForm = false;
+				alerts.update((a) => [...a, success($_('comment_submitted'))]);
+			})
+			.catch((e) => {
+				logger.error(e);
+				const msg = isErrorResponse(e) ? e.detail : $_('comment_submission_failed');
+				alerts.update((a) => [...a, error(msg)]);
+			});
+	};
 </script>
 
 <div class="mb-6 flex flex-wrap items-center gap-3">
@@ -108,7 +129,7 @@
 
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
-			<CommentDisplay comments={invoice.comments} currentUser={data.user} />
+			<CommentDisplay {comments} currentUser={data.user} />
 		</div>
 
 		<div>
@@ -130,6 +151,7 @@
 			{#if showCommentForm}
 				<div class="flex h-44 flex-col gap-2">
 					<textarea
+						bind:value={commentContent}
 						class="w-full flex-1 resize-none border border-base-500 bg-transparent p-2 text-sm focus:outline-none dark:border-dark-base-200"
 						placeholder={$_('add_comment_placeholder')}
 					></textarea>
@@ -141,6 +163,7 @@
 							{$_('cancel')}
 						</button>
 						<button
+							onclick={commentSubmit}
 							class="bg-money-green-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-money-green-500"
 						>
 							{$_('submit')}

@@ -36,6 +36,10 @@ export class InvoicesAPI {
 		};
 	}
 
+	comment(id: number, content: string) {
+		return this.apiClient.post<Comment>(`invoices/${id}/comments/`, { content });
+	}
+
 	async create(data: InvoiceCreate): Promise<Invoice> {
 		const body = new FormData();
 		body.append('description', data.description);

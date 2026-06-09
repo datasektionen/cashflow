@@ -2,6 +2,8 @@
 	import { locale } from 'svelte-i18n';
 	import type { Comment, User } from '$lib/api/types';
 	import { ScrollArea } from 'bits-ui';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { api } from '$lib/api';
 
 	function formatComment(text: string): string {
 		return text
@@ -20,33 +22,54 @@
 	};
 
 	let { comments, currentUser }: CommentDisplayProps = $props();
+
+	const avatarMap = $derived(
+		api.profilePictures.getMany([...new Set(comments.map((c) => c.author.username))])
+	);
 </script>
 
 <div class="flex flex-col gap-4 lg:hidden">
 	{#each comments as comment}
 		{@const isOwn = comment.author.email === currentUser?.email}
 		<div
-			class={[
-				'min-h-12 w-1/2 p-2',
-				isOwn ? 'self-end bg-money-green-500' : 'self-start bg-base-300 dark:bg-dark-base-300'
-			]}
+			class={['flex items-end gap-2', isOwn ? 'flex-row-reverse self-end' : 'flex-row self-start']}
 		>
-			<div class="flex items-baseline gap-2">
-				<span
-					class={[
-						'text-xs font-medium uppercase',
-						isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-					]}>{comment.author.first_name} {comment.author.last_name}</span
-				>
-				<span
-					class={[
-						'text-xs opacity-60',
-						isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-					]}>{new Date(comment.date).toLocaleDateString($locale ?? 'sv-SE')}</span
-				>
-			</div>
-			<div class={['text-sm', isOwn && 'text-white']}>
-				{@html formatComment(comment.content)}
+			{#await avatarMap}
+				<UserAvatar placeholder class="shrink-0 ring-2 ring-white dark:ring-dark-base-100" />
+			{:then urls}
+				<UserAvatar
+					url={urls[comment.author.username] ?? undefined}
+					class="shrink-0 ring-2 ring-white dark:ring-dark-base-100"
+				/>
+			{/await}
+			<div
+				class={[
+					'min-h-12 w-fit max-w-[16rem] p-2',
+					isOwn ? 'bg-money-green-500' : 'bg-base-300 dark:bg-dark-base-300'
+				]}
+			>
+				<div class="flex items-baseline gap-2">
+					<span
+						class={[
+							'text-xs font-medium uppercase',
+							isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+						]}
+					>
+						{comment.author.first_name}
+						{comment.author.last_name}
+					</span>
+					<span
+						class={[
+							'text-xs opacity-60',
+							isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+						]}
+					>
+						{new Date(comment.date).toLocaleDateString($locale ?? 'sv-SE')}
+					</span>
+				</div>
+				<div class={['text-sm', isOwn && 'text-white']}>
+					{@html formatComment(comment.content)}
+				</div>
 			</div>
 		</div>
 	{/each}
@@ -59,26 +82,46 @@
 				{@const isOwn = comment.author.email === currentUser?.email}
 				<div
 					class={[
-						'min-h-12 w-1/2 p-2',
-						isOwn ? 'self-end bg-money-green-500' : 'self-start bg-base-300 dark:bg-dark-base-300'
+						'flex items-end gap-2',
+						isOwn ? 'flex-row-reverse self-end' : 'flex-row self-start'
 					]}
 				>
-					<div class="flex items-baseline gap-2">
-						<span
-							class={[
-								'text-xs font-medium uppercase',
-								isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-							]}>{comment.author.first_name} {comment.author.last_name}</span
-						>
-						<span
-							class={[
-								'text-xs opacity-60',
-								isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-							]}>{new Date(comment.date).toLocaleDateString($locale ?? 'sv-SE')}</span
-						>
-					</div>
-					<div class={['text-sm', isOwn && 'text-white']}>
-						{@html formatComment(comment.content)}
+					{#await avatarMap}
+						<UserAvatar placeholder class="shrink-0 ring-2 ring-white dark:ring-dark-base-100" />
+					{:then urls}
+						<UserAvatar
+							url={urls[comment.author.username] ?? undefined}
+							class="shrink-0 ring-2 ring-white dark:ring-dark-base-100"
+						/>
+					{/await}
+					<div
+						class={[
+							'min-h-12 w-fit max-w-[16rem] p-2',
+							isOwn ? 'bg-money-green-500' : 'bg-base-300 dark:bg-dark-base-300'
+						]}
+					>
+						<div class="flex items-baseline gap-2">
+							<span
+								class={[
+									'text-xs font-medium uppercase',
+									isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+								]}
+							>
+								{comment.author.first_name}
+								{comment.author.last_name}
+							</span>
+							<span
+								class={[
+									'text-xs opacity-60',
+									isOwn ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+								]}
+							>
+								{new Date(comment.date).toLocaleDateString($locale ?? 'sv-SE')}
+							</span>
+						</div>
+						<div class={['text-sm', isOwn && 'text-white']}>
+							{@html formatComment(comment.content)}
+						</div>
 					</div>
 				</div>
 			{/each}

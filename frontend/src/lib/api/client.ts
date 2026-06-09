@@ -17,6 +17,10 @@ export class ApiClient {
 		const isFormData = options.body instanceof FormData;
 		const start = performance.now();
 		let response: Response;
+
+		const csrftoken =
+			typeof document !== 'undefined' ? document.cookie.match(/csrftoken=([^;]+)/)?.[1] : undefined;
+
 		try {
 			response = await this.fetch(`${this.apiUrl}${path.replace(/^\/+/, '')}`, {
 				credentials: 'include',
@@ -26,6 +30,7 @@ export class ApiClient {
 				// to diagnose
 				headers: {
 					...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+					...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
 					...options.headers
 				}
 			});
@@ -46,7 +51,10 @@ export class ApiClient {
 		const duration = Math.round(performance.now() - start);
 
 		if (!response.ok) {
-			const isJson = response.headers.get('Content-Type')?.includes('application/json');
+			const contentType = response.headers.get('Content-Type') ?? '';
+			const isJson =
+				contentType.includes('application/json') ||
+				contentType.includes('application/problem+json');
 			const error: ErrorResponse = isJson
 				? ((await response.json()) as ErrorResponse)
 				: {

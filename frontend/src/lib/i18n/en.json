@@ -200,6 +200,8 @@
 		"not_booked": "Not booked"
 	},
 	"total": "Total",
+	"comment_submitted": "Comment submitted",
+	"comment_submission_failed": "Failed to submit comment",
 	"expense_comments": "Comments",
 	"add_comment": "Add comment",
 	"add_comment_placeholder": "Write a comment...",

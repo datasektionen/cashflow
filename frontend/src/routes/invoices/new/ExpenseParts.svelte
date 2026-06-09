@@ -10,7 +10,13 @@
 	};
 
 	export function newPart(): Part {
-		return { amountRaw: null, amountDisplay: '', costcenter: '', secondarycostcenter: '', budgetline: '' };
+		return {
+			amountRaw: null,
+			amountDisplay: '',
+			costcenter: '',
+			secondarycostcenter: '',
+			budgetline: ''
+		};
 	}
 </script>
 

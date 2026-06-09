@@ -12,5 +12,5 @@ export interface ErrorResponse {
 export type NotAuthenticatedError = ErrorResponse & { code: 'not_authenticated' };
 
 export function isErrorResponse(e: unknown): e is ErrorResponse {
-	return typeof e === 'object' && e !== null && 'code' in e && 'status' in e;
+	return typeof e === 'object' && e !== null && 'detail' in e && 'status' in e;
 }

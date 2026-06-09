@@ -200,6 +200,8 @@
 		"not_booked": "Ej bokförd"
 	},
 	"total": "Totalt",
+	"comment_submitted": "Kommentar skickad",
+	"comment_submission_failed": "Misslyckades att skicka kommentar",
 	"expense_comments": "Kommentarer",
 	"add_comment": "Lägg till kommentar",
 	"add_comment_placeholder": "Skriv en kommentar...",
