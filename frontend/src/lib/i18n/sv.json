@@ -88,7 +88,8 @@
 			"voucher": "Verifikat",
 			"description": "Beskrivning",
 			"owner": "Ägare",
-			"expense_date": "Inköpsdatum"
+			"expense_date": "Inköpsdatum",
+			"status": "Status"
 		},
 		"pagination": {
 			"showing": "Visar {start} till {end} av {total}",
@@ -114,7 +115,8 @@
 			"due_date": "Förfallodatum",
 			"verification": "Verifikat",
 			"confirmed_at": "Bekräftad",
-			"paid_at": "Betald"
+			"paid_at": "Betald",
+			"status": "Status"
 		}
 	},
 
@@ -186,7 +188,7 @@
 	},
 	"file": "Fil",
 	"expense_date": "Inköpsdatum",
-	"expense_created_at": "Registrerat",
+	"expense_created_at": "Skapad",
 	"expense_no_files": "Inga filer bifogade",
 	"expense_owner": "Köpt av",
 	"expense_attested": "Attesterad",

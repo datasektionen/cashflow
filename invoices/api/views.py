@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import QueryDict
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse
-from rest_framework import generics, viewsets, status, serializers
+from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
@@ -18,12 +18,12 @@ from core.api.openapi import problems
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
 from expenses.models import File, Comment
-from .exceptions import (
+from .problems import (
     InvalidInvoiceDateError,
     InvalidDueDateError,
     VerificationRequiredError,
 )
-from core.api.exceptions import (
+from core.api.problems import (
     PartInvalidJSONProblem,
     FileRequiredProblem,
     PartRequiredProblem,
@@ -169,28 +169,20 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             Invoice.objects.viewable_by(self.current_user)
             .filter(**filter_map)
             .distinct()
-            .order_by("-invoice_date")
+            .order_by("-created_date")
         )
 
     @action(detail=True, methods=["post"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:
         invoice = self.get_object()
         serializer = CommentCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            comment = Comment.objects.create(
-                content=serializer.data["content"],
-                invoice=invoice,
-                author=self.current_user.profile,
-            )
-            return Response(
-                CommentSerializer(comment).data, status=status.HTTP_201_CREATED
-            )
-        else:
-            errors = serializer.errors
-            if errors.get("content"):
-                if errors["content"][0].code == "blank":
-                    raise EmptyCommentProblem()
-            raise serializers.ValidationError(errors)
+        serializer.is_valid(raise_exception=True)
+        comment = Comment.objects.create(
+            content=serializer.validated_data["content"],
+            invoice=invoice,
+            author=self.current_user.profile,
+        )
+        return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"])
     def confirm(self, request: Request, pk=None) -> Response:

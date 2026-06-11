@@ -1,8 +1,3 @@
-"""API exceptions that are shared between other applications.
-
-E.g. errors that can occur both for claims and invoices.
-"""
-
 from drf_problems.utils import register_exception
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -113,3 +108,15 @@ class IsFlaggedProblem(APIException):
 
 
 register_exception(IsFlaggedProblem)
+
+
+class AccountingPermissionDeniedProblem(APIException):
+    status_code = 403
+    default_code = "accounting_permission_denied"
+    title = "Permission denied for accounting expense/invoice"
+    default_detail = (
+        "The user lacks the proper permissions to account the given expense or invoice."
+    )
+
+
+register_exception(AccountingPermissionDeniedProblem)

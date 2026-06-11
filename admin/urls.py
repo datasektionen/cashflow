@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import re_path, path
 
 import admin.views as views
@@ -8,21 +9,29 @@ urlpatterns = [
     re_path(r"^attest/$", views.attest_overview, name="admin-attest"),
     re_path(r"^pay/$", views.pay_overview, name="admin-pay"),
     re_path(r"^account/$", views.account_overview, name="admin-account"),
-    # Fortnox integration URLs
-    path("fortnox", views.fortnox.overview, name="fortnox-overview"),
-    path("auth/", views.fortnox.get_auth_code, name="fortnox-auth-get"),
-    path("auth/complete/", views.fortnox.auth_complete, name="fortnox-auth-complete"),
-    path("auth/disconnect/", views.fortnox.disconnect, name="fortnox-disconnect"),
-    path(
-        "fortnox/invoices/account/<id>/",
-        views.fortnox.account_invoice,
-        name="fortnox-account-invoice",
-    ),
-    path(
-        "fortnox/claims/account/<id>/",
-        views.fortnox.account_expense,
-        name="fortnox-account-expense",
-    ),
+]
+
+if settings.FORTNOX_ENABLED:
+    urlpatterns += [
+        path("fortnox", views.fortnox.overview, name="fortnox-overview"),
+        path("auth/", views.fortnox.get_auth_code, name="fortnox-auth-get"),
+        path(
+            "auth/complete/", views.fortnox.auth_complete, name="fortnox-auth-complete"
+        ),
+        path("auth/disconnect/", views.fortnox.disconnect, name="fortnox-disconnect"),
+        path(
+            "fortnox/invoices/account/<id>/",
+            views.fortnox.account_invoice,
+            name="fortnox-account-invoice",
+        ),
+        path(
+            "fortnox/claims/account/<id>/",
+            views.fortnox.account_expense,
+            name="fortnox-account-expense",
+        ),
+    ]
+
+urlpatterns += [
     re_path(
         r"^expense/(?P<pk>\d+)/verification/edit/$",
         views.edit_expense_verification,

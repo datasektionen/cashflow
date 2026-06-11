@@ -3,6 +3,7 @@ from rest_framework.fields import DateField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.api.serializers import (
+    AccountSerializer,
     FileSerializer,
     ProfileSerializer,
     UploadField,
@@ -88,3 +89,8 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ["expense_date", "description", "files", "parts"]
+
+
+class ExpenseAccountSerializer(serializers.Serializer):
+    voucher_number = serializers.RegexField(r"[A-Z]\d+", required=False)
+    parts = AccountSerializer(many=True, required=False, default=list)

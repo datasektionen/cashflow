@@ -65,15 +65,18 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     # Django model
     "ServiceAccount": ("fortnox.models", "ServiceAccount"),
     # Cashflow-specific domain exceptions (DRF-flavored)
-    "AlreadyAccountedError": ("fortnox.exceptions", "AlreadyAccountedError"),
-    "CashflowVerificationMissingError": (
-        "fortnox.exceptions",
-        "CashflowVerificationMissingError",
+    "AlreadyAccountedProblem": ("fortnox.api.problems", "AlreadyAccountedProblem"),
+    "CashflowVerificationMissingProblem": (
+        "fortnox.api.problems",
+        "CashflowVerificationMissingProblem",
     ),
-    "FortnoxRecordMissingError": ("fortnox.exceptions", "FortnoxRecordMissingError"),
-    "FortnoxServiceNotAvailableError": (
-        "fortnox.exceptions",
-        "FortnoxServiceNotAvailableError",
+    "FortnoxRecordMissingProblem": (
+        "fortnox.api.problems",
+        "FortnoxRecordMissingProblem",
+    ),
+    "FortnoxServiceNotAvailableProblem": (
+        "fortnox.api.problems",
+        "FortnoxServiceNotAvailableProblem",
     ),
 }
 
@@ -100,11 +103,11 @@ if TYPE_CHECKING:
         require_fortnox_service,
         retrieve_or_refresh_token,
     )
-    from .exceptions import (
-        AlreadyAccountedError,
-        CashflowVerificationMissingError,
-        FortnoxRecordMissingError,
-        FortnoxServiceNotAvailableError,
+    from .api.problems import (
+        AlreadyAccountedProblem,
+        CashflowVerificationMissingProblem,
+        FortnoxRecordMissingProblem,
+        FortnoxServiceNotAvailableProblem,
     )
     from .models import ServiceAccount
 
@@ -150,8 +153,8 @@ __all__ = [
     # === Django model (lazy) ===
     "ServiceAccount",
     # === Cashflow-specific domain exceptions (lazy) ===
-    "AlreadyAccountedError",
-    "CashflowVerificationMissingError",
-    "FortnoxRecordMissingError",
-    "FortnoxServiceNotAvailableError",
+    "AlreadyAccountedProblem",
+    "CashflowVerificationMissingProblem",
+    "FortnoxRecordMissingProblem",
+    "FortnoxServiceNotAvailableProblem",
 ]

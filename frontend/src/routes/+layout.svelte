@@ -22,11 +22,22 @@
 		BookText
 	} from '@lucide/svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { api } from '$lib/api';
+	import type { ActionSummary } from '$lib/api/types';
 
 	let { children, data }: LayoutProps = $props();
 
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
+
+	let availableActions: ActionSummary | null = $state(null);
+	$effect(() => {
+		if (adminView) {
+			api.users.actionSummary().then((v) => {
+				availableActions = v;
+			});
+		}
+	});
 
 	alerts.subscribe((val) => (currentAlerts = val));
 </script>
@@ -34,7 +45,12 @@
 <nav
 	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-dark-base-200 dark:text-dark-base-text"
 >
-	<div class="mx-auto flex h-full max-w-7xl flex-row justify-between px-4 lg:px-8">
+	<div
+		class={[
+			'flex h-full w-full flex-row justify-between',
+			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'mx-auto max-w-7xl px-4 lg:px-8'
+		]}
+	>
 		<div class="flex h-full">
 			{#if data.user != null}
 				<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
@@ -84,16 +100,44 @@
 					class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
 				/>
 				{#if perms.attest.length > 0}
-					<SideNavLink to="/admin/attest" text={$_('tasks.attest')} icon={Stamp} />
+					<SideNavLink
+						to="/admin/attest"
+						text={$_('tasks.attest')}
+						icon={Stamp}
+						badge={availableActions
+							? availableActions.expenses.attestable + availableActions.invoices.attestable
+							: undefined}
+					/>
 				{/if}
 				{#if perms.confirm}
-					<SideNavLink to="/admin/confirm" text={$_('tasks.confirm')} icon={CircleCheck} />
+					<SideNavLink
+						to="/admin/confirm"
+						text={$_('tasks.confirm')}
+						icon={CircleCheck}
+						badge={availableActions
+							? availableActions.expenses.confirmable + availableActions.invoices.confirmable
+							: undefined}
+					/>
 				{/if}
 				{#if perms.pay}
-					<SideNavLink to="/admin/pay" text={$_('tasks.pay')} icon={Banknote} />
+					<SideNavLink
+						to="/admin/pay"
+						text={$_('tasks.pay')}
+						icon={Banknote}
+						badge={availableActions
+							? availableActions.expenses.payable + availableActions.invoices.payable
+							: undefined}
+					/>
 				{/if}
 				{#if perms.accounting.length > 0}
-					<SideNavLink to="/admin/account" text={$_('tasks.account')} icon={BookText} />
+					<SideNavLink
+						to="/admin/account"
+						text={$_('tasks.account')}
+						icon={BookText}
+						badge={availableActions
+							? availableActions.expenses.accountable + availableActions.invoices.accountable
+							: undefined}
+					/>
 				{/if}
 			{/if}
 		{/if}
@@ -132,8 +176,18 @@
 	class="base-text-base-text flex min-h-screen flex-col bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
 	{#if page.data.title_key != null || page.data.title != null}
-		<header class="mx-auto w-full max-w-7xl px-4 lg:px-8">
-			<h1 class="pt-12 pb-6 text-3xl font-semibold tracking-tight">
+		<header
+			class={[
+				'w-full',
+				adminView ? 'pr-8 pl-60 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8'
+			]}
+		>
+			<h1
+				class={[
+					adminView ? 'pt-6 pb-3 text-xl' : 'pt-12 pb-6 text-3xl',
+					'font-semibold tracking-tight'
+				]}
+			>
 				{page.data.title ?? $_(page.data.title_key)}
 			</h1>
 			<Separator.Root
@@ -145,8 +199,8 @@
 
 	<main
 		class={[
-			'mx-auto w-full max-w-7xl flex-1 px-4 py-8 lg:px-8 dark:text-dark-base-text',
-			adminView && 'pl-56'
+			'w-full flex-1 dark:text-dark-base-text',
+			adminView ? 'py-4 pr-8 pl-60 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 py-8 lg:px-8'
 		]}
 	>
 		{@render children()}

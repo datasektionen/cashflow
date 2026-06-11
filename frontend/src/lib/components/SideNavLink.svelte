@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import type { Component } from 'svelte';
 
-	let props: { to: string; text: string; icon?: Component } = $props();
+	let props: { to: string; text: string; icon?: Component; badge?: number } = $props();
 
 	const normalizePath = (path: string) => path.replace(/\/+$/, '') || '/';
 	const active = $derived.by(() => {
@@ -28,4 +28,11 @@
 		/>
 	{/if}
 	<span>{props.text}</span>
+	{#if props.badge != null && props.badge > 0}
+		<span
+			class="ml-auto rounded-full bg-money-green-600/15 px-1.5 py-0.5 text-xs font-medium text-money-green-700 dark:bg-money-green-600/20 dark:text-money-green-400"
+		>
+			{props.badge}
+		</span>
+	{/if}
 </a>

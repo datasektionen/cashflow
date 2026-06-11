@@ -82,7 +82,7 @@ class TestExpenseListPermissions:
         assert len(response.data["data"]) == 2
 
     def test_view_all_permission_returns_all_expenses(self, user, client, mocker):
-        permissions = {Permission.VIEW_EXPENSES: "*"}
+        permissions = {Permission.VIEW_EXPENSES: True}
         mocker.patch(
             "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
         )
@@ -96,7 +96,7 @@ class TestExpenseListPermissions:
 
 class TestExpenseListFilters:
     def test_filter_by_username(self, user, client, mocker):
-        permissions = {Permission.VIEW_EXPENSES: "*"}
+        permissions = {Permission.VIEW_EXPENSES: True}
         mocker.patch(
             "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
         )
@@ -112,7 +112,7 @@ class TestExpenseListFilters:
         )
 
     def test_filter_by_cost_center(self, user, client, mocker):
-        permissions = {Permission.VIEW_EXPENSES: "*"}
+        permissions = {Permission.VIEW_EXPENSES: True}
         mocker.patch(
             "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
         )

@@ -1,16 +1,24 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
 from django.forms.models import model_to_dict
 
-from cashflow import dauth
+from core.permissions import get_permission_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
     DuplicateConfirmationError,
+    UnauthorizedAccountingError,
+    AlreadyAccountedError,
+    FortnoxRecordMissingError,
+    CashflowVerificationMissingError,
 )
+
+if TYPE_CHECKING:
+    from fortnox.api_client import FortnoxAPIClient
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -28,14 +36,25 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
         return qs.order_by("invoice_date").distinct()
 
+    def confirmable_for(self, user: User) -> "InvoiceQuerySet":
+        if not get_permission_provider().may_confirm(user):
+            return self.none()
+        return self.filter(confirmed_by__isnull=True).distinct()
+
+    def payable_for(self, user: User) -> "InvoiceQuerySet":
+        if not get_permission_provider().may_pay(user):
+            return self.none()
+        return (
+            self.filter(payed_at__isnull=True, invoicepart__attested_by__isnull=False)
+            .distinct()
+            .order_by("due_date")
+        )
+
     def viewable_by(self, user: User) -> "InvoiceQuerySet":
-
-        if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", user):
-            # Can view all
+        provider = get_permission_provider()
+        if provider.may_view_all(user):
             return self.all()
-
-        cc_scopes = dauth.get_permissions(user).get(dauth.Permission.VIEW_EXPENSES, [])
-
+        cc_scopes = provider.viewable_cost_centres(user)
         return self.filter(
             Q(invoicepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
         ).distinct()
@@ -147,6 +166,84 @@ class Invoice(models.Model):
         self.confirmed_by = user
         self.confirmed_at = date.today()
         self.save()
+
+    def account(
+        self,
+        user: User,
+        fortnox_client: "FortnoxAPIClient | None" = None,
+        part_accounts: "dict[int, int] | None" = None,
+        voucher_number: str | None = None,
+    ):
+        if not get_permission_provider().may_account(user, self):
+            raise UnauthorizedAccountingError()
+
+        if fortnox_client is not None:
+            from django.conf import settings
+            from fortnox import FortnoxNotFound
+            from fortnox.api_client.models import VoucherCreate, VoucherRow
+
+            description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
+                description=self.description, kind="invoice", id=self.id
+            )
+            if self.verification:
+                try:
+                    fortnox_client.retrieve_voucher(
+                        settings.FORTNOX_INVOICE_VOUCHER_SERIES,
+                        int(self.verification[1:]),
+                    )
+                    raise AlreadyAccountedError()
+                except FortnoxNotFound:
+                    raise FortnoxRecordMissingError()
+            else:
+                try:
+                    fortnox_client.find_voucher(Description=description)
+                    raise CashflowVerificationMissingError()
+                except FortnoxNotFound:
+                    pass
+
+            voucher_rows = [
+                VoucherRow(
+                    Account=settings.FORTNOX_INVOICE_CREDIT_ACCOUNT,
+                    Credit=float(self.total_amount()),
+                )
+            ]
+            if part_accounts:
+                for part in self.parts.all():
+                    acct = part_accounts[part.id]
+                    cc = fortnox_client.find_cost_center(Description=part.cost_centre)
+                    voucher_rows.append(
+                        VoucherRow(
+                            Account=acct, CostCenter=cc.Code, Debit=float(part.amount)
+                        )
+                    )
+
+            created = fortnox_client.create_voucher(
+                VoucherCreate(
+                    Description=description,
+                    TransactionDate=self.invoice_date.strftime("%Y-%m-%d") if self.invoice_date else "",
+                    VoucherRows=voucher_rows,
+                    VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
+                )
+            )
+            self.verification = (
+                f"{settings.FORTNOX_INVOICE_VOUCHER_SERIES}{created.VoucherNumber}"
+            )
+        elif voucher_number is not None:
+            if self.verification:
+                raise AlreadyAccountedError()
+            self.verification = voucher_number
+        elif self.verification:
+            raise AlreadyAccountedError()
+
+        if self.verification:
+            self.save()
+            from expenses.models import Comment
+
+            Comment.objects.create(
+                author=user.profile,
+                invoice=self,
+                content=f"Bokförde med verifikationsnumret: {self.verification}",
+            )
 
     # # TODO
     @staticmethod

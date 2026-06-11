@@ -14,7 +14,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import generics, status, viewsets, serializers
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
@@ -31,16 +31,17 @@ from rest_framework.status import (
 )
 from structlog import get_logger
 
-from core.api.exceptions import (
-    PartInvalidJSONProblem,
-    FileRequiredProblem,
-    PartRequiredProblem,
+from core.api.problems import (
+    AccountingPermissionDeniedProblem,
+    AlreadyConfirmedProblem,
     AttestationPermissionDeniedProblem,
-    EmptyCommentProblem,
     ConfirmationPermissionDeniedProblem,
+    EmptyCommentProblem,
+    FileRequiredProblem,
     IsFlaggedProblem,
     NotConfirmableProblem,
-    AlreadyConfirmedProblem,
+    PartInvalidJSONProblem,
+    PartRequiredProblem,
 )
 from core.api.filters import Filter
 from core.api.openapi import problem, problems
@@ -53,15 +54,26 @@ from core.exceptions import (
     NotConfirmableError,
     FlaggedConfirmationError,
     DuplicateConfirmationError,
+    UnauthorizedAccountingError,
+    AlreadyAccountedError,
+    FortnoxRecordMissingError,
+    CashflowVerificationMissingError,
 )
-from expenses.api.exceptions import InvalidExpenseDateError
+from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
+    ExpenseAccountSerializer,
     ExpensePartSerializer,
     ExpenseSerializer,
     ExpenseAdminSerializer,
     ExpenseCreateSerializer,
 )
 from expenses.models import Expense, ExpensePart, File, Comment
+from fortnox.api.problems import (
+    AlreadyAccountedProblem,
+    CashflowVerificationMissingProblem,
+    FortnoxRecordMissingProblem,
+    FortnoxServiceNotAvailableProblem,
+)
 
 UserModel = get_user_model()
 
@@ -160,6 +172,30 @@ logger = get_logger(__name__)
         },
         operation_id="confirm_expense",
     ),
+    account=extend_schema(
+        tags=["Expenses"],
+        summary="Account an expense",
+        description=(
+            "Records accounting for an expense. "
+            "Pass `voucher_number` to record an existing voucher manually (Fortnox not required). "
+            "Pass `parts` with account/cost-centre data to create a voucher via the Fortnox integration."
+        ),
+        request=ExpenseAccountSerializer,
+        responses={
+            status.HTTP_200_OK: ExpenseSerializer,
+            status.HTTP_400_BAD_REQUEST: problem(PartRequiredProblem),
+            status.HTTP_403_FORBIDDEN: problem(AccountingPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(
+                AlreadyAccountedProblem,
+                FortnoxRecordMissingProblem,
+                CashflowVerificationMissingProblem,
+            ),
+            status.HTTP_503_SERVICE_UNAVAILABLE: problem(
+                FortnoxServiceNotAvailableProblem
+            ),
+        },
+        operation_id="account_expense",
+    ),
 )
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
@@ -216,7 +252,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             Expense.objects.viewable_by(self.current_user)
             .filter(**filter_map)
             .distinct()
-            .order_by("-expense_date")
+            .order_by("-created_date")
         )
 
     @action(detail=True, methods=["POST"], url_path="comments")
@@ -224,22 +260,13 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         expense = self.get_object()
 
         serializer = CommentCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            comment = Comment.objects.create(
-                expense=expense,
-                content=serializer.validated_data["content"],
-                author=self.current_user.profile,
-            )
-            return Response(
-                CommentSerializer(comment).data, status=status.HTTP_201_CREATED
-            )
-        else:
-            errors = serializer.errors
-            if errors.get("content"):
-                if errors["content"][0].code == "blank":
-                    raise EmptyCommentProblem()
-
-            raise serializers.ValidationError(errors)
+        serializer.is_valid(raise_exception=True)
+        comment = Comment.objects.create(
+            expense=expense,
+            content=serializer.validated_data["content"],
+            author=self.current_user.profile,
+        )
+        return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"])
     def confirm(self, request: Request, pk=None) -> Response:
@@ -251,17 +278,55 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 raise ConfirmationPermissionDeniedProblem(
                     detail="You are not authorized to confirm this expense."
                 ) from e
+            except FlaggedConfirmationError as e:
+                raise IsFlaggedProblem(
+                    detail="This expense is flagged and cannot be confirmed."
+                ) from e
             except NotConfirmableError as e:
-                if isinstance(e, FlaggedConfirmationError):
-                    raise IsFlaggedProblem(
-                        detail="This expense is flagged and cannot be confirmed."
-                    ) from e
                 raise NotConfirmableProblem() from e
             except DuplicateConfirmationError as e:
                 raise AlreadyConfirmedProblem(
                     detail="This expense has already been confirmed."
                 ) from e
             expense.save()
+        return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["POST"])
+    def account(self, request: Request, pk=None) -> Response:
+        serializer = ExpenseAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        voucher_number = serializer.validated_data.get("voucher_number")
+        parts_data = serializer.validated_data.get("parts", [])
+        part_accounts = {
+            p["part_id"]: (p["account_number"], p["cost_centre"]) for p in parts_data
+        } or None
+
+        fortnox_client = None
+        if not voucher_number:
+            fortnox_client = getattr(request, "fortnox_service", None)
+            if fortnox_client is None:
+                raise FortnoxServiceNotAvailableProblem()
+            if not part_accounts:
+                raise PartRequiredProblem()
+
+        with transaction.atomic():
+            expense = Expense.objects.select_for_update().get(pk=pk)
+            try:
+                expense.account(
+                    self.current_user,
+                    fortnox_client=fortnox_client,
+                    part_accounts=part_accounts,
+                    voucher_number=voucher_number,
+                )
+            except UnauthorizedAccountingError as e:
+                raise AccountingPermissionDeniedProblem() from e
+            except AlreadyAccountedError as e:
+                raise AlreadyAccountedProblem() from e
+            except FortnoxRecordMissingError as e:
+                raise FortnoxRecordMissingProblem() from e
+            except CashflowVerificationMissingError as e:
+                raise CashflowVerificationMissingProblem() from e
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
 
 

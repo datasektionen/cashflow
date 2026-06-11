@@ -18,6 +18,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		onPerPageChange?: (perPage: number) => void;
 		loading?: boolean;
 		rowProps?: TableRowProps<T>;
+		scrollable?: boolean;
 	}
 
 	let {
@@ -27,7 +28,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		onPageChange,
 		onPerPageChange,
 		loading,
-		rowProps
+		rowProps,
+		scrollable = false
 	}: Props = $props();
 
 	const resolved = $derived<PaginatedResponse<T>>(
@@ -37,7 +39,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		}
 	);
 
-	const perPageOptions = [10, 20, 50, 100];
+	const perPageOptions = [15, 25, 50, 100];
 
 	const rangeStart = $derived(
 		resolved.pagination.total === 0
@@ -50,44 +52,50 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 </script>
 
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
-	<div class="relative overflow-hidden rounded">
-		<table class="w-full table-fixed">
-			<thead>
-				<tr>
-					{#each columns as column}
-						<th
-							class="{column.width} px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+	<div class="relative">
+		<div class="overflow-hidden">
+			<table class="w-full table-fixed text-sm">
+				<thead>
+					<tr>
+						{#each columns as column}
+							<th
+								class="{column.width} px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+							>
+								{column.header}
+							</th>
+						{/each}
+					</tr>
+				</thead>
+				<tbody>
+					{#each resolved.data as row, i}
+						<tr
+							class={[
+								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+								rowProps?.class
+							]}
+							onclick={(e) => rowProps?.onClick(row)}
 						>
-							{column.header}
-						</th>
+							{#each columns as column}
+								<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
+									{#if column.renderSnippet}
+										{@render column.renderSnippet(row)}
+									{:else}
+										{column.render?.(row) ?? ''}
+									{/if}
+								</td>
+							{/each}
+						</tr>
 					{/each}
-				</tr>
-			</thead>
-			<tbody>
-				{#each resolved.data as row, i}
-					<tr
-						class={[
-							'border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-							rowProps?.class
-						]}
-						onclick={(e) => rowProps?.onClick(row)}
-					>
-						{#each columns as column}
-							<td class="truncate px-4 py-3">
-								{column.render(row)}
-							</td>
-						{/each}
-					</tr>
-				{/each}
-				{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
-					<tr class="border-b border-b-base-400 dark:border-dark-base-150">
-						{#each columns as column}
-							<td class="px-4 py-3">&nbsp;</td>
-						{/each}
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+					{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
+						<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+							{#each columns as column}
+								<td class="px-4">&nbsp;</td>
+							{/each}
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
 		<!-- Loading overlay -->
 		<div
 			class={[
@@ -99,7 +107,12 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		</div>
 	</div>
 
-	<div class="mt-4 flex flex-row items-center justify-center md:justify-between">
+	<div
+		class={[
+			'mt-4 flex flex-row items-center justify-center md:justify-between',
+			scrollable && 'sticky bottom-0 bg-base-200 py-2 dark:bg-dark-base-100'
+		]}
+	>
 		<div class="hidden text-sm text-base-subtle md:flex dark:text-dark-base-subtle">
 			{$_('admin_paginatedResponse.pagination.showing', {
 				values: {

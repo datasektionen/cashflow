@@ -1,25 +1,30 @@
 import re
 from datetime import date
+from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.db import models
+
+if TYPE_CHECKING:
+    from fortnox.api_client import FortnoxAPIClient
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
-from django.utils import timezone
 from django.utils.timezone import localdate
-
-from cashflow import dauth, email_util
-from cashflow.dauth import Permission
+from cashflow import email_util
+from core.permissions import get_permission_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
     UnauthorizedConfirmationError,
-    NotConfirmableError,
     DuplicateConfirmationError,
     FlaggedConfirmationError,
+    UnauthorizedAccountingError,
+    AlreadyAccountedError,
+    FortnoxRecordMissingError,
+    CashflowVerificationMissingError,
 )
 
 
@@ -71,105 +76,53 @@ class Profile(models.Model):
         }
 
     def may_view_all(self):
-        return dauth.has_unscoped_permission("view-all", self.user)
+        return get_permission_provider().may_view_all(self.user)
 
     def may_view_all_payments(self):
-        return dauth.has_unscoped_permission("view-all-payments", self.user)
+        return get_permission_provider().may_view_all_payments(self.user)
 
-    # Returns whether the user may attest an expense part's cost centre
     def may_attest(self, expense_part):
-        return dauth.has_scoped_permission(
-            "attest", expense_part.cost_centre, self.user
-        )
+        return get_permission_provider().may_attest(self.user, expense_part.cost_centre)
 
-    # Returns whether the user may attest for at least one cost centre
     def may_attest_some(self):
-        return dauth.has_any_permission_scope("attest", self.user)
+        return get_permission_provider().may_attest_some(self.user)
 
-    # Returns a list of known cost centres that the user may attest, or True
     def attestable_cost_centres(self):
-        from invoices.models import InvoicePart
+        return get_permission_provider().attestable_cost_centres(self.user)
 
-        cost_centres = set(
-            ExpensePart.objects.values_list("cost_centre", flat=True)
-        ) | set(InvoicePart.objects.values_list("cost_centre", flat=True))
-
-        if dauth.get_permissions(self.user).get(Permission.ATTEST) is True:
-            return list(cost_centres)
-
-        return [
-            cc
-            for cc in cost_centres
-            if dauth.has_scoped_permission(Permission.ATTEST, cc, self.user)
-        ]
-
-    # Returns whether the user may view attestable claims
     def may_view_attestable(self):
         return self.may_view_all() or self.may_attest_some()
 
     def may_unattest(self):
-        return dauth.has_unscoped_permission("unattest", self.user)
+        return get_permission_provider().may_unattest(self.user)
 
-    # Returns whether the user is allowed to make reimbursements
     def may_pay(self):
-        return dauth.has_unscoped_permission("pay", self.user)
+        return get_permission_provider().may_pay(self.user)
 
-    # Returns whether the user may view payable claims
     def may_view_payable(self):
         return self.may_view_all() or self.may_pay()
 
-    # Returns whether the user may confirm claims
     def may_confirm(self):
-        return dauth.has_unscoped_permission("confirm", self.user)
+        return get_permission_provider().may_confirm(self.user)
 
-    # Returns whether the user may unconfirm claims
     def may_unconfirm(self):
-        # until proven that a separate unconfirm perm is actually needed
         return self.may_confirm()
 
-    # Returns whether the user may view confirmable claims
     def may_view_confirmable(self):
         return self.may_view_all() or self.may_confirm()
 
-    # Returns whether the user may bookkeep an expense or invoice cost centre
     def may_account(self, expense=None, invoice=None):
-        if expense is not None:
-            for ep in expense.parts.all():
-                if dauth.has_scoped_permission("accounting", ep.cost_centre, self.user):
-                    return True
-            if dauth.has_scoped_permission("accounting", "*", self.user):
-                return True
+        target = expense or invoice
+        if target is None:
+            return False
+        return get_permission_provider().may_account(self.user, target)
 
-        if invoice is not None:
-            for ip in invoice.parts.all():
-                if dauth.has_scoped_permission("accounting", ip.cost_centre, self.user):
-                    return True
-            if dauth.has_scoped_permission("accounting", "*", self.user):
-                return True
-
-        return False
-
-    # Returns whether the user may bookkeep for at least one cost centre
     def may_account_some(self):
-        return dauth.has_any_permission_scope("accounting", self.user)
+        return get_permission_provider().may_account_some(self.user)
 
     def accountable_cost_centres(self):
-        from invoices.models import InvoicePart
+        return get_permission_provider().accountable_cost_centres(self.user)
 
-        cost_centres = set(
-            ExpensePart.objects.values_list("cost_centre", flat=True)
-        ) | set(InvoicePart.objects.values_list("cost_centre", flat=True))
-
-        if dauth.get_permissions(self.user).get(Permission.ACCOUNTING) is True:
-            return list(cost_centres)
-
-        return [
-            cc
-            for cc in cost_centres
-            if dauth.has_scoped_permission(Permission.ACCOUNTING, cc, self.user)
-        ]
-
-    # Returns whether the user may view attestable claims
     def may_view_accountable(self):
         return self.may_view_all() or self.may_account_some()
 
@@ -179,26 +132,24 @@ class Profile(models.Model):
     def may_delete_expense(self, expense):
         if expense.reimbursement:
             return False
-
         return (
-            dauth.has_unscoped_permission("delete", self.user)
+            get_permission_provider().may_delete(self.user)
             or expense.owner.user.username == self.user.username
         )
 
     def may_edit_invoice(self):
-        return dauth.has_unscoped_permission("edit-invoice", self.user)
+        return get_permission_provider().may_edit_invoice(self.user)
 
     def may_delete_invoice(self, invoice):
         if invoice.is_paid():
             return False
-
         return (
-            dauth.has_unscoped_permission("delete", self.user)
+            get_permission_provider().may_delete(self.user)
             or invoice.owner.user.username == self.user.username
         )
 
     def may_delete_comment(self):
-        return dauth.has_unscoped_permission("moderate-comments", self.user)
+        return get_permission_provider().may_moderate_comments(self.user)
 
     def is_admin(self):
         return (
@@ -232,12 +183,11 @@ class Profile(models.Model):
             or any(self.may_attest(ip) for ip in invoice.parts.all())
         )
 
-    # TODO: Check if these are the best/appropriate names for these permissions
     def may_firmatecknare(self):
-        return "attest-firmatecknare" in dauth.get_permissions(self.user)
+        return get_permission_provider().may_firmatecknare(self.user)
 
     def may_view_account(self):
-        return "view-account" in dauth.get_permissions(self.user)
+        return get_permission_provider().may_view_account(self.user)
 
 
 # Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
@@ -312,17 +262,28 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             qs = qs.filter(expensepart__cost_centre__in=cost_centres)
         return qs.order_by("expense_date").distinct()
 
+    def confirmable_for(self, user: User) -> "ExpenseQuerySet":
+        if not get_permission_provider().may_confirm(user):
+            return self.none()
+        return (
+            self.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
+        )
+
+    def payable_for(self, user: User) -> "ExpenseQuerySet":
+        if not get_permission_provider().may_pay(user):
+            return self.none()
+        return (
+            self.filter(reimbursement=None)
+            .exclude(expensepart__attested_by=None)
+            .exclude(confirmed_by=None)
+            .order_by("owner__user__username")
+        )
+
     def viewable_by(self, user: User) -> "ExpenseQuerySet":
-
-        if dauth.has_scoped_permission(dauth.Permission.VIEW_EXPENSES, "*", user):
-            # Can view all
+        provider = get_permission_provider()
+        if provider.may_view_all(user):
             return self.all()
-
-        # Find all cost centers that user may view claims for
-        cc_scopes = dauth.get_permissions(user).get(dauth.Permission.VIEW_EXPENSES, [])
-
-        # Q allows you to perform "OR" filtering. A user will have access to (1) their own claims, OR (2)
-        # claims in a cost center for which they have permissions for
+        cc_scopes = provider.viewable_cost_centres(user)
         return self.filter(
             Q(expensepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
         ).distinct()
@@ -419,6 +380,81 @@ class Expense(models.Model):
             .exclude(is_flagged=True)
             .distinct()
         )
+
+    def account(
+        self,
+        user: User,
+        fortnox_client: "FortnoxAPIClient | None" = None,
+        part_accounts: "dict[int, tuple[int, str]] | None" = None,
+        voucher_number: str | None = None,
+    ):
+        if not get_permission_provider().may_account(user, self):
+            raise UnauthorizedAccountingError()
+
+        if fortnox_client is not None:
+            from django.conf import settings
+            from fortnox import FortnoxNotFound
+            from fortnox.api_client.models import VoucherCreate, VoucherRow
+
+            description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
+                description=self.description, kind="expense", id=self.id
+            )
+            if self.verification:
+                try:
+                    fortnox_client.retrieve_voucher(
+                        settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
+                        int(self.verification[1:]),
+                    )
+                    raise AlreadyAccountedError()
+                except FortnoxNotFound:
+                    raise FortnoxRecordMissingError()
+            else:
+                try:
+                    fortnox_client.find_voucher(Description=description)
+                    raise CashflowVerificationMissingError()
+                except FortnoxNotFound:
+                    pass
+
+            voucher_rows = [
+                VoucherRow(
+                    Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT,
+                    Credit=float(self.total_amount()),
+                )
+            ]
+            if part_accounts:
+                for part in self.parts.all():
+                    acct, cc = part_accounts[part.id]
+                    voucher_rows.append(
+                        VoucherRow(
+                            Account=acct, CostCenter=cc, Debit=float(part.amount)
+                        )
+                    )
+
+            created = fortnox_client.create_voucher(
+                VoucherCreate(
+                    Description=description,
+                    TransactionDate=self.expense_date.strftime("%Y-%m-%d"),
+                    VoucherRows=voucher_rows,
+                    VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
+                )
+            )
+            self.verification = (
+                f"{settings.FORTNOX_EXPENSE_VOUCHER_SERIES}{created.VoucherNumber}"
+            )
+        elif voucher_number is not None:
+            if self.verification:
+                raise AlreadyAccountedError()
+            self.verification = voucher_number
+        elif self.verification:
+            raise AlreadyAccountedError()
+
+        if self.verification:
+            self.save()
+            Comment.objects.create(
+                author=user.profile,
+                expense=self,
+                content=f"Bokförde med verifikationsnumret: {self.verification}",
+            )
 
     def confirm(self, user: User):
         if not user.profile.may_confirm():

@@ -86,7 +86,8 @@
 			"voucher": "Voucher",
 			"description": "Description",
 			"owner": "Owner",
-			"expense_date": "Expense date"
+			"expense_date": "Expense date",
+			"status": "Status"
 		},
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",
@@ -114,7 +115,8 @@
 			"due_date": "Due date",
 			"verification": "Voucher",
 			"confirmed_at": "Confirmed",
-			"paid_at": "Paid"
+			"paid_at": "Paid",
+			"status": "Status"
 		}
 	},
 

@@ -105,6 +105,7 @@ export type Claim = {
 	amount: string;
 	status: ClaimStatus;
 	date: string;
+	created_date: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -134,4 +135,19 @@ export type User = {
 	last_name: string;
 	email: string;
 	permissions: Permissions;
+};
+
+export type ActionSummary = {
+	expenses: {
+		attestable: number;
+		confirmable: number;
+		accountable: number;
+		payable: number;
+	};
+	invoices: {
+		attestable: number;
+		confirmable: number;
+		accountable: number;
+		payable: number;
+	};
 };

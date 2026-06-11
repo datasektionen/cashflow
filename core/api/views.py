@@ -1,9 +1,11 @@
 from enum import Enum
 
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema_view, extend_schema
+from drf_spectacular.utils import extend_schema_view, extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.generics import GenericAPIView
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.api.pagination import DefaultPagination
@@ -63,6 +65,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     "amount": expense.total_amount(),
                     "status": get_status(expense),
                     "date": expense.expense_date,
+                    "created_date": expense.created_date,
                 }
                 for expense in expenses
             ]
@@ -74,10 +77,11 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     "amount": invoice.total_amount(),
                     "status": get_status(invoice),
                     "date": invoice.invoice_date,
+                    "created_date": invoice.created_date,
                 }
                 for invoice in invoices
             ],
-            key=lambda x: x["date"],
+            key=lambda x: x["created_date"],
             reverse=True,
         )
 
@@ -88,3 +92,56 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
 
         serializer = self.get_serializer(data, many=True)
         return Response(serializer.data)
+
+
+@extend_schema_view(
+    get=extend_schema(
+        tags=["Users"],
+        summary="Count available actions",
+        description="Returns the number of expenses and invoices that the user can act on.",
+        request=None,
+        responses=inline_serializer(
+            name="Summary",
+            fields={
+                "expenses": inline_serializer(
+                    name="ExpenseSummary",
+                    fields={
+                        "attestable": serializers.IntegerField(),
+                        "confirmable": serializers.IntegerField(),
+                        "accountable": serializers.IntegerField(),
+                        "payable": serializers.IntegerField(),
+                    },
+                ),
+                "invoices": inline_serializer(
+                    name="InvoiceSummary",
+                    fields={
+                        "attestable": serializers.IntegerField(),
+                        "confirmable": serializers.IntegerField(),
+                        "accountable": serializers.IntegerField(),
+                        "payable": serializers.IntegerField(),
+                    },
+                ),
+            },
+        ),
+    )
+)
+class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
+
+    def get(self, request: Request):
+        user = self.current_user
+        return Response(
+            {
+                "expenses": {
+                    "attestable": Expense.objects.attestable_for(user).count(),
+                    "confirmable": Expense.objects.confirmable_for(user).count(),
+                    "accountable": Expense.objects.accountable_for(user).count(),
+                    "payable": Expense.objects.payable_for(user).count(),
+                },
+                "invoices": {
+                    "attestable": Invoice.objects.attestable_for(user).count(),
+                    "confirmable": Invoice.objects.confirmable_for(user).count(),
+                    "accountable": Invoice.objects.accountable_for(user).count(),
+                    "payable": Invoice.objects.payable_for(user).count(),
+                },
+            }
+        )

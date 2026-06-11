@@ -54,7 +54,7 @@ class TestInvoiceList:
         client.force_authenticate(user=user)
         mocker.patch(
             "cashflow.dauth.get_permissions",
-            return_value={Permission.VIEW_EXPENSES: "*"},
+            return_value={Permission.VIEW_EXPENSES: True},
             autospec=True,
         )
 

@@ -69,6 +69,8 @@ INSTALLED_APPS = (
     "drf_spectacular",
 )
 
+FORTNOX_ENABLED = os.getenv("FORTNOX_ENABLED", "true").lower() == "true"
+
 MIDDLEWARE = (
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -79,8 +81,14 @@ MIDDLEWARE = (
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "fortnox.django.FortnoxMiddleware",
-    "fortnox.django.FortnoxServiceMiddleware",
+    *(
+        (
+            "fortnox.django.FortnoxMiddleware",
+            "fortnox.django.FortnoxServiceMiddleware",
+        )
+        if FORTNOX_ENABLED
+        else ()
+    ),
     "core.middleware.StructlogContextMiddleware",
 )
 
@@ -321,8 +329,7 @@ RFINGER_API_KEY = os.getenv("RFINGER_API_KEY", "unset")
 # Only send emails if set to true
 SEND_EMAILS = os.getenv("SEND_EMAILS", "False") == "True"
 
-# Class to use to determine accounting permissions
-ACCOUNTING_PERMISSION_PROVIDER = "cashflow.dauth.Hive"
+PERMISSION_PROVIDER = "cashflow.dauth.Hive"
 
 PROFILE_PICTURE_PROVIDER = "cashflow.rfinger.RFinger"
 
@@ -357,4 +364,4 @@ FORTNOX_EXPENSE_VOUCHER_SERIES = "E"
 FORTNOX_INVOICE_VOUCHER_SERIES = "U"
 
 # When accounting to Fortnox the description fill follow this format
-FORTNOX_DESCRIPTION_FORMAT = "{description} (cashflow:{kind}:{id})"
+FORTNOX_DESCRIPTION_FORMAT = "({id}) {description}"

@@ -75,7 +75,7 @@ class TestHiveAccountingPermissions:
         mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={})
         assert provider.accountable_expenses(user).count() == 0
         for e in expense_set:
-            assert provider.may_account(e, user) == False
+            assert provider.may_account(user, e) == False
 
     def test_user_with_wildcard_scope_may_account_all_expenses(
         self, provider, user, expense_set, mocker
@@ -88,7 +88,7 @@ class TestHiveAccountingPermissions:
 
         assert provider.accountable_expenses(user).count() == 20
         for e in expense_set:
-            assert provider.may_account(e, user) == True
+            assert provider.may_account(user, e) == True
 
     def test_user_with_scope_may_account_expenses(
         self, provider, user, expense_set, mocker
@@ -104,7 +104,7 @@ class TestHiveAccountingPermissions:
 
         assert provider.accountable_expenses(user).count() == 5
         for e in cc_expenses:
-            assert provider.may_account(e, user) == True
+            assert provider.may_account(user, e) == True
 
     def test_user_with_no_scopes_may_not_account_invoices(
         self, provider, user, invoice_set, mocker
@@ -112,7 +112,7 @@ class TestHiveAccountingPermissions:
         mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={})
         assert provider.accountable_invoices(user).count() == 0
         for i in invoice_set:
-            assert provider.may_account(i, user) == False
+            assert provider.may_account(user, i) == False
 
     def test_user_with_wildcard_scope_may_account_all_invoices(
         self, provider, user, invoice_set, mocker
@@ -125,7 +125,7 @@ class TestHiveAccountingPermissions:
 
         assert provider.accountable_invoices(user).count() == 20
         for i in invoice_set:
-            assert provider.may_account(i, user) == True
+            assert provider.may_account(user, i) == True
 
     def test_user_with_scope_may_account_invoices(
         self, provider, user, invoice_set, mocker
@@ -141,4 +141,4 @@ class TestHiveAccountingPermissions:
 
         assert provider.accountable_invoices(user).count() == 5
         for i in cc_invoices:
-            assert provider.may_account(i, user) == True
+            assert provider.may_account(user, i) == True

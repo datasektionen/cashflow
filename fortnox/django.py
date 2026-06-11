@@ -15,8 +15,8 @@ from fortnox import (
     FortnoxAPIClient,
     RefreshTokenGrant,
     FortnoxAuthenticationError,
-    exceptions,
 )
+from fortnox.api.problems import FortnoxServiceNotAvailableProblem
 
 logger = get_logger(__name__)
 
@@ -129,9 +129,17 @@ def require_fortnox_service(view):
     def wrap(request: FortnoxRequest, *args, **kwargs):
         token = retrieve_or_refresh_token(request.fortnox)
         if token is None:
-            error_dict = exceptions.FortnoxServiceNotAvailableError().to_dict()
+            exc = FortnoxServiceNotAvailableProblem()
             logger.error("fortnox access token not available")
-            return JsonResponse(error_dict)
+            return JsonResponse(
+                {
+                    "type": f"/problems/{exc.default_code}",
+                    "title": exc.title,
+                    "detail": exc.detail,
+                    "status_code": exc.status_code,
+                },
+                status=exc.status_code,
+            )
         return view(request, *args, **kwargs)
 
     return wrap

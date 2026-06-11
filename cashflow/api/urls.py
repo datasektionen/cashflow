@@ -2,10 +2,12 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from . import views
-from core.api.views import ClaimsList
+from core.api.views import ActionSummary, ClaimsList
 
 urlpatterns = [
+    path("features/", views.FeaturesList.as_view(), name="feature-flags"),
     path("<str:username>/claims/", ClaimsList.as_view(), name="claims-list"),
+    path("actions/", ActionSummary.as_view(), name="action-summary"),
     path(
         "cost-centres/",
         views.CostCentreList.as_view(),

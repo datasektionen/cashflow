@@ -4,14 +4,39 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { Invoice } from '$lib/api/types';
-	import type { TableColumn, TableRowProps } from '$lib/components/types';
+	import type { TableColumn } from '$lib/components/types';
 	import { _ } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 
-	let invoices = $derived(data.invoices);
-
 	let loading = $state(false);
+
+	const columns: TableColumn<Invoice>[] = $derived([
+		{
+			key: 'description',
+			header: $_('admin_invoices.columns.description'),
+			render: (r) => r.description,
+			width: 'w-auto'
+		},
+		{
+			key: 'owner',
+			header: $_('admin_invoices.columns.owner'),
+			render: (r) => r.owner.first_name + ' ' + r.owner.last_name,
+			width: 'w-48'
+		},
+		{
+			key: 'created_date',
+			header: $_('expense_created_at'),
+			render: (r) => r.created_date,
+			width: 'w-32'
+		},
+		{
+			key: 'due_date',
+			header: $_('admin_invoices.columns.due_date'),
+			render: (r) => r.due_date,
+			width: 'w-32'
+		}
+	]);
 
 	function handlePageChange(p: number) {
 		loading = true;
@@ -31,69 +56,79 @@
 			() => (loading = false)
 		);
 	}
-
-	const rowProps: TableRowProps<Invoice> = {
-		onClick: (invoice) => goto(`/${data.user}/invoices/${invoice.id}`),
-		class: 'cursor-pointer'
-	};
-
-	const columns: TableColumn<Invoice>[] = $derived([
-		{
-			key: 'id',
-			header: $_('admin_invoices.columns.id'),
-			render: (r) => r.id.toString(),
-			width: 'w-16'
-		},
-		{
-			key: 'description',
-			header: $_('admin_invoices.columns.description'),
-			render: (r) => r.description,
-			width: 'w-auto'
-		},
-		{
-			key: 'owner',
-			header: $_('admin_invoices.columns.owner'),
-			render: (r) => r.owner.first_name + ' ' + r.owner.last_name,
-			width: 'w-48'
-		},
-		{
-			key: 'invoice_date',
-			header: $_('admin_invoices.columns.invoice_date'),
-			render: (r) => r.invoice_date,
-			width: 'w-32'
-		},
-		{
-			key: 'due_date',
-			header: $_('admin_invoices.columns.due_date'),
-			render: (r) => r.due_date,
-			width: 'w-32'
-		},
-		{
-			key: 'verification',
-			header: $_('admin_invoices.columns.verification'),
-			render: (r) => r.verification ?? '—',
-			width: 'w-32'
-		},
-		{
-			key: 'confirmed_at',
-			header: $_('admin_invoices.columns.confirmed_at'),
-			render: (r) => r.confirmed_at ?? '—',
-			width: 'w-32'
-		},
-		{
-			key: 'paid_at',
-			header: $_('admin_invoices.columns.paid_at'),
-			render: (r) => r.paid_at ?? '—',
-			width: 'w-32'
-		}
-	]);
 </script>
 
+{#snippet idCell(r: Invoice)}
+	<div class="flex flex-row items-center">
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">#</span>
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{r.id}</span>
+	</div>
+{/snippet}
+
+{#snippet statusCell(r: Invoice)}
+	{@const isAttested = r.parts.length > 0 && r.parts.every((p) => p.attested_by != null)}
+	{@const done = r.paid_at || r.verification}
+	<div class="flex gap-3">
+		{#if !done && isAttested}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-400 dark:bg-money-green-500"
+				></span>
+				{$_('expense_attested')}
+			</span>
+		{/if}
+		{#if !done && r.confirmed_at}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-500 dark:bg-money-green-400"
+				></span>
+				{$_('expense_confirmed')}
+			</span>
+		{/if}
+		{#if r.paid_at}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-600 dark:bg-money-green-400"
+				></span>
+				{$_('expense_paid')}
+			</span>
+		{/if}
+		{#if r.verification}
+			<span class="flex items-center gap-1.5 font-mono text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-700 dark:bg-money-green-300"
+				></span>
+				{r.verification}
+			</span>
+		{/if}
+		{#if !isAttested && !r.confirmed_at && !r.paid_at && !r.verification}
+			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
+				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
+				></span>
+				{$_('expense_status.unconfirmed')}
+			</span>
+		{/if}
+	</div>
+{/snippet}
+
 <PaginatedTable
-	paginatedResponse={invoices}
-	{columns}
+	paginatedResponse={data.invoices}
+	columns={[
+		{ key: 'id', header: $_('admin_invoices.columns.id'), renderSnippet: idCell, width: 'w-16' },
+		...columns,
+		{
+			key: 'confirmed_at',
+			header: $_('admin_invoices.columns.status'),
+			renderSnippet: statusCell,
+			width: 'w-56'
+		}
+	]}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}
-	{rowProps}
+	scrollable
+	rowProps={{
+		onClick: (r) => goto(`/${data.user}/invoices/${r.id}`),
+		class: 'cursor-pointer'
+	}}
 />

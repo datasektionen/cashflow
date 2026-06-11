@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
 	const perPage = url.searchParams.get('per_page')
 		? parseInt(url.searchParams.get('per_page')!)
-		: 10;
+		: 15;
 
 	let expenses: PaginatedResponse<Expense> = {
 		data: [],

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-import accounting.permissions
+import core.permissions
 
 
 class Permission(str, Enum):
@@ -31,41 +31,129 @@ class HivePermission(BaseModel):
     scope: bool | list[str]
 
 
-class Hive(accounting.permissions.AccountingPermissionProvider):
+class Hive(core.permissions.PermissionProvider):
 
-    def _get_accounting_scopes(self, user: User) -> list[str]:
-        return get_permissions(user).get(Permission.ACCOUNTING, [])
+    def _scopes(
+        self, user: AbstractBaseUser, perm: Permission | str
+    ) -> list[str] | bool:
+        return get_permissions(user).get(perm, [])  # type: ignore[arg-type]
 
-    def may_account(self, target, user) -> bool:
+    def _has_unscoped(self, user: AbstractBaseUser, perm: Permission | str) -> bool:
+        return get_permissions(user).get(perm) is True  # type: ignore[arg-type]
+
+    def _has_scoped(
+        self, user: AbstractBaseUser, perm: Permission | str, cost_centre: str
+    ) -> bool:
+        scopes = get_permissions(user).get(perm)  # type: ignore[arg-type]
+        if scopes is True:
+            return True
+        return isinstance(scopes, list) and cost_centre.lower() in scopes
+
+    def _has_any_scope(self, user: AbstractBaseUser, perm: Permission | str) -> bool:
+        return perm in get_permissions(user)  # type: ignore[arg-type]
+
+    def may_view_all(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, "view-all") or self._has_scoped(
+            user, Permission.VIEW_EXPENSES, "*"
+        )
+
+    def may_view_all_payments(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.VIEW_ALL_PAYMENTS)
+
+    def viewable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
+        scopes = get_permissions(user).get(Permission.VIEW_EXPENSES, [])
+        return scopes if isinstance(scopes, list) else []
+
+    def may_attest(self, user: AbstractBaseUser, cost_centre: str) -> bool:
+        return self._has_scoped(user, Permission.ATTEST, cost_centre)
+
+    def may_attest_some(self, user: AbstractBaseUser) -> bool:
+        return self._has_any_scope(user, Permission.ATTEST)
+
+    def attestable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
+        from expenses.models import ExpensePart
+        from invoices.models import InvoicePart
+
+        all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
+            InvoicePart.objects.values_list("cost_centre", flat=True)
+        )
+
+        if get_permissions(user).get(Permission.ATTEST) is True:
+            return list(all_ccs)
+        return [cc for cc in all_ccs if self.may_attest(user, cc)]
+
+    def may_unattest(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.UNATTEST)
+
+    def may_confirm(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.CONFIRM)
+
+    def may_account(self, user: AbstractBaseUser, target) -> bool:
         from expenses.models import Expense
         from invoices.models import Invoice
 
-        scopes = self._get_accounting_scopes(user)
-        if "*" in scopes:
+        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
+        if scopes is True or "*" in scopes:
             return True
         if isinstance(target, Expense):
             return target.parts.filter(cost_centre__in=scopes).exists()
-        elif isinstance(target, Invoice):
+        if isinstance(target, Invoice):
             return target.parts.filter(cost_centre__in=scopes).exists()
         raise TypeError(
             f"Expected an expense or invoice, got {target.__class__.__name__}"
         )
 
-    def accountable_expenses(self, user: User) -> QuerySet:
+    def may_account_some(self, user: AbstractBaseUser) -> bool:
+        return self._has_any_scope(user, Permission.ACCOUNTING)
+
+    def may_account_cost_centre(self, user: AbstractBaseUser, cost_centre: str) -> bool:
+        return self._has_scoped(user, Permission.ACCOUNTING, cost_centre)
+
+    def accountable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
+        from expenses.models import ExpensePart
+        from invoices.models import InvoicePart
+
+        all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
+            InvoicePart.objects.values_list("cost_centre", flat=True)
+        )
+
+        if get_permissions(user).get(Permission.ACCOUNTING) is True:
+            return list(all_ccs)
+        return [cc for cc in all_ccs if self.may_account_cost_centre(user, cc)]
+
+    def accountable_expenses(self, user: AbstractBaseUser) -> QuerySet:
         from expenses.models import Expense
 
-        scopes = self._get_accounting_scopes(user)
-        if "*" in scopes:
+        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
+        if scopes is True or "*" in scopes:
             return Expense.objects.all()
         return Expense.objects.filter(expensepart__cost_centre__in=scopes).distinct()
 
-    def accountable_invoices(self, user: User) -> QuerySet:
+    def accountable_invoices(self, user: AbstractBaseUser) -> QuerySet:
         from invoices.models import Invoice
 
-        scopes = self._get_accounting_scopes(user)
-        if "*" in scopes:
+        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
+        if scopes is True or "*" in scopes:
             return Invoice.objects.all()
         return Invoice.objects.filter(invoicepart__cost_centre__in=scopes).distinct()
+
+    def may_pay(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.PAY)
+
+    def may_delete(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.DELETE)
+
+    def may_edit_invoice(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.EDIT_INVOICE)
+
+    def may_moderate_comments(self, user: AbstractBaseUser) -> bool:
+        return self._has_unscoped(user, Permission.MODERATE_COMMENTS)
+
+    def may_firmatecknare(self, user: AbstractBaseUser) -> bool:
+        return "attest-firmatecknare" in get_permissions(user)
+
+    def may_view_account(self, user: AbstractBaseUser) -> bool:
+        return "view-account" in get_permissions(user)
 
 
 class SSO(OIDCAuthenticationBackend):

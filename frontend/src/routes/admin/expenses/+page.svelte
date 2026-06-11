@@ -13,18 +13,6 @@
 
 	const columns: TableColumn<Expense>[] = $derived([
 		{
-			key: 'id',
-			header: $_('admin_expenses.columns.id'),
-			render: (e) => e.id.toString(),
-			width: 'w-16'
-		},
-		{
-			key: 'verification',
-			header: $_('admin_expenses.columns.voucher'),
-			render: (e) => e.verification,
-			width: 'w-32'
-		},
-		{
 			key: 'description',
 			header: $_('admin_expenses.columns.description'),
 			render: (e) => e.description,
@@ -37,9 +25,9 @@
 			width: 'w-56'
 		},
 		{
-			key: 'expense_date',
-			header: $_('admin_expenses.columns.expense_date'),
-			render: (e) => e.expense_date,
+			key: 'created_date',
+			header: $_('expense_created_at'),
+			render: (e) => e.created_date,
 			width: 'w-32'
 		}
 	]);
@@ -64,12 +52,75 @@
 	}
 </script>
 
+{#snippet statusCell(e: Expense)}
+	{@const isAttested = e.parts.length > 0 && e.parts.every((p) => p.attested_by != null)}
+	{@const done = e.payment || e.verification}
+	<div class="flex gap-3">
+		{#if !done && isAttested}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-400 dark:bg-money-green-500"
+				></span>
+				{$_('expense_attested')}
+			</span>
+		{/if}
+		{#if !done && e.confirmed_at}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-500 dark:bg-money-green-400"
+				></span>
+				{$_('expense_confirmed')}
+			</span>
+		{/if}
+		{#if e.payment}
+			<span class="flex items-center gap-1.5 text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-600 dark:bg-money-green-400"
+				></span>
+				{$_('expense_paid')}
+			</span>
+		{/if}
+		{#if e.verification}
+			<span class="flex items-center gap-1.5 font-mono text-xs">
+				<span
+					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-700 dark:bg-money-green-300"
+				></span>
+				{e.verification}
+			</span>
+		{/if}
+		{#if !isAttested && !e.confirmed_at && !e.payment && !e.verification}
+			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
+				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
+				></span>
+				{$_('expense_status.unconfirmed')}
+			</span>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet idCell(e: Expense)}
+	<div class="flex flex-row items-center">
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">#</span>
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{e.id}</span>
+	</div>
+{/snippet}
+
 <PaginatedTable
 	paginatedResponse={data.expenses}
-	{columns}
+	columns={[
+		{ key: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
+		...columns,
+		{
+			key: 'confirmed_at',
+			header: $_('admin_expenses.columns.status'),
+			renderSnippet: statusCell,
+			width: 'w-56'
+		}
+	]}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}
+	scrollable
 	rowProps={{
 		onClick: (e) => goto(`/${e.owner.username}/expenses/${e.id}`),
 		class: 'cursor-pointer'

@@ -2,6 +2,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from core.api.problems import EmptyCommentProblem
 from expenses.models import File, Profile, Comment, Payment
 
 
@@ -12,6 +13,7 @@ class ClaimSerializer(serializers.Serializer):
     amount = serializers.CharField()
     status = serializers.CharField()
     date = serializers.DateField()
+    created_date = serializers.DateField()
 
 
 class ProblemDetailSerializer(serializers.Serializer):
@@ -58,10 +60,21 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentCreateSerializer(serializers.Serializer):
     content = serializers.CharField(
-        allow_blank=False, help_text="The body of the comment, must be non-empty."
+        allow_blank=True, help_text="The body of the comment, must be non-empty."
     )
+
+    def validate_content(self, value):
+        if not value.strip():
+            raise EmptyCommentProblem()
+        return value
 
 
 @extend_schema_field(OpenApiTypes.BINARY)
 class UploadField(serializers.FileField):
     pass
+
+
+class AccountSerializer(serializers.Serializer):
+    part_id = serializers.IntegerField()
+    cost_centre = serializers.CharField(allow_blank=False)
+    account_number = serializers.IntegerField(min_value=0, max_value=9999)

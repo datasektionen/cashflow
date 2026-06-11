@@ -41,3 +41,23 @@ class FlaggedConfirmationError(NotConfirmableError):
 
 class DuplicateConfirmationError(ConfirmationError):
     pass
+
+
+class AccountingError(Exception):
+    pass
+
+
+class UnauthorizedAccountingError(AccountingError):
+    pass
+
+
+class AlreadyAccountedError(AccountingError):
+    pass
+
+
+class FortnoxRecordMissingError(AccountingError):
+    pass
+
+
+class CashflowVerificationMissingError(AccountingError):
+    pass
