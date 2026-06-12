@@ -11,91 +11,94 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import sys
 import re
-import dj_database_url
+import sys
 
-# https://stackoverflow.com/questions/74875604/cannot-import-name-urlquote-from-django-utils-http
-# Fix for broken "django-queued-storage" dependency
-# TODO: Replace this dependency
-# from urllib.parse import quote
-# django.utils.http.urlquote = quote
+import dj_database_url
+import structlog
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = BASE_DIR
 
-# noinspection PyRedeclaration
-AUTHENTICATION_BACKENDS = ['cashflow.dauth.DAuth']
+AUTHENTICATION_BACKENDS = ["cashflow.dauth.DAuth"]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', '-01^^veefr*f_p=phew0w7ib37_738%=lwmp9n4bl_2*5^)vjy')
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "-01^^veefr*f_p=phew0w7ib37_738%=lwmp9n4bl_2*5^)vjy"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.getenv('DEBUG', 'False') == "True")
+DEBUG = bool(os.getenv("DEBUG", "False") == "True")
 
-GOOGLE_ANALYTICS_KEY = os.getenv('GOOGLE_ANALYTICS_KEY')
+GOOGLE_ANALYTICS_KEY = os.getenv("GOOGLE_ANALYTICS_KEY")
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # CORS configuration
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [ "https://cashflow.datasektionen.se" ]
+CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-    'rest_framework',
-    'storages',
-    'corsheaders',
-    'widget_tweaks',
-    'expenses',
-    'invoices',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "rest_framework",
+    "storages",
+    "corsheaders",
+    "widget_tweaks",
+    "cashflow",
+    "expenses",
+    "invoices",
+    "fortnox",
+    "drf_problems",
 )
 
 MIDDLEWARE = (
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "fortnox.django.FortnoxMiddleware",
+    "fortnox.django.FortnoxServiceMiddleware",
+    "cashflow.middleware.StructlogContextMiddleware",
 )
 
-ROOT_URLCONF = 'cashflow.urls'
+ROOT_URLCONF = "cashflow.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'string_if_invalid': '%s',
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": ["templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "string_if_invalid": "%s",
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'cashflow.wsgi.application'
+WSGI_APPLICATION = "cashflow.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -105,32 +108,36 @@ if os.environ.get("DATABASE_URL"):  # Stuff for when running in Dokku.
     # First group is the (ql)? group, hence _
     _, USER, PASSWORD, HOST, PORT, NAME = re.match(
         r"^postgres(ql)?://(?P<username>.*?):(?P<password>.*?)@(?P<host>.*?):(?P<port>\d+)/(?P<db>.*?)$",
-        os.environ.get("DATABASE_URL", "")).groups()
+        os.environ.get("DATABASE_URL", ""),
+    ).groups()
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': NAME,
-            'USER': USER,
-            'PASSWORD': PASSWORD,
-            'HOST': HOST,
-            'PORT': PORT,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": NAME,
+            "USER": USER,
+            "PASSWORD": PASSWORD,
+            "HOST": HOST,
+            "PORT": PORT,
         }
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'cashflow'),
-            'USER': os.getenv('DB_USER', 'cashflow'),
-            'PASSWORD': os.getenv('DB_PASS', 'cashflow'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "cashflow"),
+            "USER": os.getenv("DB_USER", "cashflow"),
+            "PASSWORD": os.getenv("DB_PASS", "cashflow"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
         }
     }
 
 db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
+DATABASES["default"].update(db_from_env)
+
+
+REST_FRAMEWORK = {"EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler"}
 
 # noinspection PyRedeclaration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
@@ -138,9 +145,9 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'sv-SE'
+LANGUAGE_CODE = "sv-SE"
 
-TIME_ZONE = 'Europe/Stockholm'
+TIME_ZONE = "Europe/Stockholm"
 
 USE_I18N = True
 
@@ -148,81 +155,168 @@ USE_L10N = True
 
 USE_TZ = True
 
-OIDC_PROVIDER = os.getenv('OIDC_PROVIDER')
-OIDC_ID = os.getenv('OIDC_ID')
-OIDC_SECRET = os.getenv('OIDC_SECRET')
-REDIRECT_URL = os.getenv('REDIRECT_URL')
+OIDC_PROVIDER = os.getenv("OIDC_PROVIDER")
+OIDC_ID = os.getenv("OIDC_ID")
+OIDC_SECRET = os.getenv("OIDC_SECRET")
+REDIRECT_URL = os.getenv("REDIRECT_URL")
 
-BUDGET_URL = os.getenv('BUDGET_URL', 'https://budget.datasektionen.se')
+BUDGET_URL = os.getenv("BUDGET_URL", "https://budget.datasektionen.se")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
+STATIC_URL = "/static/"
 
 # Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, 'staticfiles'),)
+STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, "staticfiles"),)
 
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.django.GzipManifestStaticFilesStorage"
 
-AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID', 'unset')
-AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY', 'unset')
+AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "unset")
+AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "unset")
 
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
-            "bucket_name": os.getenv('S3_BUCKET_NAME', 'cashflow'),
+            "bucket_name": os.getenv("S3_BUCKET_NAME", "cashflow"),
             "file_overwrite": False,
-            "location":  'media',
-            "region_name": os.getenv('S3_REGION', 'eu-west-1'),
+            "location": "media",
+            "region_name": os.getenv("S3_REGION", "eu-west-1"),
             "addressing_style": "path" if DEBUG == True else "virtual",
-            "endpoint_url": os.getenv('S3_HOST', 'http://localhost:9090') if DEBUG == True else None
+            "endpoint_url": (
+                os.getenv("S3_HOST", "http://localhost:9090") if DEBUG == True else None
+            ),
         },
     },
-    "staticfiles": STATICFILES_STORAGE
+    "staticfiles": STATICFILES_STORAGE,
 }
 
-SPAM_URL = os.getenv('SPAM_URL', 'https://spam.datasektionen.se')
-SPAM_API_KEY = os.getenv('SPAM_API_KEY', 'unset')
+SPAM_URL = os.getenv("SPAM_URL", "https://spam.datasektionen.se")
+SPAM_API_KEY = os.getenv("SPAM_API_KEY", "unset")
 
-HIVE_URL = os.getenv('HIVE_URL', 'https://hive.datasektionen.se')
-HIVE_SECRET = os.getenv('HIVE_SECRET', 'unset')
+HIVE_URL = os.getenv("HIVE_URL", "https://hive.datasektionen.se")
+HIVE_SECRET = os.getenv("HIVE_SECRET", "unset")
 
-RFINGER_API_URL = os.getenv('RFINGER_API_URL', 'https://rfinger.datasektionen.se')
-RFINGER_API_KEY = os.getenv('RFINGER_API_KEY', 'unset')
+RFINGER_API_URL = os.getenv("RFINGER_API_URL", "https://rfinger.datasektionen.se")
+RFINGER_API_KEY = os.getenv("RFINGER_API_KEY", "unset")
 
+# Only send emails if set to true
+SEND_EMAILS = os.getenv("SEND_EMAILS", True) == "True"
+
+
+# Make sure the event field comes first in the structured log
+def _event_first(_logger, _method_name, event_dict):
+    if "event" in event_dict:
+        event_dict = {"event": event_dict.pop("event"), **event_dict}
+    return event_dict
+
+
+_renderer = (
+    structlog.dev.ConsoleRenderer() if DEBUG else structlog.processors.JSONRenderer()
+)
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        _event_first,
+        _renderer,
+    ],
+)
+LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '{levelname} {asctime} {module}: {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "{levelname} {asctime} {module}: {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'simple',
+    "handlers": {
+        "console": {
+            "level": LOG_LEVEL,
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "simple",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        # Some loggers are very noisy when in debug, so we adjust their levels
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
+        "django.template": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "urllib3": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
     },
 }
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cashflow-default",
+        "OPTIONS": {
+            "MAX_ENTRIES": 10000,
+        },
+    },
+}
+
+# How long to cache cost centers from GOrdian
+GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
+
+#
+# Fortnox settings
+#
+
+
+# Callback to determine if a user should be able to use the Fortnox integration
+FORTNOX_SERVICE_AUTH = "cashflow.utils.has_accounting_permissions"
+
+# Callback to determine that a user (Kassör) can authenticate the integration
+FORTNOX_ALLOW_AUTHENTICATION_CALLBACK = "cashflow.utils.may_authenticate_fortnox"
+
+# How long to cache (active) accounts and cost centers retrieved from Fortnox
+FORTNOX_ACCOUNT_CACHE_TIMEOUT = 24
+FORTNOX_COST_CENTER_CACHE_TIMEOUT = 24
+FORTNOX_CLIENT_ID = os.getenv("FORTNOX_CLIENT_ID", "client_id")
+FORTNOX_CLIENT_SECRET = os.getenv("FORTNOX_CLIENT_SECRET")
+FORTNOX_SCOPE = [
+    "bookkeeping",
+    "companyinformation",
+    "settings",
+    "customer",
+    "profile",
+    "costcenter",
+]
+# urlconf to redirect when requiring Fortnox authentication
+FORTNOX_AUTH_REDIRECT = "fortnox-auth-get"
+# These determine which account number and voucher series that is sent to Fortnox when accounting
+FORTNOX_EXPENSE_CREDIT_ACCOUNT = 2820
+FORTNOX_INVOICE_CREDIT_ACCOUNT = 2440
+FORTNOX_EXPENSE_VOUCHER_SERIES = "E"
+FORTNOX_INVOICE_VOUCHER_SERIES = "U"
+
+
+# When accounting to Fortnox the description fill follow this format
+FORTNOX_DESCRIPTION_FORMAT = "({id}) {description}"
