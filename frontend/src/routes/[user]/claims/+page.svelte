@@ -58,9 +58,9 @@
 			width: 'auto'
 		},
 		{
-			key: 'date',
+			key: 'created_date',
 			header: $_('admin_expenses.columns.expense_date'),
-			render: (row) => new Date(row.date).toLocaleDateString(),
+			render: (row) => row.created_date,
 			width: 'w-32'
 		}
 	];

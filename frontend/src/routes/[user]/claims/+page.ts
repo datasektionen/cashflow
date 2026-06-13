@@ -19,7 +19,7 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		claims = await api.claims.list(params.user, page, perPage);
+		claims = await api.claims.list(page, perPage, { user: params.user });
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;

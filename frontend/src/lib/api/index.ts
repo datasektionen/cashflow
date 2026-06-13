@@ -15,7 +15,7 @@ export class API {
 	profilePictures: ProfilePictureAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
-		const client = new ApiClient(apiUrl, fetch);
+		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
 		this.expenses = new ExpensesAPI(client);
 		this.invoices = new InvoicesAPI(client);
 		this.users = new UsersAPI(client);

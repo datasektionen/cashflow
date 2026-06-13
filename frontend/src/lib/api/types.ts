@@ -96,16 +96,16 @@ export type ExpensePart = {
 	attest_date: string | null;
 };
 
-export type ClaimStatus = 'submitted' | 'paid';
-
 export type Claim = {
 	id: number;
 	type: 'expense' | 'invoice';
 	description: string;
 	amount: string;
-	status: ClaimStatus;
-	date: string;
 	created_date: string;
+	is_attested: boolean;
+	is_confirmed: boolean;
+	is_paid: boolean;
+	owner: Profile;
 };
 
 export type PaginatedResponse<T> = {
@@ -150,4 +150,15 @@ export type ActionSummary = {
 		accountable: number;
 		payable: number;
 	};
+};
+
+export type ClaimFilter = {
+	user?: string;
+	cost_centre?: string;
+	secondary_cost_centre?: string;
+	budget_line?: string;
+	attestable?: boolean;
+	confirmable?: boolean;
+	accountable?: boolean;
+	payable?: boolean;
 };

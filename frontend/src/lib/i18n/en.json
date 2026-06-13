@@ -97,6 +97,18 @@
 
 	"claims_type": "Type",
 
+	"admin_attestable": {
+		"title": "Attest",
+		"columns": {
+			"id": "ID",
+			"type": "Type",
+			"description": "Description",
+			"owner": "Owner",
+			"amount": "Amount",
+			"status": "Status"
+		}
+	},
+
 	"admin_paginatedResponse": {
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",

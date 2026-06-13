@@ -80,6 +80,18 @@
 
 	"claims_type": "Typ",
 
+	"admin_attestable": {
+		"title": "Attestera",
+		"columns": {
+			"id": "ID",
+			"type": "Typ",
+			"description": "Beskrivning",
+			"owner": "Ägare",
+			"amount": "Belopp",
+			"status": "Status"
+		}
+	},
+
 	"admin_expenses": {
 		"title": "Utlägg",
 		"nav_title": "Alla utlägg",
