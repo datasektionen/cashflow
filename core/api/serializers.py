@@ -1,3 +1,6 @@
+from datetime import date
+from typing import TypedDict
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -6,14 +9,16 @@ from core.api.problems import EmptyCommentProblem
 from expenses.models import File, Profile, Comment, Payment
 
 
-class ClaimSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    type = serializers.CharField()
-    description = serializers.CharField()
-    amount = serializers.CharField()
-    status = serializers.CharField()
-    date = serializers.DateField()
-    created_date = serializers.DateField()
+class ClaimData(TypedDict):
+    id: int
+    type: str
+    description: str
+    amount: str
+    created_date: date
+    is_attested: bool
+    is_confirmed: bool
+    is_paid: bool
+    owner: Profile
 
 
 class ProblemDetailSerializer(serializers.Serializer):
@@ -39,6 +44,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["id", "first_name", "last_name", "email", "username"]
+
+
+class ClaimSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    type = serializers.CharField()
+    description = serializers.CharField()
+    amount = serializers.CharField()
+    created_date = serializers.DateField()
+    is_attested = serializers.BooleanField(read_only=True)
+    is_confirmed = serializers.BooleanField(read_only=True)
+    is_paid = serializers.BooleanField(read_only=True)
+    owner = ProfileSerializer(read_only=True)
 
 
 class PaymentSerializer(serializers.ModelSerializer):

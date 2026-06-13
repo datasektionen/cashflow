@@ -1,15 +1,22 @@
-from enum import Enum
-
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema_view, extend_schema, inline_serializer
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    inline_serializer,
+)
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.api.filters import (
+    apply_expense_filters,
+    apply_invoice_filters,
+    OPENAPI_PARAMS,
+)
 from core.api.pagination import DefaultPagination
-from core.api.serializers import ClaimSerializer
+from core.api.serializers import ClaimSerializer, ClaimData
 from core.api.utils import AuthenticatedUserMixin
 from expenses.models import Expense
 from invoices.models import Invoice
@@ -17,21 +24,13 @@ from invoices.models import Invoice
 UserModel = get_user_model()
 
 
-class ClaimStatus(Enum):
-    SUBMITTED = "submitted"
-    PAID = "paid"
-
-
-def get_status(target: Expense | Invoice) -> str:
-    return ClaimStatus.PAID.value if target.is_paid() else ClaimStatus.SUBMITTED.value
-
-
 @extend_schema_view(
     get=extend_schema(
         tags=["Users"],
         summary="List claims",
-        description="List all claims (expenses and invoices) for the given user. Admins may view any user's claims; others may only view their own.",
+        description="List all claims (expenses and invoices). Defaults to the requesting user. Pass `?user=<username>` to view another user's claims (admins only).",
         responses=ClaimSerializer(many=True),
+        parameters=list(OPENAPI_PARAMS.values()),
     )
 )
 class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
@@ -52,40 +51,53 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         except UserModel.DoesNotExist:
             raise NotFound(f"User '{username}' not found.")
 
-    def get(self, request, username):
+    def get(self, request: Request):
+        username = request.GET.get("user", self.current_user.username)
         target = self._resolve_target_user(username)
-        expenses = Expense.objects.filter(owner=target.profile)
-        invoices = Invoice.objects.filter(owner=target.profile)
-        data = sorted(
-            [
-                {
-                    "type": "expense",
-                    "description": expense.description,
-                    "id": expense.id,
-                    "amount": expense.total_amount(),
-                    "status": get_status(expense),
-                    "date": expense.expense_date,
-                    "created_date": expense.created_date,
-                }
-                for expense in expenses
-            ]
-            + [
-                {
-                    "type": "invoice",
-                    "description": invoice.description,
-                    "id": invoice.id,
-                    "amount": invoice.total_amount(),
-                    "status": get_status(invoice),
-                    "date": invoice.invoice_date,
-                    "created_date": invoice.created_date,
-                }
-                for invoice in invoices
-            ],
+
+        expenses = Expense.objects.viewable_by(self.current_user)
+        invoices = Invoice.objects.viewable_by(self.current_user)
+
+        expenses = apply_expense_filters(expenses, request.GET, self.current_user)
+        invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
+
+        expense_data: list[ClaimData] = [
+            {
+                "id": expense.id,
+                "type": "expense",
+                "description": expense.description,
+                "amount": expense.total_amount(),
+                "created_date": expense.created_date,
+                "is_attested": expense.is_attested(),
+                "is_confirmed": expense.confirmed_by is not None,
+                "is_paid": expense.is_paid(),
+                "owner": expense.owner,
+            }
+            for expense in expenses
+        ]
+
+        invoice_data: list[ClaimData] = [
+            {
+                "id": invoice.id,
+                "type": "invoice",
+                "description": invoice.description,
+                "amount": invoice.total_amount(),
+                "created_date": invoice.created_date,
+                "is_attested": invoice.is_attested(),
+                "is_confirmed": invoice.confirmed_by is not None,
+                "is_paid": invoice.is_paid(),
+                "owner": invoice.owner,
+            }
+            for invoice in invoices
+        ]
+
+        data: list[ClaimData] = sorted(
+            expense_data + invoice_data,
             key=lambda x: x["created_date"],
             reverse=True,
         )
 
-        page = self.paginate_queryset(data)
+        page: list[Expense | Invoice] | None = self.paginate_queryset(data)  # type: ignore[arg-type]
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)

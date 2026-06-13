@@ -1,7 +1,9 @@
 import pytest
+from datetime import date
 from hypothesis import given, settings, HealthCheck, strategies as st
 
 from cashflow.dauth import Permission
+from core.api.serializers import ClaimData, ClaimSerializer
 from expenses.factories import ExpenseFactory
 from invoices.factories import InvoiceFactory
 
@@ -121,3 +123,27 @@ class TestConfirmation:
 
         assert response.status_code == 409
         assert response.data["detail"].code == "resource_is_flagged"
+
+
+class TestClaimSerializer:
+
+    def test_claim_data_matches_serializer(self):
+        # Compares the defined keys of the typed dict class and serializer class
+        data_fields = ClaimData.__annotations__.keys()
+        serializer_fields = ClaimSerializer._declared_fields
+        assert set(data_fields) == set(serializer_fields)
+
+    def test_serializes_claim_data(self):
+        data: ClaimData = {
+            "id": 1,
+            "type": "expense",
+            "description": "Lunch",
+            "amount": "123.45",
+            "created_date": date(2024, 1, 1),
+            "is_attested": False,
+            "is_confirmed": False,
+            "is_paid": False,
+        }
+        result = ClaimSerializer(data).data
+        assert result["amount"] == "123.45"
+        assert result["created_date"] == "2024-01-01"

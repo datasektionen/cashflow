@@ -6,7 +6,7 @@ from core.api.views import ActionSummary, ClaimsList
 
 urlpatterns = [
     path("features/", views.FeaturesList.as_view(), name="feature-flags"),
-    path("<str:username>/claims/", ClaimsList.as_view(), name="claims-list"),
+    path("claims/", ClaimsList.as_view(), name="claims-list"),
     path("actions/", ActionSummary.as_view(), name="action-summary"),
     path(
         "cost-centres/",

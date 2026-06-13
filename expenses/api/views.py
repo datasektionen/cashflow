@@ -43,7 +43,7 @@ from core.api.problems import (
     PartInvalidJSONProblem,
     PartRequiredProblem,
 )
-from core.api.filters import Filter
+from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
 from core.api.serializers import CommentSerializer, CommentCreateSerializer
 from core.api.utils import AuthenticatedUserMixin
@@ -83,13 +83,9 @@ logger = get_logger(__name__)
 @extend_schema_view(
     list=extend_schema(
         summary="List expenses",
-        description=(
-            "Returns the paginated set of claims the requesting user is "
-            "allowed to see. Supports optional filtering by owner via "
-            "`?user=<username>` and by cost centre via `?cost_center=<name>`."
-        ),
         operation_id="list_expenses",
         tags=["Expenses"],
+        parameters=list(OPENAPI_PARAMS.values()),
         responses={
             HTTP_200_OK: ExpenseAdminSerializer,
             HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
@@ -233,24 +229,18 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
+        queryset = Expense.objects.viewable_by(self.current_user)
 
-        filter_map = {}
-        if self.request.GET.get(Filter.USER):
+        if username := self.request.GET.get(Filter.USER):
             try:
-                filtered_user = UserModel.objects.get(
-                    username=self.request.GET.get(Filter.USER)
+                queryset = queryset.filter(
+                    owner__user=UserModel.objects.get(username=username)
                 )
-                filter_map["owner__user"] = filtered_user
             except UserModel.DoesNotExist:
                 pass
-        if self.request.GET.get(Filter.COST_CENTER):
-            filter_map["expensepart__cost_centre__in"] = [
-                self.request.GET.get(Filter.COST_CENTER)
-            ]
 
         return (
-            Expense.objects.viewable_by(self.current_user)
-            .filter(**filter_map)
+            apply_expense_filters(queryset, self.request.GET, self.current_user)
             .distinct()
             .order_by("-created_date")
         )

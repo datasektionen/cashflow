@@ -122,7 +122,7 @@ class TestExpenseListFilters:
         for expense in expenses:
             ExpensePartFactory.create_batch(2, expense=expense, cost_centre=target_cc)
 
-        response = client.get("/api/expenses/", {"cost_center": target_cc})
+        response = client.get("/api/expenses/", {"cost_centre": target_cc})
 
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5

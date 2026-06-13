@@ -13,7 +13,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import Filter
+from core.api.filters import Filter, apply_invoice_filters, OPENAPI_PARAMS
 from core.api.openapi import problems
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
@@ -53,6 +53,7 @@ logger = get_logger(__name__)
     list=extend_schema(
         tags=["Invoices"],
         summary="List invoices",
+        parameters=list(OPENAPI_PARAMS.values()),
         responses={
             status.HTTP_200_OK: InvoiceSerializer,
             status.HTTP_401_UNAUTHORIZED: problems(NotAuthenticated),
@@ -151,23 +152,18 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
-        filter_map = {}
-        if self.request.GET.get(Filter.USER):
+        queryset = Invoice.objects.viewable_by(self.current_user)
+
+        if username := self.request.GET.get(Filter.USER):
             try:
-                filtered_user = User.objects.get(
-                    username=self.request.GET.get(Filter.USER)
+                queryset = queryset.filter(
+                    owner__user=User.objects.get(username=username)
                 )
-                filter_map["owner__user"] = filtered_user
             except User.DoesNotExist:
                 pass
-        if self.request.GET.get(Filter.COST_CENTER):
-            filter_map["invoicepart__cost_centre__in"] = [
-                self.request.GET.get(Filter.COST_CENTER),
-            ]
 
         return (
-            Invoice.objects.viewable_by(self.current_user)
-            .filter(**filter_map)
+            apply_invoice_filters(queryset, self.request.GET, self.current_user)
             .distinct()
             .order_by("-created_date")
         )
