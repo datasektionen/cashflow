@@ -90,9 +90,7 @@ class TestConfirmation:
 
         response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
 
-        assert response.status_code == 200
-        assert response.data["confirmed_by"]["username"] == user.username
-        assert response.data["confirmed_at"] == today.strftime("%Y-%m-%d")
+        assert response.status_code == 204
 
     @pytest.mark.django_db
     def test_confirm_rejects_unauthorized(self, api_client, mocker):

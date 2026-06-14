@@ -36,8 +36,11 @@ from core.api.problems import (
     AlreadyConfirmedProblem,
     AttestationPermissionDeniedProblem,
     ConfirmationPermissionDeniedProblem,
+    UnconfirmationPermissionDeniedProblem,
+    NotConfirmedProblem,
     EmptyCommentProblem,
     FileRequiredProblem,
+    FlagPermissionDeniedProblem,
     IsFlaggedProblem,
     NotConfirmableProblem,
     PartInvalidJSONProblem,
@@ -50,7 +53,10 @@ from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
+    FlaggedAttestationError,
     UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
+    NotConfirmedError,
     NotConfirmableError,
     FlaggedConfirmationError,
     DuplicateConfirmationError,
@@ -160,13 +166,47 @@ logger = get_logger(__name__)
         description="Marks an expense as confirmed. Submit as an empty POST request.",
         request=None,
         responses={
-            status.HTTP_200_OK: ExpenseSerializer,
+            status.HTTP_204_NO_CONTENT: None,
             status.HTTP_403_FORBIDDEN: problem(ConfirmationPermissionDeniedProblem),
             status.HTTP_409_CONFLICT: problems(
                 AlreadyConfirmedProblem, IsFlaggedProblem, NotConfirmableProblem
             ),
         },
         operation_id="confirm_expense",
+    ),
+    unconfirm=extend_schema(
+        tags=["Expenses"],
+        summary="Unconfirm an expense",
+        description="Removes the confirmation from an expense. Submit as an empty POST request.",
+        request=None,
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: problem(UnconfirmationPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problem(NotConfirmedProblem),
+        },
+        operation_id="unconfirm_expense",
+    ),
+    flag=extend_schema(
+        tags=["Expenses"],
+        summary="Flag an expense",
+        description="Marks an expense as flagged. Submit as an empty POST request.",
+        request=None,
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: problem(FlagPermissionDeniedProblem),
+        },
+        operation_id="flag_expense",
+    ),
+    unflag=extend_schema(
+        tags=["Expenses"],
+        summary="Unflag an expense",
+        description="Removes the flag from an expense. Submit as an empty POST request.",
+        request=None,
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: problem(FlagPermissionDeniedProblem),
+        },
+        operation_id="unflag_expense",
     ),
     account=extend_schema(
         tags=["Expenses"],
@@ -279,7 +319,38 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                     detail="This expense has already been confirmed."
                 ) from e
             expense.save()
-        return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["POST"])
+    def unconfirm(self, request: Request, pk=None) -> Response:
+        with transaction.atomic():
+            expense = Expense.objects.select_for_update().get(pk=pk)
+            try:
+                expense.unconfirm(self.current_user)
+            except UnauthorizedUnconfirmationError as e:
+                raise UnconfirmationPermissionDeniedProblem() from e
+            except NotConfirmedError as e:
+                raise NotConfirmedProblem() from e
+            expense.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["POST"])
+    def flag(self, request: Request, pk=None) -> Response:
+        if not self.current_user.profile.may_flag():
+            raise FlagPermissionDeniedProblem()
+        expense = self.get_object()
+        expense.is_flagged = True
+        expense.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["POST"])
+    def unflag(self, request: Request, pk=None) -> Response:
+        if not self.current_user.profile.may_flag():
+            raise FlagPermissionDeniedProblem()
+        expense = self.get_object()
+        expense.is_flagged = False
+        expense.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
     def account(self, request: Request, pk=None) -> Response:
@@ -338,7 +409,7 @@ class ExpensePartAttestView(
         operation_id="attest",
         request=None,
         responses={
-            HTTP_204_NO_CONTENT: ExpensePartSerializer,
+            HTTP_204_NO_CONTENT: None,
             HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
         },
     )
@@ -349,6 +420,10 @@ class ExpensePartAttestView(
             expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
             try:
                 expense_part.attest(self.current_user)
+            except FlaggedAttestationError:
+                raise IsFlaggedProblem(
+                    detail="This expense is flagged and cannot be attested."
+                )
             except UnauthorizedAttestationError:
                 raise AttestationPermissionDeniedProblem(
                     detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
@@ -358,6 +433,4 @@ class ExpensePartAttestView(
                     detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
                 )
 
-        return Response(
-            ExpensePartSerializer(expense_part).data, status=status.HTTP_204_NO_CONTENT
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)

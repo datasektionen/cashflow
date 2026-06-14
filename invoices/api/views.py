@@ -30,7 +30,9 @@ from core.api.problems import (
     AttestationPermissionDeniedProblem,
     EmptyCommentProblem,
     ConfirmationPermissionDeniedProblem,
+    UnconfirmationPermissionDeniedProblem,
     NotConfirmableProblem,
+    NotConfirmedProblem,
     AlreadyConfirmedProblem,
 )
 from .serializers import (
@@ -42,6 +44,8 @@ from ..models import Invoice, InvoicePart
 from core.exceptions import (
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
+    NotConfirmedError,
     DuplicateConfirmationError,
 )
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
@@ -114,11 +118,23 @@ logger = get_logger(__name__)
         operation_id="confirm_invoice",
         request=None,
         responses={
-            status.HTTP_200_OK: InvoiceSerializer,
+            status.HTTP_204_NO_CONTENT: None,
             status.HTTP_403_FORBIDDEN: problems(ConfirmationPermissionDeniedProblem),
             status.HTTP_409_CONFLICT: problems(
                 NotConfirmableProblem, AlreadyConfirmedProblem
             ),
+        },
+    ),
+    unconfirm=extend_schema(
+        tags=["Invoices"],
+        summary="Unconfirm an invoice",
+        description="Removes the confirmation from an invoice. Submit as an empty POST request.",
+        operation_id="unconfirm_invoice",
+        request=None,
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: problems(UnconfirmationPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(NotConfirmedProblem),
         },
     ),
 )
@@ -198,7 +214,19 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                     detail="This invoice has already been confirmed."
                 ) from e
 
-        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["POST"])
+    def unconfirm(self, request: Request, pk=None) -> Response:
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            try:
+                invoice.unconfirm(self.current_user)
+            except UnauthorizedUnconfirmationError as e:
+                raise UnconfirmationPermissionDeniedProblem() from e
+            except NotConfirmedError as e:
+                raise NotConfirmedProblem() from e
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InvoicePartAttestView(

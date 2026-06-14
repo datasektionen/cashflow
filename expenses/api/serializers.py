@@ -21,6 +21,7 @@ class ExpensePartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpensePart
         fields = [
+            "id",
             "expense",
             "cost_centre",
             "secondary_cost_centre",

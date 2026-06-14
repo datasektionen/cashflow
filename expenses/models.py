@@ -18,7 +18,10 @@ from core.permissions import get_permission_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
+    FlaggedAttestationError,
     UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
+    NotConfirmedError,
     DuplicateConfirmationError,
     FlaggedConfirmationError,
     UnauthorizedAccountingError,
@@ -249,7 +252,11 @@ class Payment(models.Model):
 class ExpenseQuerySet(models.QuerySet["Expense"]):
 
     def attestable_for(self, user: User) -> "ExpenseQuerySet":
-        qs = self.filter(expensepart__attested_by__isnull=True).exclude(is_flagged=True)
+        qs = (
+            self.filter(expensepart__attested_by__isnull=True)
+            .exclude(is_flagged=True)
+            .exclude(owner__user=user)
+        )
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             qs = qs.filter(expensepart__cost_centre__in=cost_centres)
@@ -466,6 +473,14 @@ class Expense(models.Model):
         self.confirmed_by = user
         self.confirmed_at = date.today()
 
+    def unconfirm(self, user: User):
+        if not user.profile.may_unconfirm():
+            raise UnauthorizedUnconfirmationError()
+        if not self.confirmed_by:
+            raise NotConfirmedError()
+        self.confirmed_by = None
+        self.confirmed_at = None
+
     @staticmethod
     def payable():
         return (
@@ -555,7 +570,8 @@ class ExpensePart(models.Model):
         )
 
     def attest(self, user: User):
-
+        if self.expense.is_flagged:
+            raise FlaggedAttestationError()
         if self.cost_centre not in user.profile.attestable_cost_centres():
             raise UnauthorizedAttestationError()
         if self.expense.owner == user.profile:

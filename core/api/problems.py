@@ -110,6 +110,36 @@ class IsFlaggedProblem(APIException):
 register_exception(IsFlaggedProblem)
 
 
+class UnconfirmationPermissionDeniedProblem(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    title = "Unconfirmation permission denied"
+    default_detail = "You do not have permission to unconfirm this expense or invoice."
+    default_code = "unconfirmation_permission_denied"
+
+
+register_exception(UnconfirmationPermissionDeniedProblem)
+
+
+class NotConfirmedProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    title = "Resource is not confirmed"
+    default_detail = "This expense or invoice is not confirmed."
+    default_code = "not_confirmed"
+
+
+register_exception(NotConfirmedProblem)
+
+
+class FlagPermissionDeniedProblem(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    title = "Flag permission denied"
+    default_detail = "You do not have permission to flag this expense."
+    default_code = "flag_permission_denied"
+
+
+register_exception(FlagPermissionDeniedProblem)
+
+
 class AccountingPermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "accounting_permission_denied"

@@ -244,8 +244,9 @@ class TestExpensePartAttestation:
         response = client.post(f"/api/expense-parts/{expense_part.id}/attest/")
 
         assert response.status_code == 204
-        assert response.data["attest_date"] == today.strftime("%Y-%m-%d")
-        assert response.data["attested_by"]["id"] == user.profile.id
+        expense_part.refresh_from_db()
+        assert expense_part.attest_date == today
+        assert expense_part.attested_by == user.profile
 
         comment = Comment.objects.filter(
             expense=expense_part.expense, author=user.profile
@@ -275,6 +276,22 @@ class TestExpensePartAttestation:
         )
         assert response.status_code == 403
         assert response.data["detail"].code == "attestation_permission_denied"
+
+    @pytest.mark.django_db
+    def test_cant_attest_flagged_expense(self, user, client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ATTEST: ["A"], Permission.VIEW_EXPENSES: ["A"]},
+            autospec=True,
+        )
+        expense_part = ExpensePartFactory.create(
+            cost_centre="A", expense__is_flagged=True
+        )
+        response = client.post(
+            f"/api/expense-parts/{expense_part.id}/attest/",
+        )
+        assert response.status_code == 409
+        assert response.data["detail"].code == "resource_is_flagged"
 
 
 class TestExpenseSerializer:

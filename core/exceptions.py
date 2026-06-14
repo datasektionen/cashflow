@@ -23,6 +23,10 @@ class UnauthorizedAttestationError(AttestationError):
     pass
 
 
+class FlaggedAttestationError(AttestationError):
+    pass
+
+
 class ConfirmationError(Exception):
     pass
 
@@ -40,6 +44,14 @@ class FlaggedConfirmationError(NotConfirmableError):
 
 
 class DuplicateConfirmationError(ConfirmationError):
+    pass
+
+
+class UnauthorizedUnconfirmationError(ConfirmationError):
+    pass
+
+
+class NotConfirmedError(ConfirmationError):
     pass
 
 

@@ -10,6 +10,8 @@ from core.permissions import get_permission_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
+    NotConfirmedError,
     DuplicateConfirmationError,
     UnauthorizedAccountingError,
     AlreadyAccountedError,
@@ -23,7 +25,9 @@ if TYPE_CHECKING:
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
     def attestable_for(self, user: User) -> "InvoiceQuerySet":
-        qs = self.filter(invoicepart__attested_by__isnull=True)
+        qs = self.filter(invoicepart__attested_by__isnull=True).exclude(
+            owner__user=user
+        )
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
@@ -167,6 +171,15 @@ class Invoice(models.Model):
         self.confirmed_at = date.today()
         self.save()
 
+    def unconfirm(self, user: User):
+        if not user.profile.may_unconfirm():
+            raise UnauthorizedUnconfirmationError()
+        if not self.confirmed_by:
+            raise NotConfirmedError()
+        self.confirmed_by = None
+        self.confirmed_at = None
+        self.save()
+
     def account(
         self,
         user: User,
@@ -220,7 +233,11 @@ class Invoice(models.Model):
             created = fortnox_client.create_voucher(
                 VoucherCreate(
                     Description=description,
-                    TransactionDate=self.invoice_date.strftime("%Y-%m-%d") if self.invoice_date else "",
+                    TransactionDate=(
+                        self.invoice_date.strftime("%Y-%m-%d")
+                        if self.invoice_date
+                        else ""
+                    ),
                     VoucherRows=voucher_rows,
                     VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
                 )

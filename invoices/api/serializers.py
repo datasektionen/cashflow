@@ -63,6 +63,7 @@ class InvoicePartSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoicePart
         fields = [
+            "id",
             "invoice",
             "cost_centre",
             "secondary_cost_centre",
