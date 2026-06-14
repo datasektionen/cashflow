@@ -48,6 +48,18 @@ export class InvoicesAPI {
 		return this.apiClient.post<Comment>(`invoices/${id}/comments/`, { content });
 	}
 
+	confirm(id: number) {
+		return this.apiClient.post<void>(`invoices/${id}/confirm/`, {});
+	}
+
+	unconfirm(id: number) {
+		return this.apiClient.post<void>(`invoices/${id}/unconfirm/`, {});
+	}
+
+	attestPart(partId: number) {
+		return this.apiClient.post<void>(`invoice-parts/${partId}/attest/`, {});
+	}
+
 	async create(data: InvoiceCreate): Promise<Invoice> {
 		const body = new FormData();
 		body.append('description', data.description);

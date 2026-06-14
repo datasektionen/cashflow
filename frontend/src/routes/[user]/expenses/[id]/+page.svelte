@@ -124,7 +124,7 @@
 	<div class="flex flex-col gap-12 lg:w-3/5 lg:pt-1">
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-			<PartsTable parts={expense.parts} {totalAmount} />
+			<PartsTable parts={expense.parts} owner={expense.owner} {totalAmount} />
 		</div>
 
 		<div>

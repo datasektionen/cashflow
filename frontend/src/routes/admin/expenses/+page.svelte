@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import BudgetLineTableCell from '$lib/components/BudgetLineTableCell.svelte';
+	import { Flag } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
 
@@ -64,6 +65,12 @@
 	{@const isAttested = e.parts.length > 0 && e.parts.every((p) => p.attested_by != null)}
 	{@const done = e.payment || e.verification}
 	<div class="flex gap-3">
+		{#if e.is_flagged}
+			<span class="flex items-center gap-1 text-xs text-amber-800 dark:text-amber-400">
+				<Flag class="size-3 shrink-0" />
+				{$_('expense_flagged')}
+			</span>
+		{/if}
 		{#if !done && isAttested}
 			<span class="flex items-center gap-1.5 text-xs">
 				<span
@@ -96,7 +103,7 @@
 				{e.verification}
 			</span>
 		{/if}
-		{#if !isAttested && !e.confirmed_at && !e.payment && !e.verification}
+		{#if !isAttested && !e.confirmed_at && !e.payment && !e.verification && !e.is_flagged}
 			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
 				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
 				></span>
@@ -143,7 +150,7 @@
 	{loading}
 	scrollable
 	rowProps={{
-		onClick: (e) => goto(`/${e.owner.username}/expenses/${e.id}`),
+		onClick: (e) => goto(`/admin/expenses/${e.id}`),
 		class: 'cursor-pointer'
 	}}
 />

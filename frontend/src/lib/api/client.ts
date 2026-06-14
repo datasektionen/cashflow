@@ -72,6 +72,7 @@ export class ApiClient {
 		}
 
 		log.debug({ path, status: response.status, duration_ms: duration }, 'API request succeeded');
+		if (response.status === 204) return undefined as T;
 		return response.json();
 	}
 

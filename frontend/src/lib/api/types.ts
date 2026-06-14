@@ -6,7 +6,7 @@ export type ExpenseFile = {
 };
 
 export type Profile = {
-	id: number;
+	id?: number;
 	first_name: string;
 	last_name: string;
 	email: string;
@@ -43,6 +43,7 @@ export type Expense = {
 };
 
 export type InvoicePart = {
+	id: number;
 	invoice?: number;
 	cost_centre: string;
 	secondary_cost_centre: string;
@@ -87,7 +88,7 @@ export interface ExpenseCreate {
 }
 
 export type ExpensePart = {
-	id?: number;
+	id: number;
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;

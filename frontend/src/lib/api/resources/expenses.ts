@@ -1,5 +1,11 @@
 import { ApiClient } from '$lib/api';
-import type { ClaimFilter, Expense, ExpenseCreate, PaginatedResponse } from '$lib/api/types';
+import type {
+	ClaimFilter,
+	Expense,
+	ExpenseCreate,
+	ExpensePart,
+	PaginatedResponse
+} from '$lib/api/types';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -59,5 +65,25 @@ export class ExpensesAPI {
 
 	comment(id: number, content: string) {
 		return this.apiClient.post<Comment>(`/expenses/${id}/comments/`, { content: content });
+	}
+
+	attestPart(partId: number) {
+		return this.apiClient.post<ExpensePart>(`/expense-parts/${partId}/attest/`, {});
+	}
+
+	confirm(id: number) {
+		return this.apiClient.post<void>(`/expenses/${id}/confirm/`, {});
+	}
+
+	unconfirm(id: number) {
+		return this.apiClient.post<void>(`/expenses/${id}/unconfirm/`, {});
+	}
+
+	flag(id: number) {
+		return this.apiClient.post<void>(`/expenses/${id}/flag/`, {});
+	}
+
+	unflag(id: number) {
+		return this.apiClient.post<void>(`/expenses/${id}/unflag/`, {});
 	}
 }

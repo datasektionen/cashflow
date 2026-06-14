@@ -206,6 +206,22 @@
 	"expense_owner": "Purchased by",
 	"expense_attested": "Attested",
 	"expense_confirmed": "Confirmed",
+	"expense_flagged": "Flagged",
+	"attest_disabled_flagged": "Cannot attest — this expense is flagged",
+	"confirm_disabled_flagged": "Cannot confirm — this expense is flagged",
+	"expense_confirm": "Confirm",
+	"expense_unconfirm": "Unconfirm",
+	"expense_flag": "Flag",
+	"expense_unflag": "Unflag",
+	"action_failed": "Action failed",
+	"alerts": {
+		"part_attested": "The receipt part has been attested",
+		"expense_confirmed": "The expense has been confirmed",
+		"expense_unconfirmed": "The expense has been unconfirmed",
+		"invoice_confirmed": "The invoice has been confirmed",
+		"invoice_unconfirmed": "The invoice has been unconfirmed",
+		"expense_unflagged": "The expense has been unflagged"
+	},
 	"expense_paid": "Reimbursed",
 	"expense_verification": "Voucher number",
 	"expense_status": {

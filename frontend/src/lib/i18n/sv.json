@@ -206,6 +206,22 @@
 	"expense_owner": "Köpt av",
 	"expense_attested": "Attesterad",
 	"expense_confirmed": "Bekräftad",
+	"expense_flagged": "Flaggad",
+	"attest_disabled_flagged": "Kan inte attestera — utlägget är flaggat",
+	"confirm_disabled_flagged": "Kan inte bekräfta — utlägget är flaggat",
+	"expense_confirm": "Bekräfta",
+	"expense_unconfirm": "Avbekräfta",
+	"expense_flag": "Flagga",
+	"expense_unflag": "Avflagga",
+	"action_failed": "Åtgärden misslyckades",
+	"alerts": {
+		"part_attested": "Kvittodelen har attesterats",
+		"expense_confirmed": "Utlägget har bekräftats",
+		"expense_unconfirmed": "Utlägget har avbekräftats",
+		"invoice_confirmed": "Fakturan har bekräftats",
+		"invoice_unconfirmed": "Fakturan har avbekräftats",
+		"expense_unflagged": "Utlägget har avflaggats"
+	},
 	"expense_paid": "Utbetald",
 	"expense_verification": "Verifikationsnummer",
 	"expense_status": {
