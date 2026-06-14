@@ -144,12 +144,15 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
+        parts_data = data["parts"]
         with transaction.atomic():
             invoice = serializer.save(owner=self.current_user.profile)
+            for part in parts_data:
+                InvoicePart.objects.create(invoice=invoice, **part)
             for f in files:
                 File.objects.create(invoice=invoice, file=f)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         queryset = Invoice.objects.viewable_by(self.current_user)

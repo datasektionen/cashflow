@@ -63,6 +63,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 "is_confirmed": expense.confirmed_by is not None,
                 "is_paid": expense.is_paid(),
                 "owner": expense.owner,
+                "parts": expense.parts.all(),
             }
             for expense in expenses
         ]
@@ -78,6 +79,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 "is_confirmed": invoice.confirmed_by is not None,
                 "is_paid": invoice.is_paid(),
                 "owner": invoice.owner,
+                "parts": invoice.parts.all(),
             }
             for invoice in invoices
         ]

@@ -143,6 +143,7 @@ class TestClaimSerializer:
             "is_attested": False,
             "is_confirmed": False,
             "is_paid": False,
+            "parts": [],
         }
         result = ClaimSerializer(data).data
         assert result["amount"] == "123.45"

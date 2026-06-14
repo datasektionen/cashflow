@@ -137,8 +137,4 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        parts_data = validated_data.pop("parts", [])
-        invoice = Invoice.objects.create(file_is_original=True, **validated_data)
-        for part in parts_data:
-            InvoicePart.objects.create(invoice=invoice, **part)
-        return invoice
+        return Invoice.objects.create(file_is_original=True, **validated_data)

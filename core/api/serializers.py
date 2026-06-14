@@ -19,6 +19,7 @@ class ClaimData(TypedDict):
     is_confirmed: bool
     is_paid: bool
     owner: Profile
+    parts: list
 
 
 class ProblemDetailSerializer(serializers.Serializer):
@@ -46,6 +47,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "email", "username"]
 
 
+class ClaimPartSerializer(serializers.Serializer):
+    cost_centre = serializers.CharField()
+    secondary_cost_centre = serializers.CharField()
+    budget_line = serializers.CharField()
+    amount = serializers.CharField()
+    attested_by = ProfileSerializer(read_only=True)
+    attest_date = serializers.DateField(allow_null=True)
+
+
 class ClaimSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     type = serializers.CharField()
@@ -56,6 +66,7 @@ class ClaimSerializer(serializers.Serializer):
     is_confirmed = serializers.BooleanField(read_only=True)
     is_paid = serializers.BooleanField(read_only=True)
     owner = ProfileSerializer(read_only=True)
+    parts = ClaimPartSerializer(many=True)
 
 
 class PaymentSerializer(serializers.ModelSerializer):
