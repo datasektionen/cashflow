@@ -69,6 +69,9 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
 def apply_expense_filters(
     queryset: ExpenseQuerySet, params: QueryDict, user: User | None = None
 ) -> ExpenseQuerySet:
+    """Applies filters to an expense queryset based on query parameters."""
+    if username := params.get(Filter.USER):
+        queryset = queryset.filter(owner__user__username=username)
     if user and params.get(Filter.ATTESTABLE):
         queryset = queryset.attestable_for(user)
     if user and params.get(Filter.CONFIRMABLE):
@@ -87,8 +90,11 @@ def apply_expense_filters(
 
 
 def apply_invoice_filters(
-    queryset: InvoiceQuerySet, params: QueryDict, user=None
+    queryset: InvoiceQuerySet, params: QueryDict, user: User | None = None
 ) -> InvoiceQuerySet:
+    """Applies filters to an invoice queryset based on query parameters."""
+    if username := params.get(Filter.USER):
+        queryset = queryset.filter(owner__user__username=username)
     if user and params.get(Filter.ATTESTABLE):
         queryset = queryset.attestable_for(user)
     if user and params.get(Filter.CONFIRMABLE):

@@ -5,7 +5,6 @@ from drf_spectacular.utils import (
     inline_serializer,
 )
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -39,24 +38,16 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
     def get_serializer_class(self):
         return ClaimSerializer
 
-    def _resolve_target_user(self, username):
-        if username == self.current_user.username:
-            return self.current_user
-        if not self.current_user.profile.may_view_all():
-            raise PermissionDenied(
-                "You do not have permission to view other users' claims."
-            )
-        try:
-            return UserModel.objects.get(username=username)
-        except UserModel.DoesNotExist:
-            raise NotFound(f"User '{username}' not found.")
-
     def get(self, request: Request):
-        username = request.GET.get("user", self.current_user.username)
-        target = self._resolve_target_user(username)
 
-        expenses = Expense.objects.viewable_by(self.current_user)
-        invoices = Invoice.objects.viewable_by(self.current_user)
+        expenses = (
+            Expense.objects.viewable_by(self.current_user)
+            .prefetch_related("parts")
+            .select_related("reimbursement")
+        )
+        invoices = Invoice.objects.viewable_by(self.current_user).prefetch_related(
+            "parts"
+        )
 
         expenses = apply_expense_filters(expenses, request.GET, self.current_user)
         invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
