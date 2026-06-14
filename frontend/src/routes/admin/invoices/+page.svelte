@@ -14,28 +14,34 @@
 
 	const columns: TableColumn<Invoice>[] = $derived([
 		{
-			key: 'description',
+			id: 'description',
 			header: $_('admin_invoices.columns.description'),
 			render: (r) => r.description,
-			width: 'w-auto'
+			width: ''
 		},
 		{
-			key: 'owner',
+			id: 'owner',
 			header: $_('admin_invoices.columns.owner'),
 			render: (r) => r.owner.first_name + ' ' + r.owner.last_name,
 			width: 'w-48'
 		},
 		{
-			key: 'created_date',
-			header: $_('expense_created_at'),
-			render: (r) => r.created_date,
-			width: 'w-32'
+			id: 'cost_centres',
+			header: $_('admin_expenses.columns.cost_centres'),
+			renderSnippet: costCentres,
+			width: 'w-48'
 		},
 		{
-			key: 'due_date',
+			id: 'created_date',
+			header: $_('expense_created_at'),
+			render: (r) => r.created_date,
+			width: 'w-28'
+		},
+		{
+			id: 'due_date',
 			header: $_('admin_invoices.columns.due_date'),
 			render: (r) => r.due_date,
-			width: 'w-32'
+			width: 'w-28'
 		}
 	]);
 
@@ -58,6 +64,15 @@
 		);
 	}
 </script>
+
+{#snippet costCentres(r: Invoice)}
+	{@const unique = [...new Set(r.parts.map((p) => p.cost_centre))]}
+	<div class="flex flex-wrap gap-1">
+		{#each unique as cc}
+			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
+		{/each}
+	</div>
+{/snippet}
 
 {#snippet idCell(r: Invoice)}
 	<div class="flex flex-row items-center">
@@ -120,10 +135,10 @@
 <PaginatedTable
 	paginatedResponse={data.invoices}
 	columns={[
-		{ key: 'id', header: $_('admin_invoices.columns.id'), renderSnippet: idCell, width: 'w-16' },
+		{ id: 'id', header: $_('admin_invoices.columns.id'), renderSnippet: idCell, width: 'w-16' },
 		...columns,
 		{
-			key: 'confirmed_at',
+			id: 'confirmed_at',
 			header: $_('admin_invoices.columns.status'),
 			renderSnippet: statusCell,
 			width: 'w-56'

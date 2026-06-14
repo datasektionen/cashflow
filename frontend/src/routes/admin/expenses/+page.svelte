@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import BudgetLineTableCell from '$lib/components/BudgetLineTableCell.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -14,22 +15,28 @@
 
 	const columns: TableColumn<Expense>[] = $derived([
 		{
-			key: 'description',
+			id: 'description',
 			header: $_('admin_expenses.columns.description'),
 			render: (e) => e.description,
-			width: 'w-auto'
+			width: ''
 		},
 		{
-			key: 'owner',
+			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
 			render: (e) => `${e.owner.first_name} ${e.owner.last_name}`,
-			width: 'w-56'
+			width: 'w-48'
 		},
 		{
-			key: 'created_date',
+			id: 'cost_centres',
+			header: $_('admin_expenses.columns.cost_centres'),
+			renderSnippet: costCentres,
+			width: 'w-48'
+		},
+		{
+			id: 'created_date',
 			header: $_('expense_created_at'),
 			render: (e) => e.created_date,
-			width: 'w-32'
+			width: 'w-28'
 		}
 	]);
 
@@ -106,6 +113,14 @@
 	</div>
 {/snippet}
 
+{#snippet costCentres(e: Expense)}
+	{@const unique = [...new Set(e.parts.map((p) => p.cost_centre))]}
+	<div class="flex flex-wrap gap-1">
+		{#each unique as cc}
+			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
+		{/each}
+	</div>
+{/snippet}
 <ClaimFilterBar
 	costCentreItems={['Sektionslokalsgruppen']}
 	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
@@ -114,10 +129,10 @@
 <PaginatedTable
 	paginatedResponse={data.expenses}
 	columns={[
-		{ key: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
+		{ id: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
 		...columns,
 		{
-			key: 'confirmed_at',
+			id: 'confirmed_at',
 			header: $_('admin_expenses.columns.status'),
 			renderSnippet: statusCell,
 			width: 'w-56'

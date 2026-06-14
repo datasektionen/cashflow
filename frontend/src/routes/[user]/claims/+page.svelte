@@ -47,25 +47,40 @@
 
 	const columns: TableColumn<Claim>[] = [
 		{
-			key: 'type',
+			id: 'type',
 			header: $_('claims_type'),
 			render: (row) => $_(row.type),
 			width: 'w-24'
 		},
 		{
-			key: 'description',
+			id: 'description',
 			header: $_('admin_invoices.columns.description'),
 			render: (row) => row.description,
-			width: 'auto'
+			width: ''
 		},
 		{
-			key: 'created_date',
+			id: 'cost_centres',
+			header: $_('admin_expenses.columns.cost_centres'),
+			renderSnippet: costCentres,
+			width: 'w-48'
+		},
+		{
+			id: 'created_date',
 			header: $_('admin_expenses.columns.expense_date'),
 			render: (row) => row.created_date,
-			width: 'w-32'
+			width: 'w-28'
 		}
 	];
 </script>
+
+{#snippet costCentres(c: Claim)}
+	{@const unique = [...new Set(c.parts.map((p) => p.cost_centre))]}
+	<div class="flex flex-wrap gap-1">
+		{#each unique as cc}
+			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
+		{/each}
+	</div>
+{/snippet}
 
 <ClaimFilterBar
 	costCentreItems={['Sektionslokalsgruppen']}

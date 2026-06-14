@@ -96,9 +96,8 @@ export type ExpensePart = {
 	attest_date: string | null;
 };
 
-export type Claim = {
+type ClaimBase = {
 	id: number;
-	type: 'expense' | 'invoice';
 	description: string;
 	amount: string;
 	created_date: string;
@@ -107,6 +106,10 @@ export type Claim = {
 	is_paid: boolean;
 	owner: Profile;
 };
+
+export type Claim =
+	| (ClaimBase & { type: 'expense'; parts: ExpensePart[] })
+	| (ClaimBase & { type: 'invoice'; parts: InvoicePart[] });
 
 export type PaginatedResponse<T> = {
 	data: T[];

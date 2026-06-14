@@ -1,7 +1,8 @@
 import type { Snippet } from 'svelte';
 
 export type TableColumn<T> = {
-	key: keyof T;
+	id: string;
+	key?: keyof T;
 	header: string;
 	render?: (row: T) => string;
 	renderSnippet?: Snippet<[T]>;

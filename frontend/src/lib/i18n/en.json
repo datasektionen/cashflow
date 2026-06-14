@@ -86,6 +86,7 @@
 			"voucher": "Voucher",
 			"description": "Description",
 			"owner": "Owner",
+			"cost_centres": "Cost centres",
 			"expense_date": "Expense date",
 			"status": "Status"
 		},
