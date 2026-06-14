@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
+	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -105,6 +106,11 @@
 	</div>
 {/snippet}
 
+<ClaimFilterBar
+	costCentreItems={['Sektionslokalsgruppen']}
+	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
+	budgetLineItems={['METAdryck', 'Inköp mat']}
+/>
 <PaginatedTable
 	paginatedResponse={data.expenses}
 	columns={[

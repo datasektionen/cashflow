@@ -12,13 +12,20 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	const perPage = url.searchParams.get('per_page')
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
+	const costCentre = url.searchParams.get('cost_centre') || undefined;
+	const secondaryCostCentre = url.searchParams.get('secondary_cost_centre') || undefined;
+	const budgetLine = url.searchParams.get('budget_line') || undefined;
 
 	let expenses: PaginatedResponse<Expense> = {
 		data: [],
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		expenses = await api.expenses.list(page, perPage);
+		expenses = await api.expenses.list(page, perPage, {
+			cost_centre: costCentre,
+			secondary_cost_centre: secondaryCostCentre,
+			budget_line: budgetLine
+		});
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			logger.error(e);

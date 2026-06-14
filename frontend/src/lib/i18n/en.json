@@ -225,5 +225,6 @@
 	"amount": "Amount",
 	"cost_centre": "Cost centre",
 	"secondary_cost_centre": "Secondary cost centre",
-	"budget_line": "Budget line"
+	"budget_line": "Budget line",
+	"reset": "Reset"
 }

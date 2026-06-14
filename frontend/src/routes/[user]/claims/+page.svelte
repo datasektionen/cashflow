@@ -8,6 +8,7 @@
 	import type { Claim } from '$lib/api/types';
 	import { alerts, success } from '$lib/stores/alerts';
 	import { logger } from '$lib/logger';
+	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -66,6 +67,11 @@
 	];
 </script>
 
+<ClaimFilterBar
+	costCentreItems={['Sektionslokalsgruppen']}
+	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
+	budgetLineItems={['METAdryck', 'Inköp mat']}
+/>
 <PaginatedTable
 	paginatedResponse={data.claims}
 	{columns}

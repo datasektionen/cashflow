@@ -10,7 +10,10 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		: 15;
 
 	const filter: ClaimFilter = {
-		attestable: true
+		attestable: true,
+		cost_centre: url.searchParams.get('cost_centre') || undefined,
+		secondary_cost_centre: url.searchParams.get('secondary_cost_centre') || undefined,
+		budget_line: url.searchParams.get('budget_line') || undefined
 	};
 
 	const claims = await api.claims.list(page, perPage, filter);

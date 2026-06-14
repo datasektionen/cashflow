@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { Invoice, InvoiceCreate, PaginatedResponse } from '$lib/api/types';
+import type { ClaimFilter, Invoice, InvoiceCreate, PaginatedResponse } from '$lib/api/types';
 
 export class InvoicesAPI {
 	private apiClient: ApiClient;
@@ -12,7 +12,11 @@ export class InvoicesAPI {
 		return await this.apiClient.get<Invoice>(`invoices/${id}`);
 	}
 
-	async list(page: number, perPage: number): Promise<PaginatedResponse<Invoice>> {
+	async list(
+		page: number,
+		perPage: number,
+		filter?: ClaimFilter
+	): Promise<PaginatedResponse<Invoice>> {
 		type RawResponse = {
 			data: Invoice[];
 			pagination: {
@@ -23,7 +27,11 @@ export class InvoicesAPI {
 			};
 		};
 
-		const res = await this.apiClient.get<RawResponse>('invoices/', { page, per_page: perPage });
+		const res = await this.apiClient.get<RawResponse>('invoices/', {
+			page,
+			per_page: perPage,
+			...filter
+		});
 
 		return {
 			data: res.data,

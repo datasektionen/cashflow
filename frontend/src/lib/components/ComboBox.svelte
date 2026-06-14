@@ -14,32 +14,56 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		items,
 		placeholder = '',
 		value = $bindable(''),
+		class: className = '',
+		onchange,
 		onblur
 	}: {
 		name: string;
 		items: string[];
 		placeholder?: string;
 		value?: string;
+		class?: string;
+		onchange?: (value: string) => void;
 		onblur?: (e: FocusEvent) => void;
 	} = $props();
 
-	let searchValue = $state('');
+	let searchValue = $state(value ?? '');
 	let open = $state(false);
 
 	const fuse = $derived(new Fuse(items));
-	let filtered = $derived(fuse.search(searchValue));
+	let filtered = $derived(
+		searchValue ? fuse.search(searchValue) : items.map((item, i) => ({ item, refIndex: i }))
+	);
 </script>
 
-<Combobox.Root type="single" {name} bind:value bind:open inputValue={searchValue}>
+<Combobox.Root
+	type="single"
+	{name}
+	bind:value
+	bind:open
+	inputValue={searchValue}
+	onValueChange={(v) => onchange?.(v ?? '')}
+>
 	<div class="relative">
-		<div class="flex flex-row">
+		<div
+			class="flex flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200"
+		>
 			<Combobox.Input
-				class="p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
-				oninput={(e) => (searchValue = e.currentTarget.value)}
+				class="p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle {className}"
+				onclick={() => (open = true)}
+				oninput={(e) => {
+					searchValue = e.currentTarget.value;
+					if (!searchValue) {
+						value = '';
+						onchange?.('');
+					}
+				}}
 				onkeydown={(e) => {
 					if (e.key === 'Tab' && searchValue !== '') {
-						value = filtered[0] ? filtered[0].item : '';
-						searchValue = filtered[0] ? filtered[0].item : searchValue;
+						const completed = filtered[0] ? filtered[0].item : '';
+						value = completed;
+						searchValue = completed || searchValue;
+						onchange?.(completed);
 					}
 				}}
 				onblur={(e) => {

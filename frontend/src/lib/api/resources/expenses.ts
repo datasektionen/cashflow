@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { Expense, ExpenseCreate, PaginatedResponse } from '$lib/api/types';
+import type { ClaimFilter, Expense, ExpenseCreate, PaginatedResponse } from '$lib/api/types';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -15,7 +15,7 @@ export class ExpensesAPI {
 	async list(
 		page: number,
 		perPage: number,
-		username: string | undefined = undefined
+		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Expense>> {
 		// The response format from DRF
 		type RawResponse = {
@@ -31,7 +31,7 @@ export class ExpensesAPI {
 		const res = await this.apiClient.get<RawResponse>('expenses/', {
 			page: page,
 			per_page: perPage,
-			...(username ? { username: username } : {})
+			...filter
 		});
 
 		return {
