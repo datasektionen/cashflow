@@ -215,7 +215,8 @@
 	"expense_unflag": "Unflag",
 	"action_failed": "Action failed",
 	"alerts": {
-		"part_attested": "The receipt part has been attested",
+		"expense_part_attested": "The receipt part has been attested",
+		"invoice_part_attested": "The invoice part has been attested",
 		"expense_confirmed": "The expense has been confirmed",
 		"expense_unconfirmed": "The expense has been unconfirmed",
 		"invoice_confirmed": "The invoice has been confirmed",

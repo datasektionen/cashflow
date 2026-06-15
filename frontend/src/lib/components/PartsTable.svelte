@@ -30,12 +30,15 @@
 	let attested: Set<number> = $state(new Set());
 	const attestCallback = async (part: ExpensePart) => {
 		currentlyAttesting = new Set([...currentlyAttesting, part.id]);
-		const attestFn = partType === 'invoice' ? api.invoices.attestPart : api.expenses.attestPart;
+		const attestFn =
+			partType === 'invoice'
+				? (id: number) => api.invoices.attestPart(id)
+				: (id: number) => api.expenses.attestPart(id);
 		await attestFn(part.id)
 			.then(() => {
 				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
 				attested = new Set([...attested, part.id]);
-				alerts.update((a) => [...a, success($_('alerts.part_attested'))]);
+				alerts.update((a) => [...a, success($_(`alerts.${partType}_part_attested`))]);
 			})
 			.catch((err) => {
 				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
