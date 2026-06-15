@@ -27,6 +27,7 @@ urlpatterns = [
     path("", include("invoices.api.urls")),
     path("users/", include("users.api.urls")),
     path("files/", include("file_api.urls")),
+    path("", include("core.api.urls")),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularRedocView.as_view(url_name="schema"), name="docs"),
 ]

@@ -1,12 +1,16 @@
 from datetime import date
 from typing import TypedDict
 
+from django.db.models import QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.fields import CharField
+from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.api.problems import EmptyCommentProblem
-from expenses.models import File, Profile, Comment, Payment
+from expenses.models import File, Profile, Comment, Payment, ExpensePart
+from invoices.models import InvoicePart
 
 
 class ClaimData(TypedDict):
@@ -19,7 +23,7 @@ class ClaimData(TypedDict):
     is_confirmed: bool
     is_paid: bool
     owner: Profile
-    parts: list
+    parts: QuerySet[InvoicePart | ExpensePart]
 
 
 class ProblemDetailSerializer(serializers.Serializer):
@@ -106,3 +110,10 @@ class AccountSerializer(serializers.Serializer):
     part_id = serializers.IntegerField()
     cost_centre = serializers.CharField(allow_blank=False)
     account_number = serializers.IntegerField(min_value=0, max_value=9999)
+
+
+class PendingPaymentsSerializer(serializers.Serializer):
+    # Include all normal Profile fields
+    owner = ProfileSerializer(source="*", read_only=True)
+    total = serializers.DecimalField(max_digits=11, decimal_places=2, read_only=True)
+    count = serializers.IntegerField(read_only=True)

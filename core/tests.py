@@ -4,7 +4,8 @@ from hypothesis import given, settings, HealthCheck, strategies as st
 
 from cashflow.dauth import Permission
 from core.api.serializers import ClaimData, ClaimSerializer
-from expenses.factories import ExpenseFactory
+from expenses.factories import ExpenseFactory, ExpensePartFactory
+from expenses.models import Payment
 from invoices.factories import InvoiceFactory
 
 
@@ -132,6 +133,7 @@ class TestClaimSerializer:
         assert set(data_fields) == set(serializer_fields)
 
     def test_serializes_claim_data(self):
+        from unittest.mock import MagicMock
         data: ClaimData = {
             "id": 1,
             "type": "expense",
@@ -141,8 +143,43 @@ class TestClaimSerializer:
             "is_attested": False,
             "is_confirmed": False,
             "is_paid": False,
+            "owner": MagicMock(),
             "parts": [],
         }
         result = ClaimSerializer(data).data
         assert result["amount"] == "123.45"
         assert result["created_date"] == "2024-01-01"
+
+
+class TestPendingPaymentsList:
+
+    @pytest.mark.django_db
+    def test_correct_count_and_total(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value={"pay": True}, autospec=True
+        )
+
+        ExpenseFactory.create_batch(
+            10,
+            owner=user.profile,
+            reimbursement=Payment.objects.create(
+                payer=user.profile, receiver=user.profile
+            ),
+        )
+        pending = ExpenseFactory.create_batch(5, owner=user.profile, reimbursement=None)
+        pending_sum = sum([sum([p.amount for p in e.parts.all()]) for e in pending])
+
+        response = api_client.get("/api/payments/pending/?per_page=100")
+
+        assert response.status_code == 200
+        entry = next(
+            (
+                e
+                for e in response.data["data"]
+                if e["owner"]["username"] == user.username
+            ),
+            None,
+        )
+        assert entry is not None
+        assert entry["total"] == str(pending_sum)
+        assert entry["count"] == 5

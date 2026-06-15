@@ -1,26 +1,33 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.db.models.aggregates import Sum, Count
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
     inline_serializer,
 )
-from rest_framework import serializers
-from rest_framework.generics import GenericAPIView
+from rest_framework import serializers, status
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
+from structlog import get_logger
 
 from core.api.filters import (
     apply_expense_filters,
     apply_invoice_filters,
     OPENAPI_PARAMS,
 )
+from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
-from core.api.serializers import ClaimSerializer, ClaimData
+from core.api.serializers import ClaimSerializer, ClaimData, PendingPaymentsSerializer
 from core.api.utils import AuthenticatedUserMixin
-from expenses.models import Expense
+from core.permissions import get_permission_provider
+from expenses.models import Expense, Profile
 from invoices.models import Invoice
 
 UserModel = get_user_model()
+logger = get_logger(__name__)
 
 
 @extend_schema_view(
@@ -97,6 +104,46 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
 
         serializer = self.get_serializer(data, many=True)
         return Response(serializer.data)
+
+
+@extend_schema_view(
+    get=extend_schema(
+        tags=["Payments"],
+        summary="List pending payments",
+        description="Lists all users with expenses that have not been reimbursed, together with the count and total sum of non-reimbursed expenses. Only allowed for users with the `pay` permission.",
+        responses={
+            status.HTTP_200_OK: PendingPaymentsSerializer,
+            status.HTTP_403_FORBIDDEN: problems(PermissionDenied),
+        },
+        operation_id="list_pending_payments",
+    )
+)
+class PendingPaymentsList(ListAPIView, AuthenticatedUserMixin):
+    """Lists available reimbursements per user."""
+
+    def get_serializer_class(self):
+        return PendingPaymentsSerializer
+
+    def get_queryset(self):
+        return (
+            Profile.objects.annotate(
+                count=Count("expense", filter=Q(expense__reimbursement__isnull=True))
+            )
+            .annotate(
+                total=Sum(
+                    "expense__expensepart__amount",
+                    filter=Q(expense__reimbursement__isnull=True),
+                )
+            )
+            .filter(count__gt=0)
+            .filter(total__isnull=False)
+            .order_by("-total")
+        )
+
+    def list(self, request, *args, **kwargs):
+        if not get_permission_provider().may_pay(self.current_user):
+            raise PermissionDenied()
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema_view(
