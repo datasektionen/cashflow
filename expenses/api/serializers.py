@@ -10,7 +10,7 @@ from core.api.serializers import (
     CommentSerializer,
     PaymentSerializer,
 )
-from expenses.models import Expense, ExpensePart
+from expenses.models import Expense, ExpensePart, Payment
 
 
 class ExpensePartSerializer(serializers.ModelSerializer):
@@ -95,3 +95,15 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
 class ExpenseAccountSerializer(serializers.Serializer):
     voucher_number = serializers.RegexField(r"[A-Z]\d+", required=False)
     parts = AccountSerializer(many=True, required=False, default=list)
+
+
+class ExpensePaymentSerializer(serializers.ModelSerializer):
+    payer = ProfileSerializer(read_only=True, source="payer.profile")
+    receiver = ProfileSerializer(read_only=True, source="receiver.profile")
+    expenses = PrimaryKeyRelatedField(
+        queryset=Expense.objects.all(), many=True, source="expense_set"
+    )
+
+    class Meta:
+        model = Payment
+        fields = ["id", "date", "payer", "receiver", "expenses"]

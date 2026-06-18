@@ -8,8 +8,8 @@ from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from core.api.problems import EmptyCommentProblem
-from expenses.models import File, Profile, Comment, Payment, ExpensePart
+from core.api.problems import EmptyCommentProblem, NoExpensesProblem
+from expenses.models import File, Profile, Comment, Payment, ExpensePart, Expense
 from invoices.models import InvoicePart
 
 
@@ -75,10 +75,11 @@ class ClaimSerializer(serializers.Serializer):
 
 class PaymentSerializer(serializers.ModelSerializer):
     payer = ProfileSerializer(read_only=True)
+    receiver = ProfileSerializer(read_only=True)
 
     class Meta:
         model = Payment
-        fields = ["id", "date", "payer"]
+        fields = ["id", "date", "payer", "receiver"]
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -117,3 +118,19 @@ class PendingPaymentsSerializer(serializers.Serializer):
     owner = ProfileSerializer(source="*", read_only=True)
     total = serializers.DecimalField(max_digits=11, decimal_places=2, read_only=True)
     count = serializers.IntegerField(read_only=True)
+
+
+class PaymentCreateSerializer(serializers.Serializer):
+    """Request body for creating a payment: the expenses to reimburse in one go."""
+
+    expenses = PrimaryKeyRelatedField(
+        many=True,
+        allow_empty=True,
+        queryset=Expense.objects.all(),
+        help_text="IDs of the expenses to reimburse. All must belong to the same user.",
+    )
+
+    def validate_expenses(self, value):
+        if not value:
+            raise NoExpensesProblem()
+        return value

@@ -73,3 +73,11 @@ class FortnoxRecordMissingError(AccountingError):
 
 class CashflowVerificationMissingError(AccountingError):
     pass
+
+
+class PaymentError(Exception):
+    pass
+
+
+class UnauthorizedPaymentError(PaymentError):
+    pass

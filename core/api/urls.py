@@ -1,7 +1,8 @@
-from django.urls import path
+from rest_framework.routers import SimpleRouter
 
-from .views import PendingPaymentsList
+from .views import PaymentViewSet
 
-urlpatterns = [
-    path("payments/pending/", PendingPaymentsList.as_view()),
-]
+router = SimpleRouter()
+router.register(r"payments", PaymentViewSet, basename="payment")
+
+urlpatterns = router.urls

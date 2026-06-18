@@ -6,9 +6,11 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
 )
-from rest_framework import serializers, status
+from django.db import transaction
+from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
@@ -20,10 +22,22 @@ from core.api.filters import (
 )
 from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
-from core.api.serializers import ClaimSerializer, ClaimData, PendingPaymentsSerializer
+from core.api.problems import (
+    MultipleReceiversProblem,
+    PaymentPermissionDeniedProblem,
+    AlreadyReimbursedProblem,
+    NoExpensesProblem,
+)
+from core.api.serializers import (
+    ClaimSerializer,
+    ClaimData,
+    PaymentCreateSerializer,
+    PaymentSerializer,
+    PendingPaymentsSerializer,
+)
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
-from expenses.models import Expense, Profile
+from expenses.models import Comment, Expense, Payment, Profile
 from invoices.models import Invoice
 
 UserModel = get_user_model()
@@ -106,8 +120,73 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         return Response(serializer.data)
 
 
-@extend_schema_view(
-    get=extend_schema(
+class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
+    """
+    Payments (expense reimbursements).
+
+    A payment reimburses one member for a batch of their expenses. Invoice
+    payments are a different flow (a per-invoice action on the invoice) and are
+    intentionally not handled here — see ``Invoice.pay``.
+    """
+
+    pagination_class = DefaultPagination
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return PaymentCreateSerializer
+        if self.action == "pending":
+            return PendingPaymentsSerializer
+        return PaymentSerializer
+
+    @extend_schema(
+        tags=["Payments"],
+        summary="Create a payment",
+        description="Reimburses a single member for the given expenses in one payment. All expenses must belong to the same user and be confirmed and fully attested.",
+        responses={
+            status.HTTP_201_CREATED: PaymentSerializer,
+            status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(AlreadyReimbursedProblem),
+            status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
+                MultipleReceiversProblem, NoExpensesProblem
+            ),
+        },
+        operation_id="create_payment",
+    )
+    def create(self, request: Request) -> Response:
+        if not get_permission_provider().may_pay(self.current_user):
+            raise PaymentPermissionDeniedProblem()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        expenses: list[Expense] = serializer.validated_data["expenses"]
+
+        if not all(expense.reimbursement is None for expense in expenses):
+            raise AlreadyReimbursedProblem(
+                detail="One or more expenses are already reimbursed."
+            )
+
+        receivers = {expense.owner_id for expense in expenses}
+        if len(receivers) > 1:
+            raise MultipleReceiversProblem()
+
+        receiver = expenses[0].owner
+
+        with transaction.atomic():
+            payment = Payment.objects.create(
+                payer=self.current_user.profile, receiver=receiver
+            )
+            for expense in expenses:
+                expense.reimbursement = payment
+                expense.save(update_fields=["reimbursement"])
+                Comment.objects.create(
+                    author=self.current_user.profile,
+                    expense=expense,
+                    content=f"Betalade ut i betalning {payment.id}",
+                )
+
+        return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
         tags=["Payments"],
         summary="List pending payments",
         description="Lists all users with expenses that have not been reimbursed, together with the count and total sum of non-reimbursed expenses. Only allowed for users with the `pay` permission.",
@@ -117,33 +196,33 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         },
         operation_id="list_pending_payments",
     )
-)
-class PendingPaymentsList(ListAPIView, AuthenticatedUserMixin):
-    """Lists available reimbursements per user."""
+    @action(detail=False, methods=["GET"])
+    def pending(self, request: Request) -> Response:
+        if not get_permission_provider().may_pay(self.current_user):
+            raise PermissionDenied()
 
-    def get_serializer_class(self):
-        return PendingPaymentsSerializer
-
-    def get_queryset(self):
-        return (
+        payable = Q(
+            expense__reimbursement__isnull=True,
+            expense__confirmed_by__isnull=False,
+            expense__expensepart__attested_by__isnull=False,
+        )
+        queryset = (
             Profile.objects.annotate(
-                count=Count("expense", filter=Q(expense__reimbursement__isnull=True))
+                count=Count("expense", filter=payable, distinct=True)
             )
-            .annotate(
-                total=Sum(
-                    "expense__expensepart__amount",
-                    filter=Q(expense__reimbursement__isnull=True),
-                )
-            )
+            .annotate(total=Sum("expense__expensepart__amount", filter=payable))
             .filter(count__gt=0)
             .filter(total__isnull=False)
             .order_by("-total")
         )
 
-    def list(self, request, *args, **kwargs):
-        if not get_permission_provider().may_pay(self.current_user):
-            raise PermissionDenied()
-        return super().list(request, *args, **kwargs)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema_view(
@@ -181,19 +260,21 @@ class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
 
     def get(self, request: Request):
         user = self.current_user
+        expenses = Expense.objects.viewable_by(user)
+        invoices = Invoice.objects.viewable_by(user)
         return Response(
             {
                 "expenses": {
-                    "attestable": Expense.objects.attestable_for(user).count(),
-                    "confirmable": Expense.objects.confirmable_for(user).count(),
-                    "accountable": Expense.objects.accountable_for(user).count(),
-                    "payable": Expense.objects.payable_for(user).count(),
+                    "attestable": expenses.attestable_for(user).count(),
+                    "confirmable": expenses.confirmable_for(user).count(),
+                    "accountable": expenses.accountable_for(user).count(),
+                    "payable": expenses.payable_for(user).count(),
                 },
                 "invoices": {
-                    "attestable": Invoice.objects.attestable_for(user).count(),
-                    "confirmable": Invoice.objects.confirmable_for(user).count(),
-                    "accountable": Invoice.objects.accountable_for(user).count(),
-                    "payable": Invoice.objects.payable_for(user).count(),
+                    "attestable": invoices.attestable_for(user).count(),
+                    "confirmable": invoices.confirmable_for(user).count(),
+                    "accountable": invoices.accountable_for(user).count(),
+                    "payable": invoices.payable_for(user).count(),
                 },
             }
         )

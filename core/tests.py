@@ -4,6 +4,7 @@ from hypothesis import given, settings, HealthCheck, strategies as st
 
 from cashflow.dauth import Permission
 from core.api.serializers import ClaimData, ClaimSerializer
+from core.factories import ProfileFactory
 from expenses.factories import ExpenseFactory, ExpensePartFactory
 from expenses.models import Payment
 from invoices.factories import InvoiceFactory
@@ -134,6 +135,7 @@ class TestClaimSerializer:
 
     def test_serializes_claim_data(self):
         from unittest.mock import MagicMock
+
         data: ClaimData = {
             "id": 1,
             "type": "expense",
@@ -167,6 +169,10 @@ class TestPendingPaymentsList:
             ),
         )
         pending = ExpenseFactory.create_batch(5, owner=user.profile, reimbursement=None)
+        for expense in pending:
+            expense.confirmed_by = user
+            expense.save()
+            expense.parts.all().update(attested_by=user.profile)
         pending_sum = sum([sum([p.amount for p in e.parts.all()]) for e in pending])
 
         response = api_client.get("/api/payments/pending/?per_page=100")
@@ -183,3 +189,86 @@ class TestPendingPaymentsList:
         assert entry is not None
         assert entry["total"] == str(pending_sum)
         assert entry["count"] == 5
+
+
+class TestPaymentCreation:
+
+    @pytest.mark.django_db
+    def test_correct_payment(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        payee = ProfileFactory.create()
+        expenses = ExpenseFactory.create_batch(5, reimbursement=None, owner=payee)
+        api_client.force_authenticate(user=user)
+        response = api_client.post(
+            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+        )
+
+        assert response.status_code == 201, response.data
+        assert response.data["payer"]["username"] == user.username
+        assert response.data["receiver"]["username"] == payee.user.username
+
+    @pytest.mark.django_db
+    def test_rejects_unauthorized(self, api_client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        payee = ProfileFactory.create()
+        expenses = ExpenseFactory.create_batch(5, reimbursement=None, owner=payee)
+        response = api_client.post(
+            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+        )
+
+        assert response.status_code == 403
+        assert response.data["detail"].code == "payment_permission_denied"
+
+    @pytest.mark.django_db
+    def test_rejects_empty_expenses(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        api_client.force_authenticate(user=user)
+
+        response = api_client.post(f"/api/payments/", {"expenses": []})
+
+        assert response.status_code == 422
+        assert response.data["detail"].code == "no_expenses"
+
+    @pytest.mark.django_db
+    def test_rejects_already_reimbursed(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        payee = ProfileFactory.create()
+        existing_payment = Payment.objects.create(payer=payee, receiver=payee)
+        expense = ExpenseFactory.create(reimbursement=existing_payment, owner=payee)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.post(f"/api/payments/", {"expenses": [expense.id]})
+
+        assert response.status_code == 409
+        assert response.data["detail"].code == "already_reimbursed"
+
+        # check that existing reimbursement was not changed
+        expense.refresh_from_db()
+        assert expense.reimbursement_id == existing_payment.id
+
+    @pytest.mark.django_db
+    def test_rejects_multiple_receivers(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        expenses = ExpenseFactory.create_batch(5, reimbursement=None)
+        response = api_client.post(
+            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+        )
+
+        assert response.status_code == 422
+        assert response.data["detail"].code == "multiple_receivers"

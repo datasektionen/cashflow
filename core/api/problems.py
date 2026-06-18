@@ -150,3 +150,45 @@ class AccountingPermissionDeniedProblem(APIException):
 
 
 register_exception(AccountingPermissionDeniedProblem)
+
+
+class PaymentPermissionDeniedProblem(APIException):
+    status_code = 403
+    default_code = "payment_permission_denied"
+    title = "Permission denied for payment expense/invoice"
+    default_detail = (
+        "The user lacks the proper permissions to pay this expense or invoice."
+    )
+
+
+register_exception(PaymentPermissionDeniedProblem)
+
+
+class MultipleReceiversProblem(APIException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    default_code = "multiple_receivers"
+    title = "More than one receiver in payment"
+    default_detail = "Only one user's expenses can be included in one payment."
+
+
+register_exception(MultipleReceiversProblem)
+
+
+class AlreadyReimbursedProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "already_reimbursed"
+    title = "Resource is already reimbursed"
+    default_detail = "This expense or invoice is already reimbursed."
+
+
+register_exception(AlreadyReimbursedProblem)
+
+
+class NoExpensesProblem(APIException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    default_code = "no_expenses"
+    title = "No expenses in payment"
+    default_detail = "A payment must include at least one expense."
+
+
+register_exception(NoExpensesProblem)
