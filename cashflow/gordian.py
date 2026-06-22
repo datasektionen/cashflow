@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 class GCostCenter(BaseModel):
     id: int = Field(alias="CostCentreID")
     name: str = Field(alias="CostCentreName")
-    type: Literal["committee", "partition", "project", "projcetX", "other"] = Field(
+    type: Literal["committee", "partition", "project", "projectX", "other"] = Field(
         alias="CostCentreType"
     )
 
