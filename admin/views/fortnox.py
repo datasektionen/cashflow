@@ -285,9 +285,9 @@ def account_invoice(request: FortnoxRequest, **kwargs):
 
         for part in invoice.parts.all():
             acct = int(request.POST[f"part-{part.id}-account"])
-            cc = request.fortnox_service.find_cost_center(Description=part.cost_centre)
+            cc = request.POST[f"part-{part.id}-cost-center"]
             debit_row = VoucherRow(
-                Account=acct, CostCenter=cc.Code, Debit=float(part.amount)
+                Account=acct, CostCenter=cc, Debit=float(part.amount)
             )
             voucher_rows.append(debit_row)
 
