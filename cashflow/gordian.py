@@ -115,7 +115,7 @@ def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCen
         if len(cost_centers) != 0:
             return cost_centers
 
-    response = _get(f"https://budget.datasektionen.se/api/CostCentres")
+    response = _get(f"{settings.BUDGET_URL}/api/CostCentres")
     cost_centers = CC_LIST.validate_json(response.text)
     cache.set(
         COST_CENTER_SEARCH_KEYS,
@@ -148,7 +148,7 @@ def list_secondary_cost_centres_from_gordian(
 
     if cost_center is not None:
         response = _get(
-            f"https://budget.datasektionen.se/api/SecondaryCostCentres",
+            f"{settings.BUDGET_URL}/api/SecondaryCostCentres",
             params={"id": cc_id},
         )
         secondary_cost_centers = SCC_LIST.validate_json(response.text)
@@ -174,7 +174,7 @@ def list_secondary_cost_centres_from_gordian(
         secondary_cost_centers = []
         for cc in cost_centers:
             response = _get(
-                f"https://budget.datasektionen.se/api/SecondaryCostCentres",
+                f"{settings.BUDGET_URL}/api/SecondaryCostCentres",
                 params={"id": cc.id},
             )
             secondary_cost_centers += SCC_LIST.validate_json(response.text)
@@ -219,7 +219,7 @@ def list_budget_lines_from_gordian(
 
     if secondary_cost_center is not None:
         response = _get(
-            f"https://budget.datasektionen.se/api/BudgetLines", params={"id": scc_id}
+            f"{settings.BUDGET_URL}/api/BudgetLines", params={"id": scc_id}
         )
         budget_lines = BL_LIST.validate_json(response.text)
 
@@ -241,7 +241,7 @@ def list_budget_lines_from_gordian(
         budget_lines = []
         for scc in secondary_cost_centers:
             response = _get(
-                f"https://budget.datasektionen.se/api/BudgetLines",
+                f"{settings.BUDGET_URL}/api/BudgetLines",
                 params={"id": scc.id},
             )
             if response.text.strip() == "null":  # No budget lines for this scc
