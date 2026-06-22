@@ -102,7 +102,9 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
 
     try:
         number = gordian.retrieve_account_from_gordian(part)[0]
-    except IndexError:
+    except (IndexError, ValueError):
+        # IndexError: budget line resolved but has no account.
+        # ValueError: cost centre / secondary / budget line no longer exists on GOrdian.
         logger.error(
             "failed to resolve account from gordian",
             part=part,
@@ -127,7 +129,7 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
 
 def fortnox_cost_center_for_part(
     request: FortnoxRequest, part: ExpensePart | InvoicePart
-) -> Account | None:
+) -> CostCenter | None:
     """Retrieves the Fortnox cost center that the part should be accounted in, based on Gordian."""
     cost_centers = list_active_cost_centers(request)
     cost_center_by_description = {cc.Description: cc for cc in cost_centers}
