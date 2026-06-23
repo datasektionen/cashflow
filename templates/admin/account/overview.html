@@ -23,6 +23,36 @@
         select.tabular-options option {
             font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important;
         }
+        .account-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4em;
+        }
+        .account-controls .hidden {
+            display: none;
+        }
+        .account-controls .fortnox-controls,
+        .account-controls .manual-entry {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4em;
+        }
+        .pen-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25em 0.4em;
+            background: none;
+            border: 1px solid currentColor;
+            border-radius: 0;
+            cursor: pointer;
+            color: inherit;
+            line-height: 1;
+        }
+        .manual-entry input {
+            padding: 0.25em 0.4em;
+            max-width: 10em;
+        }
     </style>
     <div id="data">
         <p>
@@ -48,6 +78,10 @@
             </div>
 
             {% for expense in expenses %}
+                {% if not expense.verification %}
+                    <form id="manual-expense-{{ expense.id }}" method="post"
+                          action="{% url 'admin-expense-verification' expense.id %}">{% csrf_token %}</form>
+                {% endif %}
                 <form method="post" action={% url 'fortnox-account-expense' expense.id %}>
                     <div class="row theme-label-when-auto">
                         <div class="col-lg-3">({{ expense.id }})
@@ -55,7 +89,21 @@
                         <div class="col-lg-3">{{ expense.expense_date|date:"Y-m-d" }}</div>
                         <div class="col-lg-3 pull-right">
                             {% if not expense.verification %}
-                                <button class="theme-color btn-color" type="submit">Bokför</button>
+                                <div class="account-controls">
+                                    <span class="fortnox-controls">
+                                        <button class="theme-color btn-color" type="submit">Bokför</button>
+                                        <button type="button" class="pen-btn" title="Ange verifikationsnummer manuellt"
+                                                onclick="toggleManual(this)">{% include "admin/account/_pen_icon.svg" %}</button>
+                                    </span>
+                                    <span class="manual-entry hidden">
+                                        <input type="text" name="verification" form="manual-expense-{{ expense.id }}"
+                                               placeholder="Verifikationsnr" required>
+                                        <button type="submit" form="manual-expense-{{ expense.id }}"
+                                                class="theme-color btn-color">Spara</button>
+                                        <button type="button" class="pen-btn" title="Avbryt"
+                                                onclick="toggleManual(this)">✕</button>
+                                    </span>
+                                </div>
                             {% else %}
                                 <span>Sparade: <span
                                         style="font-weight: bold;">{{ expense.verification }}</span>.</span>
@@ -123,6 +171,10 @@
         </div>
 
         {% for invoice in invoices %}
+            {% if not invoice.verification %}
+                <form id="manual-invoice-{{ invoice.id }}" method="post"
+                      action="{% url 'admin-invoice-verification' invoice.id %}">{% csrf_token %}</form>
+            {% endif %}
             <form method="post" action={% url 'fortnox-account-invoice' invoice.id %}>
                 <div class="row theme-label-when-auto">
                     <div class="col-lg-3">({{ invoice.id }})
@@ -131,7 +183,21 @@
                     <div class="col-lg-3">{{ invoice.invoice_date|date:"Y-m-d" }}</div>
                     <div class="col-lg-3 pull-right">
                         {% if not invoice.verification %}
-                            <button class="theme-color btn-color" type="submit">Bokför</button>
+                            <div class="account-controls">
+                                <span class="fortnox-controls">
+                                    <button class="theme-color btn-color" type="submit">Bokför</button>
+                                    <button type="button" class="pen-btn" title="Ange verifikationsnummer manuellt"
+                                            onclick="toggleManual(this)">{% include "admin/account/_pen_icon.svg" %}</button>
+                                </span>
+                                <span class="manual-entry hidden">
+                                    <input type="text" name="verification" form="manual-invoice-{{ invoice.id }}"
+                                           placeholder="Verifikationsnr" required>
+                                    <button type="submit" form="manual-invoice-{{ invoice.id }}"
+                                            class="theme-color btn-color">Spara</button>
+                                    <button type="button" class="pen-btn" title="Avbryt"
+                                            onclick="toggleManual(this)">✕</button>
+                                </span>
+                            </div>
                         {% else %}
                             <span>Sparade: <span style="font-weight: bold;">{{ invoice.verification }}</span>.</span>
                         {% endif %}
@@ -191,6 +257,16 @@
 
     <script src="/static/account.js"></script>
     <script>
+        function toggleManual(btn) {
+            const container = btn.closest('.account-controls');
+            container.querySelector('.fortnox-controls').classList.toggle('hidden');
+            const manual = container.querySelector('.manual-entry');
+            manual.classList.toggle('hidden');
+            if (!manual.classList.contains('hidden')) {
+                manual.querySelector('input').focus();
+            }
+        }
+
         document.querySelectorAll('form[action^="/admin/fortnox/"]').forEach((form) => {
             form.addEventListener('submit', () => {
                 const btn = form.querySelector('button[type="submit"]');
