@@ -17,6 +17,7 @@ export type Payment = {
 	id: number;
 	date: string;
 	payer: Profile;
+	receiver: Profile;
 };
 
 export type Comment = {
@@ -150,13 +151,13 @@ export type ActionSummary = {
 	};
 	invoices: {
 		attestable: number;
-		confirmable: number;
 		accountable: number;
 		payable: number;
 	};
 };
 
 export type ClaimFilter = {
+	type?: 'expense' | 'invoice';
 	user?: string;
 	cost_centre?: string;
 	secondary_cost_centre?: string;
@@ -165,4 +166,10 @@ export type ClaimFilter = {
 	confirmable?: boolean;
 	accountable?: boolean;
 	payable?: boolean;
+};
+
+export type PendingPayment = {
+	owner: Profile;
+	total: string;
+	count: number;
 };

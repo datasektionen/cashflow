@@ -93,14 +93,7 @@
 				{$_('expense_attested')}
 			</span>
 		{/if}
-		{#if !done && r.confirmed_at}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-500 dark:bg-money-green-400"
-				></span>
-				{$_('expense_confirmed')}
-			</span>
-		{/if}
+
 		{#if r.paid_at}
 			<span class="flex items-center gap-1.5 text-xs">
 				<span
@@ -117,11 +110,11 @@
 				{r.verification}
 			</span>
 		{/if}
-		{#if !isAttested && !r.confirmed_at && !r.paid_at && !r.verification}
+		{#if !isAttested && !r.paid_at && !r.verification}
 			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
 				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
 				></span>
-				{$_('expense_status.unconfirmed')}
+				{$_('expense_status.not_attested')}
 			</span>
 		{/if}
 	</div>

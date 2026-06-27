@@ -125,6 +125,45 @@ class TestConfirmation:
         assert response.data["detail"].code == "resource_is_flagged"
 
 
+class TestClaimsList:
+
+    @pytest.fixture
+    def confirm_and_view_all(self, mocker):
+        return mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.CONFIRM: True, "view-all": True},
+            autospec=True,
+        )
+
+    @pytest.mark.django_db
+    def test_lists_both_types_by_default(
+        self, user, api_client, confirm_and_view_all
+    ):
+        ExpenseFactory(owner=user.profile, confirmed_by=None)
+        InvoiceFactory(owner=user.profile, confirmed_by=None)
+
+        response = api_client.get("/api/claims/?confirmable=true&per_page=100")
+
+        assert response.status_code == 200
+        types = {c["type"] for c in response.data["data"]}
+        assert types == {"expense", "invoice"}
+
+    @pytest.mark.django_db
+    def test_type_expense_excludes_invoices(
+        self, user, api_client, confirm_and_view_all
+    ):
+        ExpenseFactory(owner=user.profile, confirmed_by=None)
+        InvoiceFactory(owner=user.profile, confirmed_by=None)
+
+        response = api_client.get(
+            "/api/claims/?confirmable=true&type=expense&per_page=100"
+        )
+
+        assert response.status_code == 200
+        assert response.data["data"]
+        assert all(c["type"] == "expense" for c in response.data["data"])
+
+
 class TestClaimSerializer:
 
     def test_claim_data_matches_serializer(self):

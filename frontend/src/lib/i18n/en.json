@@ -110,6 +110,22 @@
 		}
 	},
 
+	"admin_confirmable": {
+		"title": "Confirm",
+		"columns": {
+			"id": "ID",
+			"type": "Type",
+			"description": "Description",
+			"owner": "Owner",
+			"amount": "Amount",
+			"status": "Status"
+		},
+		"preview": {
+			"empty": "Select an expense to preview and confirm it",
+			"open_detail": "Open"
+		}
+	},
+
 	"admin_paginatedResponse": {
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",
@@ -229,7 +245,8 @@
 		"unconfirmed": "Not confirmed",
 		"paid": "Reimbursed",
 		"unpaid": "Not reimbursed",
-		"not_booked": "Not booked"
+		"not_booked": "Not booked",
+		"not_attested": "Not attested"
 	},
 	"total": "Total",
 	"comment_submitted": "Comment submitted",

@@ -41,6 +41,11 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 
 	const perPageOptions = [15, 25, 50, 100];
 
+	function resolveRowClass(row: T): string | undefined {
+		const c = rowProps?.class;
+		return typeof c === 'function' ? c(row) : c;
+	}
+
 	const rangeStart = $derived(
 		resolved.pagination.total === 0
 			? 0
@@ -71,9 +76,9 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 						<tr
 							class={[
 								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-								rowProps?.class
+								resolveRowClass(row)
 							]}
-							onclick={(e) => rowProps?.onClick(row)}
+							onclick={() => rowProps?.onClick?.(row)}
 						>
 							{#each columns as column}
 								<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>

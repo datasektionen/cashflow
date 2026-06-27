@@ -1,6 +1,7 @@
 import { ApiClient } from '$lib/api';
 import type {
 	ClaimFilter,
+	Comment,
 	Expense,
 	ExpenseCreate,
 	ExpensePart,

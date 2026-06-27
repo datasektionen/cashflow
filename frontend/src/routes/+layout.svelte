@@ -114,9 +114,7 @@
 						to="/admin/confirm"
 						text={$_('tasks.confirm')}
 						icon={CircleCheck}
-						badge={availableActions
-							? availableActions.expenses.confirmable + availableActions.invoices.confirmable
-							: undefined}
+						badge={availableActions ? availableActions.expenses.confirmable : undefined}
 					/>
 				{/if}
 				{#if perms.pay}

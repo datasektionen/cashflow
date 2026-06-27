@@ -19,6 +19,7 @@ class Filter(str, Enum):
     CONFIRMABLE = "confirmable"
     ACCOUNTABLE = "accountable"
     PAYABLE = "payable"
+    TYPE = "type"
 
 
 # For use in extend_schema() to generate OpenAPI documentation
@@ -62,6 +63,13 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
         Filter.PAYABLE.value,
         type=bool,
         required=False,
+    ),
+    Filter.TYPE: OpenApiParameter(
+        Filter.TYPE.value,
+        type=str,
+        required=False,
+        enum=["expense", "invoice"],
+        description="Restrict the claims list to a single type.",
     ),
 }
 

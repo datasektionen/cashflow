@@ -4,6 +4,7 @@ import { ApiClient } from '$lib/api/client';
 import { InvoicesAPI } from '$lib/api/resources/invoices';
 import { ClaimsAPI } from '$lib/api/resources/claims';
 import { ProfilePictureAPI } from '$lib/api/resources/profilePictures';
+import { PaymentsAPI } from '$lib/api/resources/payments';
 
 export { ApiClient } from './client';
 
@@ -13,6 +14,7 @@ export class API {
 	invoices: InvoicesAPI;
 	claims: ClaimsAPI;
 	profilePictures: ProfilePictureAPI;
+	payments: PaymentsAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
@@ -21,6 +23,7 @@ export class API {
 		this.users = new UsersAPI(client);
 		this.claims = new ClaimsAPI(client);
 		this.profilePictures = new ProfilePictureAPI(client);
+		this.payments = new PaymentsAPI(client);
 	}
 }
 

@@ -92,6 +92,22 @@
 		}
 	},
 
+	"admin_confirmable": {
+		"title": "Bekräfta",
+		"columns": {
+			"id": "ID",
+			"type": "Typ",
+			"description": "Beskrivning",
+			"owner": "Ägare",
+			"amount": "Belopp",
+			"status": "Status"
+		},
+		"preview": {
+			"empty": "Välj ett utlägg för att förhandsgranska och bekräfta",
+			"open_detail": "Öppna"
+		}
+	},
+
 	"admin_expenses": {
 		"title": "Utlägg",
 		"nav_title": "Alla utlägg",
@@ -229,7 +245,8 @@
 		"unconfirmed": "Ej bekräftad",
 		"paid": "Utbetald",
 		"unpaid": "Ej utbetald",
-		"not_booked": "Ej bokförd"
+		"not_booked": "Ej bokförd",
+		"not_attested": "Ej attesterad"
 	},
 	"total": "Totalt",
 	"comment_submitted": "Kommentar skickad",

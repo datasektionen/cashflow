@@ -145,34 +145,6 @@
 			{/if}
 		</div>
 	</div>
-
-	<div class="flex items-center gap-2">
-		{#if canConfirm}
-			<button
-				onclick={handleConfirm}
-				disabled={confirming}
-				class="flex cursor-pointer items-center gap-1.5 bg-money-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-money-green-500 disabled:opacity-50 dark:bg-money-green-700 dark:hover:bg-money-green-600"
-			>
-				{#if confirming}
-					<CashSpinner />
-				{:else}
-					{$_('expense_confirm')}
-				{/if}
-			</button>
-		{:else if canUnconfirm}
-			<button
-				onclick={handleUnconfirm}
-				disabled={confirming}
-				class="flex cursor-pointer items-center gap-1.5 border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle hover:border-red-400 hover:text-red-600 disabled:opacity-50 dark:border-dark-base-300 dark:text-dark-base-subtle dark:hover:border-red-500 dark:hover:text-red-400"
-			>
-				{#if confirming}
-					<CashSpinner />
-				{:else}
-					{$_('expense_unconfirm')}
-				{/if}
-			</button>
-		{/if}
-	</div>
 </div>
 
 <div class="flex flex-col gap-4 lg:flex-row">
