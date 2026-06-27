@@ -34,7 +34,11 @@ from core.api.problems import (
     NotConfirmableProblem,
     NotConfirmedProblem,
     AlreadyConfirmedProblem,
+    PaymentPermissionDeniedProblem,
+    AlreadyPaidProblem,
+    NotPayableProblem,
 )
+from core.permissions import get_permission_provider
 from .serializers import (
     InvoiceCreateRequestSerializer,
     InvoiceSerializer,
@@ -137,6 +141,18 @@ logger = get_logger(__name__)
             status.HTTP_409_CONFLICT: problems(NotConfirmedProblem),
         },
     ),
+    pay=extend_schema(
+        tags=["Invoices"],
+        summary="Pay an invoice",
+        description="Marks an invoice as paid. Unlike expense reimbursements, invoices are paid one at a time. Submit as an empty POST request. Requires the `pay` permission, and the invoice must be fully attested and not already paid.",
+        operation_id="pay_invoice",
+        request=None,
+        responses={
+            status.HTTP_200_OK: InvoiceSerializer,
+            status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(AlreadyPaidProblem, NotPayableProblem),
+        },
+    ),
 )
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = InvoiceSerializer
@@ -227,6 +243,21 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             except NotConfirmedError as e:
                 raise NotConfirmedProblem() from e
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["POST"])
+    def pay(self, request: Request, pk=None) -> Response:
+        if not get_permission_provider().may_pay(self.current_user):
+            raise PaymentPermissionDeniedProblem()
+
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            if invoice.is_paid():
+                raise AlreadyPaidProblem()
+            if not invoice.is_payable():
+                raise NotPayableProblem()
+            invoice.pay(self.current_user)
+
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
 
 
 class InvoicePartAttestView(

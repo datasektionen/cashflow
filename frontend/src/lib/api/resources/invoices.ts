@@ -60,6 +60,10 @@ export class InvoicesAPI {
 		return this.apiClient.post<void>(`invoice-parts/${partId}/attest/`, {});
 	}
 
+	pay(id: number): Promise<Invoice> {
+		return this.apiClient.post<Invoice>(`invoices/${id}/pay/`, {});
+	}
+
 	async create(data: InvoiceCreate): Promise<Invoice> {
 		const body = new FormData();
 		body.append('description', data.description);

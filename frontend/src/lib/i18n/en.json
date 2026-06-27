@@ -126,6 +126,14 @@
 		}
 	},
 
+	"admin_pay": {
+		"title": "Pay",
+		"tabs": {
+			"expenses": "Expenses",
+			"invoices": "Invoices"
+		}
+	},
+
 	"admin_paginatedResponse": {
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",

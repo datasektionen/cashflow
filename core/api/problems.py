@@ -192,3 +192,23 @@ class NoExpensesProblem(APIException):
 
 
 register_exception(NoExpensesProblem)
+
+
+class AlreadyPaidProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "already_paid"
+    title = "Invoice is already paid"
+    default_detail = "This invoice has already been paid."
+
+
+register_exception(AlreadyPaidProblem)
+
+
+class NotPayableProblem(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "not_payable"
+    title = "Invoice cannot be paid"
+    default_detail = "This invoice cannot be paid; all parts must be attested first."
+
+
+register_exception(NotPayableProblem)

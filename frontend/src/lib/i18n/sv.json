@@ -108,6 +108,14 @@
 		}
 	},
 
+	"admin_pay": {
+		"title": "Betala",
+		"tabs": {
+			"expenses": "Utlägg",
+			"invoices": "Fakturor"
+		}
+	},
+
 	"admin_expenses": {
 		"title": "Utlägg",
 		"nav_title": "Alla utlägg",

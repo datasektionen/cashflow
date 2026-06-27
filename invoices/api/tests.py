@@ -216,3 +216,67 @@ class TestInvoicePartAttestation:
             invoice=invoice_part.invoice, author=user.profile
         )
         assert comment.exists()
+
+
+class TestInvoicePay:
+
+    @pytest.mark.django_db
+    def test_correct_payment(self, user, api_client, mocker, today):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+        InvoicePartFactory.create(invoice=invoice, attested_by=user.profile)
+
+        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+
+        assert response.status_code == 200, response.data
+        assert response.data["paid_at"] == today.strftime("%Y-%m-%d")
+        assert response.data["paid_by"]["username"] == user.username
+
+        invoice.refresh_from_db()
+        assert invoice.payed_by_id == user.id
+
+    @pytest.mark.django_db
+    def test_rejects_unauthorized(self, api_client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        invoice = InvoiceFactory.create()
+        InvoicePartFactory.create(invoice=invoice, attested_by=invoice.owner)
+
+        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+
+        assert response.status_code == 403
+        assert response.data["detail"].code == "payment_permission_denied"
+
+    @pytest.mark.django_db
+    def test_rejects_already_paid(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+        InvoicePartFactory.create(invoice=invoice, attested_by=user.profile)
+        invoice.pay(user)
+
+        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+
+        assert response.status_code == 409
+        assert response.data["detail"].code == "already_paid"
+
+    @pytest.mark.django_db
+    def test_rejects_unattested(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+        InvoicePartFactory.create(invoice=invoice, attested_by=None)
+
+        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+
+        assert response.status_code == 409
+        assert response.data["detail"].code == "not_payable"

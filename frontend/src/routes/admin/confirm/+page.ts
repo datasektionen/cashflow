@@ -20,6 +20,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	const claims = await api.claims.list(page, perPage, filter);
 
 	return {
+		title_key: 'admin_confirmable.title',
 		claims
 	};
 };

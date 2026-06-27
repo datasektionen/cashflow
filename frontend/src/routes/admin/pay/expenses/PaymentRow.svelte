@@ -139,7 +139,7 @@
 			<button
 				onclick={handlePay}
 				disabled={selected.size === 0 || paying}
-				class="bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
+				class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
 			>
 				{paying ? 'Betalar…' : 'Betala'}
 			</button>
