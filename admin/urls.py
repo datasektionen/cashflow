@@ -13,12 +13,6 @@ urlpatterns = [
 
 if settings.FORTNOX_ENABLED:
     urlpatterns += [
-        path("fortnox", views.fortnox.overview, name="fortnox-overview"),
-        path("auth/", views.fortnox.get_auth_code, name="fortnox-auth-get"),
-        path(
-            "auth/complete/", views.fortnox.auth_complete, name="fortnox-auth-complete"
-        ),
-        path("auth/disconnect/", views.fortnox.disconnect, name="fortnox-disconnect"),
         path(
             "fortnox/invoices/account/<id>/",
             views.fortnox.account_invoice,

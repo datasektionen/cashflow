@@ -134,6 +134,18 @@
 		}
 	},
 
+	"fortnox": {
+		"title": "Fortnox",
+		"connected_by": "Fortnox is authorized by {name}.",
+		"not_connected": "Fortnox is not connected.",
+		"authenticate": "Connect Fortnox",
+		"reauthenticate": "Re-authenticate",
+		"disconnect": "Disconnect",
+		"authenticated": "Fortnox connected successfully.",
+		"disconnected": "Fortnox has been disconnected.",
+		"auth_failed": "Failed to connect Fortnox."
+	},
+
 	"admin_paginatedResponse": {
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",

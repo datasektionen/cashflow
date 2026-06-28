@@ -84,6 +84,11 @@ class Profile(models.Model):
     def may_view_all_payments(self):
         return get_permission_provider().may_view_all_payments(self.user)
 
+    def may_manage_fortnox(self):
+        from cashflow import dauth
+
+        return dauth.has_unscoped_permission(dauth.Permission.MANAGE_FORTNOX, self.user)
+
     def may_attest(self, expense_part):
         return get_permission_provider().may_attest(self.user, expense_part.cost_centre)
 

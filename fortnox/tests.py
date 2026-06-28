@@ -371,3 +371,72 @@ def test_account_invoice_returns_409_when_already_accounted(db, user, profile):
     fortnox_service.create_voucher.assert_not_called()
     invoice.refresh_from_db()
     assert invoice.verification == ""
+
+
+# --- API: status & disconnect ---
+
+
+def _service_account(user, *, expired=False):
+    delta = datetime.timedelta(hours=-1 if expired else 1)
+    return ServiceAccount.objects.create(
+        authenticated_by=user,
+        access_token="access",
+        refresh_token="refresh",
+        expires_at=timezone.now() + delta,
+    )
+
+
+def _with_manage_fortnox():
+    return patch(
+        "cashflow.dauth.get_permissions", return_value={"manage-fortnox": True}
+    )
+
+
+def test_status_requires_manage_fortnox(api_client, profile):
+    with patch("cashflow.dauth.get_permissions", return_value={}):
+        response = api_client.get("/api/fortnox/status/")
+    assert response.status_code == 403
+
+
+def test_status_reports_disconnected_when_no_account(api_client, profile):
+    with _with_manage_fortnox():
+        response = api_client.get("/api/fortnox/status/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_connected"] is False
+    assert body["authenticated_by"] is None
+    assert body["expires_at"] is None
+
+
+def test_status_reports_connected(api_client, profile, user):
+    _service_account(user)
+    with _with_manage_fortnox():
+        response = api_client.get("/api/fortnox/status/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_connected"] is True
+    assert body["authenticated_by"] == (user.get_full_name() or user.username)
+
+
+def test_status_expired_account_is_not_connected(api_client, profile, user):
+    _service_account(user, expired=True)
+    with _with_manage_fortnox():
+        response = api_client.get("/api/fortnox/status/")
+    assert response.json()["is_connected"] is False
+
+
+def test_disconnect_deletes_account(api_client, profile, user):
+    _service_account(user)
+    with _with_manage_fortnox():
+        response = api_client.post("/api/fortnox/disconnect/")
+    assert response.status_code == 200
+    assert response.json()["is_connected"] is False
+    assert ServiceAccount.objects.count() == 0
+
+
+def test_disconnect_requires_manage_fortnox(api_client, profile, user):
+    _service_account(user)
+    with patch("cashflow.dauth.get_permissions", return_value={}):
+        response = api_client.post("/api/fortnox/disconnect/")
+    assert response.status_code == 403
+    assert ServiceAccount.objects.count() == 1

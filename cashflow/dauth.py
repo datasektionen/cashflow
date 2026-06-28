@@ -18,6 +18,7 @@ class Permission(str, Enum):
     CONFIRM = "confirm"
     DELETE = "delete"
     EDIT_INVOICE = "edit-invoice"
+    MANAGE_FORTNOX = "manage-fortnox"
     MODERATE_COMMENTS = "moderate-comments"
     PAY = "pay"
     UNATTEST = "unattest"

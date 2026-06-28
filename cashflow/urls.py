@@ -30,4 +30,9 @@ urlpatterns = [
     path("api/", include("cashflow.api.urls")),
     path("", include("drf_problems.urls")),
     path("oidc/", include("mozilla_django_oidc.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+if settings.FORTNOX_ENABLED:
+    urlpatterns += [re_path(r"^fortnox/", include("fortnox.urls"))]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

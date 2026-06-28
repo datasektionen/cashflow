@@ -132,6 +132,13 @@ export type Permissions = {
 	unattest: boolean;
 	'edit-invoice': boolean;
 	'view-all-payments': boolean;
+	'manage-fortnox': boolean;
+};
+
+export type FortnoxStatus = {
+	is_connected: boolean;
+	authenticated_by: string | null;
+	expires_at: string | null;
 };
 
 export type User = {

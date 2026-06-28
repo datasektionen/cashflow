@@ -40,6 +40,13 @@ CSRF_TRUSTED_ORIGINS = ["https://cashflow.datasektionen.se"]
 if DEBUG:
     CSRF_TRUSTED_ORIGINS.append("http://localhost:5173")
 
+# Base URL of the SvelteKit frontend, used to redirect the browser back into the
+# SPA after server-side flows such as the Fortnox OAuth dance.
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "http://localhost:5173" if DEBUG else "https://cashflow.datasektionen.se",
+)
+
 ROOT_URLCONF = "cashflow.urls"
 
 WSGI_APPLICATION = "cashflow.wsgi.application"

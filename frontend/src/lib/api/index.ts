@@ -5,6 +5,7 @@ import { InvoicesAPI } from '$lib/api/resources/invoices';
 import { ClaimsAPI } from '$lib/api/resources/claims';
 import { ProfilePictureAPI } from '$lib/api/resources/profilePictures';
 import { PaymentsAPI } from '$lib/api/resources/payments';
+import { FortnoxAPI } from '$lib/api/resources/fortnox';
 
 export { ApiClient } from './client';
 
@@ -15,6 +16,7 @@ export class API {
 	claims: ClaimsAPI;
 	profilePictures: ProfilePictureAPI;
 	payments: PaymentsAPI;
+	fortnox: FortnoxAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
@@ -24,6 +26,7 @@ export class API {
 		this.claims = new ClaimsAPI(client);
 		this.profilePictures = new ProfilePictureAPI(client);
 		this.payments = new PaymentsAPI(client);
+		this.fortnox = new FortnoxAPI(client);
 	}
 }
 

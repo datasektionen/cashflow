@@ -19,7 +19,8 @@
 		CircleCheck,
 		Stamp,
 		Banknote,
-		BookText
+		BookText,
+		Settings2
 	} from '@lucide/svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { api } from '$lib/api';
@@ -138,6 +139,14 @@
 					/>
 				{/if}
 			{/if}
+		{/if}
+
+		{#if data.user?.permissions?.['manage-fortnox']}
+			<Separator.Root
+				orientation="horizontal"
+				class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
+			/>
+			<SideNavLink to="/admin/fortnox" text={$_('fortnox.title')} icon={Settings2} />
 		{/if}
 
 		<a

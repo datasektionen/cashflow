@@ -116,6 +116,18 @@
 		}
 	},
 
+	"fortnox": {
+		"title": "Fortnox",
+		"connected_by": "Fortnox är auktoriserad av {name}.",
+		"not_connected": "Fortnox är inte anslutet.",
+		"authenticate": "Logga in på Fortnox",
+		"reauthenticate": "Återautentisera",
+		"disconnect": "Logga ut",
+		"authenticated": "Fortnox anslöts.",
+		"disconnected": "Fortnox har kopplats från.",
+		"auth_failed": "Det gick inte att ansluta Fortnox."
+	},
+
 	"admin_expenses": {
 		"title": "Utlägg",
 		"nav_title": "Alla utlägg",

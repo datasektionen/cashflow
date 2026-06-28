@@ -66,9 +66,6 @@
                 <li><a href="{% url 'admin-user-overview' %}">Användare</a></li>
                 <li><a href="{% url 'admin-search-verification' %}">Sök verifikation</a></li>
                 <li><a href="{% url 'admin-list-verification' %}">Lista verifikat</a></li>
-                {% if user|may_authenticate_fortnox %}
-                <li><a href="{% url 'fortnox-overview' %}">Fortnox</a></li>
-                {% endif %}
             </ul>
         </div>
     </div>
