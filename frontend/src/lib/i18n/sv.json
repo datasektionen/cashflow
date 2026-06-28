@@ -116,6 +116,23 @@
 		}
 	},
 
+	"admin_account": {
+		"title": "Bokföring",
+		"create_voucher": "Skapa verifikat",
+		"existing_voucher": "Befintligt verifikat",
+		"voucher_number_placeholder": "Verifikatnummer",
+		"tabs": {
+			"expenses": "Utlägg",
+			"invoices": "Fakturor"
+		}
+	},
+
+	"booking_account_code": "Konto",
+	"booking_cost_centre": "Kostnadsställe",
+	"booking_debit": "Debet",
+	"booking_credit": "Kredit",
+	"booking_add_row": "Lägg till rad",
+
 	"fortnox": {
 		"title": "Fortnox",
 		"connected_by": "Fortnox är auktoriserad av {name}.",

@@ -180,3 +180,15 @@ export type PendingPayment = {
 	total: string;
 	count: number;
 };
+
+export type VoucherRow = {
+	account: number;
+	cost_centre?: string;
+	credit?: number;
+	debit?: number;
+	description?: string;
+	project?: string;
+	quantity?: number;
+	removed?: boolean;
+	transaction_information?: string;
+};

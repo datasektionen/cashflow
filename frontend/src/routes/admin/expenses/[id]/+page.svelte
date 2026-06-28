@@ -265,7 +265,7 @@
 		{/if}
 	</div>
 
-	<div class="flex flex-col gap-12 lg:w-2/3 lg:pt-1">
+	<div class="flex flex-col gap-12 lg:w-2/3 lg:pt-1 xl:pr-16">
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
 			<PartsTable
@@ -279,15 +279,76 @@
 		</div>
 
 		<div>
-			<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
-			<CommentDisplay {comments} currentUser={data.user} />
+			<h2 class="border-t border-base-500 pt-4 text-base font-semibold dark:border-dark-base-200">
+				Information
+			</h2>
+			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
+				<dd>
+					{expense.owner.first_name}
+					{expense.owner.last_name}
+					<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
+				<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
+				<dd>{new Date(expense.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_confirmed')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if expense.confirmed_at}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
+							{#if expense.confirmed_by}{expense.confirmed_by.first_name}
+								{expense.confirmed_by.last_name}
+							{/if}
+							{new Date(expense.confirmed_at).toLocaleDateString($locale ?? 'sv-SE')}
+						</span>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.unconfirmed')}</span
+						>
+					{/if}
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_paid')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if expense.payment}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
+							{expense.payment.payer.first_name}
+							{expense.payment.payer.last_name} · {new Date(
+								expense.payment.date
+							).toLocaleDateString($locale ?? 'sv-SE')}
+						</span>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.unpaid')}</span
+						>
+					{/if}
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_verification')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if expense.verification}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
+							>{expense.verification}</span
+						>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.not_booked')}</span
+						>
+					{/if}
+				</dd>
+			</dl>
 		</div>
 
-		<div>
-			<div
-				class="flex items-center justify-between border-t border-base-500 pt-4 dark:border-dark-base-200"
-			>
-				<h2 class={['text-base font-semibold', showCommentForm && 'opacity-0']}>Information</h2>
+		<div class="flex flex-col gap-3">
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
 				{#if !showCommentForm}
 					<button
 						onclick={() => (showCommentForm = true)}
@@ -298,7 +359,6 @@
 					</button>
 				{/if}
 			</div>
-
 			{#if showCommentForm}
 				<div class="flex h-44 flex-col gap-2">
 					<textarea
@@ -321,70 +381,8 @@
 						</button>
 					</div>
 				</div>
-			{:else}
-				<dl class="grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
-					<dd>
-						{expense.owner.first_name}
-						{expense.owner.last_name}
-						<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
-					<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
-					<dd>{new Date(expense.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_confirmed')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if expense.confirmed_at}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								{#if expense.confirmed_by}{expense.confirmed_by.first_name}
-									{expense.confirmed_by.last_name}
-								{/if}
-								{new Date(expense.confirmed_at).toLocaleDateString($locale ?? 'sv-SE')}
-							</span>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.unconfirmed')}</span
-							>
-						{/if}
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_paid')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if expense.payment}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								{expense.payment.payer.first_name}
-								{expense.payment.payer.last_name} · {new Date(
-									expense.payment.date
-								).toLocaleDateString($locale ?? 'sv-SE')}
-							</span>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.unpaid')}</span
-							>
-						{/if}
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_verification')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if expense.verification}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
-								>{expense.verification}</span
-							>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.not_booked')}</span
-							>
-						{/if}
-					</dd>
-				</dl>
 			{/if}
+			<CommentDisplay {comments} currentUser={data.user} />
 		</div>
 	</div>
 </div>

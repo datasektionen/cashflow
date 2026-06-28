@@ -134,6 +134,23 @@
 		}
 	},
 
+	"admin_account": {
+		"title": "Accounting",
+		"create_voucher": "Create voucher",
+		"existing_voucher": "Existing voucher",
+		"voucher_number_placeholder": "Voucher number",
+		"tabs": {
+			"expenses": "Expenses",
+			"invoices": "Invoices"
+		}
+	},
+
+	"booking_account_code": "Account",
+	"booking_cost_centre": "Cost centre",
+	"booking_debit": "Debit",
+	"booking_credit": "Credit",
+	"booking_add_row": "Add row",
+
 	"fortnox": {
 		"title": "Fortnox",
 		"connected_by": "Fortnox is authorized by {name}.",

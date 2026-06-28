@@ -160,7 +160,7 @@
 		{/if}
 	</div>
 
-	<div class="flex flex-col gap-12 lg:w-3/5 lg:pt-1">
+	<div class="flex flex-col gap-12 lg:w-3/5 lg:pt-1 xl:pr-16">
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
 			<PartsTable
@@ -174,15 +174,78 @@
 		</div>
 
 		<div>
-			<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
-			<CommentDisplay {comments} currentUser={data.user} />
+			<h2 class="border-t border-base-500 pt-4 text-base font-semibold dark:border-dark-base-200">
+				Information
+			</h2>
+			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
+				<dd>
+					{invoice.owner.first_name}
+					{invoice.owner.last_name}
+					<span class="text-base-subtle dark:text-dark-base-subtle">({invoice.owner.email})</span>
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
+				<dd>
+					{invoice.invoice_date
+						? new Date(invoice.invoice_date).toLocaleDateString($locale ?? 'sv-SE')
+						: '–'}
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
+				<dd>{new Date(invoice.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_confirmed')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if invoice.confirmed_at}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
+							{#if invoice.confirmed_by}{invoice.confirmed_by.first_name}
+								{invoice.confirmed_by.last_name} ·
+							{/if}
+							{new Date(invoice.confirmed_at).toLocaleDateString($locale ?? 'sv-SE')}
+						</span>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.unconfirmed')}</span
+						>
+					{/if}
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_paid')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if invoice.paid_at}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
+							{#if invoice.paid_by}{invoice.paid_by.first_name} {invoice.paid_by.last_name} ·
+							{/if}{new Date(invoice.paid_at).toLocaleDateString($locale ?? 'sv-SE')}
+						</span>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.unpaid')}</span
+						>
+					{/if}
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_verification')}</dt>
+				<dd class="flex items-center gap-2">
+					{#if invoice.verification}
+						<Check class="size-5 shrink-0 text-money-green-600" />
+						<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
+							>{invoice.verification}</span
+						>
+					{:else}
+						<span class="text-base-subtle dark:text-dark-base-subtle"
+							>{$_('expense_status.not_booked')}</span
+						>
+					{/if}
+				</dd>
+			</dl>
 		</div>
 
-		<div>
-			<div
-				class="flex items-center justify-between border-t border-base-500 pt-4 dark:border-dark-base-200"
-			>
-				<h2 class={['text-base font-semibold', showCommentForm && 'opacity-0']}>Information</h2>
+		<div class="flex flex-col gap-3">
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
 				{#if !showCommentForm}
 					<button
 						onclick={() => (showCommentForm = true)}
@@ -193,7 +256,6 @@
 					</button>
 				{/if}
 			</div>
-
 			{#if showCommentForm}
 				<div class="flex h-44 flex-col gap-2">
 					<textarea
@@ -216,72 +278,8 @@
 						</button>
 					</div>
 				</div>
-			{:else}
-				<dl class="grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
-					<dd>
-						{invoice.owner.first_name}
-						{invoice.owner.last_name}
-						<span class="text-base-subtle dark:text-dark-base-subtle">({invoice.owner.email})</span>
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
-					<dd>
-						{invoice.invoice_date
-							? new Date(invoice.invoice_date).toLocaleDateString($locale ?? 'sv-SE')
-							: '–'}
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
-					<dd>{new Date(invoice.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_confirmed')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if invoice.confirmed_at}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								{#if invoice.confirmed_by}{invoice.confirmed_by.first_name}
-									{invoice.confirmed_by.last_name} ·
-								{/if}
-								{new Date(invoice.confirmed_at).toLocaleDateString($locale ?? 'sv-SE')}
-							</span>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.unconfirmed')}</span
-							>
-						{/if}
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_paid')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if invoice.paid_at}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								{#if invoice.paid_by}{invoice.paid_by.first_name} {invoice.paid_by.last_name} ·
-								{/if}{new Date(invoice.paid_at).toLocaleDateString($locale ?? 'sv-SE')}
-							</span>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.unpaid')}</span
-							>
-						{/if}
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_verification')}</dt>
-					<dd class="flex items-center gap-2">
-						{#if invoice.verification}
-							<Check class="size-5 shrink-0 text-money-green-600" />
-							<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
-								>{invoice.verification}</span
-							>
-						{:else}
-							<span class="text-base-subtle dark:text-dark-base-subtle"
-								>{$_('expense_status.not_booked')}</span
-							>
-						{/if}
-					</dd>
-				</dl>
 			{/if}
+			<CommentDisplay {comments} currentUser={data.user} />
 		</div>
 	</div>
 </div>

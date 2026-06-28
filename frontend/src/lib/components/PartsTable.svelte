@@ -14,6 +14,7 @@
 		includeAttest?: boolean;
 		attestDisabled?: boolean;
 		partType?: 'expense' | 'invoice';
+		dense?: boolean;
 	};
 
 	const {
@@ -23,7 +24,8 @@
 		totalAmount,
 		includeAttest = false,
 		attestDisabled = false,
-		partType = 'expense'
+		partType = 'expense',
+		dense = false
 	}: ClaimPartsTableProps = $props();
 
 	let currentlyAttesting: Set<number> = $state(new Set());
@@ -51,7 +53,7 @@
 	);
 </script>
 
-<table class="w-full table-fixed text-sm">
+<table class={['w-full table-fixed', dense ? 'text-xs' : 'text-sm']}>
 	<thead
 		class="text-xxs text-left font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
 	>

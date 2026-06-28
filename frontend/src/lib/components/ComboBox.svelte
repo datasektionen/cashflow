@@ -44,12 +44,12 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 	inputValue={searchValue}
 	onValueChange={(v) => onchange?.(v ?? '')}
 >
-	<div class="relative">
+	<div class="relative w-full">
 		<div
-			class="flex flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200"
+			class="flex w-full flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {className}"
 		>
 			<Combobox.Input
-				class="p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle {className}"
+				class="w-full flex-1 p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
 				onclick={() => (open = true)}
 				oninput={(e) => {
 					searchValue = e.currentTarget.value;
