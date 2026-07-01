@@ -280,3 +280,74 @@ class TestInvoicePay:
 
         assert response.status_code == 409
         assert response.data["detail"].code == "not_payable"
+
+
+class TestInvoiceAccount:
+
+    @pytest.mark.django_db
+    def test_rejects_unauthorized(self, api_client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        invoice = InvoiceFactory.create()
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 403
+        assert response.data["detail"].code == "accounting_permission_denied"
+
+    @pytest.mark.django_db
+    def test_manual_voucher_number_accounts(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 200, response.data
+        invoice.refresh_from_db()
+        assert invoice.verification == "A123"
+        assert Comment.objects.filter(invoice=invoice, author=user.profile).exists()
+
+    @pytest.mark.django_db
+    def test_rejects_already_accounted(self, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create(verification="A1")
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 409
+        assert response.data["detail"].code == "already_accounted"
+
+    @pytest.mark.django_db
+    def test_voucher_rows_without_service_returns_503(self, api_client, mocker):
+        # Without a fortnox service client attached, accounting via voucher rows
+        # (rather than a manual voucher number) cannot proceed.
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {"voucher_rows": [{"account": 1930, "cost_centre": 100, "debit": "50.00"}]},
+            format="json",
+        )
+        assert response.status_code == 503
+        assert response.data["detail"].code == "fortnox_service_not_available"

@@ -8,6 +8,7 @@ from core.api.serializers import (
     CommentSerializer,
     PaymentSerializer,
     FileSerializer,
+    VoucherRowSerializer,
 )
 from invoices.models import Invoice, InvoicePart
 from .problems import (
@@ -55,6 +56,11 @@ class InvoiceCreateRequestSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Verification number, required when accounted=true.",
     )
+
+
+class InvoiceAccountSerializer(serializers.Serializer):
+    voucher_number = serializers.RegexField(r"[A-Z]\d+", required=False)
+    voucher_rows = VoucherRowSerializer(many=True, required=False)
 
 
 class InvoicePartSerializer(serializers.ModelSerializer):

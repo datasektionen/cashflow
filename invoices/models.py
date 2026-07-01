@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
@@ -17,10 +18,12 @@ from core.exceptions import (
     AlreadyAccountedError,
     FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
 )
 
 if TYPE_CHECKING:
-    from fortnox.api_client import FortnoxAPIClient
+    from fortnox.api_client import FortnoxAPIClient, VoucherRow
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -184,16 +187,16 @@ class Invoice(models.Model):
         self,
         user: User,
         fortnox_client: "FortnoxAPIClient | None" = None,
-        part_accounts: "dict[int, int] | None" = None,
+        voucher_rows: "list[VoucherRow] | None" = None,
         voucher_number: str | None = None,
-    ):
+    ) -> str:
         if not get_permission_provider().may_account(user, self):
             raise UnauthorizedAccountingError()
 
         if fortnox_client is not None:
             from django.conf import settings
             from fortnox import FortnoxNotFound
-            from fortnox.api_client.models import VoucherCreate, VoucherRow
+            from fortnox.api_client.models import VoucherCreate
 
             description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
                 description=self.description, kind="invoice", id=self.id
@@ -214,21 +217,19 @@ class Invoice(models.Model):
                 except FortnoxNotFound:
                     pass
 
-            voucher_rows = [
-                VoucherRow(
-                    Account=settings.FORTNOX_INVOICE_CREDIT_ACCOUNT,
-                    Credit=float(self.total_amount()),
+            # Verify total amount of voucher rows matches the total amount of the invoice
+            if voucher_rows is not None:
+                voucher_total = sum(
+                    (
+                        Decimal(str(r.Debit))
+                        for r in voucher_rows
+                        if r.Debit is not None
+                    ),
+                    Decimal("0"),
                 )
-            ]
-            if part_accounts:
-                for part in self.parts.all():
-                    acct = part_accounts[part.id]
-                    cc = fortnox_client.find_cost_center(Description=part.cost_centre)
-                    voucher_rows.append(
-                        VoucherRow(
-                            Account=acct, CostCenter=cc.Code, Debit=float(part.amount)
-                        )
-                    )
+
+                if voucher_total != self.total_amount():
+                    raise MismatchedTotalAmountError()
 
             created = fortnox_client.create_voucher(
                 VoucherCreate(
@@ -238,7 +239,7 @@ class Invoice(models.Model):
                         if self.invoice_date
                         else ""
                     ),
-                    VoucherRows=voucher_rows,
+                    VoucherRows=voucher_rows or [],
                     VoucherSeries=settings.FORTNOX_INVOICE_VOUCHER_SERIES,
                 )
             )
@@ -251,16 +252,19 @@ class Invoice(models.Model):
             self.verification = voucher_number
         elif self.verification:
             raise AlreadyAccountedError()
+        else:
+            # User didn't pass either an existing voucher number or voucher rows
+            raise NoAccountingMethodError()
 
-        if self.verification:
-            self.save()
-            from expenses.models import Comment
+        self.save()
+        from expenses.models import Comment
 
-            Comment.objects.create(
-                author=user.profile,
-                invoice=self,
-                content=f"Bokförde med verifikationsnumret: {self.verification}",
-            )
+        Comment.objects.create(
+            author=user.profile,
+            invoice=self,
+            content=f"Bokförde med verifikationsnumret: {self.verification}",
+        )
+        return self.verification
 
     # # TODO
     @staticmethod

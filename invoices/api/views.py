@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from structlog import get_logger
 
 from core.api.filters import Filter, apply_invoice_filters, OPENAPI_PARAMS
-from core.api.openapi import problems
+from core.api.openapi import problem, problems
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
 from expenses.models import File, Comment
@@ -37,12 +37,23 @@ from core.api.problems import (
     PaymentPermissionDeniedProblem,
     AlreadyPaidProblem,
     NotPayableProblem,
+    AccountingPermissionDeniedProblem,
+    MismatchedTotalAmountProblem,
+    NoAccountingMethodProblem,
+)
+from fortnox import VoucherRow
+from fortnox.api.problems import (
+    AlreadyAccountedProblem,
+    CashflowVerificationMissingProblem,
+    FortnoxRecordMissingProblem,
+    FortnoxServiceNotAvailableProblem,
 )
 from core.permissions import get_permission_provider
 from .serializers import (
     InvoiceCreateRequestSerializer,
     InvoiceSerializer,
     InvoicePartSerializer,
+    InvoiceAccountSerializer,
 )
 from ..models import Invoice, InvoicePart
 from core.exceptions import (
@@ -51,6 +62,12 @@ from core.exceptions import (
     UnauthorizedUnconfirmationError,
     NotConfirmedError,
     DuplicateConfirmationError,
+    UnauthorizedAccountingError,
+    AlreadyAccountedError,
+    FortnoxRecordMissingError,
+    CashflowVerificationMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
 )
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 
@@ -152,6 +169,34 @@ logger = get_logger(__name__)
             status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
             status.HTTP_409_CONFLICT: problems(AlreadyPaidProblem, NotPayableProblem),
         },
+    ),
+    account=extend_schema(
+        tags=["Invoices"],
+        summary="Account an invoice",
+        description=(
+            "Records accounting for an invoice. "
+            "Pass `voucher_number` to record an existing voucher manually (Fortnox not required). "
+            "Pass `voucher_rows` with account/cost-centre/debit/credit data to create a voucher via the Fortnox integration."
+        ),
+        request=InvoiceAccountSerializer,
+        responses={
+            status.HTTP_200_OK: InvoiceSerializer,
+            status.HTTP_400_BAD_REQUEST: problems(
+                PartRequiredProblem,
+                NoAccountingMethodProblem,
+            ),
+            status.HTTP_403_FORBIDDEN: problem(AccountingPermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problems(
+                AlreadyAccountedProblem,
+                FortnoxRecordMissingProblem,
+                CashflowVerificationMissingProblem,
+            ),
+            status.HTTP_422_UNPROCESSABLE_ENTITY: problem(MismatchedTotalAmountProblem),
+            status.HTTP_503_SERVICE_UNAVAILABLE: problem(
+                FortnoxServiceNotAvailableProblem
+            ),
+        },
+        operation_id="account_invoice",
     ),
 )
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
@@ -257,6 +302,55 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 raise NotPayableProblem()
             invoice.pay(self.current_user)
 
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["POST"])
+    def account(self, request: Request, pk=None) -> Response:
+        serializer = InvoiceAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        voucher_number = serializer.validated_data.get("voucher_number")
+        voucher_rows_data = serializer.validated_data.get("voucher_rows", [])
+
+        fortnox_client = None
+        if not voucher_number:
+            fortnox_client = getattr(request, "fortnox_service", None)
+            if fortnox_client is None:
+                raise FortnoxServiceNotAvailableProblem()
+            if not voucher_rows_data:
+                raise PartRequiredProblem()
+
+        voucher_rows = [
+            VoucherRow(
+                Account=row["account"],
+                CostCenter=str(row["cost_centre"]),
+                Debit=float(row["debit"]) if row.get("debit") is not None else None,
+                Credit=float(row["credit"]) if row.get("credit") is not None else None,
+            )
+            for row in voucher_rows_data
+        ]
+
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            try:
+                invoice.account(
+                    self.current_user,
+                    fortnox_client=fortnox_client,
+                    voucher_rows=voucher_rows,
+                    voucher_number=voucher_number,
+                )
+            except UnauthorizedAccountingError as e:
+                raise AccountingPermissionDeniedProblem() from e
+            except AlreadyAccountedError as e:
+                raise AlreadyAccountedProblem() from e
+            except FortnoxRecordMissingError as e:
+                raise FortnoxRecordMissingProblem() from e
+            except CashflowVerificationMissingError as e:
+                raise CashflowVerificationMissingProblem() from e
+            except MismatchedTotalAmountError as e:
+                raise MismatchedTotalAmountProblem() from e
+            except NoAccountingMethodError as e:
+                raise NoAccountingMethodProblem() from e
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
 
 

@@ -45,6 +45,8 @@ from core.api.problems import (
     NotConfirmableProblem,
     PartInvalidJSONProblem,
     PartRequiredProblem,
+    MismatchedTotalAmountProblem,
+    NoAccountingMethodProblem,
 )
 from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
@@ -64,6 +66,8 @@ from core.exceptions import (
     AlreadyAccountedError,
     FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
 )
 from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
@@ -74,6 +78,7 @@ from expenses.api.serializers import (
     ExpenseCreateSerializer,
 )
 from expenses.models import Expense, ExpensePart, File, Comment
+from fortnox import VoucherRow
 from fortnox.api.problems import (
     AlreadyAccountedProblem,
     CashflowVerificationMissingProblem,
@@ -214,18 +219,22 @@ logger = get_logger(__name__)
         description=(
             "Records accounting for an expense. "
             "Pass `voucher_number` to record an existing voucher manually (Fortnox not required). "
-            "Pass `parts` with account/cost-centre data to create a voucher via the Fortnox integration."
+            "Pass `voucher_rows` with account/cost-centre/debit/credit data to create a voucher via the Fortnox integration."
         ),
         request=ExpenseAccountSerializer,
         responses={
             status.HTTP_200_OK: ExpenseSerializer,
-            status.HTTP_400_BAD_REQUEST: problem(PartRequiredProblem),
+            status.HTTP_400_BAD_REQUEST: problems(
+                PartRequiredProblem,
+                NoAccountingMethodProblem,
+            ),
             status.HTTP_403_FORBIDDEN: problem(AccountingPermissionDeniedProblem),
             status.HTTP_409_CONFLICT: problems(
                 AlreadyAccountedProblem,
                 FortnoxRecordMissingProblem,
                 CashflowVerificationMissingProblem,
             ),
+            status.HTTP_422_UNPROCESSABLE_ENTITY: problem(MismatchedTotalAmountProblem),
             status.HTTP_503_SERVICE_UNAVAILABLE: problem(
                 FortnoxServiceNotAvailableProblem
             ),
@@ -358,18 +367,25 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         serializer.is_valid(raise_exception=True)
 
         voucher_number = serializer.validated_data.get("voucher_number")
-        parts_data = serializer.validated_data.get("parts", [])
-        part_accounts = {
-            p["part_id"]: (p["account_number"], p["cost_centre"]) for p in parts_data
-        } or None
+        voucher_rows_data = serializer.validated_data.get("voucher_rows", [])
 
         fortnox_client = None
         if not voucher_number:
             fortnox_client = getattr(request, "fortnox_service", None)
             if fortnox_client is None:
                 raise FortnoxServiceNotAvailableProblem()
-            if not part_accounts:
+            if not voucher_rows_data:
                 raise PartRequiredProblem()
+
+        voucher_rows = [
+            VoucherRow(
+                Account=row["account"],
+                CostCenter=str(row["cost_centre"]),
+                Debit=float(row["debit"]) if row.get("debit") is not None else None,
+                Credit=float(row["credit"]) if row.get("credit") is not None else None,
+            )
+            for row in voucher_rows_data
+        ]
 
         with transaction.atomic():
             expense = Expense.objects.select_for_update().get(pk=pk)
@@ -377,7 +393,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 expense.account(
                     self.current_user,
                     fortnox_client=fortnox_client,
-                    part_accounts=part_accounts,
+                    voucher_rows=voucher_rows,
                     voucher_number=voucher_number,
                 )
             except UnauthorizedAccountingError as e:
@@ -388,6 +404,10 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 raise FortnoxRecordMissingProblem() from e
             except CashflowVerificationMissingError as e:
                 raise CashflowVerificationMissingProblem() from e
+            except MismatchedTotalAmountError as e:
+                raise MismatchedTotalAmountProblem() from e
+            except NoAccountingMethodError as e:
+                raise NoAccountingMethodProblem() from e
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
 
 

@@ -113,6 +113,17 @@ class AccountSerializer(serializers.Serializer):
     account_number = serializers.IntegerField(min_value=0, max_value=9999)
 
 
+class VoucherRowSerializer(serializers.Serializer):
+    account = serializers.IntegerField(min_value=0, max_value=9999, required=True)
+    cost_centre = serializers.IntegerField(min_value=0, max_value=9999, required=True)
+    debit = serializers.DecimalField(
+        decimal_places=2, max_digits=9, min_value=0, required=False
+    )
+    credit = serializers.DecimalField(
+        decimal_places=2, max_digits=9, min_value=0, required=False
+    )
+
+
 class PendingPaymentsSerializer(serializers.Serializer):
     # Include all normal Profile fields
     owner = ProfileSerializer(source="*", read_only=True)

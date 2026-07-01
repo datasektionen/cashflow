@@ -152,6 +152,26 @@ class AccountingPermissionDeniedProblem(APIException):
 register_exception(AccountingPermissionDeniedProblem)
 
 
+class MismatchedTotalAmountProblem(APIException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    default_code = "mismatched_total_amount"
+    title = "Mismatched total amount for voucher"
+    default_detail = "The total amount for the voucher rows do not match the total amount of this expense or invoice."
+
+
+register_exception(MismatchedTotalAmountProblem)
+
+
+class NoAccountingMethodProblem(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "no_accounting_method"
+    title = "No accounting method provided"
+    default_detail = "You need to provide either an existing voucher number or a list of voucher rows to account this expense or invoice."
+
+
+register_exception(NoAccountingMethodProblem)
+
+
 class PaymentPermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "payment_permission_denied"

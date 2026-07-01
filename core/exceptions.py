@@ -81,3 +81,11 @@ class PaymentError(Exception):
 
 class UnauthorizedPaymentError(PaymentError):
     pass
+
+
+class MismatchedTotalAmountError(AccountingError):
+    pass
+
+
+class NoAccountingMethodError(AccountingError):
+    pass

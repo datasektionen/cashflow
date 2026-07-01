@@ -7,22 +7,17 @@
 #
 # Better late than never
 import json
-from datetime import date
-from unittest import mock
-
 import pytest
-from freezegun import freeze_time
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.serializers.json import DjangoJSONEncoder
 from hypothesis import given, settings, HealthCheck, strategies as st
-from hypothesis.extra.django import from_model
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
 from core.factories import UserFactory
-from expenses.api.serializers import ExpenseSerializer, ExpensePartSerializer
+from expenses.api.serializers import ExpenseSerializer
 from expenses.factories import ExpenseFactory, ExpensePartFactory
-from expenses.models import Profile, ExpensePart, Expense, Comment
+from expenses.models import Profile, Comment
 
 
 @pytest.fixture
@@ -225,6 +220,66 @@ class TestExpenseCreate:
         assert response.data["detail"].code == "part_invalid_json"
 
 
+class TestExpenseAccount:
+    def test_rejects_unauthorized(self, user, client, expense, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        response = client.post(
+            f"/api/expenses/{expense.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 403
+        assert response.data["detail"].code == "accounting_permission_denied"
+
+    def test_manual_voucher_number_accounts(self, user, client, expense, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        response = client.post(
+            f"/api/expenses/{expense.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 200, response.json()
+        expense.refresh_from_db()
+        assert expense.verification == "A123"
+        assert Comment.objects.filter(expense=expense, author=user.profile).exists()
+
+    def test_rejects_already_accounted(self, user, client, expense, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        expense.verification = "A1"
+        expense.save()
+        response = client.post(
+            f"/api/expenses/{expense.id}/account/",
+            {"voucher_number": "A123"},
+            format="json",
+        )
+        assert response.status_code == 409
+        assert response.data["detail"].code == "already_accounted"
+
+    def test_voucher_rows_without_service_returns_503(
+        self, user, client, expense, mocker
+    ):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        response = client.post(
+            f"/api/expenses/{expense.id}/account/",
+            {"voucher_rows": [{"account": 1930, "cost_centre": 100, "debit": "50.00"}]},
+            format="json",
+        )
+        assert response.status_code == 503
+        assert response.data["detail"].code == "fortnox_service_not_available"
+
+
 class TestExpensePartAttestation:
 
     @pytest.mark.django_db
@@ -296,10 +351,6 @@ class TestExpensePartAttestation:
 
 class TestExpenseSerializer:
 
-    # These serialize the same expense once per example. Serialization is
-    # read-only, so we mutate `verification` in memory rather than creating a row
-    # per example — a fresh create() per example eventually hits a UserFactory
-    # username collision that poisons the shared @given transaction.
     @pytest.mark.django_db
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(st.from_regex(r"[A-Z]\d+", fullmatch=True))

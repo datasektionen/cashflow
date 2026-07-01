@@ -1,12 +1,13 @@
 import re
 from datetime import date
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.db import models
 
 if TYPE_CHECKING:
-    from fortnox.api_client import FortnoxAPIClient
+    from fortnox.api_client import FortnoxAPIClient, VoucherRow
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -28,6 +29,8 @@ from core.exceptions import (
     AlreadyAccountedError,
     FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
 )
 
 
@@ -349,8 +352,8 @@ class Expense(models.Model):
         return "Inte attesterad"
 
     # Return the total amount of the expense parts
-    def total_amount(self):
-        total = 0
+    def total_amount(self) -> Decimal:
+        total = Decimal("0")
         for part in self.parts.all():
             total += part.amount
         return total
@@ -397,16 +400,16 @@ class Expense(models.Model):
         self,
         user: User,
         fortnox_client: "FortnoxAPIClient | None" = None,
-        part_accounts: "dict[int, tuple[int, str]] | None" = None,
+        voucher_rows: "list[VoucherRow] | None" = None,
         voucher_number: str | None = None,
-    ):
+    ) -> str:
         if not get_permission_provider().may_account(user, self):
             raise UnauthorizedAccountingError()
 
         if fortnox_client is not None:
             from django.conf import settings
             from fortnox import FortnoxNotFound
-            from fortnox.api_client.models import VoucherCreate, VoucherRow
+            from fortnox.api_client.models import VoucherCreate
 
             description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
                 description=self.description, kind="expense", id=self.id
@@ -427,26 +430,25 @@ class Expense(models.Model):
                 except FortnoxNotFound:
                     pass
 
-            voucher_rows = [
-                VoucherRow(
-                    Account=settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT,
-                    Credit=float(self.total_amount()),
+            # Verify total amount of voucher rows matches the total amount of the expense
+            if voucher_rows is not None:
+                voucher_total = sum(
+                    (
+                        Decimal(str(r.Debit))
+                        for r in voucher_rows
+                        if r.Debit is not None
+                    ),
+                    Decimal("0"),
                 )
-            ]
-            if part_accounts:
-                for part in self.parts.all():
-                    acct, cc = part_accounts[part.id]
-                    voucher_rows.append(
-                        VoucherRow(
-                            Account=acct, CostCenter=cc, Debit=float(part.amount)
-                        )
-                    )
+
+                if voucher_total != self.total_amount():
+                    raise MismatchedTotalAmountError()
 
             created = fortnox_client.create_voucher(
                 VoucherCreate(
                     Description=description,
                     TransactionDate=self.expense_date.strftime("%Y-%m-%d"),
-                    VoucherRows=voucher_rows,
+                    VoucherRows=voucher_rows or [],
                     VoucherSeries=settings.FORTNOX_EXPENSE_VOUCHER_SERIES,
                 )
             )
@@ -459,14 +461,17 @@ class Expense(models.Model):
             self.verification = voucher_number
         elif self.verification:
             raise AlreadyAccountedError()
+        else:
+            # User didn't pass either an existing voucher number or voucher rows
+            raise NoAccountingMethodError()
 
-        if self.verification:
-            self.save()
-            Comment.objects.create(
-                author=user.profile,
-                expense=self,
-                content=f"Bokförde med verifikationsnumret: {self.verification}",
-            )
+        self.save()
+        Comment.objects.create(
+            author=user.profile,
+            expense=self,
+            content=f"Bokförde med verifikationsnumret: {self.verification}",
+        )
+        return self.verification
 
     def confirm(self, user: User):
         if not user.profile.may_confirm():
