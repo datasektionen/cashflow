@@ -12,32 +12,32 @@
 	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const expense = $derived(data.expense);
+	const invoice = $derived(data.invoice);
 
 	// Prefill once; the form must not reset if data refreshes while editing.
 	// svelte-ignore state_referenced_locally
 	let voucherRows = $state<VoucherRowDraft[]>(
-		draftsFromParts(data.expense.parts, data.expense.recommended_credit_account)
+		draftsFromParts(data.invoice.parts, data.invoice.recommended_credit_account)
 	);
 	let voucherNumber = $state('');
 	// Which of the two submit buttons is in flight, so only it shows a spinner.
 	let submitting = $state<'rows' | 'number' | null>(null);
 
-	const isAccounted = $derived(expense.verification != null && expense.verification !== '');
+	const isAccounted = $derived(invoice.verification != null && invoice.verification !== '');
 
 	async function submitAccounting(
 		kind: 'rows' | 'number',
-		payload: Parameters<typeof api.expenses.account>[1]
+		payload: Parameters<typeof api.invoices.account>[1]
 	) {
 		submitting = kind;
 		try {
-			const updated = await api.expenses.account(expense.id, payload);
+			const updated = await api.invoices.account(invoice.id, payload);
 			alerts.update((a) => [
 				...a,
 				success($_('admin_account.success', { values: { verification: updated.verification } }))
 			]);
-			// Back to the queue of remaining accountable expenses.
-			await goto('/admin/account/expenses');
+			// Back to the queue of remaining accountable invoices.
+			await goto('/admin/account/invoices');
 		} catch (e) {
 			const message = isErrorResponse(e) ? e.detail : $_('admin_account.error');
 			alerts.update((a) => [...a, error(message)]);
@@ -58,15 +58,15 @@
 	}
 
 	const isAttested = $derived(
-		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
+		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
 	);
 </script>
 
 <div class="mb-6 flex flex-wrap items-center gap-3">
 	<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
-		<span>{$_('expense')} #{expense.id}</span>
+		<span>{$_('invoice')} #{invoice.id}</span>
 		<span>·</span>
-		<span>{expense.owner.first_name} {expense.owner.last_name}</span>
+		<span>{invoice.owner.first_name} {invoice.owner.last_name}</span>
 	</div>
 	<div class="flex items-center gap-2">
 		{#if isAttested}
@@ -75,22 +75,22 @@
 				>{$_('expense_attested')}</span
 			>
 		{/if}
-		{#if expense.confirmed_at}
+		{#if invoice.confirmed_at}
 			<span
 				class="dark:text-money-green-950 bg-money-green-500 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-money-green-400"
 				>{$_('expense_confirmed')}</span
 			>
 		{/if}
-		{#if expense.payment}
+		{#if invoice.paid_at}
 			<span
 				class="dark:text-money-green-950 bg-money-green-700 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-money-green-300"
 				>{$_('expense_paid')}</span
 			>
 		{/if}
-		{#if expense.verification}
+		{#if invoice.verification}
 			<span
 				class="bg-money-green-900 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-money-green-200 dark:text-money-green-900"
-				>{expense.verification}</span
+				>{invoice.verification}</span
 			>
 		{/if}
 	</div>
@@ -154,26 +154,37 @@
 					<dt class="text-base-subtle dark:text-dark-base-subtle">
 						{$_('new_expense.form.description.label')}
 					</dt>
-					<dd>{expense.description}</dd>
+					<dd>{invoice.description}</dd>
 
 					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
 					<dd>
-						{expense.owner.first_name}
-						{expense.owner.last_name}
-						<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>
+						{invoice.owner.first_name}
+						{invoice.owner.last_name}
+						<span class="text-base-subtle dark:text-dark-base-subtle">({invoice.owner.email})</span>
 					</dd>
 
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
-					<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+					{#if invoice.invoice_date}
+						<dt class="text-base-subtle dark:text-dark-base-subtle">
+							{$_('admin_invoices.columns.invoice_date')}
+						</dt>
+						<dd>{new Date(invoice.invoice_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+					{/if}
+
+					{#if invoice.due_date}
+						<dt class="text-base-subtle dark:text-dark-base-subtle">
+							{$_('admin_invoices.columns.due_date')}
+						</dt>
+						<dd>{new Date(invoice.due_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+					{/if}
 
 					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
-					<dd>{new Date(expense.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+					<dd>{new Date(invoice.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 				</dl>
 			</div>
 
 			<div>
 				<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-				<PartsTable parts={expense.parts} owner={expense.owner} dense />
+				<PartsTable parts={invoice.parts} owner={invoice.owner} partType="invoice" dense />
 			</div>
 		</div>
 	</div>
@@ -182,7 +193,7 @@
 		<h2 class="mb-3 text-base font-semibold">{$_('expense_comments')}</h2>
 		<CommentDisplay
 			variant="compact"
-			comments={expense.comments}
+			comments={invoice.comments}
 			currentUser={data.user ?? undefined}
 		/>
 	</div>

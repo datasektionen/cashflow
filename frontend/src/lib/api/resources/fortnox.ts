@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { FortnoxStatus } from '$lib/api/types';
+import type { FortnoxAccount, FortnoxCostCentre, FortnoxStatus } from '$lib/api/types';
 
 export class FortnoxAPI {
 	private apiClient: ApiClient;
@@ -14,5 +14,13 @@ export class FortnoxAPI {
 
 	disconnect(): Promise<FortnoxStatus> {
 		return this.apiClient.post<FortnoxStatus>('/fortnox/disconnect/', {});
+	}
+
+	accounts(): Promise<FortnoxAccount[]> {
+		return this.apiClient.get<FortnoxAccount[]>('/fortnox/accounts/');
+	}
+
+	costCentres(): Promise<FortnoxCostCentre[]> {
+		return this.apiClient.get<FortnoxCostCentre[]>('/fortnox/cost-centres/');
 	}
 }

@@ -24,12 +24,24 @@ logger = get_logger(__name__)
 # ======================
 # Data models
 # ======================
+def validate_cost_centre_type(value: Any) -> Any:
+    """Normalizes unknown cost centre types to "other".
+
+    GOrdian occasionally contains cost centres with made-up types (e.g.
+    "projectX"); one such entry must not make the whole list unparseable.
+    """
+    if value not in ("committee", "partition", "project", "other"):
+        return "other"
+    return value
+
+
 class GCostCenter(BaseModel):
     id: int = Field(alias="CostCentreID")
     name: str = Field(alias="CostCentreName")
-    type: Literal["committee", "partition", "project", "other"] = Field(
-        alias="CostCentreType"
-    )
+    type: Annotated[
+        Literal["committee", "partition", "project", "other"],
+        BeforeValidator(validate_cost_centre_type),
+    ] = Field(alias="CostCentreType")
 
 
 class GSecondaryCostCenter(BaseModel):
@@ -130,7 +142,7 @@ def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCen
 
 
 def list_secondary_cost_centres_from_gordian(
-    cost_center: Union[int, GCostCenter] = None, force_refresh: bool = False
+    cost_center: Union[int, GCostCenter, None] = None, force_refresh: bool = False
 ) -> list[GSecondaryCostCenter]:
     cc_id = cost_center.id if isinstance(cost_center, GCostCenter) else cost_center
 
@@ -196,7 +208,7 @@ def list_secondary_cost_centres_from_gordian(
 
 
 def list_budget_lines_from_gordian(
-    secondary_cost_center: Union[int, GSecondaryCostCenter] = None,
+    secondary_cost_center: Union[int, GSecondaryCostCenter, None] = None,
     force_refresh: bool = False,
 ) -> list[GBudgetLine]:
     scc_id = (

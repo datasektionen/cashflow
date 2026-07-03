@@ -1,5 +1,6 @@
 import { ApiClient } from '$lib/api';
 import type {
+	AccountPayload,
 	ClaimFilter,
 	Comment,
 	Expense,
@@ -86,5 +87,9 @@ export class ExpensesAPI {
 
 	unflag(id: number) {
 		return this.apiClient.post<void>(`/expenses/${id}/unflag/`, {});
+	}
+
+	account(id: number, payload: AccountPayload): Promise<Expense> {
+		return this.apiClient.post<Expense>(`/expenses/${id}/account/`, payload);
 	}
 }

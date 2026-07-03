@@ -1,7 +1,9 @@
 import datetime
 
+from django.conf import settings
 from rest_framework import serializers
 
+from cashflow.api.serializers import PartRecommendationsMixin
 from core.api.serializers import (
     ProfileSerializer,
     UploadField,
@@ -63,7 +65,7 @@ class InvoiceAccountSerializer(serializers.Serializer):
     voucher_rows = VoucherRowSerializer(many=True, required=False)
 
 
-class InvoicePartSerializer(serializers.ModelSerializer):
+class InvoicePartSerializer(PartRecommendationsMixin, serializers.ModelSerializer):
     attested_by = ProfileSerializer(read_only=True)
 
     class Meta:
@@ -77,6 +79,8 @@ class InvoicePartSerializer(serializers.ModelSerializer):
             "amount",
             "attested_by",
             "attest_date",
+            "recommended_accounts",
+            "recommended_cost_centre",
         ]
 
 
@@ -103,6 +107,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     comments = CommentSerializer(many=True, read_only=True, source="comment_set")
 
+    recommended_credit_account = serializers.SerializerMethodField(
+        help_text=(
+            "Fortnox account to credit when creating a voucher for this "
+            "invoice (the accounts payable account). Null in list responses."
+        )
+    )
+
     class Meta:
         model = Invoice
         fields = [
@@ -120,7 +131,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "files",
             "paid_by",
             "paid_at",
+            "recommended_credit_account",
         ]
+
+    def get_recommended_credit_account(self, invoice: Invoice) -> int | None:
+        if not self.context.get("include_recommendations"):
+            return None
+        return settings.FORTNOX_INVOICE_CREDIT_ACCOUNT
 
     def validate(self, data):
 

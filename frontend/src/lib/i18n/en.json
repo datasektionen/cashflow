@@ -139,6 +139,8 @@
 		"create_voucher": "Create voucher",
 		"existing_voucher": "Existing voucher",
 		"voucher_number_placeholder": "Voucher number",
+		"success": "Voucher {verification} was recorded",
+		"error": "The voucher could not be recorded",
 		"tabs": {
 			"expenses": "Expenses",
 			"invoices": "Invoices"

@@ -115,7 +115,9 @@ class AccountSerializer(serializers.Serializer):
 
 class VoucherRowSerializer(serializers.Serializer):
     account = serializers.IntegerField(min_value=0, max_value=9999, required=True)
-    cost_centre = serializers.IntegerField(min_value=0, max_value=9999, required=True)
+    # Fortnox cost centre code, e.g. "ADAALL". Optional: balancing rows
+    # (e.g. crediting the liability account) are not tied to a cost centre.
+    cost_centre = serializers.CharField(max_length=6, required=False)
     debit = serializers.DecimalField(
         decimal_places=2, max_digits=9, min_value=0, required=False
     )

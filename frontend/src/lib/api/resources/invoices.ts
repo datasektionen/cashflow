@@ -1,5 +1,11 @@
 import { ApiClient } from '$lib/api';
-import type { ClaimFilter, Invoice, InvoiceCreate, PaginatedResponse } from '$lib/api/types';
+import type {
+	AccountPayload,
+	ClaimFilter,
+	Invoice,
+	InvoiceCreate,
+	PaginatedResponse
+} from '$lib/api/types';
 
 export class InvoicesAPI {
 	private apiClient: ApiClient;
@@ -62,6 +68,10 @@ export class InvoicesAPI {
 
 	pay(id: number): Promise<Invoice> {
 		return this.apiClient.post<Invoice>(`invoices/${id}/pay/`, {});
+	}
+
+	account(id: number, payload: AccountPayload): Promise<Invoice> {
+		return this.apiClient.post<Invoice>(`invoices/${id}/account/`, payload);
 	}
 
 	async create(data: InvoiceCreate): Promise<Invoice> {

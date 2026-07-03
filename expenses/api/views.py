@@ -253,6 +253,14 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             return ExpenseAdminSerializer
         return ExpenseSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # Recommended accounts require a GOrdian lookup per part, so only
+        # compute them for single-expense reads (e.g. the accounting page),
+        # never for list responses.
+        context["include_recommendations"] = self.action == "retrieve"
+        return context
+
     def create(self, request, *args, **kwargs):
 
         files = request.FILES.getlist("files")
@@ -380,7 +388,11 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         voucher_rows = [
             VoucherRow(
                 Account=row["account"],
-                CostCenter=str(row["cost_centre"]),
+                CostCenter=(
+                    str(row["cost_centre"])
+                    if row.get("cost_centre") is not None
+                    else None
+                ),
                 Debit=float(row["debit"]) if row.get("debit") is not None else None,
                 Credit=float(row["credit"]) if row.get("credit") is not None else None,
             )

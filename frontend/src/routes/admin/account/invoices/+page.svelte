@@ -91,7 +91,7 @@
 	{loading}
 	scrollable
 	rowProps={{
-		onClick: (r) => goto(`/admin/invoices/${r.id}`),
+		onClick: (r) => goto(`/admin/account/invoices/${r.id}`),
 		class: 'cursor-pointer'
 	}}
 />

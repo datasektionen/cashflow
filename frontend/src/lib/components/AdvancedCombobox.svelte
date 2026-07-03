@@ -125,7 +125,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 		<Combobox.Portal>
 			<Combobox.Content
 				sideOffset={10}
-				class="focus-override border-muted h-96 w-full border-2 border-base-300 bg-base-200 dark:border-dark-base-300 dark:bg-dark-base-200"
+				class="focus-override border-muted max-h-[min(24rem,var(--bits-combobox-content-available-height))] w-(--bits-combobox-anchor-width) border-2 border-base-300 bg-base-200 dark:border-dark-base-300 dark:bg-dark-base-200"
 			>
 				<Combobox.ScrollUpButton class="p-2 text-base dark:text-dark-base-text">
 					<ChevronUp class="m-auto" />

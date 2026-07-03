@@ -7,15 +7,15 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
 	// Reference data is unavailable when the Fortnox integration is disabled
 	// or disconnected; the page still works for manual voucher numbers.
-	const [expense, accounts, costCentres] = await Promise.all([
-		api.expenses.get(parseInt(params.id)),
+	const [invoice, accounts, costCentres] = await Promise.all([
+		api.invoices.get(parseInt(params.id)),
 		api.fortnox.accounts().catch(() => [] as FortnoxAccount[]),
 		api.fortnox.costCentres().catch(() => [] as FortnoxCostCentre[])
 	]);
 
 	return {
 		title_key: 'admin_account.title',
-		expense,
+		invoice,
 		accounts,
 		costCentres
 	};

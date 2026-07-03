@@ -121,6 +121,8 @@
 		"create_voucher": "Skapa verifikat",
 		"existing_voucher": "Befintligt verifikat",
 		"voucher_number_placeholder": "Verifikatnummer",
+		"success": "Verifikat {verification} bokfördes",
+		"error": "Verifikatet kunde inte bokföras",
 		"tabs": {
 			"expenses": "Utlägg",
 			"invoices": "Fakturor"

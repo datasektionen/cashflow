@@ -41,6 +41,9 @@ export type Expense = {
 	parts: ExpensePart[];
 	files: ExpenseFile[];
 	comments: Comment[];
+	// Fortnox account to credit on the balancing voucher row.
+	// null in list responses; populated on single-claim reads.
+	recommended_credit_account: number | null;
 };
 
 export type InvoicePart = {
@@ -52,6 +55,10 @@ export type InvoicePart = {
 	amount: string;
 	attested_by: Profile | null;
 	attest_date: string | null;
+	// Voucher suggestions derived from GOrdian + Fortnox.
+	// null in list responses; populated on single-claim reads.
+	recommended_accounts: number[] | null;
+	recommended_cost_centre: string | null;
 };
 
 export type Invoice = {
@@ -69,6 +76,9 @@ export type Invoice = {
 	parts: InvoicePart[];
 	comments: Comment[];
 	files: ExpenseFile[];
+	// Fortnox account to credit on the balancing voucher row.
+	// null in list responses; populated on single-claim reads.
+	recommended_credit_account: number | null;
 };
 
 export interface InvoiceCreate {
@@ -96,6 +106,10 @@ export type ExpensePart = {
 	amount: string;
 	attested_by: Profile | null;
 	attest_date: string | null;
+	// Voucher suggestions derived from GOrdian + Fortnox.
+	// null in list responses; populated on single-claim reads.
+	recommended_accounts: number[] | null;
+	recommended_cost_centre: string | null;
 };
 
 type ClaimBase = {
@@ -139,6 +153,16 @@ export type FortnoxStatus = {
 	is_connected: boolean;
 	authenticated_by: string | null;
 	expires_at: string | null;
+};
+
+export type FortnoxAccount = {
+	number: number;
+	description: string;
+};
+
+export type FortnoxCostCentre = {
+	code: string;
+	description: string;
 };
 
 export type User = {
@@ -191,4 +215,11 @@ export type VoucherRow = {
 	quantity?: number;
 	removed?: boolean;
 	transaction_information?: string;
+};
+
+// Pass either voucher_rows (create a voucher via Fortnox) or voucher_number
+// (record an existing voucher manually).
+export type AccountPayload = {
+	voucher_rows?: VoucherRow[];
+	voucher_number?: string;
 };

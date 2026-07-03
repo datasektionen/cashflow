@@ -1,5 +1,5 @@
 import json
-from typing import cast
+from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -221,7 +221,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        parts_data = data["parts"]
+        parts_data = cast("list[dict[str, Any]]", data["parts"])
         with transaction.atomic():
             invoice = serializer.save(owner=self.current_user.profile)
             for part in parts_data:
@@ -247,6 +247,14 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .distinct()
             .order_by("-created_date")
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # Recommendations require a GOrdian/Fortnox lookup per part, so only
+        # compute them for single-invoice reads (e.g. the accounting page),
+        # never for list responses.
+        context["include_recommendations"] = self.action == "retrieve"
+        return context
 
     @action(detail=True, methods=["post"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:
@@ -323,7 +331,11 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         voucher_rows = [
             VoucherRow(
                 Account=row["account"],
-                CostCenter=str(row["cost_centre"]),
+                CostCenter=(
+                    str(row["cost_centre"])
+                    if row.get("cost_centre") is not None
+                    else None
+                ),
                 Debit=float(row["debit"]) if row.get("debit") is not None else None,
                 Credit=float(row["credit"]) if row.get("credit") is not None else None,
             )

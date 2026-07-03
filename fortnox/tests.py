@@ -11,8 +11,10 @@ from pytest import fixture, raises
 
 from admin.views.fortnox import account_expense, account_invoice
 from expenses.models import Expense
+from rest_framework.test import APIClient
+
 from fortnox import FortnoxAPIClient, FortnoxNotFound
-from fortnox.api_client.models import CostCenter, Voucher
+from fortnox.api_client.models import Account, CostCenter, Voucher
 from fortnox.models import ServiceAccount
 from invoices.models import Invoice
 
@@ -440,3 +442,51 @@ def test_disconnect_requires_manage_fortnox(api_client, profile, user):
         response = api_client.post("/api/fortnox/disconnect/")
     assert response.status_code == 403
     assert ServiceAccount.objects.count() == 1
+
+
+# --- API: accounts & cost-centre reference data ---
+
+
+def _with_accounting():
+    return patch("cashflow.dauth.get_permissions", return_value={"accounting": True})
+
+
+def test_reference_data_requires_accounting_permission(api_client, profile):
+    with patch("cashflow.dauth.get_permissions", return_value={}):
+        assert api_client.get("/api/fortnox/accounts/").status_code == 403
+        assert api_client.get("/api/fortnox/cost-centres/").status_code == 403
+
+
+def test_reference_data_503_without_service_client(api_client, profile):
+    # api_client uses force_authenticate, which leaves request.user anonymous
+    # during the middleware phase, so no fortnox_service client is attached.
+    with _with_accounting():
+        response = api_client.get("/api/fortnox/accounts/")
+    assert response.status_code == 503
+    assert response.data["detail"].code == "fortnox_service_not_available"
+
+
+def test_accounts_listed(user, profile):
+    client = APIClient()
+    client.force_login(user)
+    accounts = [Account(Number=1930, Description="Bankkonto", Active=True)]
+    with (
+        _with_accounting(),
+        patch("fortnox.api.views.list_active_accounts", return_value=accounts),
+    ):
+        response = client.get("/api/fortnox/accounts/")
+    assert response.status_code == 200
+    assert response.json() == [{"number": 1930, "description": "Bankkonto"}]
+
+
+def test_cost_centres_listed(user, profile):
+    client = APIClient()
+    client.force_login(user)
+    cost_centres = [CostCenterFactory(Code="123", Description="Styrelsen")]
+    with (
+        _with_accounting(),
+        patch("fortnox.api.views.list_active_cost_centers", return_value=cost_centres),
+    ):
+        response = client.get("/api/fortnox/cost-centres/")
+    assert response.status_code == 200
+    assert response.json() == [{"code": "123", "description": "Styrelsen"}]

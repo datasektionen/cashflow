@@ -1,7 +1,9 @@
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.fields import DateField
 from rest_framework.relations import PrimaryKeyRelatedField
 
+from cashflow.api.serializers import PartRecommendationsMixin
 from core.api.serializers import (
     FileSerializer,
     ProfileSerializer,
@@ -13,7 +15,7 @@ from core.api.serializers import (
 from expenses.models import Expense, ExpensePart, Payment
 
 
-class ExpensePartSerializer(serializers.ModelSerializer):
+class ExpensePartSerializer(PartRecommendationsMixin, serializers.ModelSerializer):
     expense: PrimaryKeyRelatedField[Expense] = PrimaryKeyRelatedField(read_only=True)
     attested_by = ProfileSerializer(read_only=True)
     attest_date = DateField(read_only=True)
@@ -29,6 +31,8 @@ class ExpensePartSerializer(serializers.ModelSerializer):
             "amount",
             "attested_by",
             "attest_date",
+            "recommended_accounts",
+            "recommended_cost_centre",
         ]
 
 
@@ -41,6 +45,13 @@ class ExpenseSerializer(serializers.ModelSerializer):
     payment = PaymentSerializer(read_only=True, source="payment_set")
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
+    recommended_credit_account = serializers.SerializerMethodField(
+        help_text=(
+            "Fortnox account to credit when creating a voucher for this "
+            "expense (the reimbursement liability account). Null in list "
+            "responses."
+        )
+    )
 
     class Meta:
         model = Expense
@@ -58,7 +69,13 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "parts",
             "comments",
             "payment",
+            "recommended_credit_account",
         ]
+
+    def get_recommended_credit_account(self, expense: Expense) -> int | None:
+        if not self.context.get("include_recommendations"):
+            return None
+        return settings.FORTNOX_EXPENSE_CREDIT_ACCOUNT
 
     def create(self, validated_data):
         parts_data = validated_data.pop("parts", [])

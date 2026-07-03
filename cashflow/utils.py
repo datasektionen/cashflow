@@ -24,7 +24,7 @@ def has_accounting_permissions(user: User):
 
 
 def may_authenticate_fortnox(user: User):
-    return dauth.has_unscoped_permission("manage-fortnox", user)
+    return dauth.has_unscoped_permission(dauth.Permission.MANAGE_FORTNOX, user)
 
 
 def build_cache_key(name: str):
@@ -48,10 +48,12 @@ def list_active_accounts(
         if cached is not None:
             return [Account.model_validate(acc) for acc in cached]
 
-    all_accounts = []
+    client = request.fortnox_service
+    assert client is not None, "list_active_accounts requires a Fortnox service client"
+    all_accounts: list[Account] = []
     page = 1
     while True:
-        page_accounts = request.fortnox_service.list_accounts(limit=500, page=page)
+        page_accounts = client.list_accounts(limit=500, page=page)
         all_accounts.extend(page_accounts)
         if len(page_accounts) < 500:
             break
@@ -75,12 +77,14 @@ def list_active_cost_centers(
         if cached is not None:
             return [CostCenter.model_validate(cc) for cc in cached]
 
-    all_cost_centers = []
+    client = request.fortnox_service
+    assert (
+        client is not None
+    ), "list_active_cost_centers requires a Fortnox service client"
+    all_cost_centers: list[CostCenter] = []
     page = 1
     while True:
-        page_cost_centers = request.fortnox_service.list_cost_centers(
-            limit=500, page=page
-        )
+        page_cost_centers = client.list_cost_centers(limit=500, page=page)
         all_cost_centers.extend(page_cost_centers)
         if len(page_cost_centers) < 500:
             break
@@ -127,7 +131,7 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
 
 def fortnox_cost_center_for_part(
     request: FortnoxRequest, part: ExpensePart | InvoicePart
-) -> Account | None:
+) -> CostCenter | None:
     """Retrieves the Fortnox cost center that the part should be accounted in, based on Gordian."""
     cost_centers = list_active_cost_centers(request)
     cost_center_by_description = {cc.Description: cc for cc in cost_centers}

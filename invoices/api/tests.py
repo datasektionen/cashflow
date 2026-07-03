@@ -2,6 +2,7 @@ import datetime
 import json
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
@@ -347,6 +348,126 @@ class TestInvoiceAccount:
         response = api_client.post(
             f"/api/invoices/{invoice.id}/account/",
             {"voucher_rows": [{"account": 1930, "cost_centre": 100, "debit": "50.00"}]},
+            format="json",
+        )
+        assert response.status_code == 503
+        assert response.data["detail"].code == "fortnox_service_not_available"
+
+
+class TestInvoiceRecommendations:
+    @pytest.mark.django_db
+    def test_populated_on_retrieve(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.VIEW_EXPENSES: True},
+            autospec=True,
+        )
+        mocker.patch(
+            "cashflow.api.serializers.retrieve_account_from_gordian",
+            return_value=[4010, 4011],
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create(owner=user.profile)
+        InvoicePartFactory.create(invoice=invoice)
+
+        response = api_client.get(f"/api/invoices/{invoice.id}/")
+        assert response.status_code == 200
+        assert response.data["parts"][0]["recommended_accounts"] == [4010, 4011]
+        # No session login, so the Fortnox service client is absent.
+        assert response.data["parts"][0]["recommended_cost_centre"] is None
+        assert (
+            response.data["recommended_credit_account"]
+            == settings.FORTNOX_INVOICE_CREDIT_ACCOUNT
+        )
+
+    @pytest.mark.django_db
+    def test_null_on_list(self, user, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.VIEW_EXPENSES: True},
+            autospec=True,
+        )
+        gordian = mocker.patch(
+            "cashflow.api.serializers.retrieve_account_from_gordian",
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create(owner=user.profile)
+        InvoicePartFactory.create(invoice=invoice)
+
+        response = api_client.get("/api/invoices/")
+        assert response.status_code == 200
+        assert response.data["data"][0]["parts"][0]["recommended_accounts"] is None
+        assert response.data["data"][0]["parts"][0]["recommended_cost_centre"] is None
+        assert response.data["data"][0]["recommended_credit_account"] is None
+        gordian.assert_not_called()
+
+    @pytest.mark.django_db
+    def test_cost_centre_populated_with_fortnox_service(self, user, mocker):
+        client = APIClient()
+        client.force_login(user)
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={
+                Permission.VIEW_EXPENSES: True,
+                Permission.ACCOUNTING: True,
+            },
+            autospec=True,
+        )
+        mocker.patch(
+            "cashflow.api.serializers.retrieve_account_from_gordian",
+            return_value=[4010],
+            autospec=True,
+        )
+        fortnox_cc = mocker.patch(
+            "cashflow.utils.fortnox_cost_center_for_part", autospec=True
+        )
+        fortnox_cc.return_value.Code = "456"
+        invoice = InvoiceFactory.create(owner=user.profile)
+        InvoicePartFactory.create(invoice=invoice)
+
+        response = client.get(f"/api/invoices/{invoice.id}/")
+        assert response.status_code == 200
+        assert response.data["parts"][0]["recommended_cost_centre"] == "456"
+
+    @pytest.mark.django_db
+    def test_account_row_without_cost_centre_is_valid(self, user, api_client, mocker):
+        # Balancing rows may omit cost_centre; without a Fortnox service
+        # client the request still 503s, proving it got past validation.
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {"voucher_rows": [{"account": 1930, "credit": "50.00"}]},
+            format="json",
+        )
+        assert response.status_code == 503
+        assert response.data["detail"].code == "fortnox_service_not_available"
+
+    @pytest.mark.django_db
+    def test_account_row_accepts_alphanumeric_cost_centre(
+        self, user, api_client, mocker
+    ):
+        # Fortnox cost centre codes are alphanumeric (e.g. "ADAALL") and must
+        # pass validation. 503 proves the payload got past it.
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.ACCOUNTING: True},
+            autospec=True,
+        )
+        invoice = InvoiceFactory.create()
+
+        response = api_client.post(
+            f"/api/invoices/{invoice.id}/account/",
+            {
+                "voucher_rows": [
+                    {"account": 4010, "cost_centre": "ADAALL", "debit": "50.00"}
+                ]
+            },
             format="json",
         )
         assert response.status_code == 503
