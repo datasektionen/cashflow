@@ -11,6 +11,9 @@ export type Profile = {
 	last_name: string;
 	email: string;
 	username: string;
+	// Whether the user has registered bank account and clearing number.
+	// Optional because User objects are passed as Profile in a few places.
+	has_bank_info?: boolean;
 };
 
 export type Payment = {
@@ -165,12 +168,19 @@ export type FortnoxCostCentre = {
 	description: string;
 };
 
+export type BankInfo = {
+	bank_account: string;
+	sorting_number: string;
+	bank_name: string;
+};
+
 export type User = {
 	username: string;
 	first_name: string;
 	last_name: string;
 	email: string;
 	permissions: Permissions;
+	bank_info: BankInfo;
 };
 
 export type ActionSummary = {
@@ -201,6 +211,8 @@ export type ClaimFilter = {
 
 export type PendingPayment = {
 	owner: Profile;
+	// Full details are only exposed on the pay-gated pending endpoint.
+	bank_info: BankInfo;
 	total: string;
 	count: number;
 };

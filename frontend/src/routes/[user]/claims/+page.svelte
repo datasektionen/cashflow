@@ -9,8 +9,11 @@
 	import { alerts, success } from '$lib/stores/alerts';
 	import { logger } from '$lib/logger';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import ProfileCard from './ProfileCard.svelte';
 
 	let { data }: PageProps = $props();
+
+	const isOwnClaims = $derived(data.user != null && data.user.username === page.params.user);
 
 	$effect(() => {
 		if (page.url.searchParams.get('createSuccess')) {
@@ -81,6 +84,10 @@
 		{/each}
 	</div>
 {/snippet}
+
+{#if isOwnClaims && data.user}
+	<ProfileCard user={data.user} />
+{/if}
 
 <ClaimFilterBar
 	costCentreItems={['Sektionslokalsgruppen']}

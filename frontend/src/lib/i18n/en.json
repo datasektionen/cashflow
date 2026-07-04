@@ -294,6 +294,14 @@
 	"add_comment": "Add comment",
 	"add_comment_placeholder": "Write a comment...",
 	"cancel": "Cancel",
+	"save": "Save",
+	"profile": {
+		"bank_name": "Bank",
+		"sorting_number": "Clearing number",
+		"bank_account": "Account number",
+		"bank_info_saved": "Bank information saved",
+		"bank_info_save_failed": "Could not save bank information"
+	},
 	"submit": "Submit",
 	"expense_parts": "Expense parts",
 	"amount": "Amount",

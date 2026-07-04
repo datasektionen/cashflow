@@ -102,4 +102,11 @@ export class ApiClient {
 			...(contentType && { headers: { 'Content-Type': contentType } })
 		});
 	}
+
+	patch<T>(path: string, body: unknown) {
+		return this.request<T>(path, {
+			method: 'PATCH',
+			body: JSON.stringify(body)
+		});
+	}
 }

@@ -293,6 +293,14 @@
 	"expense_comments": "Kommentarer",
 	"add_comment": "Lägg till kommentar",
 	"add_comment_placeholder": "Skriv en kommentar...",
+	"save": "Spara",
+	"profile": {
+		"bank_name": "Bank",
+		"sorting_number": "Clearingnummer",
+		"bank_account": "Kontonummer",
+		"bank_info_saved": "Bankinformationen sparades",
+		"bank_info_save_failed": "Bankinformationen kunde inte sparas"
+	},
 	"submit": "Skicka",
 	"expense_parts": "Kvittodelar",
 	"amount": "Belopp",

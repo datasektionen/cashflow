@@ -1,16 +1,25 @@
 <script lang="ts">
-	import type { Profile } from '$lib/api/types.ts';
+	import type { BankInfo, Profile } from '$lib/api/types.ts';
 	import { api } from '$lib/api';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { ExternalLink } from '@lucide/svelte';
+	import { Check, Copy, ExternalLink } from '@lucide/svelte';
 	import { Checkbox } from 'bits-ui';
 	import { invalidateAll } from '$app/navigation';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
 	import { logger } from '$lib/logger';
 
-	let { owner, onPaid }: { owner: Profile; onPaid?: () => void } = $props();
+	let { owner, bankInfo, onPaid }: { owner: Profile; bankInfo: BankInfo; onPaid?: () => void } =
+		$props();
+
+	let copiedField = $state<'sorting' | 'account' | null>(null);
+
+	function copy(field: 'sorting' | 'account', value: string) {
+		navigator.clipboard.writeText(value);
+		copiedField = field;
+		setTimeout(() => (copiedField = null), 2000);
+	}
 
 	let refreshKey = $state(0);
 
@@ -44,6 +53,37 @@
 </script>
 
 <div class="flex flex-col pb-2 pl-8">
+	{#if owner.has_bank_info}
+		<div
+			class="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 pr-4 text-sm text-base-subtle dark:text-dark-base-subtle"
+		>
+			{#if bankInfo.bank_name}
+				<span>{bankInfo.bank_name}</span>
+			{/if}
+			<button
+				onclick={() => copy('sorting', bankInfo.sorting_number)}
+				class="flex cursor-pointer items-center gap-1 tabular-nums transition-colors hover:text-base-text dark:hover:text-dark-base-text"
+			>
+				<span>Clearingnummer: {bankInfo.sorting_number}</span>
+				{#if copiedField === 'sorting'}
+					<Check class="size-3" />
+				{:else}
+					<Copy class="size-3" />
+				{/if}
+			</button>
+			<button
+				onclick={() => copy('account', bankInfo.bank_account)}
+				class="flex cursor-pointer items-center gap-1 tabular-nums transition-colors hover:text-base-text dark:hover:text-dark-base-text"
+			>
+				<span>Kontonummer: {bankInfo.bank_account}</span>
+				{#if copiedField === 'account'}
+					<Check class="size-3" />
+				{:else}
+					<Copy class="size-3" />
+				{/if}
+			</button>
+		</div>
+	{/if}
 	{#await expenses}
 		<div class="p-4">
 			<CashSpinner />

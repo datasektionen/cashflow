@@ -17,12 +17,23 @@ profile_picture_provider: ProfilePictureProvider = import_string(
         summary="Get current user",
         operation_id="get_current_user",
         tags=["Users"],
-    )
+    ),
+    patch=extend_schema(
+        summary="Update current user",
+        description=(
+            "Updates the current user's bank information. Identity fields "
+            "come from the SSO and are read-only."
+        ),
+        operation_id="update_current_user",
+        tags=["Users"],
+    ),
+    put=extend_schema(exclude=True),
 )
-class CurrentUserView(generics.RetrieveAPIView):
+class CurrentUserView(generics.RetrieveUpdateAPIView):
     """Retrieves the current user's information based on the authentication credentials."""
 
     serializer_class = UserSerializer
+    http_method_names = ["get", "patch", "options", "head"]
 
     def get_object(self):
         if not self.request.user.is_authenticated:

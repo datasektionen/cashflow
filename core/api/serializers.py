@@ -40,15 +40,27 @@ class FileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class BankInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["bank_account", "sorting_number", "bank_name"]
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", allow_blank=False)
     last_name = serializers.CharField(source="user.last_name", allow_blank=False)
     email = serializers.EmailField(source="user.email", allow_blank=False)
     username = serializers.CharField(source="user.username", allow_blank=False)
+    # Deliberately a boolean only: the bank details themselves are private to
+    # the user (`/api/users/me/`); admins just need to know they exist.
+    has_bank_info = serializers.BooleanField(
+        read_only=True,
+        help_text="Whether the user has registered bank account and clearing number.",
+    )
 
     class Meta:
         model = Profile
-        fields = ["id", "first_name", "last_name", "email", "username"]
+        fields = ["id", "first_name", "last_name", "email", "username", "has_bank_info"]
 
 
 class ClaimPartSerializer(serializers.Serializer):
@@ -129,6 +141,9 @@ class VoucherRowSerializer(serializers.Serializer):
 class PendingPaymentsSerializer(serializers.Serializer):
     # Include all normal Profile fields
     owner = ProfileSerializer(source="*", read_only=True)
+    # Full bank details are only exposed here: the endpoint is gated by the
+    # pay permission, and the payer needs them to make the bank transfer.
+    bank_info = BankInfoSerializer(source="*", read_only=True)
     total = serializers.DecimalField(max_digits=11, decimal_places=2, read_only=True)
     count = serializers.IntegerField(read_only=True)
 

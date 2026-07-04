@@ -3,6 +3,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from cashflow.dauth import Permission
+from core.api.serializers import BankInfoSerializer
 
 # Helper "types" for Redoc annotation
 _SCOPE_LIST = {"type": "array", "items": {"type": "string"}}
@@ -12,10 +13,29 @@ _BOOL = {"type": "boolean"}
 class UserSerializer(serializers.ModelSerializer):
 
     permissions = serializers.SerializerMethodField()
+    bank_info = BankInfoSerializer(source="profile")
 
     class Meta:
         model = get_user_model()
-        fields = ["username", "first_name", "last_name", "email", "permissions"]
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "permissions",
+            "bank_info",
+        ]
+        # Identity fields come from the SSO and cannot be edited here; only
+        # the bank information is writable.
+        read_only_fields = ["username", "first_name", "last_name", "email"]
+
+    def update(self, user, validated_data):
+        bank_info = validated_data.pop("profile", None)
+        if bank_info is not None:
+            for field, value in bank_info.items():
+                setattr(user.profile, field, value)
+            user.profile.save()
+        return user
 
     @extend_schema_field(
         {

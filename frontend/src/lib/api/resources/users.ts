@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { ActionSummary, User } from '$lib/api/types';
+import type { ActionSummary, BankInfo, User } from '$lib/api/types';
 
 export class UsersAPI {
 	private readonly apiClient: ApiClient;
@@ -10,6 +10,10 @@ export class UsersAPI {
 
 	async getCurrent(): Promise<User> {
 		return this.apiClient.get<User>('/users/me');
+	}
+
+	updateBankInfo(bankInfo: BankInfo): Promise<User> {
+		return this.apiClient.patch<User>('/users/me/', { bank_info: bankInfo });
 	}
 
 	async actionSummary(): Promise<ActionSummary> {

@@ -49,6 +49,11 @@ class Profile(models.Model):
     sorting_number = models.CharField(max_length=6, blank=True)
     bank_name = models.CharField(max_length=30, blank=True)
 
+    @property
+    def has_bank_info(self) -> bool:
+        """Whether the user can be paid: both account and clearing number set."""
+        return bool(self.bank_account and self.sorting_number)
+
     # Return a string representation of the user
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name

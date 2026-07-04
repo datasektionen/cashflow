@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import favicon from '$lib/assets/favicon.svg';
-	import { DarkMode } from 'flowbite-svelte';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import NavLink from '$lib/components/NavLink.svelte';
 	import SideNavLink from '$lib/components/SideNavLink.svelte';
 	import { Separator } from 'bits-ui';
@@ -62,10 +62,15 @@
 		</div>
 
 		<div class="flex h-full items-center space-x-2">
-			<DarkMode class="items-center" />
+			<ThemeToggle />
 			{#if data.user != null}
-				<p>{data.user.first_name} {data.user.last_name}</p>
-				<UserAvatar class="bg-white dark:bg-dark-base-50" username={data.user.username} />
+				<a
+					href="/{data.user.username}/claims/"
+					class="flex items-center gap-2 transition-opacity hover:opacity-80"
+				>
+					<p>{data.user.first_name} {data.user.last_name}</p>
+					<UserAvatar class="bg-white dark:bg-dark-base-50" username={data.user.username} />
+				</a>
 				<form method="POST" action="/logout">
 					<button type="submit" class="cursor-pointer">{$_('logout')}</button>
 				</form>
