@@ -20,7 +20,10 @@
 		Stamp,
 		Banknote,
 		BookText,
-		Settings2
+		Settings2,
+		Menu,
+		X,
+		Wallet
 	} from '@lucide/svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { api } from '$lib/api';
@@ -31,9 +34,16 @@
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 
+	let sidebarOpen = $state(false);
+	$effect(() => {
+		// Close the drawer whenever the route changes (e.g. after clicking a sidebar link)
+		page.url.pathname;
+		sidebarOpen = false;
+	});
+
 	let availableActions: ActionSummary | null = $state(null);
 	$effect(() => {
-		if (adminView) {
+		if (adminView || sidebarOpen) {
 			api.users.actionSummary().then((v) => {
 				availableActions = v;
 			});
@@ -54,10 +64,25 @@
 	>
 		<div class="flex h-full">
 			{#if data.user != null}
-				<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
-				<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
-				<NavLink to="/{data.user.username}/claims/" text={$_('user_claims')}></NavLink>
-				<NavLink to="/admin/" text={$_('admin')}></NavLink>
+				<button
+					type="button"
+					onclick={() => (sidebarOpen = !sidebarOpen)}
+					aria-label="Toggle sidebar"
+					aria-expanded={sidebarOpen}
+					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-dark-base-300"
+				>
+					{#if sidebarOpen}
+						<X class="size-5" />
+					{:else}
+						<Menu class="size-5" />
+					{/if}
+				</button>
+				<div class="hidden h-full lg:flex">
+					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
+					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
+					<NavLink to="/{data.user.username}/claims/" text={$_('user_claims')}></NavLink>
+					<NavLink to="/admin/" text={$_('admin')}></NavLink>
+				</div>
 			{/if}
 		</div>
 
@@ -83,12 +108,31 @@
 	</div>
 </nav>
 
-{#if adminView}
+{#if data.user != null && sidebarOpen}
+	<button
+		type="button"
+		aria-label="Close sidebar"
+		onclick={() => (sidebarOpen = false)}
+		class="fixed inset-0 top-16 z-20 bg-black/40 lg:hidden"
+	></button>
+{/if}
+
+{#if data.user != null}
 	<aside
-		class="fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 border-r border-base-500 bg-base-200 px-3 py-4 text-sm dark:border-dark-base-200 dark:bg-dark-base-100"
+		class={[
+			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100',
+			sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+			adminView ? 'lg:translate-x-0' : 'lg:hidden'
+		]}
 	>
 		<SideNavLink to="/expenses/new" text={$_('new_expense.title')} icon={ReceiptText} />
 		<SideNavLink to="/invoices/new" text={$_('new_invoice.title')} icon={FileText} />
+		<SideNavLink
+			to="/{data.user.username}/claims/"
+			text={$_('user_claims')}
+			icon={Wallet}
+			class="lg:hidden"
+		/>
 
 		<p
 			class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wider text-base-subtle uppercase dark:text-dark-base-subtle"
@@ -189,10 +233,7 @@
 >
 	{#if page.data.title_key != null || page.data.title != null}
 		<header
-			class={[
-				'w-full',
-				adminView ? 'pr-8 pl-60 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8'
-			]}
+			class={['w-full', adminView ? 'px-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8']}
 		>
 			<h1
 				class={[
@@ -212,7 +253,7 @@
 	<main
 		class={[
 			'w-full flex-1 dark:text-dark-base-text',
-			adminView ? 'py-4 pr-8 pl-60 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 py-8 lg:px-8'
+			adminView ? 'px-4 py-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 py-8 lg:px-8'
 		]}
 	>
 		{@render children()}

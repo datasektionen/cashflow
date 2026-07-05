@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	import type { Component } from 'svelte';
 
-	let props: { to: string; text: string; icon?: Component; badge?: number } = $props();
+	let props: { to: string; text: string; icon?: Component; badge?: number; class?: string } =
+		$props();
 
 	const normalizePath = (path: string) => path.replace(/\/+$/, '') || '/';
 	const active = $derived.by(() => {
@@ -19,7 +20,8 @@
 		'flex w-full items-center gap-2.5 border-l-2 px-3 py-2 transition-colors',
 		active
 			? 'border-money-green-600 bg-money-green-600/10 font-medium text-base-text dark:text-dark-base-text'
-			: 'border-transparent text-base-subtle hover:bg-base-300 hover:text-base-text dark:text-dark-base-subtle dark:hover:bg-dark-base-200 dark:hover:text-dark-base-text'
+			: 'border-transparent text-base-subtle hover:bg-base-300 hover:text-base-text dark:text-dark-base-subtle dark:hover:bg-dark-base-200 dark:hover:text-dark-base-text',
+		props.class
 	]}
 >
 	{#if props.icon}
