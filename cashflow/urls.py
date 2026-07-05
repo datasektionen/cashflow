@@ -15,6 +15,7 @@ Including another URLconf
 
 from django.conf.urls.static import static
 from django.urls import include, re_path, path
+from django.views.generic.base import RedirectView
 
 from cashflow import settings
 from expenses import views as expenses_views
@@ -30,6 +31,11 @@ urlpatterns = [
     path("api/", include("cashflow.api.urls")),
     path("", include("drf_problems.urls")),
     path("oidc/", include("mozilla_django_oidc.urls")),
+    path(
+        "login/",
+        RedirectView.as_view(url="/oidc/authenticate/", query_string=True),
+        name="login",
+    ),
 ]
 
 if settings.FORTNOX_ENABLED:

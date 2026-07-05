@@ -151,6 +151,7 @@ OIDC_OP_TOKEN_ENDPOINT = f"{_oidc_provider}/oauth/token"
 OIDC_OP_USER_ENDPOINT = f"{_oidc_provider}/userinfo"
 OIDC_OP_JWKS_ENDPOINT = f"{_oidc_provider}/keys"
 
+LOGIN_URL = "/oidc/authenticate/"
 LOGIN_REDIRECT_URL = os.getenv("REDIRECT_URL")
 
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
