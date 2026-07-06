@@ -1,6 +1,7 @@
 services:
   app:
     build:
+      context: backend
       target: dev
     env_file: .env
     environment:
@@ -38,10 +39,10 @@ services:
       - ./media:/app/media
     develop:
       watch:
-        - path: .
+        - path: backend
           target: /app
           action: sync+restart
-        - path: pyproject.toml
+        - path: backend/pyproject.toml
           action: rebuild
     depends_on:
       db:

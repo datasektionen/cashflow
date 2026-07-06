@@ -15,3 +15,5 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           nomad-token: ${{ secrets.NOMAD_TOKEN }}
           nomad-addr: ${{ vars.NOMAD_ADDR }}
+          build-context: backend
+          build-dockerfile: backend/Dockerfile # relative to repo root, not the context
