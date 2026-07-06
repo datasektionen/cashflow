@@ -52,6 +52,7 @@ from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
 from core.api.serializers import CommentSerializer, CommentCreateSerializer
 from core.api.utils import AuthenticatedUserMixin
+from core.files import normalize_upload
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
@@ -281,7 +282,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         with transaction.atomic():
             expense = serializer.save(owner=self.current_user.profile)
             for f in files:
-                File.objects.create(expense=expense, file=f)
+                File.objects.create(expense=expense, file=normalize_upload(f))
 
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 

@@ -34,15 +34,3 @@ _TODO — user-facing endpoints, including current-user info and resolved permis
 ## Fortnox
 
 _TODO — integration with the Fortnox bookkeeping API._
-
-## Stats
-
-_TODO — statistics and reporting._
-
-## Admin
-
-_TODO — admin-facing views and URLconf included from `cashflow/urls.py`._
-
-## File API
-
-_TODO — file upload/download endpoints (`file_api`)._

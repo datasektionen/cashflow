@@ -1,13 +1,18 @@
 import pytest
 from datetime import date
+from io import BytesIO
+
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 from hypothesis import given, settings, HealthCheck, strategies as st
 
 from cashflow.dauth import Permission
 from core.api.serializers import ClaimData, ClaimSerializer
 from core.factories import ProfileFactory
-from expenses.factories import ExpenseFactory, ExpensePartFactory
+from core.files import normalize_upload
+from expenses.factories import ExpenseFactory, ExpenseFileFactory, ExpensePartFactory
 from expenses.models import Payment
-from invoices.factories import InvoiceFactory
+from invoices.factories import InvoiceFactory, InvoiceFileFactory
 
 
 def implies(a: bool, b: bool) -> bool:
@@ -108,7 +113,11 @@ class TestConfirmation:
     def test_confirm_rejects_already_confirmed(
         self, api_client, user, confirm_permission
     ):
-        expense = ExpenseFactory(confirmed_by=user)
+        # Confirm after creation: the factory attaches a File post-creation,
+        # which resets any confirmation passed as a factory kwarg.
+        expense = ExpenseFactory()
+        expense.confirmed_by = user
+        expense.save()
 
         response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
 
@@ -311,3 +320,59 @@ class TestPaymentCreation:
 
         assert response.status_code == 422
         assert response.data["detail"].code == "multiple_receivers"
+
+
+def _image_upload(name, content_type):
+    buffer = BytesIO()
+    Image.new("RGB", (4, 4), "red").save(buffer, format="png")
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type=content_type)
+
+
+class TestNormalizeUpload:
+    # A real HEIF payload needs an encoder this environment lacks; the
+    # conversion is driven by content type, so a PNG payload exercises it.
+    def test_converts_heif_uploads_to_jpeg(self):
+        result = normalize_upload(_image_upload("Receipt.HEIC", "image/heic"))
+
+        assert result.content_type == "image/jpeg"
+        assert result.name == "Receipt.jpeg"
+        with Image.open(result) as image:
+            assert image.format == "JPEG"
+
+    def test_other_uploads_are_returned_unchanged(self):
+        upload = _image_upload("receipt.png", "image/png")
+
+        assert normalize_upload(upload) is upload
+
+
+class TestFileChangeResetsConfirmation:
+    target_factories = {"expense": ExpenseFactory, "invoice": InvoiceFactory}
+    file_factories = {"expense": ExpenseFileFactory, "invoice": InvoiceFileFactory}
+
+    @pytest.fixture(params=["expense", "invoice"])
+    def confirmed(self, request, db, user):
+        # Confirm after creation: the factories attach a File post-creation,
+        # which itself resets any confirmation passed as a factory kwarg.
+        target = self.target_factories[request.param]()
+        target.confirmed_by = user
+        target.confirmed_at = date.today()
+        target.save()
+        return request.param, target
+
+    def test_adding_a_file_resets_confirmation(self, confirmed):
+        kind, target = confirmed
+
+        self.file_factories[kind](**{kind: target})
+
+        target.refresh_from_db()
+        assert target.confirmed_by is None
+        assert target.confirmed_at is None
+
+    def test_deleting_a_file_resets_confirmation(self, confirmed):
+        kind, target = confirmed
+
+        target.file_set.first().delete()
+
+        target.refresh_from_db()
+        assert target.confirmed_by is None
+        assert target.confirmed_at is None

@@ -30,8 +30,6 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
 
-GOOGLE_ANALYTICS_KEY = os.getenv("GOOGLE_ANALYTICS_KEY")
-
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -55,18 +53,14 @@ WSGI_APPLICATION = "cashflow.wsgi.application"
 # Apps
 
 INSTALLED_APPS = (
-    "django.contrib.admin",
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
-    "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.humanize",
     "rest_framework",
     "storages",
     "corsheaders",
-    "widget_tweaks",
     "cashflow",
     "core",
     "expenses",
@@ -84,10 +78,8 @@ MIDDLEWARE = (
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     *(
         (
             "fortnox.django.FortnoxMiddleware",
@@ -99,21 +91,12 @@ MIDDLEWARE = (
     "core.middleware.StructlogContextMiddleware",
 )
 
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
-        "OPTIONS": {
-            "string_if_invalid": "%s",
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
+    }
 ]
 
 
@@ -191,13 +174,7 @@ Error responses follow [RFC 7807 (Problem Details)](https://datatracker.ietf.org
 
 # Static and storage
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 STATIC_URL = "/static/"
-
-# Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, "staticfiles"),)
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "unset")
 AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "unset")
@@ -217,7 +194,7 @@ STORAGES = {
         },
     },
     "staticfiles": {
-        "BACKEND": STATICFILES_STORAGE,
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 

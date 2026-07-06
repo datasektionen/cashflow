@@ -9,7 +9,11 @@ from django.test import RequestFactory
 from django.utils import timezone
 from pytest import fixture, raises
 
-from admin.views.fortnox import account_expense, account_invoice
+from core.exceptions import (
+    AlreadyAccountedError,
+    CashflowVerificationMissingError,
+    FortnoxRecordMissingError,
+)
 from expenses.models import Expense
 from rest_framework.test import APIClient
 
@@ -296,17 +300,12 @@ def test_account_aborts_when_already_accounted(db, user, profile):
         VoucherSeries="E", VoucherNumber=123
     )
 
-    request = RequestFactory().post(f"/admin/fortnox/expenses/account/{expense.id}/")
-    request.user = user
-    request.fortnox_service = fortnox_service
-
     # Pretend the user has proper permissions
     with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
-        response = account_expense(request, id=str(expense.id))
+        with raises(AlreadyAccountedError):
+            expense.account(user, fortnox_client=fortnox_service)
 
-    assert response.status_code == 409
     fortnox_service.create_voucher.assert_not_called()
-    expense.refresh_from_db()
 
 
 def test_account_expense_catches_missing_fortnox_record(db, user, profile):
@@ -319,16 +318,10 @@ def test_account_expense_catches_missing_fortnox_record(db, user, profile):
     fortnox_service = MagicMock()
     fortnox_service.retrieve_voucher.side_effect = FortnoxNotFound
 
-    request = RequestFactory().post(f"/admin/fortnox/expenses/account/{expense.id}/")
-    request.user = user
-    request.fortnox_service = fortnox_service
-
     with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
-        response = account_expense(request, id=str(expense.id))
+        with raises(FortnoxRecordMissingError):
+            expense.account(user, fortnox_client=fortnox_service)
 
-    assert response.status_code == 409
-    error = json.loads(response.content)
-    assert error["type"] == "/problems/fortnox_record_missing"
     fortnox_service.create_voucher.assert_not_called()
 
 
@@ -339,19 +332,14 @@ def test_account_expense_catches_missing_cashflow_record(db, user, profile):
     fortnox_service = MagicMock()
     fortnox_service.find_voucher.return_value = VoucherFactory.build()
 
-    request = RequestFactory().post(f"/admin/fortnox/expenses/account/{expense.id}/")
-    request.user = user
-    request.fortnox_service = fortnox_service
-
     with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
-        response = account_expense(request, id=str(expense.id))
-    assert response.status_code == 409
-    error = json.loads(response.content)
-    assert error["type"] == "/problems/cashflow_verification_missing"
+        with raises(CashflowVerificationMissingError):
+            expense.account(user, fortnox_client=fortnox_service)
+
     fortnox_service.create_voucher.assert_not_called()
 
 
-def test_account_invoice_returns_409_when_already_accounted(db, user, profile):
+def test_account_invoice_aborts_when_fortnox_voucher_exists(db, user, profile):
     invoice = Invoice.objects.create(
         invoice_date=datetime.date(2025, 1, 1),
         owner=profile,
@@ -362,14 +350,10 @@ def test_account_invoice_returns_409_when_already_accounted(db, user, profile):
     fortnox_service = MagicMock()
     fortnox_service.find_voucher.return_value = VoucherFactory.build()
 
-    request = RequestFactory().post(f"/admin/fortnox/invoices/account/{invoice.id}/")
-    request.user = user
-    request.fortnox_service = fortnox_service
-
     with patch("cashflow.dauth.get_permissions", return_value={"accounting": True}):
-        response = account_invoice(request, id=str(invoice.id))
+        with raises(CashflowVerificationMissingError):
+            invoice.account(user, fortnox_client=fortnox_service)
 
-    assert response.status_code == 409
     fortnox_service.create_voucher.assert_not_called()
     invoice.refresh_from_db()
     assert invoice.verification == ""

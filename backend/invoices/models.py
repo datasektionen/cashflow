@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
-from django.forms.models import model_to_dict
 
 from core.permissions import get_permission_provider
 from core.exceptions import (
@@ -100,19 +99,6 @@ class Invoice(models.Model):
     def __str__(self):
         return self.description
 
-    # Returns a unicode representation of the invoice
-    def __unicode__(self):
-        return self.description
-
-    # Returns a json dict from the invoice
-    def __repr__(self):
-        return str(self.to_dict())
-
-    def status(self):
-        if self.verification:
-            return "Bokförd som " + str(self.verification)
-        return "Oklart"
-
     def pay(self, user):
         self.payed_by = user
         self.payed_at = date.today()
@@ -131,10 +117,6 @@ class Invoice(models.Model):
     def total_amount(self):
         return sum([part.amount for part in self.parts.all()])  # return total
 
-    # Returns the cost centres belonging to the invoice as a list [{ cost_centre: 'Name' }, ...]
-    def cost_centres(self):
-        return self.parts.order_by("cost_centre").values("cost_centre").distinct()
-
     def is_attested(self):
         return self.parts.filter(attested_by__isnull=True).count() == 0
 
@@ -149,21 +131,6 @@ class Invoice(models.Model):
             if ip.attested_by is None:
                 return False
         return True
-
-    # Returns a dict representation of the model
-    def to_dict(self):
-        exp = model_to_dict(self)
-        exp["invoice_parts"] = [
-            part.to_dict() for part in InvoicePart.objects.filter(invoice=self)
-        ]
-        exp["owner_username"] = self.owner.user.username
-        exp["owner_first_name"] = self.owner.user.first_name
-        exp["owner_last_name"] = self.owner.user.last_name
-        exp["amount"] = self.total_amount()
-        exp["cost_centres"] = [
-            cost_centre["cost_centre"] for cost_centre in self.cost_centres()
-        ]
-        return exp
 
     def confirm(self, user: User):
         if not user.profile.may_confirm():
@@ -308,17 +275,6 @@ class InvoicePart(models.Model):
             + " kr)"
         )
 
-    # Returns unicode representation of the model
-    def __unicode__(self):
-        return (
-            self.invoice.__unicode__()
-            + " ("
-            + self.budget_line
-            + ": "
-            + str(self.amount)
-            + " kr)"
-        )
-
     def attest(self, user: User):
         if self.cost_centre not in user.profile.attestable_cost_centres():
             raise UnauthorizedAttestationError()
@@ -335,13 +291,3 @@ class InvoicePart(models.Model):
             content="Attesterar fakturadelen ```" + str(self) + "```",
         )
         comment.save()
-
-    # Returns dict representation of the model
-    def to_dict(self):
-        exp_part = model_to_dict(self)
-        del exp_part["invoice"]
-        if self.attested_by is not None:
-            exp_part["attested_by_username"] = self.attested_by.user.username
-            exp_part["attested_by_first_name"] = self.attested_by.user.first_name
-            exp_part["attested_by_last_name"] = self.attested_by.user.last_name
-        return exp_part

@@ -15,8 +15,6 @@ RUN poetry install --no-root
 
 COPY . .
 
-RUN ln -s staticfiles static # It seems like it sometimes only looks in staticfiles/ and other times only in static/
-
 EXPOSE 8000
 
 CMD ["poetry", "run", "gunicorn", "cashflow.wsgi", "--bind=0.0.0.0:8000", "-t", "600", "--log-file", "-"]

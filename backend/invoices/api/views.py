@@ -17,6 +17,7 @@ from core.api.filters import Filter, apply_invoice_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
+from core.files import normalize_upload
 from expenses.models import File, Comment
 from .problems import (
     InvalidInvoiceDateError,
@@ -214,7 +215,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             if parts_raw is None:
                 raise PartRequiredProblem()
             data["parts"] = json.loads(parts_raw)
-        except json.JSONDecodeError, TypeError:
+        except (json.JSONDecodeError, TypeError):
             raise PartInvalidJSONProblem(
                 detail="There was a problem decoding the parts field. Invoice parts should be submitted as a JSON encoded array."
             )
@@ -227,7 +228,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             for part in parts_data:
                 InvoicePart.objects.create(invoice=invoice, **part)
             for f in files:
-                File.objects.create(invoice=invoice, file=f)
+                File.objects.create(invoice=invoice, file=normalize_upload(f))
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 

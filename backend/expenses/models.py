@@ -1,4 +1,3 @@
-import re
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -11,7 +10,6 @@ if TYPE_CHECKING:
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.forms.models import model_to_dict
 from django.template.loader import render_to_string
 from django.utils.timezone import localdate
 from cashflow import email_util
@@ -57,34 +55,6 @@ class Profile(models.Model):
     # Return a string representation of the user
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name
-
-    # Creates a dict from the model
-    def to_dict(self):
-        person_dict = model_to_dict(self)
-        person_dict["username"] = self.user.username
-        person_dict["first_name"] = self.user.first_name
-        person_dict["last_name"] = self.user.last_name
-        person_dict["bank_info"]["bank_account"] = self.bank_account
-        person_dict["bank_info"]["sorting_number"] = self.sorting_number
-        person_dict["bank_info"]["bank_name"] = self.bank_name
-        del person_dict["user"]
-        del person_dict["id"]
-        return person_dict
-
-    # Creates and returns an object with the user's properties
-    def user_dict(self):
-        return {
-            "id": self.user.id,
-            "username": self.user.username,
-            "first_name": self.user.first_name,
-            "last_name": self.user.last_name,
-            "email": self.user.email,
-            "bank_info": {
-                "bank_account": self.bank_account,
-                "sorting_number": self.sorting_number,
-                "bank_name": self.bank_name,
-            },
-        }
 
     def may_view_all(self):
         return get_permission_provider().may_view_all(self.user)
@@ -237,19 +207,6 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment #{self.id} on {self.date} to {self.receiver}"
 
-    # Return a unicode representation of the payment
-    def __unicode__(self):
-        return f"Payment #{self.id} on {self.date} to {self.receiver}"
-
-    # Return a dict from the model
-    def to_dict(self):
-        payment = model_to_dict(self)
-        payment["payer"] = self.payer.user_dict()
-        payment["receiver"] = self.receiver.user_dict()
-        payment["tag"] = self.tag()
-        payment["amount"] = self.amount()
-        return payment
-
     # Returns the total amount of the payment
     def amount(self):
         total = 0
@@ -335,27 +292,6 @@ class Expense(models.Model):
     def __str__(self):
         return self.description
 
-    # Returns a unicode representation of the expense
-    def __unicode__(self):
-        return self.description
-
-    # Returns a json dict from the expense
-    def __repr__(self):
-        return str(self.to_dict())
-
-    def status(self):
-        if self.verification:
-            return "Bokförd som " + str(self.verification)
-        if self.reimbursement:
-            return "Utbetald"
-        if self.is_attested() and self.confirmed_by:
-            return "Inväntar utbetalning"
-        if self.is_attested() and not self.confirmed_by:
-            return "Attesterad men inte bekräftad av kassör"
-        if not self.is_attested() and self.confirmed_by:
-            return "Inte attesterad men bekräftad av kassör"
-        return "Inte attesterad"
-
     # Return the total amount of the expense parts
     def total_amount(self) -> Decimal:
         total = Decimal("0")
@@ -363,43 +299,11 @@ class Expense(models.Model):
             total += part.amount
         return total
 
-    # Returns the cost_centres belonging to the expense as a list [{ cost_centres: 'Name' }, ...]
-    def cost_centres(self):
-        return self.parts.order_by("cost_centre").values("cost_centre").distinct()
-
     def is_attested(self):
         return self.parts.filter(attested_by__isnull=True).count() == 0
 
     def is_paid(self):
         return self.reimbursement is not None
-
-    # Returns a dict representation of the model
-    def to_dict(self):
-        exp = model_to_dict(self)
-        exp["created_date"] = self.created_date
-        exp["expense_parts"] = [
-            part.to_dict() for part in ExpensePart.objects.filter(expense=self)
-        ]
-        exp["owner_username"] = self.owner.user.username
-        exp["owner_first_name"] = self.owner.user.first_name
-        exp["owner_last_name"] = self.owner.user.last_name
-        exp["amount"] = self.total_amount()
-        exp["cost_centres"] = [
-            cost_centre["cost_centre"] for cost_centre in self.cost_centres()
-        ]
-        exp["status"] = self.status()
-        exp["is_flagged"] = self.is_flagged
-        if self.reimbursement is not None:
-            exp["reimbursement"] = self.reimbursement.to_dict()
-        return exp
-
-    @staticmethod
-    def confirmable():
-        return (
-            Expense.objects.filter(confirmed_by__isnull=True)
-            .exclude(is_flagged=True)
-            .distinct()
-        )
 
     def account(
         self,
@@ -506,9 +410,6 @@ class Expense(models.Model):
         )
 
 
-FILE_REGEX = re.compile(r".*\.(jpg|jpeg|png|gif|bmp)", re.IGNORECASE)
-
-
 class File(models.Model):
     """
     Represents a file on, for example, S3.
@@ -522,24 +423,30 @@ class File(models.Model):
     )
     file = models.FileField()
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self._reset_confirmation()
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        self._reset_confirmation()
+        return result
+
+    def _reset_confirmation(self):
+        """
+        The attached files are part of what a confirmer signs off on, so
+        changing them voids an existing confirmation. Note that bulk queryset
+        operations bypass this, like all model-level behaviour.
+        """
+        target = self.expense or self.invoice
+        if target is not None and target.confirmed_by_id is not None:
+            target.confirmed_by = None
+            target.confirmed_at = None
+            target.save()
+
     # Returns a string representation of the file
     def __str__(self):
         return self.file.url
-
-    # Returns a unicode representation of the file
-    def __unicode__(self):
-        return self.file.url
-
-    # Returns a dict representation of the file
-    def to_dict(self):
-        return {"url": self.file.url, "id": self.id}
-
-    # Returns true if image url ends with commit image file names
-    def is_image(self):
-        return FILE_REGEX.match(self.file.name)
-
-    def is_pdf(self):
-        return self.file.name.lower().endswith(".pdf")
 
 
 class ExpensePart(models.Model):
@@ -566,17 +473,6 @@ class ExpensePart(models.Model):
     def __str__(self):
         return (
             self.expense.__str__()
-            + " ("
-            + self.budget_line
-            + ": "
-            + str(self.amount)
-            + " kr)"
-        )
-
-    # Returns unicode representation of the model
-    def __unicode__(self):
-        return (
-            self.expense.__unicode__()
             + " ("
             + self.budget_line
             + ": "
@@ -615,17 +511,6 @@ class ExpensePart(models.Model):
         )
         comment.save()
 
-    # Returns dict representation of the model
-    def to_dict(self):
-        exp_part = model_to_dict(self)
-        del exp_part["expense"]
-        if self.attested_by is not None:
-            exp_part["attested_by_username"] = self.attested_by.user.username
-            exp_part["attested_by_first_name"] = self.attested_by.user.first_name
-            exp_part["attested_by_last_name"] = self.attested_by.user.last_name
-        return exp_part
-
-
 class Comment(models.Model):
     """
     Represents a comment on an expense.
@@ -645,18 +530,6 @@ class Comment(models.Model):
     def __str__(self):
         return self.author.__str__() + " - " + str(self.date) + ": " + self.content
 
-    # Unicode representation of comment
-    def __unicode__(self):
-        return self.author.__unicode__() + " - " + str(self.date) + ": " + self.content
-
-    # Dict representation of the comment
-    def to_dict(self):
-        comment = model_to_dict(self)
-        comment["author_username"] = self.author.user.username
-        comment["author_first_name"] = self.author.user.first_name
-        comment["author_last_name"] = self.author.user.last_name
-        return comment
-
     class Meta:
         ordering = ["date"]
 
@@ -665,14 +538,21 @@ class Comment(models.Model):
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=Comment)
 def send_mail(sender, instance, created, *args, **kwargs):
-    owner = instance.expense.owner if instance.expense else instance.invoice.owner
+    from django.conf import settings
+
+    if instance.expense:
+        target, kind = instance.expense, "expenses"
+    else:
+        target, kind = instance.invoice, "invoices"
+    owner = target.owner
     if sender == Comment:
         if created and instance.author != owner:
             recipient = owner.user.email
             subject = (
                 str(instance.author) + " har lagt till en kommentar på ditt utlägg."
             )
+            link = f"{settings.FRONTEND_URL}/{owner.user.username}/{kind}/{target.id}"
             content = render_to_string(
-                "email.html", {"comment": instance, "receiver": owner}
+                "email.html", {"comment": instance, "receiver": owner, "link": link}
             )
             email_util.send_mail(recipient, subject, content)

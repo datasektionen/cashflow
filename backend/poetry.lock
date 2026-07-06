@@ -733,21 +733,6 @@ django = "*"
 typing-extensions = "*"
 
 [[package]]
-name = "django-widget-tweaks"
-version = "1.5.1"
-description = "Tweak the form field rendering in templates, not in python-level form definitions."
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "django_widget_tweaks-1.5.1-py3-none-any.whl", hash = "sha256:3f5080f8365740fc1c14607498c975cbfed896dd0c40e1b563095716ee31e3b5"},
-    {file = "django_widget_tweaks-1.5.1.tar.gz", hash = "sha256:084acc9eeb5a3208f2670522de6284287973e54d54488ce6d402f4b99bc5f452"},
-]
-
-[package.dependencies]
-django = ">=4.2"
-
-[[package]]
 name = "djangorestframework"
 version = "3.16.1"
 description = "Web APIs for Django, made easy."
@@ -2426,22 +2411,7 @@ files = [
     {file = "wcwidth-0.5.3.tar.gz", hash = "sha256:53123b7af053c74e9fe2e92ac810301f6139e64379031f7124574212fb3b4091"},
 ]
 
-[[package]]
-name = "whitenoise"
-version = "6.11.0"
-description = "Radically simplified static file serving for WSGI applications"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "whitenoise-6.11.0-py3-none-any.whl", hash = "sha256:b2aeb45950597236f53b5342b3121c5de69c8da0109362aee506ce88e022d258"},
-    {file = "whitenoise-6.11.0.tar.gz", hash = "sha256:0f5bfce6061ae6611cd9396a8231e088722e4fc67bc13a111be74c738d99375f"},
-]
-
-[package.extras]
-brotli = ["brotli"]
-
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.14.3"
-content-hash = "08332ed38bc4289ebbd8d2dded89411e7c8f7ad7634afe7101fa816f60f615f5"
+content-hash = "f42331ec9a7ebd217e222cfd94f990122b2de8948f854df089ead818d2dc7717"

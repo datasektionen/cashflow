@@ -35,8 +35,6 @@ services:
     configs:
       - source: nginx.conf
         target: /etc/nginx/nginx.conf
-    volumes:
-      - ./media:/app/media
     develop:
       watch:
         - path: backend
