@@ -9,16 +9,21 @@
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
 	import { logger } from '$lib/logger';
+	import { formatBankAccount } from '$lib/bankAccount';
 
 	let { owner, bankInfo, onPaid }: { owner: Profile; bankInfo: BankInfo; onPaid?: () => void } =
 		$props();
 
-	let copiedField = $state<'sorting' | 'account' | null>(null);
+	let copied = $state(false);
 
-	function copy(field: 'sorting' | 'account', value: string) {
+	let formattedAccount = $derived(
+		formatBankAccount(bankInfo.sorting_number, bankInfo.bank_account)
+	);
+
+	function copy(value: string) {
 		navigator.clipboard.writeText(value);
-		copiedField = field;
-		setTimeout(() => (copiedField = null), 2000);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
 	}
 
 	let refreshKey = $state(0);
@@ -61,22 +66,11 @@
 				<span>{bankInfo.bank_name}</span>
 			{/if}
 			<button
-				onclick={() => copy('sorting', bankInfo.sorting_number)}
+				onclick={() => copy(formattedAccount)}
 				class="flex cursor-pointer items-center gap-1 tabular-nums transition-colors hover:text-base-text dark:hover:text-dark-base-text"
 			>
-				<span>Clearingnummer: {bankInfo.sorting_number}</span>
-				{#if copiedField === 'sorting'}
-					<Check class="size-3" />
-				{:else}
-					<Copy class="size-3" />
-				{/if}
-			</button>
-			<button
-				onclick={() => copy('account', bankInfo.bank_account)}
-				class="flex cursor-pointer items-center gap-1 tabular-nums transition-colors hover:text-base-text dark:hover:text-dark-base-text"
-			>
-				<span>Kontonummer: {bankInfo.bank_account}</span>
-				{#if copiedField === 'account'}
+				<span>{formattedAccount}</span>
+				{#if copied}
 					<Check class="size-3" />
 				{:else}
 					<Copy class="size-3" />
