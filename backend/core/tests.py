@@ -12,7 +12,7 @@ from core.factories import ProfileFactory
 from core.files import normalize_upload
 from expenses.factories import ExpenseFactory, ExpenseFileFactory, ExpensePartFactory
 from expenses.models import Payment
-from invoices.factories import InvoiceFactory, InvoiceFileFactory
+from invoices.factories import InvoiceFactory, InvoiceFileFactory, InvoicePartFactory
 
 
 def implies(a: bool, b: bool) -> bool:
@@ -172,6 +172,38 @@ class TestClaimsList:
         assert response.data["data"]
         assert all(c["type"] == "expense" for c in response.data["data"])
 
+    @pytest.mark.django_db
+    def test_page_query_count_is_independent_of_table_size(
+        self, user, api_client, confirm_and_view_all, django_assert_max_num_queries
+    ):
+        for _ in range(15):
+            ExpensePartFactory(expense=ExpenseFactory(owner=user.profile))
+            InvoicePartFactory(invoice=InvoiceFactory(owner=user.profile))
+
+        with django_assert_max_num_queries(12):
+            response = api_client.get("/api/claims/?per_page=5")
+
+        assert response.status_code == 200
+        assert len(response.data["data"]) == 5
+        assert response.data["pagination"]["total"] == 30
+
+    @pytest.mark.django_db
+    def test_pagination_yields_every_claim_exactly_once(
+        self, user, api_client, confirm_and_view_all
+    ):
+        expected = {
+            ("expense", ExpenseFactory(owner=user.profile).id) for _ in range(7)
+        } | {("invoice", InvoiceFactory(owner=user.profile).id) for _ in range(7)}
+
+        seen: list[tuple[str, int]] = []
+        for page in range(1, 6):
+            response = api_client.get(f"/api/claims/?per_page=3&page={page}")
+            assert response.status_code == 200
+            seen += [(c["type"], c["id"]) for c in response.data["data"]]
+
+        assert len(seen) == len(set(seen)) == 14
+        assert set(seen) == expected
+
 
 class TestClaimSerializer:
 
@@ -193,6 +225,7 @@ class TestClaimSerializer:
             "is_attested": False,
             "is_confirmed": False,
             "is_paid": False,
+            "voucher": None,
             "owner": MagicMock(),
             "parts": [],
         }

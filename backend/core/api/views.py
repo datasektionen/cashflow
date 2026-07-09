@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.db.models.aggregates import Sum, Count
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -38,11 +38,27 @@ from core.api.serializers import (
 )
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
-from expenses.models import Comment, Expense, Payment, Profile
-from invoices.models import Invoice
+from expenses.models import Comment, Expense, ExpensePart, Payment, Profile
+from invoices.models import Invoice, InvoicePart
 
 UserModel = get_user_model()
 logger = get_logger(__name__)
+
+
+class _WindowedClaims(list):
+    """The first rows of the merged claims feed plus the true combined count.
+
+    Django's ``Paginator`` calls ``count()`` when the object list provides
+    one, so the view can hand over a window of only the rows that can appear
+    on or before the requested page while the reported totals stay correct.
+    """
+
+    def __init__(self, rows, total: int):
+        super().__init__(rows)
+        self._total = total
+
+    def count(self) -> int:
+        return self._total
 
 
 @extend_schema_view(
@@ -64,14 +80,34 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
 
         claim_type = request.GET.get(Filter.TYPE)
 
+        # Each source queryset is sliced in SQL to the rows that can appear
+        # on or before the requested page, so page cost does not grow with
+        # table size. Non-numeric pages ("last") materialize everything.
+        window = None
+        if self.paginator is not None:
+            page_size = self.paginator.get_page_size(request)
+            raw_page = request.GET.get(self.paginator.page_query_param, "1")
+            if page_size and raw_page.isdigit():
+                window = int(raw_page) * page_size
+
+        total = 0
         expense_data: list[ClaimData] = []
         if claim_type != "invoice":
             expenses = (
                 Expense.objects.viewable_by(self.current_user)
-                .prefetch_related("parts")
-                .select_related("reimbursement")
+                .select_related("reimbursement", "owner__user")
+                .prefetch_related(
+                    Prefetch(
+                        "parts",
+                        ExpensePart.objects.select_related("attested_by__user"),
+                    )
+                )
             )
             expenses = apply_expense_filters(expenses, request.GET, self.current_user)
+            total += expenses.count()
+            expenses = expenses.order_by("-created_date", "-id")
+            if window is not None:
+                expenses = expenses[:window]
             expense_data = [
                 {
                     "id": expense.id,
@@ -80,8 +116,10 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     "amount": expense.total_amount(),
                     "created_date": expense.created_date,
                     "is_attested": expense.is_attested(),
-                    "is_confirmed": expense.confirmed_by is not None,
+                    "is_confirmed": expense.confirmed_by_id is not None,
                     "is_paid": expense.is_paid(),
+                    # Model stores "" for not-yet-accounted; API exposes null
+                    "voucher": expense.verification or None,
                     "owner": expense.owner,
                     "parts": expense.parts.all(),
                 }
@@ -90,10 +128,21 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
 
         invoice_data: list[ClaimData] = []
         if claim_type != "expense":
-            invoices = Invoice.objects.viewable_by(self.current_user).prefetch_related(
-                "parts"
+            invoices = (
+                Invoice.objects.viewable_by(self.current_user)
+                .select_related("owner__user")
+                .prefetch_related(
+                    Prefetch(
+                        "parts",
+                        InvoicePart.objects.select_related("attested_by__user"),
+                    )
+                )
             )
             invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
+            total += invoices.count()
+            invoices = invoices.order_by("-created_date", "-id")
+            if window is not None:
+                invoices = invoices[:window]
             invoice_data = [
                 {
                     "id": invoice.id,
@@ -102,26 +151,32 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     "amount": invoice.total_amount(),
                     "created_date": invoice.created_date,
                     "is_attested": invoice.is_attested(),
-                    "is_confirmed": invoice.confirmed_by is not None,
+                    "is_confirmed": invoice.confirmed_by_id is not None,
                     "is_paid": invoice.is_paid(),
+                    "voucher": invoice.verification or None,
                     "owner": invoice.owner,
                     "parts": invoice.parts.all(),
                 }
                 for invoice in invoices
             ]
 
+        # The merge key must match the querysets' ordering so the per-source
+        # windows and the merged window select the same rows.
         data: list[ClaimData] = sorted(
             expense_data + invoice_data,
-            key=lambda x: x["created_date"],
+            key=lambda x: (x["created_date"], x["id"]),
             reverse=True,
         )
+        if window is not None:
+            data = data[:window]
 
-        page: list[Expense | Invoice] | None = self.paginate_queryset(data)  # type: ignore[arg-type]
+        results = _WindowedClaims(data, total)
+        page: list[ClaimData] | None = self.paginate_queryset(results)  # type: ignore[arg-type]
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(data, many=True)
+        serializer = self.get_serializer(results, many=True)
         return Response(serializer.data)
 
 

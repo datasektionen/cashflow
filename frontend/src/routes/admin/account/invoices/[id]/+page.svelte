@@ -23,7 +23,7 @@
 	// Which of the two submit buttons is in flight, so only it shows a spinner.
 	let submitting = $state<'rows' | 'number' | null>(null);
 
-	const isAccounted = $derived(invoice.verification != null && invoice.verification !== '');
+	const isAccounted = $derived(invoice.voucher != null);
 
 	async function submitAccounting(
 		kind: 'rows' | 'number',
@@ -34,7 +34,7 @@
 			const updated = await api.invoices.account(invoice.id, payload);
 			alerts.update((a) => [
 				...a,
-				success($_('admin_account.success', { values: { verification: updated.verification } }))
+				success($_('admin_account.success', { values: { verification: updated.voucher } }))
 			]);
 			// Back to the queue of remaining accountable invoices.
 			await goto('/admin/account/invoices');
@@ -87,10 +87,10 @@
 				>{$_('expense_paid')}</span
 			>
 		{/if}
-		{#if invoice.verification}
+		{#if invoice.voucher}
 			<span
 				class="bg-money-green-900 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-money-green-200 dark:text-money-green-900"
-				>{invoice.verification}</span
+				>{invoice.voucher}</span
 			>
 		{/if}
 	</div>

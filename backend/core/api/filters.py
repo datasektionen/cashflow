@@ -20,6 +20,7 @@ class Filter(str, Enum):
     ACCOUNTABLE = "accountable"
     PAYABLE = "payable"
     TYPE = "type"
+    ACCOUNTED = "accounted"
 
 
 # For use in extend_schema() to generate OpenAPI documentation
@@ -71,6 +72,12 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
         enum=["expense", "invoice"],
         description="Restrict the claims list to a single type.",
     ),
+    Filter.ACCOUNTED: OpenApiParameter(
+        Filter.ACCOUNTED.value,
+        type=bool,
+        required=False,
+        description="Whether or not the claim is accounted (has a registered voucher)",
+    ),
 }
 
 
@@ -94,6 +101,11 @@ def apply_expense_filters(
         queryset = queryset.filter(expensepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(expensepart__budget_line=name)
+    if accounted := params.get(Filter.ACCOUNTED):
+        if accounted:
+            queryset = queryset.exclude(verification="")
+        elif not accounted:
+            queryset = queryset.filter(verification="")
     return queryset
 
 
@@ -117,4 +129,9 @@ def apply_invoice_filters(
         queryset = queryset.filter(invoicepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(invoicepart__budget_line=name)
+    if accounted := params.get(Filter.ACCOUNTED):
+        if accounted:
+            queryset = queryset.exclude(verification="")
+        elif not accounted:
+            queryset = queryset.filter(verification="")
     return queryset

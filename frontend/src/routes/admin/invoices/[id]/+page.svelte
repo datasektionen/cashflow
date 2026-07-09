@@ -132,13 +132,13 @@
 					>{$_('expense_paid')}</span
 				>
 			{/if}
-			{#if invoice.verification}
+			{#if invoice.voucher}
 				<span
 					class="bg-money-green-900 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-money-green-200 dark:text-money-green-900"
-					>{invoice.verification}</span
+					>{invoice.voucher}</span
 				>
 			{/if}
-			{#if !isAttested && !invoice.confirmed_at && !invoice.paid_at && !invoice.verification}
+			{#if !isAttested && !invoice.confirmed_at && !invoice.paid_at && !invoice.voucher}
 				<span
 					class="bg-base-300 px-2.5 py-0.5 text-xs font-semibold text-base-subtle dark:bg-dark-base-300 dark:text-dark-base-subtle"
 					>{$_('expense_status.unconfirmed')}</span
@@ -229,10 +229,10 @@
 
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_verification')}</dt>
 				<dd class="flex items-center gap-2">
-					{#if invoice.verification}
+					{#if invoice.voucher}
 						<Check class="size-5 shrink-0 text-money-green-600" />
 						<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
-							>{invoice.verification}</span
+							>{invoice.voucher}</span
 						>
 					{:else}
 						<span class="text-base-subtle dark:text-dark-base-subtle"

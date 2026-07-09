@@ -187,6 +187,10 @@
 			"status": "Status"
 		}
 	},
+	"admin_vouchers": {
+		"title": "Verifikat",
+		"nav_title": "Alla verifikat"
+	},
 
 	"new_expense": {
 		"title": "Nytt utlägg",

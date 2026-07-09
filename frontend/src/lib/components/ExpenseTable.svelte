@@ -36,9 +36,9 @@
 			width: 'w-16'
 		},
 		{
-			key: 'verification',
+			key: 'voucher',
 			header: $_('admin_expenses.columns.voucher'),
-			render: (e) => e.verification,
+			render: (e) => e.voucher,
 			width: 'w-32'
 		},
 		{

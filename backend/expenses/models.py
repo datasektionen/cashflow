@@ -303,10 +303,11 @@ class Expense(models.Model):
         return total
 
     def is_attested(self):
-        return self.parts.filter(attested_by__isnull=True).count() == 0
+        # Iterates instead of querying so prefetched parts are reused.
+        return all(part.attested_by_id is not None for part in self.parts.all())
 
     def is_paid(self):
-        return self.reimbursement is not None
+        return self.reimbursement_id is not None
 
     def account(
         self,

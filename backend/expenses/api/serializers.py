@@ -47,6 +47,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
     payment = PaymentSerializer(read_only=True, source="reimbursement")
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
+    voucher = serializers.SerializerMethodField(
+        help_text="Fortnox voucher (verification) number. Null if not yet accounted."
+    )
     recommended_credit_account = serializers.SerializerMethodField(
         help_text=(
             "Fortnox account to credit when creating a voucher for this "
@@ -67,6 +70,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "description",
             "reimbursement",
             "verification",
+            "voucher",
             "files",
             "parts",
             "comments",
@@ -74,6 +78,10 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "is_flagged",
             "recommended_credit_account",
         ]
+
+    def get_voucher(self, expense: Expense) -> str | None:
+        # Model stores "" for not-yet-accounted; API exposes null
+        return expense.verification or None
 
     def get_recommended_credit_account(self, expense: Expense) -> int | None:
         if not self.context.get("include_recommendations"):

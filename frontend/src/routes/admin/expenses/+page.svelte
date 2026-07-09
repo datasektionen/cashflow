@@ -64,7 +64,7 @@
 
 {#snippet statusCell(e: Expense)}
 	{@const isAttested = e.parts.length > 0 && e.parts.every((p) => p.attested_by != null)}
-	{@const done = e.payment || e.verification}
+	{@const done = e.payment || e.voucher}
 	<div class="flex gap-3">
 		{#if e.is_flagged}
 			<span class="flex items-center gap-1 text-xs text-amber-800 dark:text-amber-400">
@@ -96,15 +96,15 @@
 				{$_('expense_paid')}
 			</span>
 		{/if}
-		{#if e.verification}
+		{#if e.voucher}
 			<span class="flex items-center gap-1.5 font-mono text-xs">
 				<span
 					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-700 dark:bg-money-green-300"
 				></span>
-				{e.verification}
+				{e.voucher}
 			</span>
 		{/if}
-		{#if !isAttested && !e.confirmed_at && !e.payment && !e.verification && !e.is_flagged}
+		{#if !isAttested && !e.confirmed_at && !e.payment && !e.voucher && !e.is_flagged}
 			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
 				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
 				></span>

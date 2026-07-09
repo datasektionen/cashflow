@@ -104,6 +104,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
+    voucher = serializers.SerializerMethodField(
+        help_text="Fortnox voucher (verification) number. Null if not yet accounted."
+    )
 
     comments = CommentSerializer(many=True, read_only=True, source="comment_set")
 
@@ -126,6 +129,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "owner",
             "description",
             "verification",
+            "voucher",
             "parts",
             "comments",
             "files",
@@ -133,6 +137,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "paid_at",
             "recommended_credit_account",
         ]
+
+    def get_voucher(self, invoice: Invoice) -> str | None:
+        # Model stores "" for not-yet-accounted; API exposes null
+        return invoice.verification or None
 
     def get_recommended_credit_account(self, invoice: Invoice) -> int | None:
         if not self.context.get("include_recommendations"):

@@ -187,6 +187,10 @@
 			"status": "Status"
 		}
 	},
+	"admin_vouchers": {
+		"title": "Vouchers",
+		"nav_title": "All vouchers"
+	},
 
 	"new_expense": {
 		"title": "New expense",

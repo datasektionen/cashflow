@@ -39,7 +39,8 @@ export type Expense = {
 	owner: Profile;
 	reimbursement: number | null;
 	payment: Payment | null;
-	verification: string;
+	// Fortnox voucher (verification) number; null if not yet accounted.
+	voucher: string | null;
 	is_flagged: boolean | null;
 	parts: ExpensePart[];
 	files: ExpenseFile[];
@@ -73,7 +74,7 @@ export type Invoice = {
 	confirmed_at: string | null;
 	owner: Profile;
 	description: string;
-	verification: string | null;
+	voucher: string | null;
 	paid_by: Profile | null;
 	paid_at: string | null;
 	parts: InvoicePart[];
@@ -124,6 +125,8 @@ type ClaimBase = {
 	is_confirmed: boolean;
 	is_paid: boolean;
 	owner: Profile;
+	// Fortnox voucher (verification) number; null if not yet accounted.
+	voucher: string | null;
 };
 
 export type Claim =
@@ -207,6 +210,7 @@ export type ClaimFilter = {
 	confirmable?: boolean;
 	accountable?: boolean;
 	payable?: boolean;
+	accounted?: boolean;
 };
 
 export type PendingPayment = {

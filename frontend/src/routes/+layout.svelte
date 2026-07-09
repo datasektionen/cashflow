@@ -19,6 +19,7 @@
 		CircleCheck,
 		Stamp,
 		Banknote,
+		BookCheck,
 		BookText,
 		Settings2,
 		Menu,
@@ -141,6 +142,7 @@
 		</p>
 		<SideNavLink to="/admin/expenses" text={$_('admin_expenses.nav_title')} icon={Receipt} />
 		<SideNavLink to="/admin/invoices" text={$_('admin_invoices.nav_title')} icon={Files} />
+		<SideNavLink to="/admin/vouchers" text={$_('admin_vouchers.nav_title')} icon={BookCheck} />
 
 		{#if data.user?.permissions}
 			{@const perms = data.user.permissions}
