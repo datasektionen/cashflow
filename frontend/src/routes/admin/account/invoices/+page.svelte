@@ -6,6 +6,7 @@
 	import type { Invoice } from '$lib/api/types';
 	import type { TableColumn } from '$lib/components/types';
 	import { _ } from 'svelte-i18n';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -21,7 +22,7 @@
 		{
 			id: 'owner',
 			header: $_('admin_invoices.columns.owner'),
-			render: (r) => r.owner.first_name + ' ' + r.owner.last_name,
+			renderSnippet: ownerCell,
 			width: 'w-48'
 		},
 		{
@@ -71,6 +72,10 @@
 			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
 		{/each}
 	</div>
+{/snippet}
+
+{#snippet ownerCell(r: Invoice)}
+	<UserLink user={r.owner} />
 {/snippet}
 
 {#snippet idCell(r: Invoice)}

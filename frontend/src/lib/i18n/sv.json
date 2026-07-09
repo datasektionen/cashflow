@@ -299,7 +299,8 @@
 		"sorting_number": "Clearingnummer",
 		"bank_account": "Kontonummer",
 		"bank_info_saved": "Bankinformationen sparades",
-		"bank_info_save_failed": "Bankinformationen kunde inte sparas"
+		"bank_info_save_failed": "Bankinformationen kunde inte sparas",
+		"bank_info_missing": "Bankinfo saknas"
 	},
 	"submit": "Skicka",
 	"expense_parts": "Kvittodelar",

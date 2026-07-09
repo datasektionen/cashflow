@@ -40,9 +40,11 @@ class ExpenseSerializer(serializers.ModelSerializer):
     files = FileSerializer(many=True, source="file_set", read_only=True)
     owner = ProfileSerializer(read_only=True)
     parts = ExpensePartSerializer(many=True, required=True, allow_empty=False)
-    confirmed_by = ProfileSerializer(read_only=True, source="confirmed_by.profile")
+    confirmed_by = ProfileSerializer(
+        read_only=True, source="confirmed_by.profile", allow_null=True
+    )
     comments = CommentSerializer(many=True, read_only=True, source="comment_set")
-    payment = PaymentSerializer(read_only=True, source="payment_set")
+    payment = PaymentSerializer(read_only=True, source="reimbursement")
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
     recommended_credit_account = serializers.SerializerMethodField(
@@ -69,6 +71,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "parts",
             "comments",
             "payment",
+            "is_flagged",
             "recommended_credit_account",
         ]
 

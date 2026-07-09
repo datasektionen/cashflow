@@ -11,6 +11,7 @@
 	import { logger } from '$lib/logger';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { expenseId, currentUser }: { expenseId: number; currentUser?: User } = $props();
 
@@ -44,7 +45,7 @@
 			<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
 				<span>{$_('expense')} #{expense.id}</span>
 				<span>·</span>
-				<span>{expense.owner.first_name} {expense.owner.last_name}</span>
+				<span><UserLink user={expense.owner} /></span>
 			</div>
 			<div class="flex items-center gap-2">
 				<a

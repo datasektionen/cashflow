@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ExpensePreview from './ExpensePreview.svelte';
+	import UserLink from '$lib/components/UserLink.svelte';
 	import { ScrollArea } from 'bits-ui';
 
 	let { data }: PageProps = $props();
@@ -24,7 +25,7 @@
 		{
 			id: 'owner',
 			header: $_('admin_confirmable.columns.owner'),
-			render: (c) => `${c.owner.first_name} ${c.owner.last_name}`,
+			renderSnippet: ownerCell,
 			width: 'w-40'
 		}
 	]);
@@ -59,6 +60,10 @@
 		}
 	}
 </script>
+
+{#snippet ownerCell(c: Claim)}
+	<UserLink user={c.owner} />
+{/snippet}
 
 {#snippet idCell(c: Claim)}
 	<div class="flex flex-row items-center">

@@ -2,7 +2,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from core.factories import ProfileFactory
-from expenses.models import Expense, ExpensePart, File
+from expenses.models import Expense, ExpensePart, File, Payment
 
 
 class ExpenseFactory(DjangoModelFactory):
@@ -28,6 +28,14 @@ class ExpenseFileFactory(DjangoModelFactory):
     expense = factory.SubFactory(ExpenseFactory)
     invoice = None
     file = factory.django.FileField()
+
+
+class PaymentFactory(DjangoModelFactory):
+    class Meta:
+        model = Payment
+
+    payer = factory.SubFactory(ProfileFactory)
+    receiver = factory.SubFactory(ProfileFactory)
 
 
 class ExpensePartFactory(DjangoModelFactory):

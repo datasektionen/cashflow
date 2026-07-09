@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import BudgetLineTableCell from '$lib/components/BudgetLineTableCell.svelte';
+	import UserLink from '$lib/components/UserLink.svelte';
 	import { Flag } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
@@ -24,7 +25,7 @@
 		{
 			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
-			render: (e) => `${e.owner.first_name} ${e.owner.last_name}`,
+			renderSnippet: ownerCell,
 			width: 'w-48'
 		},
 		{
@@ -111,6 +112,10 @@
 			</span>
 		{/if}
 	</div>
+{/snippet}
+
+{#snippet ownerCell(e: Expense)}
+	<UserLink user={e.owner} />
 {/snippet}
 
 {#snippet idCell(e: Expense)}

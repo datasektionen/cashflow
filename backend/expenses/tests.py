@@ -17,7 +17,7 @@ from rest_framework.test import APIClient
 from cashflow.dauth import Permission
 from core.factories import UserFactory
 from expenses.api.serializers import ExpenseSerializer
-from expenses.factories import ExpenseFactory, ExpensePartFactory
+from expenses.factories import ExpenseFactory, ExpensePartFactory, PaymentFactory
 from expenses.models import Profile, Comment
 
 
@@ -351,6 +351,22 @@ class TestExpensePartAttestation:
 
 
 class TestExpenseSerializer:
+
+    @pytest.mark.django_db
+    def test_unpaid_expense_serializes_null_payment_and_flags(self, expense):
+        data = ExpenseSerializer(expense).data
+        assert data["payment"] is None
+        assert data["confirmed_by"] is None
+        assert data["is_flagged"] is None
+
+    @pytest.mark.django_db
+    def test_paid_expense_serializes_payment(self, expense):
+        payment = PaymentFactory(receiver=expense.owner)
+        expense.reimbursement = payment
+        expense.save()
+        data = ExpenseSerializer(expense).data
+        assert data["payment"]["id"] == payment.id
+        assert data["payment"]["receiver"]["id"] == expense.owner.id
 
     @pytest.mark.django_db
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])

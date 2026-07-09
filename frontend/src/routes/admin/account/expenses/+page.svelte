@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -21,7 +22,7 @@
 		{
 			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
-			render: (e) => `${e.owner.first_name} ${e.owner.last_name}`,
+			renderSnippet: ownerCell,
 			width: 'w-48'
 		},
 		{
@@ -57,6 +58,10 @@
 		);
 	}
 </script>
+
+{#snippet ownerCell(e: Expense)}
+	<UserLink user={e.owner} />
+{/snippet}
 
 {#snippet idCell(e: Expense)}
 	<div class="flex flex-row items-center">

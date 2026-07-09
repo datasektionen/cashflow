@@ -3,9 +3,11 @@
 	import type { PaginatedResponse, PendingPayment } from '$lib/api/types.ts';
 	import { api } from '$lib/api';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import UserLink from '$lib/components/UserLink.svelte';
 	import { ChevronDown, ChevronUp, TriangleAlert } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import PaymentRow from './PaymentRow.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type pageData = {
 		pendingPayments: PaginatedResponse<PendingPayment>;
@@ -65,15 +67,15 @@
 									{/await}
 								</span>
 								<span class="flex items-center gap-2">
-									<span class="font-semibold"
-										>{pending.owner.first_name} {pending.owner.last_name}</span
-									>
+									<span class="font-semibold">
+										<UserLink user={pending.owner} />
+									</span>
 									{#if !pending.owner.has_bank_info}
 										<span
 											class="flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
 										>
 											<TriangleAlert class="size-3" />
-											Bankinfo saknas
+											{$_('profile.bank_info_missing')}
 										</span>
 									{/if}
 								</span>

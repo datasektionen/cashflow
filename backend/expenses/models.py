@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.db import models
+from structlog import get_logger
 
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
@@ -30,6 +31,8 @@ from core.exceptions import (
     MismatchedTotalAmountError,
     NoAccountingMethodError,
 )
+
+logger = get_logger()
 
 
 class Profile(models.Model):
@@ -351,6 +354,12 @@ class Expense(models.Model):
                 )
 
                 if voucher_total != self.total_amount():
+                    logger.debug(
+                        "mismatched total",
+                        voucher_total=voucher_total,
+                        expense_total=self.total_amount(),
+                        voucher_rows=voucher_rows,
+                    )
                     raise MismatchedTotalAmountError()
 
             created = fortnox_client.create_voucher(
@@ -510,6 +519,7 @@ class ExpensePart(models.Model):
             content="Avattesterar kvittodelen ```" + str(self) + "```",
         )
         comment.save()
+
 
 class Comment(models.Model):
     """

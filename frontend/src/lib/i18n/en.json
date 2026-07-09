@@ -300,7 +300,8 @@
 		"sorting_number": "Clearing number",
 		"bank_account": "Account number",
 		"bank_info_saved": "Bank information saved",
-		"bank_info_save_failed": "Could not save bank information"
+		"bank_info_save_failed": "Could not save bank information",
+		"bank_info_missing": "Bank info missing"
 	},
 	"submit": "Submit",
 	"expense_parts": "Expense parts",

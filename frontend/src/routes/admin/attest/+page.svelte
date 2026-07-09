@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -28,7 +29,7 @@
 		{
 			id: 'owner',
 			header: $_('admin_attestable.columns.owner'),
-			render: (c) => `${c.owner.first_name} ${c.owner.last_name}`,
+			renderSnippet: ownerCell,
 			width: 'w-48'
 		},
 		{
@@ -72,6 +73,10 @@
 			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
 		{/each}
 	</div>
+{/snippet}
+
+{#snippet ownerCell(c: Claim)}
+	<UserLink user={c.owner} />
 {/snippet}
 
 {#snippet idCell(c: Claim)}

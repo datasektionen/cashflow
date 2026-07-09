@@ -11,6 +11,7 @@
 	import { logger } from '$lib/logger.ts';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let invoice: Invoice = $state(data.invoice);
@@ -110,7 +111,7 @@
 				{/if}
 			</button>
 			<span>·</span>
-			<span>{invoice.owner.first_name} {invoice.owner.last_name}</span>
+			<span><UserLink user={invoice.owner} /></span>
 		</div>
 		<div class="flex items-center gap-2">
 			{#if isAttested}
@@ -180,8 +181,7 @@
 			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
 				<dd>
-					{invoice.owner.first_name}
-					{invoice.owner.last_name}
+					<UserLink user={invoice.owner} />
 					<span class="text-base-subtle dark:text-dark-base-subtle">({invoice.owner.email})</span>
 				</dd>
 

@@ -8,6 +8,7 @@
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
 	import { logger } from '$lib/logger';
+	import UserLink from '$lib/components/UserLink.svelte';
 
 	type pageData = {
 		invoices: PaginatedResponse<Invoice>;
@@ -84,8 +85,7 @@
 						</a>
 						<div class="flex flex-wrap items-center gap-1">
 							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								{invoice.owner.first_name}
-								{invoice.owner.last_name}
+								<UserLink user={invoice.owner} />
 							</span>
 							{#each costCentres(invoice) as cc}
 								<span class="bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
