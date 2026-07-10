@@ -6,7 +6,6 @@ authors = [
 	{name = "Alexander Viklund", email = "viklu@kth.se"},
 	{name = "Mauritz Zachrisson", email="mauritzz@kth.se"}
 ]
-package-mode = false
 readme = "README.md"
 requires-python = "==3.14.3"
 dependencies = [
@@ -33,6 +32,9 @@ dependencies = [
     "mozilla-django-oidc (>=5.0.2,<6.0.0)",
 ]
 
+
+[tool.poetry]
+package-mode = false
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "cashflow.settings_test"
