@@ -59,8 +59,6 @@
 			() => (loading = false)
 		);
 	}
-
-	function handleQueryChange(query: string) {}
 </script>
 
 {#snippet statusCell(e: Expense)}

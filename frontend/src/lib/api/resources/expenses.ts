@@ -6,7 +6,7 @@ import type {
 	Expense,
 	ExpenseCreate,
 	ExpensePart,
-	ExpenseSearch,
+	DescriptionSearch,
 	PaginatedResponse
 } from '$lib/api/types';
 
@@ -58,7 +58,7 @@ export class ExpensesAPI {
 		page: number,
 		perPage: number,
 		filter?: ClaimFilter,
-		searchFields?: ExpenseSearch
+		searchFields?: DescriptionSearch
 	): Promise<PaginatedResponse<Expense>> {
 		const res = await this.apiClient.query<RawResponse>(
 			'expenses/search/',

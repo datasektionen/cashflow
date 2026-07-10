@@ -4,6 +4,7 @@ import { alerts, error } from '$lib/stores/alerts';
 import type { Expense, PaginatedResponse } from '$lib/api/types';
 import { isErrorResponse } from '$lib/api/errors';
 import { logger } from '$lib/logger';
+import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
@@ -18,7 +19,10 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		expenses = await api.expenses.list(page, perPage, { accountable: true });
+		expenses = await api.expenses.list(page, perPage, {
+			...claimFilterFromUrl(url),
+			accountable: true
+		});
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			logger.error(e);

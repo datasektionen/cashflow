@@ -203,6 +203,7 @@ logger = get_logger(__name__)
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = [*viewsets.ModelViewSet.http_method_names, "query"]
 
     def create(self, request: Request, *args, **kwargs) -> Response:
 
@@ -256,6 +257,16 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         # never for list responses.
         context["include_recommendations"] = self.action == "retrieve"
         return context
+
+    @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
+    def search(self, request: Request) -> Response:
+        query = request.data.get("query") or {}
+        invoices = self.get_queryset().search(**query)
+        page = self.paginate_queryset(invoices)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        return Response(InvoiceSerializer(invoices, many=True).data)
 
     @action(detail=True, methods=["post"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:

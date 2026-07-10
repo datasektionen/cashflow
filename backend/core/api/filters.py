@@ -10,7 +10,7 @@ from django.http import QueryDict
 from drf_spectacular.utils import OpenApiParameter
 
 from expenses.models import Expense, ExpenseQuerySet
-from invoices.models import InvoiceQuerySet
+from invoices.models import Invoice, InvoiceQuerySet
 
 
 class Filter(str, Enum):
@@ -24,6 +24,11 @@ class Filter(str, Enum):
     PAYABLE = "payable"
     TYPE = "type"
     ACCOUNTED = "accounted"
+    ATTESTED = "attested"
+    QUERY = "q"
+    FLAGGED = "flagged"
+    CONFIRMED = "confirmed"
+    PAID = "paid"
 
 
 # For use in extend_schema() to generate OpenAPI documentation
@@ -81,6 +86,36 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
         required=False,
         description="Whether or not the claim is accounted (has a registered voucher)",
     ),
+    Filter.ATTESTED: OpenApiParameter(
+        Filter.ATTESTED.value,
+        type=bool,
+        required=False,
+        description="Whether or not every part of the claim has been attested.",
+    ),
+    Filter.QUERY: OpenApiParameter(
+        Filter.QUERY.value,
+        type=str,
+        required=False,
+        description="Substring search on the claim's description.",
+    ),
+    Filter.FLAGGED: OpenApiParameter(
+        Filter.FLAGGED.value,
+        type=bool,
+        required=False,
+        description="Whether or not this claim is flagged. Expenses only.",
+    ),
+    Filter.CONFIRMED: OpenApiParameter(
+        Filter.CONFIRMED.value,
+        type=bool,
+        required=False,
+        description="Whether or not the claim has been confirmed.",
+    ),
+    Filter.PAID: OpenApiParameter(
+        Filter.PAID.value,
+        type=bool,
+        required=False,
+        description="Whether or not the claim has been paid out.",
+    ),
 }
 
 
@@ -106,19 +141,61 @@ def apply_expense_filters(
         queryset = queryset.filter(expensepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(expensepart__budget_line=name)
+    if query := params.get(Filter.QUERY):
+        queryset = queryset.filter(description__icontains=query)
     match params.get(Filter.ACCOUNTED):
         case None:
             pass
+        case "none":
+            queryset = queryset.none()
         case False | "false" | "0":
             queryset = queryset.filter(verification="")
         case _:
             queryset = queryset.exclude(verification="")
+    match params.get(Filter.ATTESTED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(expensepart__attested_by__isnull=True)
+        case _:
+            queryset = queryset.exclude(expensepart__attested_by__isnull=True)
+    match params.get(Filter.CONFIRMED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(confirmed_by__isnull=True)
+        case _:
+            queryset = queryset.filter(confirmed_by__isnull=False)
+    match params.get(Filter.PAID):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(reimbursement__isnull=True)
+        case _:
+            queryset = queryset.filter(reimbursement__isnull=False)
+    match params.get(Filter.FLAGGED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.exclude(is_flagged=True)
+        case _:
+            queryset = queryset.filter(is_flagged=True)
     return queryset
 
 
 def apply_invoice_filters(
-    queryset: InvoiceQuerySet, params: QueryDict, user: User | None = None
-) -> InvoiceQuerySet:
+    queryset: InvoiceQuerySet[Invoice],
+    params: QueryDict | dict[str, Any],
+    user: User | None = None,
+) -> QuerySet[Invoice]:
     """Applies filters to an invoice queryset based on query parameters."""
     if username := params.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
@@ -136,11 +213,42 @@ def apply_invoice_filters(
         queryset = queryset.filter(invoicepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(invoicepart__budget_line=name)
+    if query := params.get(Filter.QUERY):
+        queryset = queryset.filter(description__icontains=query)
     match params.get(Filter.ACCOUNTED):
         case None:
             pass
+        case "none":
+            queryset = queryset.none()
         case False | "false" | "0":
             queryset = queryset.filter(verification="")
         case _:
             queryset = queryset.exclude(verification="")
+    match params.get(Filter.ATTESTED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(invoicepart__attested_by__isnull=True)
+        case _:
+            queryset = queryset.exclude(invoicepart__attested_by__isnull=True)
+    match params.get(Filter.CONFIRMED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(confirmed_by__isnull=True)
+        case _:
+            queryset = queryset.filter(confirmed_by__isnull=False)
+    match params.get(Filter.PAID):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            queryset = queryset.filter(payed_at__isnull=True)
+        case _:
+            queryset = queryset.filter(payed_at__isnull=False)
     return queryset

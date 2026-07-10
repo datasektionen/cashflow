@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -108,6 +109,13 @@
 </svelte:head>
 
 <h1 class="mb-4 text-xl font-bold dark:text-slate-100">{$_('admin_vouchers.title')}</h1>
+
+<ClaimFilterBar
+	costCentreItems={['Sektionslokalsgruppen']}
+	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
+	budgetLineItems={['METAdryck', 'Inköp mat']}
+	includeChecks={false}
+/>
 
 <PaginatedTable
 	paginatedResponse={data.claims}

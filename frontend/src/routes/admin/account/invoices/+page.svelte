@@ -7,6 +7,7 @@
 	import type { TableColumn } from '$lib/components/types';
 	import { _ } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -84,6 +85,13 @@
 		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{r.id}</span>
 	</div>
 {/snippet}
+
+<ClaimFilterBar
+	costCentreItems={['Sektionslokalsgruppen']}
+	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
+	budgetLineItems={['METAdryck', 'Inköp mat']}
+	includeChecks={false}
+/>
 
 <PaginatedTable
 	paginatedResponse={data.invoices}

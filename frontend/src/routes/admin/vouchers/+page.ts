@@ -5,6 +5,7 @@ import { alerts, error } from '$lib/stores/alerts';
 import type { Claim, PaginatedResponse } from '$lib/api/types';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
+import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
@@ -19,7 +20,10 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		claims = await api.claims.list(page, perPage, { accounted: true });
+		claims = await api.claims.list(page, perPage, {
+			...claimFilterFromUrl(url),
+			accounted: 'true'
+		});
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;

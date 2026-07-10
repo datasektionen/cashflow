@@ -113,6 +113,7 @@
 			costCentreItems={['Sektionslokalsgruppen']}
 			secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
 			budgetLineItems={['METAdryck', 'Inköp mat']}
+			exclude={['confirmed', 'paid', 'accounted', 'flagged']}
 		/>
 		<PaginatedTable
 			paginatedResponse={data.claims}

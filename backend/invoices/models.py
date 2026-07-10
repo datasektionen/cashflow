@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -23,6 +23,7 @@ from core.exceptions import (
 
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
+    from invoices.search import InvoiceSearchFields
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
@@ -64,6 +65,15 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
         return self.filter(
             Q(invoicepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
         ).distinct()
+
+    def search(
+        self, **search_fields: Unpack["InvoiceSearchFields"]
+    ) -> "InvoiceQuerySet":
+        from invoices.search import invoice_search
+
+        queryset = invoice_search(self, **search_fields)
+        assert isinstance(queryset, InvoiceQuerySet)
+        return queryset
 
 
 class Invoice(models.Model):

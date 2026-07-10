@@ -2,10 +2,22 @@ import { ApiClient } from '$lib/api';
 import type {
 	AccountPayload,
 	ClaimFilter,
+	DescriptionSearch,
 	Invoice,
 	InvoiceCreate,
 	PaginatedResponse
 } from '$lib/api/types';
+
+// The response format from DRF
+type RawResponse = {
+	data: Invoice[];
+	pagination: {
+		total: number;
+		page: number;
+		per_page: number;
+		total_pages: number;
+	};
+};
 
 export class InvoicesAPI {
 	private apiClient: ApiClient;
@@ -23,16 +35,6 @@ export class InvoicesAPI {
 		perPage: number,
 		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Invoice>> {
-		type RawResponse = {
-			data: Invoice[];
-			pagination: {
-				total: number;
-				page: number;
-				per_page: number;
-				total_pages: number;
-			};
-		};
-
 		const res = await this.apiClient.get<RawResponse>('invoices/', {
 			page,
 			per_page: perPage,
@@ -45,6 +47,35 @@ export class InvoicesAPI {
 				total: res.pagination.total,
 				page: res.pagination.page,
 				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
+	}
+
+	async search(
+		page: number,
+		perPage: number,
+		filter?: ClaimFilter,
+		searchFields?: DescriptionSearch
+	): Promise<PaginatedResponse<Invoice>> {
+		const res = await this.apiClient.query<RawResponse>(
+			'invoices/search/',
+			{
+				query: { ...filter, ...searchFields }
+			},
+			'application/json',
+			{
+				page: page,
+				per_page: perPage
+			}
+		);
+
+		return {
+			data: res.data,
+			pagination: {
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				total: res.pagination.total,
 				totalPages: res.pagination.total_pages
 			}
 		};

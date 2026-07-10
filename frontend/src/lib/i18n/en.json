@@ -314,5 +314,17 @@
 	"secondary_cost_centre": "Secondary cost centre",
 	"budget_line": "Budget line",
 	"reset": "Reset",
-	"search_description": "Search by description"
+	"search_description": "Search by description",
+	"show_all_filters": "Show all filters",
+	"attested": "Attested",
+	"not_attested": "Not attested",
+	"confirmed": "Confirmed",
+	"not_confirmed": "Not confirmed",
+	"paid": "Paid",
+	"not_paid": "Not paid",
+	"flagged": "Flagged",
+	"not_flagged": "Not flagged",
+	"accounted": "Accounted",
+	"not_accounted": "Not accounted",
+	"clear_all": "Clear all"
 }

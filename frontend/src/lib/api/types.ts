@@ -200,20 +200,27 @@ export type ActionSummary = {
 	};
 };
 
+export type TristateFilter = 'true' | 'false' | 'none';
+
 export type ClaimFilter = {
 	type?: 'expense' | 'invoice';
 	user?: string;
 	cost_centre?: string;
 	secondary_cost_centre?: string;
 	budget_line?: string;
+	attested?: TristateFilter;
+	confirmed?: TristateFilter;
+	paid?: TristateFilter;
+	accounted?: TristateFilter;
+	flagged?: TristateFilter;
 	attestable?: boolean;
 	confirmable?: boolean;
 	accountable?: boolean;
 	payable?: boolean;
-	accounted?: boolean;
+	q?: string;
 };
 
-export type ExpenseSearch = {
+export type DescriptionSearch = {
 	description?: string;
 	description_fuzzy?: string;
 };

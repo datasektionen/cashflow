@@ -313,5 +313,17 @@
 	"secondary_cost_centre": "Sekundärt kostnadsställe",
 	"budget_line": "Budgetpost",
 	"reset": "Återställ",
-	"search_description": "Sök på beskrivning"
+	"search_description": "Sök på beskrivning",
+	"show_all_filters": "Visa alla filter",
+	"attested": "Attesterad",
+	"not_attested": "Ej attesterad",
+	"confirmed": "Bekräftad",
+	"not_confirmed": "Ej bekräftad",
+	"paid": "Betald",
+	"not_paid": "Ej betald",
+	"flagged": "Flaggad",
+	"not_flagged": "Ej flaggad",
+	"accounted": "Bokförd",
+	"not_accounted": "Ej bokförd",
+	"clear_all": "Rensa alla"
 }

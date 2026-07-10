@@ -5,6 +5,7 @@ import { alerts, error } from '$lib/stores/alerts';
 import type { Claim, PaginatedResponse } from '$lib/api/types';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
+import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url, params }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
@@ -13,9 +14,6 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 	const perPage = url.searchParams.get('per_page')
 		? parseInt(url.searchParams.get('per_page')!)
 		: 10;
-	const costCentre = url.searchParams.get('cost_centre') || undefined;
-	const secondaryCostCentre = url.searchParams.get('secondary_cost_centre') || undefined;
-	const budgetLine = url.searchParams.get('budget_line') || undefined;
 
 	let claims: PaginatedResponse<Claim> = {
 		data: [],
@@ -23,10 +21,9 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 	};
 	try {
 		claims = await api.claims.list(page, perPage, {
+			...claimFilterFromUrl(url),
 			user: params.user,
-			cost_centre: costCentre,
-			secondary_cost_centre: secondaryCostCentre,
-			budget_line: budgetLine
+			q: url.searchParams.get('q') || undefined
 		});
 	} catch (e) {
 		if (isErrorResponse(e)) {

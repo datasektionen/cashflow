@@ -4,7 +4,7 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { Check, Copy, ExternalLink } from '@lucide/svelte';
-	import { Checkbox } from 'bits-ui';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
@@ -120,18 +120,13 @@
 					{total.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
 				</div>
 				<div class="flex w-20 shrink-0 items-start justify-center py-2 pr-4">
-					<Checkbox.Root
+					<Checkbox
+						class="mt-0.5"
 						checked={selected.has(expense.id)}
 						onCheckedChange={(v) => {
 							if (v) selected.add(expense.id);
 							else selected.delete(expense.id);
 						}}
-						class={[
-							'mt-0.5 size-4 cursor-pointer border border-base-800 bg-base-500 inset-shadow-xs',
-							'data-[state=checked]:border-4 data-[state=checked]:border-money-green-500 data-[state=checked]:bg-white',
-							'dark:border-dark-base-50 dark:bg-dark-base-200',
-							'dark:data-[state=checked]:bg-dark-base-200'
-						]}
 					/>
 				</div>
 			</div>
@@ -145,26 +140,16 @@
 		<div
 			class="mt-2 flex items-center justify-end gap-x-4 border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
 		>
-			<label
-				class="flex cursor-pointer items-center gap-x-2 text-sm text-base-subtle dark:text-dark-base-subtle"
+			<Checkbox
+				checked={allSelected}
+				indeterminate={selected.size > 0 && !allSelected}
+				onCheckedChange={(v) => {
+					if (v) for (const e of resolved.data) selected.add(e.id);
+					else selected.clear();
+				}}
 			>
 				Markera alla
-				<Checkbox.Root
-					checked={allSelected}
-					indeterminate={selected.size > 0 && !allSelected}
-					onCheckedChange={(v) => {
-						if (v) for (const e of resolved.data) selected.add(e.id);
-						else selected.clear();
-					}}
-					class={[
-						'size-4 cursor-pointer border border-base-800 bg-base-500 inset-shadow-xs',
-						'data-[state=checked]:border-4 data-[state=checked]:border-money-green-500 data-[state=checked]:bg-white',
-						'data-[state=indeterminate]:border-money-green-500 data-[state=indeterminate]:bg-money-green-500',
-						'dark:border-dark-base-50 dark:bg-dark-base-200',
-						'dark:data-[state=checked]:bg-dark-base-200'
-					]}
-				/>
-			</label>
+			</Checkbox>
 			<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
 				{selectedTotal.toLocaleString('sv-SE', {
 					minimumFractionDigits: 2,

@@ -4,6 +4,7 @@ import { alerts, error } from '$lib/stores/alerts';
 import type { Invoice, PaginatedResponse } from '$lib/api/types';
 import { isErrorResponse } from '$lib/api/errors';
 import { logger } from '$lib/logger';
+import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API('http://localhost:8000/api/', fetch);
@@ -12,20 +13,20 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	const perPage = url.searchParams.get('per_page')
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
-	const costCentre = url.searchParams.get('cost_centre') || undefined;
-	const secondaryCostCentre = url.searchParams.get('secondary_cost_centre') || undefined;
-	const budgetLine = url.searchParams.get('budget_line') || undefined;
+
+	// Search queries
+	const query = url.searchParams.get('q') || undefined;
 
 	let invoices: PaginatedResponse<Invoice> = {
 		data: [],
 		pagination: { total: 0, page, perPage, totalPages: 0 }
 	};
 	try {
-		invoices = await api.invoices.list(page, perPage, {
-			cost_centre: costCentre,
-			secondary_cost_centre: secondaryCostCentre,
-			budget_line: budgetLine
-		});
+		const filter = claimFilterFromUrl(url);
+
+		invoices = query
+			? await api.invoices.search(page, perPage, filter, { description_fuzzy: query })
+			: await api.invoices.list(page, perPage, filter);
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			logger.error(e);
