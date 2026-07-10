@@ -313,5 +313,6 @@
 	"cost_centre": "Cost centre",
 	"secondary_cost_centre": "Secondary cost centre",
 	"budget_line": "Budget line",
-	"reset": "Reset"
+	"reset": "Reset",
+	"search_description": "Search by description"
 }

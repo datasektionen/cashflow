@@ -7,7 +7,6 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
-	import BudgetLineTableCell from '$lib/components/BudgetLineTableCell.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import { Flag } from '@lucide/svelte';
 
@@ -60,6 +59,8 @@
 			() => (loading = false)
 		);
 	}
+
+	function handleQueryChange(query: string) {}
 </script>
 
 {#snippet statusCell(e: Expense)}
@@ -138,6 +139,7 @@
 	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
 	budgetLineItems={['METAdryck', 'Inköp mat']}
 />
+
 <PaginatedTable
 	paginatedResponse={data.expenses}
 	columns={[

@@ -312,5 +312,6 @@
 	"cost_centre": "Kostnadsställe",
 	"secondary_cost_centre": "Sekundärt kostnadsställe",
 	"budget_line": "Budgetpost",
-	"reset": "Återställ"
+	"reset": "Återställ",
+	"search_description": "Sök på beskrivning"
 }

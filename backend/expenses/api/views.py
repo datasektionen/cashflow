@@ -246,6 +246,7 @@ logger = get_logger(__name__)
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = [*viewsets.ModelViewSet.http_method_names, "query"]
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -302,6 +303,16 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .distinct()
             .order_by("-created_date")
         )
+
+    @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
+    def search(self, request: Request) -> Response:
+        query = request.data.get("query") or {}
+        expenses = self.get_queryset().search(**query)
+        page = self.paginate_queryset(expenses)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        return Response(ExpenseSerializer(expenses, many=True).data)
 
     @action(detail=True, methods=["POST"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:

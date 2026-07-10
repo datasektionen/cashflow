@@ -6,8 +6,20 @@ import type {
 	Expense,
 	ExpenseCreate,
 	ExpensePart,
+	ExpenseSearch,
 	PaginatedResponse
 } from '$lib/api/types';
+
+// The response format from DRF
+type RawResponse = {
+	data: Expense[];
+	pagination: {
+		total: number;
+		page: number;
+		per_page: number;
+		total_pages: number;
+	};
+};
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -25,17 +37,6 @@ export class ExpensesAPI {
 		perPage: number,
 		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Expense>> {
-		// The response format from DRF
-		type RawResponse = {
-			data: Expense[];
-			pagination: {
-				total: number;
-				page: number;
-				per_page: number;
-				total_pages: number;
-			};
-		};
-
 		const res = await this.apiClient.get<RawResponse>('expenses/', {
 			page: page,
 			per_page: perPage,
@@ -48,6 +49,35 @@ export class ExpensesAPI {
 				total: res.pagination.total,
 				page: res.pagination.page,
 				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
+	}
+
+	async search(
+		page: number,
+		perPage: number,
+		filter?: ClaimFilter,
+		searchFields?: ExpenseSearch
+	): Promise<PaginatedResponse<Expense>> {
+		const res = await this.apiClient.query<RawResponse>(
+			'expenses/search/',
+			{
+				query: { ...filter, ...searchFields }
+			},
+			'application/json',
+			{
+				page: page,
+				per_page: perPage
+			}
+		);
+
+		return {
+			data: res.data,
+			pagination: {
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				total: res.pagination.total,
 				totalPages: res.pagination.total_pages
 			}
 		};

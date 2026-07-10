@@ -10,8 +10,9 @@ from cashflow.dauth import Permission
 from core.api.serializers import ClaimData, ClaimSerializer
 from core.factories import ProfileFactory
 from core.files import normalize_upload
+from core.search import fuzzy_model_search
 from expenses.factories import ExpenseFactory, ExpenseFileFactory, ExpensePartFactory
-from expenses.models import Payment
+from expenses.models import Expense, Payment
 from invoices.factories import InvoiceFactory, InvoiceFileFactory, InvoicePartFactory
 
 
@@ -32,6 +33,31 @@ def commentable(request, user):
     resource = request.param
     obj = factories[resource](owner=user.profile)
     return resource, obj
+
+
+class TestFuzzyModelSearch:
+
+    @pytest.mark.django_db
+    def test_not_capped_at_default_extract_limit(self):
+        # rapidfuzz's process.extract defaults to limit=5; a real match
+        # further down the queryset must not be dropped because of it.
+        match = ExpenseFactory(description="Detta är ett utlägg för resa")
+        ExpenseFactory.create_batch(10, description="Kontorsmaterial inköp")
+
+        result = fuzzy_model_search(Expense.objects.all(), "utlägg", "description")
+
+        assert match in result
+
+    @pytest.mark.django_db
+    def test_orders_by_score_best_match_first(self):
+        best = ExpenseFactory(description="utlägg")
+        worse = ExpenseFactory(
+            description="ett långt utläg med stavfel längre bort i texten"
+        )
+
+        result = fuzzy_model_search(Expense.objects.all(), "utlägg", "description")
+
+        assert list(result) == [best, worse]
 
 
 class TestComment:
@@ -145,9 +171,7 @@ class TestClaimsList:
         )
 
     @pytest.mark.django_db
-    def test_lists_both_types_by_default(
-        self, user, api_client, confirm_and_view_all
-    ):
+    def test_lists_both_types_by_default(self, user, api_client, confirm_and_view_all):
         ExpenseFactory(owner=user.profile, confirmed_by=None)
         InvoiceFactory(owner=user.profile, confirmed_by=None)
 

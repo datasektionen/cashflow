@@ -59,7 +59,6 @@ def list_active_accounts(
             break
         page += 1
     accounts = [acc for acc in all_accounts if acc.Active]
-
     cache.set(
         cache_key,
         [acc.model_dump() for acc in accounts],

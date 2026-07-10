@@ -1,12 +1,15 @@
 """Defines functions for filtering expenses and invoices in list views."""
 
+from typing import Any
+
+from django.db.models import QuerySet
 from enum import Enum
 
 from django.contrib.auth.models import User
 from django.http import QueryDict
 from drf_spectacular.utils import OpenApiParameter
 
-from expenses.models import ExpenseQuerySet
+from expenses.models import Expense, ExpenseQuerySet
 from invoices.models import InvoiceQuerySet
 
 
@@ -82,8 +85,10 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
 
 
 def apply_expense_filters(
-    queryset: ExpenseQuerySet, params: QueryDict, user: User | None = None
-) -> ExpenseQuerySet:
+    queryset: ExpenseQuerySet[Expense],
+    params: QueryDict | dict[str, Any],
+    user: User | None = None,
+) -> QuerySet[Expense]:
     """Applies filters to an expense queryset based on query parameters."""
     if username := params.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
@@ -101,11 +106,13 @@ def apply_expense_filters(
         queryset = queryset.filter(expensepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(expensepart__budget_line=name)
-    if accounted := params.get(Filter.ACCOUNTED):
-        if accounted:
-            queryset = queryset.exclude(verification="")
-        elif not accounted:
+    match params.get(Filter.ACCOUNTED):
+        case None:
+            pass
+        case False | "false" | "0":
             queryset = queryset.filter(verification="")
+        case _:
+            queryset = queryset.exclude(verification="")
     return queryset
 
 
@@ -129,9 +136,11 @@ def apply_invoice_filters(
         queryset = queryset.filter(invoicepart__secondary_cost_centre=name)
     if name := params.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(invoicepart__budget_line=name)
-    if accounted := params.get(Filter.ACCOUNTED):
-        if accounted:
-            queryset = queryset.exclude(verification="")
-        elif not accounted:
+    match params.get(Filter.ACCOUNTED):
+        case None:
+            pass
+        case False | "false" | "0":
             queryset = queryset.filter(verification="")
+        case _:
+            queryset = queryset.exclude(verification="")
     return queryset

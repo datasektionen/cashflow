@@ -213,6 +213,11 @@ export type ClaimFilter = {
 	accounted?: boolean;
 };
 
+export type ExpenseSearch = {
+	description?: string;
+	description_fuzzy?: string;
+};
+
 export type PendingPayment = {
 	owner: Profile;
 	// Full details are only exposed on the pay-gated pending endpoint.

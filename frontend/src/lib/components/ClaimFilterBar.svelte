@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ListRestart } from '@lucide/svelte';
+	import { ListRestart, Search } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import ComboBox from '$lib/components/ComboBox.svelte';
+	import TextInput from '$lib/components/TextInput.svelte';
 
 	let {
 		costCentreItems = [],
@@ -23,23 +24,24 @@
 	let resetting = $state(false);
 
 	function resetFilter() {
+		clearTimeout(queryTimeout);
 		resetting = true;
 		resetKey++;
 		const url = new URL(page.url);
 		for (const key of filterKeys) {
 			url.searchParams.delete(key);
 		}
+		url.searchParams.delete('q');
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
 			() => (resetting = false)
 		);
 	}
 
-	function filterValue(key: (typeof filterKeys)[number]) {
+	function filterValue(key: (typeof filterKeys)[number] | 'q') {
 		return resetting ? '' : (page.url.searchParams.get(key) ?? '');
 	}
 
 	function setFilter(key: (typeof filterKeys)[number], value: string) {
-		console.log(`Setting filter ${key} to ${value}`);
 		const url = new URL(page.url);
 		if (value) {
 			url.searchParams.set(key, value);
@@ -47,6 +49,22 @@
 			url.searchParams.delete(key);
 		}
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	let queryTimeout: ReturnType<typeof setTimeout>;
+
+	function setQuery(query: string) {
+		clearTimeout(queryTimeout);
+		queryTimeout = setTimeout(() => {
+			const url = new URL(page.url);
+			if (query) {
+				url.searchParams.set('q', query);
+				url.searchParams.delete('page')
+			} else {
+				url.searchParams.delete('q');
+			}
+			goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+		}, 500);
 	}
 </script>
 
@@ -74,6 +92,17 @@
 			onchange={(v) => setFilter('budget_line', v)}
 			placeholder={$_('budget_line')}
 			items={budgetLineItems}
+		/>
+
+		{#snippet searchIcon()}
+			<Search class="size-4" />
+		{/snippet}
+		<TextInput
+			class="text-sm"
+			value={filterValue('q')}
+			onchange={setQuery}
+			placeholder={$_('search_description')}
+			icon={searchIcon}
 		/>
 	{/key}
 	{#if includeReset}

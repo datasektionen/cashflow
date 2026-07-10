@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -8,6 +8,7 @@ from structlog import get_logger
 
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
+    from expenses.search import ExpenseSearchFields
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -267,6 +268,15 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
         return self.filter(
             Q(expensepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
         ).distinct()
+
+    def search(
+        self, **search_fields: Unpack["ExpenseSearchFields"]
+    ) -> "ExpenseQuerySet":
+        from expenses.search import expense_search
+
+        queryset = expense_search(self, **search_fields)
+        assert isinstance(queryset, ExpenseQuerySet)
+        return queryset
 
 
 class Expense(models.Model):

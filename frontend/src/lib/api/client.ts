@@ -76,20 +76,25 @@ export class ApiClient {
 		return response.json();
 	}
 
+	private static queryString(
+		params?: Record<string, string | number | boolean | undefined>
+	): string {
+		return params
+			? '?' +
+					new URLSearchParams(
+						Object.entries(params)
+							.filter(([, v]) => v !== undefined)
+							.map(([k, v]) => [k, String(v)])
+					).toString()
+			: '';
+	}
+
 	get<T>(
 		path: string,
 		params?: Record<string, string | number | boolean | undefined>,
 		options: RequestInit = {}
 	): Promise<T> {
-		const qs = params
-			? '?' +
-				new URLSearchParams(
-					Object.entries(params)
-						.filter(([, v]) => v !== undefined)
-						.map(([k, v]) => [k, String(v)])
-				).toString()
-			: '';
-		return this.request<T>(`${path}${qs}`, {
+		return this.request<T>(`${path}${ApiClient.queryString(params)}`, {
 			...options,
 			method: 'GET'
 		});
@@ -98,6 +103,19 @@ export class ApiClient {
 	post<T>(path: string, body: unknown, contentType?: string) {
 		return this.request<T>(path, {
 			method: 'POST',
+			body: body instanceof FormData ? body : JSON.stringify(body),
+			...(contentType && { headers: { 'Content-Type': contentType } })
+		});
+	}
+
+	query<T>(
+		path: string,
+		body: unknown,
+		contentType?: string,
+		params?: Record<string, string | number | boolean | undefined>
+	) {
+		return this.request<T>(`${path}${ApiClient.queryString(params)}`, {
+			method: 'QUERY',
 			body: body instanceof FormData ? body : JSON.stringify(body),
 			...(contentType && { headers: { 'Content-Type': contentType } })
 		});
