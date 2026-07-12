@@ -109,12 +109,7 @@
 <div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
 	<!-- Table column: full width on small screens, constrained on large to leave room on the right -->
 	<div class="min-w-0 flex-1 lg:min-h-0 lg:max-w-4xl lg:overflow-y-auto">
-		<ClaimFilterBar
-			costCentreItems={['Sektionslokalsgruppen']}
-			secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
-			budgetLineItems={['METAdryck', 'Inköp mat']}
-			exclude={['confirmed', 'paid', 'accounted', 'flagged']}
-		/>
+		<ClaimFilterBar exclude={['confirmed', 'paid', 'accounted', 'flagged']} />
 		<PaginatedTable
 			paginatedResponse={data.claims}
 			columns={[

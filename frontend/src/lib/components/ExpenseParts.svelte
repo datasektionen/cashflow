@@ -22,28 +22,86 @@
 
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
+	import { onMount } from 'svelte';
 	import { CircleAlert, Plus, X } from '@lucide/svelte';
 	import ComboBox from '$lib/components/ComboBox.svelte';
+	import { api } from '$lib/api';
+	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
 
 	type Props = {
 		parts: Part[];
-		costCenters: string[];
-		budgetLines: string[];
 		errors: Record<string, string[]>;
 		showErrors: (field: string) => boolean;
 		onValidate: (field: string) => void;
 		addPartPrompt?: string;
 	};
 
-	let {
-		parts = $bindable(),
-		costCenters,
-		budgetLines,
-		errors,
-		showErrors,
-		onValidate,
-		addPartPrompt
-	}: Props = $props();
+	let { parts = $bindable(), errors, showErrors, onValidate, addPartPrompt }: Props = $props();
+
+	// Cost centres are shared across all rows; secondary cost centres and
+	// budget lines cascade from each row's own selection, so they're kept as
+	// parallel arrays indexed the same as `parts`.
+	let costCentres: CostCentre[] = $state([]);
+	let secondaryCostCentresByPart: SecondaryCostCentre[][] = $state([]);
+	let budgetLinesByPart: BudgetLine[][] = $state([]);
+
+	onMount(async () => {
+		costCentres = await api.budget
+			.listCostCentres(1, 100, { active: true })
+			.then((res) => res.data);
+		secondaryCostCentresByPart = parts.map(() => []);
+		budgetLinesByPart = parts.map(() => []);
+		await Promise.all(parts.map((_, i) => loadSecondaryCostCentres(i)));
+	});
+
+	async function loadSecondaryCostCentres(i: number) {
+		const costCentre = costCentres.find((cc) => cc.name === parts[i].costcenter);
+		secondaryCostCentresByPart[i] =
+			costCentre?.id != null
+				? await api.budget
+						.listSecondaryCostCentres(1, 100, { active: true, cost_centre: costCentre.id })
+						.then((res) => res.data)
+				: [];
+
+		await loadBudgetLines(i);
+	}
+
+	async function loadBudgetLines(i: number) {
+		const secondaryCostCentre = secondaryCostCentresByPart[i]?.find(
+			(scc) => scc.name === parts[i].secondarycostcenter
+		);
+		const filter =
+			secondaryCostCentre?.id != null
+				? { active: true, secondary_cost_centre: secondaryCostCentre.id }
+				: { active: true };
+		budgetLinesByPart[i] = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+	}
+
+	function onCostCentreChange(i: number, value: string) {
+		parts[i].costcenter = value;
+		parts[i].secondarycostcenter = '';
+		parts[i].budgetline = '';
+		loadSecondaryCostCentres(i);
+	}
+
+	function onSecondaryCostCentreChange(i: number, value: string) {
+		parts[i].secondarycostcenter = value;
+		parts[i].budgetline = '';
+		loadBudgetLines(i);
+	}
+
+	function addPart() {
+		parts = [...parts, newPart()];
+		secondaryCostCentresByPart = [...secondaryCostCentresByPart, []];
+		budgetLinesByPart = [...budgetLinesByPart, []];
+		loadBudgetLines(parts.length - 1);
+	}
+
+	function removePart(i: number) {
+		parts = parts.filter((_, j) => j !== i);
+		secondaryCostCentresByPart = secondaryCostCentresByPart.filter((_, j) => j !== i);
+		budgetLinesByPart = budgetLinesByPart.filter((_, j) => j !== i);
+	}
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
 		minimumFractionDigits: 2,
@@ -90,8 +148,9 @@
 					<ComboBox
 						name="part-{i}-costcenter"
 						placeholder={$_('new_expense.form.expense_parts.cost_center_placeholder')}
-						items={costCenters}
+						items={costCentres.map((cc) => cc.name)}
 						bind:value={part.costcenter}
+						onchange={(v) => onCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-costcenter`)}
 					/>
 					{@render fieldError(`part-${i}-costcenter`)}
@@ -103,8 +162,9 @@
 					<ComboBox
 						name="part-{i}-secondarycostcenter"
 						placeholder={$_('new_expense.form.expense_parts.secondary_cost_center_placeholder')}
-						items={costCenters}
+						items={(secondaryCostCentresByPart[i] ?? []).map((scc) => scc.name)}
 						bind:value={part.secondarycostcenter}
+						onchange={(v) => onSecondaryCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-secondarycostcenter`)}
 					/>
 					{@render fieldError(`part-${i}-secondarycostcenter`)}
@@ -116,7 +176,7 @@
 					<ComboBox
 						name="part-{i}-budgetline"
 						placeholder={$_('new_expense.form.expense_parts.budget_line_placeholder')}
-						items={budgetLines}
+						items={(budgetLinesByPart[i] ?? []).map((bl) => bl.name)}
 						bind:value={part.budgetline}
 						onblur={() => onValidate(`part-${i}-budgetline`)}
 					/>
@@ -146,7 +206,7 @@
 				</div>
 				<button
 					type="button"
-					onclick={() => (parts = parts.filter((_, j) => j !== i))}
+					onclick={() => removePart(i)}
 					class="ml-4 text-base-subtle transition-all hover:scale-125 hover:cursor-pointer dark:text-dark-base-subtle"
 				>
 					{#if i > 0}
@@ -158,7 +218,7 @@
 	{/each}
 	<button
 		type="button"
-		onclick={() => (parts = [...parts, newPart()])}
+		onclick={addPart}
 		class="group mt-2 flex cursor-pointer flex-col items-center justify-center gap-1 border-0 bg-base-300 py-3 dark:bg-dark-base-300"
 	>
 		<span

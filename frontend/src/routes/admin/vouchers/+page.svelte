@@ -110,12 +110,7 @@
 
 <h1 class="mb-4 text-xl font-bold dark:text-slate-100">{$_('admin_vouchers.title')}</h1>
 
-<ClaimFilterBar
-	costCentreItems={['Sektionslokalsgruppen']}
-	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
-	budgetLineItems={['METAdryck', 'Inköp mat']}
-	includeChecks={false}
-/>
+<ClaimFilterBar includeChecks={false} />
 
 <PaginatedTable
 	paginatedResponse={data.claims}

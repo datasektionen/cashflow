@@ -13,27 +13,54 @@
 		Eraser
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
+	import { onMount } from 'svelte';
 	import ComboBox from '$lib/components/ComboBox.svelte';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types.ts';
+	import { api } from '$lib/api';
 
 	let {
-		costCentreItems = [],
-		secondaryCostCentreItems = [],
-		budgetLineItems = [],
 		includeReset = true,
 		includeChecks = true,
 		exclude = []
 	}: {
-		costCentreItems?: string[];
-		secondaryCostCentreItems?: string[];
-		budgetLineItems?: string[];
 		includeReset?: boolean;
 		includeChecks?: boolean;
 		exclude?: (typeof tristateKeys)[number][];
 	} = $props();
 
 	let showAllFilters: boolean = $state(true);
+
+	let costCentres: CostCentre[] = $state([]);
+	let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
+	let budgetLines: BudgetLine[] = $state([]);
+
+	onMount(async () => {
+		costCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
+
+		const selectedCostCentre = costCentres.find((cc) => cc.name === filterValue('cost_centre'));
+		secondaryCostCentres = await api.budget
+			.listSecondaryCostCentres(
+				1,
+				100,
+				selectedCostCentre?.id != null ? { cost_centre: selectedCostCentre.id } : undefined
+			)
+			.then((res) => res.data);
+
+		const selectedSecondaryCostCentre = secondaryCostCentres.find(
+			(scc) => scc.name === filterValue('secondary_cost_centre')
+		);
+		budgetLines = await api.budget
+			.listBudgetLines(
+				1,
+				100,
+				selectedSecondaryCostCentre?.id != null
+					? { secondary_cost_centre: selectedSecondaryCostCentre.id }
+					: undefined
+			)
+			.then((res) => res.data);
+	});
 
 	const filterKeys = ['cost_centre', 'secondary_cost_centre', 'budget_line'] as const;
 
@@ -99,7 +126,7 @@
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
-	function setFilter(
+	async function setFilter(
 		key: (typeof filterKeys)[number] | (typeof tristateKeys)[number],
 		value: string
 	) {
@@ -109,6 +136,31 @@
 		} else {
 			url.searchParams.delete(key);
 		}
+
+		if (key === 'cost_centre') {
+			const costCentre = costCentres.find((cc) => cc.name === value);
+			// Cost centres with no GOrdian id (inactive/legacy) can't be used to
+			// scope secondary cost centres, so show none rather than the full
+			// unfiltered list.
+			secondaryCostCentres =
+				costCentre?.id != null
+					? await api.budget
+							.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id })
+							.then((res) => res.data)
+					: [];
+			budgetLines = [];
+			url.searchParams.delete('secondary_cost_centre');
+			url.searchParams.delete('budget_line');
+		} else if (key === 'secondary_cost_centre') {
+			const secondaryCostCentre = secondaryCostCentres.find((scc) => scc.name === value);
+			const filter =
+				secondaryCostCentre?.id != null
+					? { secondary_cost_centre: secondaryCostCentre.id }
+					: undefined;
+			budgetLines = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+			url.searchParams.delete('budget_line');
+		}
+
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
@@ -146,21 +198,21 @@
 			value={filterValue('cost_centre')}
 			onchange={(v) => setFilter('cost_centre', v)}
 			placeholder={$_('cost_centre')}
-			items={costCentreItems}
+			items={costCentres.map((it) => it.name)}
 		/>
 		<ComboBox
 			class="text-sm"
 			value={filterValue('secondary_cost_centre')}
 			onchange={(v) => setFilter('secondary_cost_centre', v)}
 			placeholder={$_('secondary_cost_centre')}
-			items={secondaryCostCentreItems}
+			items={secondaryCostCentres.map((it) => it.name)}
 		/>
 		<ComboBox
 			class="text-sm"
 			value={filterValue('budget_line')}
 			onchange={(v) => setFilter('budget_line', v)}
 			placeholder={$_('budget_line')}
-			items={budgetLineItems}
+			items={budgetLines.map((it) => it.name)}
 		/>
 
 		{#snippet searchIcon()}

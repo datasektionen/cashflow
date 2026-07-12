@@ -168,3 +168,31 @@ class TestGordianParsing:
             }
         )
         assert cc.type == "committee"
+
+
+class TestCostCentreListActiveFilter:
+    def test_active_filter_excludes_inactive_cost_centres(self, db, user):
+        from cashflow.gordian import GCostCenter
+
+        e = ExpenseFactory()
+        ExpensePartFactory.create(expense=e, cost_centre="Retired CC")
+
+        client = Client()
+        client.force_login(user)
+        with (
+            patch("cashflow.dauth.get_permissions", return_value={}),
+            patch(
+                "cashflow.api.views.list_cost_centres_from_gordian",
+                return_value=[
+                    GCostCenter(
+                        CostCentreID=1,
+                        CostCentreName="Active CC",
+                        CostCentreType="committee",
+                    )
+                ],
+            ),
+        ):
+            response = client.get(reverse("costcentre-list"), {"active": "true"})
+
+        names = {cc["name"] for cc in response.json()["data"]}
+        assert names == {"Active CC"}

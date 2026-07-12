@@ -48,22 +48,16 @@ test('invoice-date: today is valid', () => {
 	assert(!result.hasErrors('invoice-date'));
 });
 
-test('invoice-date: tomorrow is invalid', () => {
+test('invoice-date: tomorrow is valid', () => {
 	const data = makeFormData({ 'invoice-date': TOMORROW });
 	const result = validation.run(data);
-	assert(result.hasErrors('invoice-date'));
-	const errors = result.getErrors();
-	assert(errors['invoice-date'].length === 1);
-	assert(errors['invoice-date'][0] === 'invoice_date_not_in_future');
+	assert(!result.hasErrors('invoice-date'));
 });
 
-test('due-date: yesterday is invalid', () => {
+test('due-date: yesterday is valid', () => {
 	const data = makeFormData({ 'due-date': YESTERDAY });
 	const result = validation.run(data);
-	assert(result.hasErrors('due-date'));
-	const errors = result.getErrors('due-date');
-	assert(errors.length === 1);
-	assert(errors[0] === 'due_date_today_or_after');
+	assert(!result.hasErrors('due-date'));
 });
 
 test('due-date: today is valid', () => {

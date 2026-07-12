@@ -125,12 +125,7 @@
 	</div>
 {/snippet}
 
-<ClaimFilterBar
-	costCentreItems={['Sektionslokalsgruppen']}
-	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
-	budgetLineItems={['METAdryck', 'Inköp mat']}
-	exclude={['confirmed', 'flagged']}
-/>
+<ClaimFilterBar exclude={['confirmed', 'flagged']} />
 <PaginatedTable
 	paginatedResponse={data.invoices}
 	columns={[

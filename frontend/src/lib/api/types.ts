@@ -171,6 +171,31 @@ export type FortnoxCostCentre = {
 	description: string;
 };
 
+export type CostCentre = {
+	id: number | null;
+	name: string;
+	type: 'committee' | 'partition' | 'project' | 'other' | null;
+	active: boolean;
+};
+
+export type SecondaryCostCentre = {
+	id: number | null;
+	name: string;
+	cost_centre_id: number | null;
+	active: boolean;
+};
+
+export type BudgetLine = {
+	id: number | null;
+	name: string;
+	secondary_cost_centre_id: number | null;
+	accounts: number[] | null;
+	income: number | null;
+	expense: number | null;
+	comment: string | null;
+	active: boolean;
+};
+
 export type BankInfo = {
 	bank_account: string;
 	sorting_number: string;

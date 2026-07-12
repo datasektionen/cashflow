@@ -171,6 +171,7 @@ Error responses follow [RFC 7807 (Problem Details)](https://datatracker.ietf.org
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_URLCONF": "cashflow.api.urls",
     "PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
+    "GET_MOCK_REQUEST": "cashflow.api.schema.get_mock_request",
 }
 
 

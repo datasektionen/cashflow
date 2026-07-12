@@ -8,26 +8,6 @@
 	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
 	import validation from './validation.ts';
 
-	const costCenters = [
-		'Sektionslokalsgruppen',
-		'Mottagningen',
-		'D-rektoratet',
-		'Studienämnden',
-		'Näringslivsnämnden',
-		'Internationella nämnden',
-		'Idrottsnämnden',
-		'Jämlikhetsnämnden',
-		'DKM',
-		'METAspexet',
-		'Fanborgen',
-		'Sånggruppen',
-		'METAdorerna',
-		'Valberedningen',
-		'Revisorerna'
-	];
-
-	const budgetLines = ['Lokalskostnader', 'Mat och dryck', 'Transport', 'Trycksaker', 'Övrigt'];
-
 	let submitting: Boolean = $state(false);
 	let description = $state('');
 	let receiptFiles: File[] = $state([]);
@@ -49,7 +29,6 @@
 	}
 
 	function handleSubmit(e: SubmitEvent) {
-		console.log('TEST');
 		submitting = true;
 		validationResult = validation.run(buildValidationData());
 		if (!validationResult.isValid()) {
@@ -65,11 +44,7 @@
 		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
 	}
 
-	function onDateBlur(e: FocusEvent) {
-		// const wrapper = e.currentTarget as HTMLElement;
-		// if (e.relatedTarget && wrapper.contains(e.relatedTarget as Node)) return;
-		console.log('date blur');
-		console.log(e.currentTarget);
+	function onDateBlur() {
 		validationResult = validation.run(buildValidationData(), 'expense-date');
 	}
 
@@ -189,8 +164,6 @@
 		<!--   Expense parts     -->
 		<ExpenseParts
 			bind:parts
-			{costCenters}
-			{budgetLines}
 			{errors}
 			{showErrors}
 			onValidate={validateField}

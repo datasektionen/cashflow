@@ -132,11 +132,7 @@
 		{/each}
 	</div>
 {/snippet}
-<ClaimFilterBar
-	costCentreItems={['Sektionslokalsgruppen']}
-	secondaryCostCentreItems={['Allmänt', 'X-scapomiddag']}
-	budgetLineItems={['METAdryck', 'Inköp mat']}
-/>
+<ClaimFilterBar />
 
 <PaginatedTable
 	paginatedResponse={data.expenses}

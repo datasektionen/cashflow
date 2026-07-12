@@ -128,3 +128,12 @@ export class ApiClient {
 		});
 	}
 }
+export type ListResponse<T> = {
+	data: T[];
+	pagination: {
+		total: number;
+		page: number;
+		per_page: number;
+		total_pages: number;
+	};
+};

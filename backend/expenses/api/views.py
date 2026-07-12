@@ -304,6 +304,10 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .order_by("-created_date")
         )
 
+    # drf_spectacular's schema generator can't build a mock request for the
+    # QUERY method (DRF's APIRequestFactory has no `.query()`), so exclude it
+    # from schema generation; the POST variant still documents this action.
+    @extend_schema(methods=["QUERY"], exclude=True)
     @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
     def search(self, request: Request) -> Response:
         query = request.data.get("query") or {}

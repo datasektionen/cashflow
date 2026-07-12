@@ -21,6 +21,12 @@
 		invalid = false,
 		onBlur
 	}: DatePickerProps = $props();
+
+	function handleFocusOut(e: FocusEvent) {
+		const wrapper = e.currentTarget as HTMLElement;
+		if (e.relatedTarget && wrapper.contains(e.relatedTarget as Node)) return;
+		onBlur(e);
+	}
 </script>
 
 <DatePicker.Root
@@ -31,7 +37,7 @@
 	locale={$locale ?? 'sv'}
 >
 	<div
-		onfocusout={onBlur}
+		onfocusout={handleFocusOut}
 		class={[
 			'flex h-[2.5em] w-full flex-row items-center bg-base-300 inset-shadow-sm dark:bg-dark-base-300',
 			invalid && 'border-2 border-red-500'

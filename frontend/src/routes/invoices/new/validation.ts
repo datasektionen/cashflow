@@ -1,6 +1,5 @@
-import { create, enforce, test } from 'vest';
+import { create, enforce, only, test } from 'vest';
 import 'vest/date';
-import { getLocalTimeZone, today } from '@internationalized/date';
 
 export type Part = {
 	costcenter?: string;
@@ -18,24 +17,14 @@ export type InvoiceFormData = {
 };
 
 const validation = create((data: InvoiceFormData, currentField?: string) => {
+	only(currentField);
+
 	test('description', 'description_required', () => {
 		enforce(data.description).isNotBlank();
 	});
 
 	test('invoice-date', 'invoice_date_required', () => {
 		enforce(data['invoice-date']).isNotBlank();
-	});
-
-	test('invoice-date', 'invoice_date_not_in_future', () => {
-		enforce(data['invoice-date'])
-			.isDate()
-			.isBefore(today(getLocalTimeZone()).add({ days: 1 }).toString());
-	});
-
-	test('due-date', 'due_date_today_or_after', () => {
-		enforce(data['due-date'])
-			.isDate()
-			.isAfter(today(getLocalTimeZone()).subtract({ days: 1 }).toString());
 	});
 
 	test('due-date', 'due_date_required', () => {

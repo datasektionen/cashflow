@@ -11,6 +11,13 @@ from cashflow.gordian import (
     list_secondary_cost_centres_from_gordian,
     list_budget_lines_from_gordian,
 )
+from expenses.models import ExpensePart
+from invoices.models import InvoicePart
+from .filters import (
+    apply_cost_centre_filter,
+    apply_secondary_cost_centre_filter,
+    apply_budget_line_filter,
+)
 from .serializers import (
     CostCentreSerializer,
     SecondaryCostCentreSerializer,
@@ -21,9 +28,11 @@ from .serializers import (
 class CostCentreList(GenericAPIView):
     """List cost centres from GOrdian.
 
-    Returns every cost centre currently registered on GOrdian. Pass the
-    `name` query parameter to filter the result to cost centres with that
-    exact name.
+    Returns every cost centre currently registered on GOrdian (`active: true`),
+    followed by any cost centre referenced on an existing expense or invoice
+    that is no longer on GOrdian (`active: false`, `id`/`type` null), sorted
+    alphabetically. Pass the `name` query parameter to filter the result to
+    cost centres with that exact name.
     """
 
     def get_serializer_class(self):
@@ -39,21 +48,50 @@ class CostCentreList(GenericAPIView):
 
         name = request.query_params.get("name")
         if name is not None:
-            cost_centres = [
-                cc.model_dump()
+            result = [
+                {**cc.model_dump(), "active": True}
                 for cc in list_cost_centres_from_gordian()
                 if cc.name == name
             ]
         else:
-            cost_centres = [cc.model_dump() for cc in list_cost_centres_from_gordian()]
+            gordian_ccs = list_cost_centres_from_gordian()
+            active_names = {cc.name for cc in gordian_ccs}
+            active = [{**cc.model_dump(), "active": True} for cc in gordian_ccs]
 
-        return Response(CostCentreSerializer(cost_centres, many=True).data)
+            expense_ccs = ExpensePart.objects.values_list(
+                "cost_centre", flat=True
+            ).distinct()
+            invoice_ccs = InvoicePart.objects.values_list(
+                "cost_centre", flat=True
+            ).distinct()
+            inactive_names = {
+                cc_name
+                for cc_name in (*expense_ccs, *invoice_ccs)
+                if cc_name and cc_name not in active_names
+            }
+            inactive = [
+                {"id": None, "name": cc_name, "type": None, "active": False}
+                for cc_name in sorted(inactive_names)
+            ]
+
+            result = active + inactive
+            result = apply_cost_centre_filter(result, request.query_params)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = CostCentreSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(CostCentreSerializer(result, many=True).data)
 
 
 class SecondaryCostCentreList(GenericAPIView):
     """List secondary cost centres from GOrdian.
 
-    Returns every secondary cost centre on GOrdian. Pass the
+    Returns every secondary cost centre currently registered on GOrdian
+    (`active: true`), followed by any secondary cost centre referenced on an
+    existing expense or invoice that is no longer on GOrdian (`active: false`,
+    `id`/`cost_centre_id` null), sorted alphabetically. Pass the
     `costcentre_id` query parameter to restrict the result to children of a
     specific cost centre.
     """
@@ -70,24 +108,52 @@ class SecondaryCostCentreList(GenericAPIView):
 
         costcentre_id = request.query_params.get("costcentre_id")
         if costcentre_id is not None:
-            collection = [
-                scc.model_dump()
+            result = [
+                {**scc.model_dump(), "active": True}
                 for scc in list_secondary_cost_centres_from_gordian()
                 if scc.cc_id == int(costcentre_id)
             ]
         else:
-            collection = list_secondary_cost_centres_from_gordian()
+            gordian_sccs = list_secondary_cost_centres_from_gordian()
+            active_names = {scc.name for scc in gordian_sccs}
+            active = [{**scc.model_dump(), "active": True} for scc in gordian_sccs]
 
-        collection = SecondaryCostCentreSerializer(collection, many=True)
-        return Response(collection.data)
+            expense_sccs = ExpensePart.objects.values_list(
+                "secondary_cost_centre", flat=True
+            ).distinct()
+            invoice_sccs = InvoicePart.objects.values_list(
+                "secondary_cost_centre", flat=True
+            ).distinct()
+            inactive_names = {
+                scc_name
+                for scc_name in (*expense_sccs, *invoice_sccs)
+                if scc_name and scc_name not in active_names
+            }
+            inactive = [
+                {"id": None, "name": scc_name, "cc_id": None, "active": False}
+                for scc_name in sorted(inactive_names)
+            ]
+
+            result = active + inactive
+            result = apply_secondary_cost_centre_filter(result, request.query_params)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = SecondaryCostCentreSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(SecondaryCostCentreSerializer(result, many=True).data)
 
 
 class BudgetLineList(GenericAPIView):
     """List budget lines from GOrdian.
 
-    Returns every budget line on GOrdian. Pass the `secondarycostcentre_id`
-    query parameter to restrict the result to budget lines belonging to a
-    specific secondary cost centre.
+    Returns every budget line currently registered on GOrdian (`active: true`),
+    followed by any budget line referenced on an existing expense or invoice
+    that is no longer on GOrdian (`active: false`, other fields null), sorted
+    alphabetically. Pass the `secondary_cost_centre` query parameter to
+    restrict the result to budget lines belonging to a specific secondary
+    cost centre.
     """
 
     def get_serializer_class(self):
@@ -100,16 +166,44 @@ class BudgetLineList(GenericAPIView):
     )
     def get(self, request):
 
-        scc_id = request.query_params.get("secondarycostcentre_id")
-        if scc_id is not None:
-            collection = [
-                bl.model_dump() for bl in list_budget_lines_from_gordian(int(scc_id))
-            ]
-        else:
-            collection = list_budget_lines_from_gordian()
+        gordian_bls = list_budget_lines_from_gordian()
+        active_names = {bl.name for bl in gordian_bls}
+        active = [{**bl.model_dump(), "active": True} for bl in gordian_bls]
 
-        collection = BudgetLineSerializer(collection, many=True)
-        return Response(collection.data)
+        expense_bls = ExpensePart.objects.values_list(
+            "budget_line", flat=True
+        ).distinct()
+        invoice_bls = InvoicePart.objects.values_list(
+            "budget_line", flat=True
+        ).distinct()
+        inactive_names = {
+            bl_name
+            for bl_name in (*expense_bls, *invoice_bls)
+            if bl_name and bl_name not in active_names
+        }
+        inactive = [
+            {
+                "id": None,
+                "name": bl_name,
+                "scc_id": None,
+                "account": None,
+                "income": None,
+                "expense": None,
+                "comment": None,
+                "active": False,
+            }
+            for bl_name in sorted(inactive_names)
+        ]
+
+        result = active + inactive
+        result = apply_budget_line_filter(result, request.query_params)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = BudgetLineSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(BudgetLineSerializer(result, many=True).data)
 
 
 class FeaturesList(APIView):

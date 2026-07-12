@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { getLocalTimeZone, today } from '@internationalized/date';
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
@@ -9,26 +8,6 @@
 	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import validation from './validation.ts';
-
-	const costCenters = [
-		'Sektionslokalsgruppen',
-		'Mottagningen',
-		'D-rektoratet',
-		'Studienämnden',
-		'Näringslivsnämnden',
-		'Internationella nämnden',
-		'Idrottsnämnden',
-		'Jämlikhetsnämnden',
-		'DKM',
-		'METAspexet',
-		'Fanborgen',
-		'Sånggruppen',
-		'METAdorerna',
-		'Valberedningen',
-		'Revisorerna'
-	];
-
-	const budgetLines = ['Lokalskostnader', 'Mat och dryck', 'Transport', 'Trycksaker', 'Övrigt'];
 
 	let disclaimerParts = $derived($_('new_invoice.disclaimer').split('{new_expense_link}'));
 
@@ -168,7 +147,6 @@
 				<input type="hidden" name="invoice-date" value={invoiceDate?.toString() ?? ''} />
 				<DatePicker
 					bind:value={invoiceDate}
-					maxValue={today(getLocalTimeZone())}
 					invalid={showErrors('invoice-date')}
 					errors={errors['invoice-date']}
 					onBlur={() => validateField('invoice-date')}
@@ -179,7 +157,6 @@
 				<input type="hidden" name="due-date" value={dueDate?.toString() ?? ''} />
 				<DatePicker
 					bind:value={dueDate}
-					minValue={today(getLocalTimeZone())}
 					invalid={showErrors('due-date')}
 					errors={errors['due-date']}
 					onBlur={() => validateField('due-date')}
@@ -222,8 +199,6 @@
 
 		<ExpenseParts
 			bind:parts={invoiceParts}
-			{costCenters}
-			{budgetLines}
 			{errors}
 			{showErrors}
 			onValidate={validateField}

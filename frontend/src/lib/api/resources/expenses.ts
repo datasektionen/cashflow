@@ -3,23 +3,13 @@ import type {
 	AccountPayload,
 	ClaimFilter,
 	Comment,
+	DescriptionSearch,
 	Expense,
 	ExpenseCreate,
 	ExpensePart,
-	DescriptionSearch,
 	PaginatedResponse
 } from '$lib/api/types';
-
-// The response format from DRF
-type RawResponse = {
-	data: Expense[];
-	pagination: {
-		total: number;
-		page: number;
-		per_page: number;
-		total_pages: number;
-	};
-};
+import type { ListResponse } from '$lib/api/client';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -37,7 +27,7 @@ export class ExpensesAPI {
 		perPage: number,
 		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.get<RawResponse>('expenses/', {
+		const res = await this.apiClient.get<ListResponse<Expense>>('expenses/', {
 			page: page,
 			per_page: perPage,
 			...filter
@@ -60,7 +50,7 @@ export class ExpensesAPI {
 		filter?: ClaimFilter,
 		searchFields?: DescriptionSearch
 	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.query<RawResponse>(
+		const res = await this.apiClient.query<ListResponse<Expense>>(
 			'expenses/search/',
 			{
 				query: { ...filter, ...searchFields }
