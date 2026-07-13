@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Unpack
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from structlog import get_logger
@@ -209,7 +210,7 @@ class Payment(models.Model):
 
     # Returns the payment tag, which makes the payment identifiable in the bank
     def tag(self):
-        return "Data" + str(self.id)
+        return settings.PAYMENT_TAG_PREFIX + str(self.id)
 
 
 class ExpenseQuerySet(models.QuerySet["Expense"]):

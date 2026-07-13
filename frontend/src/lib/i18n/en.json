@@ -131,6 +131,16 @@
 		"tabs": {
 			"expenses": "Expenses",
 			"invoices": "Invoices"
+		},
+		"columns": {
+			"invoice": "Invoice",
+			"due_date": "Due",
+			"total": "Total"
+		},
+		"empty": "No invoices to pay",
+		"preview": {
+			"empty": "Select an invoice to preview and pay it",
+			"open_detail": "Open"
 		}
 	},
 
@@ -271,6 +281,7 @@
 	"attest_disabled_flagged": "Cannot attest — this expense is flagged",
 	"confirm_disabled_flagged": "Cannot confirm — this expense is flagged",
 	"expense_confirm": "Confirm",
+	"invoice_pay": "Pay",
 	"expense_unconfirm": "Unconfirm",
 	"expense_flag": "Flag",
 	"expense_unflag": "Unflag",
@@ -290,7 +301,8 @@
 		"invoice_unconfirmed": "The invoice has been unconfirmed",
 		"expense_unflagged": "The expense has been unflagged",
 		"expense_delete": "The expense \"{description}\" has been deleted",
-		"invoice_delete": "The invoice \"{description}\" has been deleted"
+		"invoice_delete": "The invoice \"{description}\" has been deleted",
+		"invoice_paid": "The invoice has been paid"
 	},
 	"expense_paid": "Reimbursed",
 	"expense_verification": "Voucher number",

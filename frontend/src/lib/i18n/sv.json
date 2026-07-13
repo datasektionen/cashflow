@@ -113,6 +113,16 @@
 		"tabs": {
 			"expenses": "Utlägg",
 			"invoices": "Fakturor"
+		},
+		"columns": {
+			"invoice": "Faktura",
+			"due_date": "Förfaller",
+			"total": "Total"
+		},
+		"empty": "Inga fakturor att betala",
+		"preview": {
+			"empty": "Välj en faktura för att förhandsgranska och betala",
+			"open_detail": "Öppna"
 		}
 	},
 
@@ -271,6 +281,7 @@
 	"attest_disabled_flagged": "Kan inte attestera, utlägget är flaggat",
 	"confirm_disabled_flagged": "Kan inte bekräfta, utlägget är flaggat",
 	"expense_confirm": "Bekräfta",
+	"invoice_pay": "Betala",
 	"expense_unconfirm": "Avbekräfta",
 	"expense_flag": "Flagga",
 	"expense_unflag": "Avflagga",
@@ -290,7 +301,8 @@
 		"invoice_unconfirmed": "Fakturan har avbekräftats",
 		"expense_unflagged": "Utlägget har avflaggats",
 		"expense_delete": "Utlägget \"{description}\" har tagits bort",
-		"invoice_delete": "Fakturan \"{description}\" har tagits bort"
+		"invoice_delete": "Fakturan \"{description}\" har tagits bort",
+		"invoice_paid": "Fakturan har betalats"
 	},
 	"expense_paid": "Utbetald",
 	"expense_verification": "Verifikationsnummer",

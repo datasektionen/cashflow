@@ -393,6 +393,9 @@
 								expense.payment.date
 							).toLocaleDateString($locale ?? 'sv-SE')}
 						</span>
+						<span class="font-mono text-xs text-base-subtle dark:text-dark-base-subtle"
+							>{expense.payment.tag}</span
+						>
 					{:else}
 						<span class="text-base-subtle dark:text-dark-base-subtle"
 							>{$_('expense_status.unpaid')}</span

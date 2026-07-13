@@ -93,10 +93,14 @@ class ClaimSerializer(serializers.Serializer):
 class PaymentSerializer(serializers.ModelSerializer):
     payer = ProfileSerializer(read_only=True)
     receiver = ProfileSerializer(read_only=True)
+    tag = serializers.CharField(
+        read_only=True,
+        help_text="Bank-facing payment reference, e.g. 'Data1234'.",
+    )
 
     class Meta:
         model = Payment
-        fields = ["id", "date", "payer", "receiver"]
+        fields = ["id", "date", "payer", "receiver", "tag"]
 
 
 class CommentSerializer(serializers.ModelSerializer):

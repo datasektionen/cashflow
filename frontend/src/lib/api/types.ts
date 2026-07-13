@@ -21,6 +21,7 @@ export type Payment = {
 	date: string;
 	payer: Profile;
 	receiver: Profile;
+	tag: string;
 };
 
 export type Comment = {

@@ -351,5 +351,9 @@ FORTNOX_INVOICE_CREDIT_ACCOUNT = 2440
 FORTNOX_EXPENSE_VOUCHER_SERIES = "E"
 FORTNOX_INVOICE_VOUCHER_SERIES = "U"
 
+# Prefix for the bank-facing payment reference/tag (e.g. "Data1234"), so the
+# treasurer can identify chapter payouts on the bank statement.
+PAYMENT_TAG_PREFIX = "Data"
+
 # When accounting to Fortnox the description fill follow this format
 FORTNOX_DESCRIPTION_FORMAT = "({id}) {description}"

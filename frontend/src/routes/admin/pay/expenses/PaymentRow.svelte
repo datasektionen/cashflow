@@ -42,7 +42,7 @@
 		paying = true;
 		try {
 			const payment = await api.payments.create([...selected]);
-			alerts.update((a) => [...a, success(`Betalning #${payment.id} skapad`)]);
+			alerts.update((a) => [...a, success(`Betalning ${payment.tag} skapad`)]);
 			selected.clear();
 			onPaid?.();
 			refreshKey++;

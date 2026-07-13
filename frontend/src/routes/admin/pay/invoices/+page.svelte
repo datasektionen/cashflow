@@ -1,129 +1,146 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { Invoice, PaginatedResponse } from '$lib/api/types';
-	import { api } from '$lib/api';
-	import { invalidateAll } from '$app/navigation';
-	import { ExternalLink } from '@lucide/svelte';
-	import { SvelteSet } from 'svelte/reactivity';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
-	import { logger } from '$lib/logger';
+	import type { Invoice } from '$lib/api/types';
+	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import type { TableColumn } from '$lib/components/types';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { _, locale } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
-
-	type pageData = {
-		invoices: PaginatedResponse<Invoice>;
-	};
+	import InvoicePreview from './InvoicePreview.svelte';
+	import { ScrollArea } from 'bits-ui';
 
 	let { data }: PageProps = $props();
-	let { invoices }: pageData = $derived(data);
 
-	let paying = new SvelteSet<number>();
+	let loading = $state(false);
 
 	function total(invoice: Invoice): number {
 		return invoice.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0);
 	}
 
-	function costCentres(invoice: Invoice): string[] {
-		return [...new Set(invoice.parts.map((p) => p.cost_centre))];
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
+
+	function handlePageChange(p: number) {
+		loading = true;
+		const url = new URL(page.url);
+		url.searchParams.set('page', p.toString());
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
 	}
 
-	async function handlePay(invoice: Invoice) {
-		if (paying.has(invoice.id)) return;
-		paying.add(invoice.id);
-		try {
-			const paid = await api.invoices.pay(invoice.id);
-			alerts.update((a) => [...a, success(`Faktura #${paid.id} betald`)]);
-			await invalidateAll();
-		} catch (e) {
-			logger.error(e);
-			const msg = isErrorResponse(e) ? e.detail : 'Något gick fel';
-			alerts.update((a) => [...a, error(msg)]);
-		} finally {
-			paying.delete(invoice.id);
+	function handlePerPageChange(perPage: number) {
+		loading = true;
+		const url = new URL(page.url);
+		url.searchParams.set('per_page', perPage.toString());
+		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
+	let preview: Invoice | null = $state(null);
+
+	function handleRowClick(invoice: Invoice) {
+		if (window.matchMedia('(min-width: 1024px)').matches) {
+			preview = invoice;
+		} else {
+			goto(`/admin/invoices/${invoice.id}`);
 		}
 	}
+
+	const columns: TableColumn<Invoice>[] = [
+		{
+			id: 'invoice',
+			header: $_('admin_pay.columns.invoice'),
+			renderSnippet: invoiceCell,
+			width: ''
+		},
+		{
+			id: 'due_date',
+			header: $_('admin_pay.columns.due_date'),
+			renderSnippet: dueDateCell,
+			width: 'w-32'
+		},
+		{
+			id: 'total',
+			header: $_('admin_pay.columns.total'),
+			renderSnippet: totalCell,
+			width: 'w-32'
+		}
+	];
 </script>
 
-<div class="max-w-4xl border border-base-500 p-2 dark:border-dark-base-200">
-	<table class="w-full table-fixed text-sm">
-		<thead>
-			<tr class="flex">
-				<th
-					class="flex-1 px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-				>
-					Faktura
-				</th>
-				<th
-					class="hidden w-32 px-4 py-3 text-right text-xs font-medium text-base-subtle uppercase sm:block dark:text-dark-base-subtle"
-				>
-					Förfaller
-				</th>
-				<th
-					class="w-32 px-4 py-3 text-right text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-				>
-					Total
-				</th>
-				<th class="w-24 py-2 pr-4"></th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each invoices.data as invoice (invoice.id)}
-				<tr
-					class="flex items-center border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-				>
-					<td class="flex min-w-0 flex-1 flex-col gap-y-1 px-4 py-2">
-						<a
-							href="/admin/invoices/{invoice.id}"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="group dark:hover:text-dark-base flex min-w-0 items-center gap-x-1.5 text-sm dark:text-dark-base-subtle"
-						>
-							<span class="min-w-0 truncate font-medium">{invoice.description}</span>
-							<ExternalLink
-								class="size-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
-							/>
-						</a>
-						<div class="flex flex-wrap items-center gap-1">
-							<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-								<UserLink user={invoice.owner} />
-							</span>
-							{#each costCentres(invoice) as cc}
-								<span class="bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
-							{/each}
-						</div>
-					</td>
-					<td
-						class="hidden w-32 px-4 py-2 text-right text-sm text-base-subtle tabular-nums sm:block dark:text-dark-base-subtle"
-					>
-						{invoice.due_date}
-					</td>
-					<td class="w-32 px-4 py-2 text-right font-semibold tabular-nums">
-						{total(invoice).toLocaleString('sv-SE', {
-							minimumFractionDigits: 2,
-							maximumFractionDigits: 2
-						})} kr
-					</td>
-					<td class="flex w-24 justify-end py-2 pr-4">
-						<button
-							onclick={() => handlePay(invoice)}
-							disabled={paying.has(invoice.id)}
-							class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
-						>
-							{paying.has(invoice.id) ? 'Betalar…' : 'Betala'}
-						</button>
-					</td>
-				</tr>
-			{/each}
+{#snippet invoiceCell(invoice: Invoice)}
+	<div class="flex min-w-0 flex-col gap-y-1">
+		<span class="min-w-0 truncate font-medium">{invoice.description}</span>
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
+			<UserLink user={invoice.owner} />
+		</span>
+	</div>
+{/snippet}
 
-			{#if invoices.data.length === 0}
-				<tr class="flex">
-					<td
-						class="flex-1 px-4 py-8 text-center text-sm text-base-subtle dark:text-dark-base-subtle"
-					>
-						Inga fakturor att betala
-					</td>
-				</tr>
-			{/if}
-		</tbody>
-	</table>
+{#snippet dueDateCell(invoice: Invoice)}
+	<span class="text-base-subtle tabular-nums dark:text-dark-base-subtle">
+		{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString($locale ?? 'sv-SE') : '–'}
+	</span>
+{/snippet}
+
+{#snippet totalCell(invoice: Invoice)}
+	<span class="font-semibold tabular-nums">{fmt.format(total(invoice))} kr</span>
+{/snippet}
+
+<div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
+	<div class="min-w-0 flex-1 lg:min-h-0 lg:max-w-4xl lg:overflow-y-auto">
+		<PaginatedTable
+			paginatedResponse={data.invoices}
+			{columns}
+			onPageChange={handlePageChange}
+			onPerPageChange={handlePerPageChange}
+			{loading}
+			scrollable
+			rowProps={{
+				onClick: handleRowClick,
+				class: (invoice: Invoice) =>
+					preview && invoice.id === preview.id
+						? 'cursor-pointer bg-base-200 dark:bg-dark-base-200'
+						: 'cursor-pointer'
+			}}
+		/>
+		{#if data.invoices.data.length === 0}
+			<p class="p-8 text-center text-sm text-base-subtle dark:text-dark-base-subtle">
+				{$_('admin_pay.empty')}
+			</p>
+		{/if}
+	</div>
+
+	<div class="hidden min-h-0 flex-1 lg:block lg:max-w-2xl">
+		<ScrollArea.Root class="relative h-full w-full overflow-hidden">
+			<ScrollArea.Viewport class="h-full w-full">
+				<div class="px-8 pb-8">
+					{#if !preview}
+						<div class="flex h-full items-center justify-center py-24">
+							<p class="text-sm text-base-subtle dark:text-dark-base-subtle">
+								{$_('admin_pay.preview.empty')}
+							</p>
+						</div>
+					{:else}
+						{#key preview.id}
+							<InvoicePreview invoiceId={preview.id} onPaid={() => (preview = null)} />
+						{/key}
+					{/if}
+				</div>
+			</ScrollArea.Viewport>
+
+			<ScrollArea.Scrollbar
+				orientation="vertical"
+				class="hover:bg-dark-10 data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out-0 data-[state=visible]:fade-in-0 flex w-2.5 touch-none rounded-none border-l border-l-transparent bg-base-subtle p-px transition-all duration-200 select-none hover:w-3 dark:bg-dark-base-subtle"
+			>
+				<ScrollArea.Thumb class="flex-1 rounded-none bg-base-400 dark:bg-dark-base-400" />
+			</ScrollArea.Scrollbar>
+		</ScrollArea.Root>
+	</div>
 </div>
