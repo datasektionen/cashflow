@@ -134,6 +134,8 @@
 	"booking_debit": "Debet",
 	"booking_credit": "Kredit",
 	"booking_add_row": "Lägg till rad",
+	"booking_debit_credit_mismatch": "Debet och kredit måste stämma överens",
+	"booking_total_mismatch": "Verifikationens debitsumma måste stämma överens med totalsumman {total} SEK",
 
 	"fortnox": {
 		"title": "Fortnox",

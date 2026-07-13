@@ -6,18 +6,22 @@ reveals the plain number for editing; on blur it parses (accepting `,` or `.` an
 spaces) and reformats. Renders an optional hidden input for native form submission.
 -->
 <script lang="ts">
+	import { Lock } from '@lucide/svelte';
+
 	let {
 		value = $bindable(null),
 		name,
 		placeholder = '0,00',
 		suffix = '',
-		class: className = ''
+		class: className = '',
+		locked = false
 	}: {
 		value?: number | null;
 		name?: string;
 		placeholder?: string;
 		suffix?: string;
 		class?: string;
+		locked?: boolean;
 	} = $props();
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
@@ -62,12 +66,16 @@ spaces) and reformats. Renders an optional hidden input for native form submissi
 		bind:value={display}
 		onfocus={onFocus}
 		onblur={onBlur}
+		disabled={locked}
 		{placeholder}
-		class="w-full border-0 bg-transparent p-2 text-right text-sm tabular-nums outline-none placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle {suffix
+		class="w-full border-0 bg-transparent p-2 text-right text-sm tabular-nums outline-none placeholder:text-base-subtle disabled:cursor-not-allowed disabled:opacity-75 dark:placeholder:text-dark-base-subtle {suffix ||
+		locked
 			? 'pr-12'
 			: ''} {className}"
 	/>
-	{#if suffix}
+	{#if locked}
+		<Lock class="pointer-events-none absolute right-3 size-3 text-gray-500" />
+	{:else if suffix}
 		<span
 			class="pointer-events-none absolute right-3 text-sm text-base-subtle dark:text-dark-base-subtle"
 		>

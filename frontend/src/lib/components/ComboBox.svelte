@@ -5,7 +5,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 -->
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { ChevronDown, ChevronsUpDown, ChevronUp } from '@lucide/svelte';
+	import { ChevronDown, ChevronsUpDown, ChevronUp, Lock } from '@lucide/svelte';
 	import { Combobox } from 'bits-ui';
 	import Fuse from 'fuse.js';
 
@@ -15,6 +15,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		placeholder = '',
 		value = $bindable(''),
 		class: className = '',
+		locked = false,
 		onchange,
 		onblur
 	}: {
@@ -23,6 +24,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		placeholder?: string;
 		value?: string;
 		class?: string;
+		locked?: boolean;
 		onchange?: (value: string) => void;
 		onblur?: (e: FocusEvent) => void;
 	} = $props();
@@ -41,15 +43,18 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 	{name}
 	bind:value
 	bind:open
+	disabled={locked}
 	inputValue={searchValue}
 	onValueChange={(v) => onchange?.(v ?? '')}
 >
 	<div class="relative w-full">
 		<div
-			class="flex w-full flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {className}"
+			class="flex w-full flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {locked
+				? 'cursor-not-allowed opacity-75'
+				: ''} {className}"
 		>
 			<Combobox.Input
-				class="w-full flex-1 p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
+				class="w-full flex-1 p-2 placeholder:text-sm placeholder:text-base-subtle disabled:cursor-not-allowed dark:placeholder:text-dark-base-subtle"
 				onclick={() => (open = true)}
 				oninput={(e) => {
 					searchValue = e.currentTarget.value;
@@ -74,8 +79,12 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 				{placeholder}
 				aria-label={placeholder}
 			></Combobox.Input>
-			<Combobox.Trigger>
-				<ChevronsUpDown />
+			<Combobox.Trigger class={locked ? 'cursor-not-allowed' : ''}>
+				{#if locked}
+					<Lock class="size-3 text-gray-500" />
+				{:else}
+					<ChevronsUpDown />
+				{/if}
 			</Combobox.Trigger>
 		</div>
 

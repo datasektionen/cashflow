@@ -4,6 +4,7 @@
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
+	import { sumAmounts } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 
 	export type ClaimPartsTableProps = {
@@ -48,9 +49,7 @@
 			});
 	};
 
-	const resolvedTotalAmount = $derived(
-		totalAmount ?? parts.reduce((sum, part) => sum + parseFloat(part.amount), 0)
-	);
+	const resolvedTotalAmount = $derived(totalAmount ?? sumAmounts(parts.map((part) => part.amount)));
 </script>
 
 <table class={['w-full table-fixed', dense ? 'text-xs' : 'text-sm']}>

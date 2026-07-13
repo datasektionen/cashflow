@@ -152,6 +152,8 @@
 	"booking_debit": "Debit",
 	"booking_credit": "Credit",
 	"booking_add_row": "Add row",
+	"booking_debit_credit_mismatch": "Debit and credit totals must match",
+	"booking_total_mismatch": "Voucher total must match the {total} SEK total",
 
 	"fortnox": {
 		"title": "Fortnox",

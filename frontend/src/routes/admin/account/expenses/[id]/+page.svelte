@@ -10,15 +10,24 @@
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
+	import { sumAmounts } from '$lib/money';
 
 	let { data }: { data: PageData } = $props();
 	const expense = $derived(data.expense);
+	const expectedTotal = $derived(sumAmounts(expense.parts.map((p) => p.amount)));
+	let voucherRowFields: VoucherRowFields | undefined = $state();
 
 	// Prefill once; the form must not reset if data refreshes while editing.
 	// svelte-ignore state_referenced_locally
-	let voucherRows = $state<VoucherRowDraft[]>(
-		draftsFromParts(data.expense.parts, data.expense.recommended_credit_account)
-	);
+	const drafts = draftsFromParts(data.expense.parts, data.expense.recommended_credit_account);
+	// The last draft is the balancing credit row; lock it so it can't be edited or removed.
+	// svelte-ignore state_referenced_locally
+	if (data.expense.parts.length > 0) {
+		const balancing = drafts[drafts.length - 1];
+		balancing.lockedFields = ['account', 'cost_centre', 'debit', 'credit'];
+		balancing.deletable = false;
+	}
+	let voucherRows = $state<VoucherRowDraft[]>(drafts);
 	let voucherNumber = $state('');
 	// Which of the two submit buttons is in flight, so only it shows a spinner.
 	let submitting = $state<'rows' | 'number' | null>(null);
@@ -47,6 +56,7 @@
 	}
 
 	function submitVoucherRows() {
+		if (!voucherRowFields?.validate()) return;
 		submitAccounting('rows', { voucher_rows: toVoucherRows(voucherRows) });
 	}
 
@@ -102,9 +112,11 @@
 			<div>
 				<h2 class="mb-2 text-base font-semibold">{$_('admin_account.create_voucher')}</h2>
 				<VoucherRowFields
+					bind:this={voucherRowFields}
 					bind:voucherRows
 					accounts={data.accounts}
 					costCentres={data.costCentres}
+					{expectedTotal}
 				/>
 				<div class="mt-4 flex justify-end">
 					<button

@@ -26,6 +26,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 		value?: string;
 		placeholder?: string;
 		class?: string;
+		locked?: boolean;
 		onchange?: (value: string | null) => void;
 		onblur?: (e: FocusEvent) => void;
 	};
@@ -33,7 +34,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 
 <script lang="ts" generics="T">
 	import { _ } from 'svelte-i18n';
-	import { ChevronDown, ChevronsUpDown, ChevronUp } from '@lucide/svelte';
+	import { ChevronDown, ChevronsUpDown, ChevronUp, Lock } from '@lucide/svelte';
 	import { Combobox } from 'bits-ui';
 	import Fuse from 'fuse.js';
 
@@ -47,6 +48,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 		value = $bindable(''),
 		placeholder = '',
 		class: className = '',
+		locked = false,
 		onchange,
 		onblur
 	}: AdvancedComboboxProps<T> = $props();
@@ -85,16 +87,19 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 	{name}
 	{value}
 	bind:open
+	disabled={locked}
 	inputValue={searchValue}
 	onValueChange={(v) => commit(v ?? '')}
 >
 	<div class="relative w-full">
 		<div
-			class="flex w-full flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {className}"
+			class="flex w-full flex-row border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {locked
+				? 'cursor-not-allowed opacity-75'
+				: ''} {className}"
 		>
 			<div class="relative flex-1">
 				<Combobox.Input
-					class="w-full p-2 placeholder:text-sm placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle {showDisplay
+					class="w-full p-2 placeholder:text-sm placeholder:text-base-subtle disabled:cursor-not-allowed dark:placeholder:text-dark-base-subtle {showDisplay
 						? 'text-transparent'
 						: ''}"
 					onclick={() => (open = true)}
@@ -121,8 +126,12 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 					</div>
 				{/if}
 			</div>
-			<Combobox.Trigger>
-				<ChevronsUpDown />
+			<Combobox.Trigger class={locked ? 'cursor-not-allowed' : ''}>
+				{#if locked}
+					<Lock class="size-3 text-gray-500" />
+				{:else}
+					<ChevronsUpDown />
+				{/if}
 			</Combobox.Trigger>
 		</div>
 
