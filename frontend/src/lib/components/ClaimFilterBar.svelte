@@ -2,22 +2,28 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
-		ListRestart,
-		Search,
-		SlidersHorizontal,
-		Stamp,
-		CircleCheck,
 		Banknote,
-		Receipt,
+		CircleCheck,
+		Eraser,
 		Flag,
-		Eraser
+		ListRestart,
+		Receipt,
+		Search,
+		Stamp
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import ComboBox from '$lib/components/ComboBox.svelte';
 	import TextInput from '$lib/components/TextInput.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types.ts';
+	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
+	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
+	import type {
+		BudgetLine,
+		CostCentre,
+		SecondaryCostCentre,
+		VoucherSeries
+	} from '$lib/api/types.ts';
 	import { api } from '$lib/api';
 
 	let {
@@ -27,7 +33,7 @@
 	}: {
 		includeReset?: boolean;
 		includeChecks?: boolean;
-		exclude?: (typeof tristateKeys)[number][];
+		exclude?: ((typeof tristateKeys)[number] | 'voucher_series')[];
 	} = $props();
 
 	let showAllFilters: boolean = $state(true);
@@ -36,8 +42,11 @@
 	let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
 	let budgetLines: BudgetLine[] = $state([]);
 
+	let voucherSeries: VoucherSeries[] = $state([]);
+
 	onMount(async () => {
 		costCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
+		voucherSeries = await api.voucherSeries.list(1, 100).then((res) => res.data);
 
 		const selectedCostCentre = costCentres.find((cc) => cc.name === filterValue('cost_centre'));
 		secondaryCostCentres = await api.budget
@@ -62,7 +71,25 @@
 			.then((res) => res.data);
 	});
 
-	const filterKeys = ['cost_centre', 'secondary_cost_centre', 'budget_line'] as const;
+	const filterKeys = [
+		'cost_centre',
+		'secondary_cost_centre',
+		'budget_line',
+		'voucher_series'
+	] as const;
+
+	const voucherSeriesColumns: ComboboxColumn<VoucherSeries>[] = [
+		{
+			label: 'Kod',
+			field: 'code',
+			render: VoucherSeriesCodeSnippet
+		},
+		{
+			label: 'Beskrivning',
+			field: 'description',
+			render: VoucherSeriesDescriptionSnippet
+		}
+	];
 
 	let resetKey = $state(0);
 	let resetting = $state(false);
@@ -181,6 +208,23 @@
 	}
 </script>
 
+{#snippet VoucherSeriesDisplay(vs: VoucherSeries)}
+	<span>{vs.code}</span>
+	{#if vs.description}
+		<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
+			{vs.description}
+		</span>
+	{/if}
+{/snippet}
+{#snippet VoucherSeriesCodeSnippet(vs: VoucherSeries)}
+	<span>{vs.code}</span>
+{/snippet}
+{#snippet VoucherSeriesDescriptionSnippet(vs: VoucherSeries)}
+	<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
+		{vs.description}
+	</span>
+{/snippet}
+
 <div
 	class="mb-4 flex flex-row items-center space-x-2 border-b border-base-500 pb-4 dark:border-dark-base-200"
 >
@@ -214,7 +258,20 @@
 			placeholder={$_('budget_line')}
 			items={budgetLines.map((it) => it.name)}
 		/>
-
+		{#if !exclude.includes('voucher_series')}
+			<AdvancedCombobox
+				name="voucher-series"
+				class="text-sm"
+				columns={voucherSeriesColumns}
+				items={voucherSeries}
+				searchField={['code', 'description']}
+				valueField="code"
+				value={filterValue('voucher_series')}
+				onchange={(v) => setFilter('voucher_series', v ?? '')}
+				display={VoucherSeriesDisplay}
+				placeholder={$_('voucher_series')}
+			/>
+		{/if}
 		{#snippet searchIcon()}
 			<Search class="size-4" />
 		{/snippet}

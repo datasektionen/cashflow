@@ -7,6 +7,7 @@ import { ProfilePictureAPI } from '$lib/api/resources/profilePictures';
 import { PaymentsAPI } from '$lib/api/resources/payments';
 import { FortnoxAPI } from '$lib/api/resources/fortnox';
 import { BudgetAPI } from '$lib/api/resources/budget';
+import { VoucherSeriesAPI } from '$lib/api/resources/voucherSeries.js';
 
 export { ApiClient } from './client';
 
@@ -19,6 +20,7 @@ export class API {
 	payments: PaymentsAPI;
 	fortnox: FortnoxAPI;
 	budget: BudgetAPI;
+	voucherSeries: VoucherSeriesAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
@@ -30,6 +32,7 @@ export class API {
 		this.payments = new PaymentsAPI(client);
 		this.fortnox = new FortnoxAPI(client);
 		this.budget = new BudgetAPI(client);
+		this.voucherSeries = new VoucherSeriesAPI(client);
 	}
 }
 

@@ -3,7 +3,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from . import views
-from core.api.views import ActionSummary, ClaimsList
+from core.api.views import ActionSummary, ClaimsList, VoucherSeriesList
 
 urlpatterns = [
     path("features/", views.FeaturesList.as_view(), name="feature-flags"),
@@ -23,6 +23,11 @@ urlpatterns = [
         "budget-lines/",
         views.BudgetLineList.as_view(),
         name="budgetline-list",
+    ),
+    path(
+        "voucher-series/",
+        VoucherSeriesList.as_view(),
+        name="voucherseries-list",
     ),
     path("", include("expenses.api.urls")),
     path("", include("invoices.api.urls")),

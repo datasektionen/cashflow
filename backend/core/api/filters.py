@@ -29,6 +29,7 @@ class Filter(str, Enum):
     FLAGGED = "flagged"
     CONFIRMED = "confirmed"
     PAID = "paid"
+    VOUCHER_SERIES = "voucher_series"
 
 
 # For use in extend_schema() to generate OpenAPI documentation
@@ -116,6 +117,12 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
         required=False,
         description="Whether or not the claim has been paid out.",
     ),
+    Filter.VOUCHER_SERIES: OpenApiParameter(
+        Filter.VOUCHER_SERIES.value,
+        type=str,
+        required=False,
+        description="Filter by voucher series code, e.g. 'E'",
+    ),
 }
 
 
@@ -188,6 +195,9 @@ def apply_expense_filters(
             queryset = queryset.exclude(is_flagged=True)
         case _:
             queryset = queryset.filter(is_flagged=True)
+    if voucher_series := params.get(Filter.VOUCHER_SERIES):
+        queryset = queryset.filter(verification__startswith=voucher_series)
+
     return queryset
 
 
@@ -251,4 +261,6 @@ def apply_invoice_filters(
             queryset = queryset.filter(payed_at__isnull=True)
         case _:
             queryset = queryset.filter(payed_at__isnull=False)
+    if voucher_series := params.get(Filter.VOUCHER_SERIES):
+        queryset = queryset.filter(verification__startswith=voucher_series)
     return queryset

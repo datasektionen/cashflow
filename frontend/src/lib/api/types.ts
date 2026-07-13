@@ -243,6 +243,7 @@ export type ClaimFilter = {
 	confirmable?: boolean;
 	accountable?: boolean;
 	payable?: boolean;
+	voucher_series?: string;
 	q?: string;
 };
 
@@ -276,4 +277,9 @@ export type VoucherRow = {
 export type AccountPayload = {
 	voucher_rows?: VoucherRow[];
 	voucher_number?: string;
+};
+
+export type VoucherSeries = {
+	code: string;
+	description?: string;
 };

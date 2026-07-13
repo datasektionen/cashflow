@@ -320,6 +320,7 @@
 	"cost_centre": "Kostnadsställe",
 	"secondary_cost_centre": "Sekundärt kostnadsställe",
 	"budget_line": "Budgetpost",
+	"voucher_series": "Verifikationsserie",
 	"reset": "Återställ",
 	"search_description": "Sök på beskrivning",
 	"show_all_filters": "Visa alla filter",

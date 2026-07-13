@@ -132,7 +132,7 @@
 		{/each}
 	</div>
 {/snippet}
-<ClaimFilterBar />
+<ClaimFilterBar exclude={['voucher_series']} />
 
 <PaginatedTable
 	paginatedResponse={data.expenses}

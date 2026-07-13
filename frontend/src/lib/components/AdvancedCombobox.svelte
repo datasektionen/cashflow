@@ -24,6 +24,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 		columns: ComboboxColumn<T>[];
 		display?: Snippet<[T]>;
 		value?: string;
+		placeholder?: string;
 		class?: string;
 		onchange?: (value: string | null) => void;
 		onblur?: (e: FocusEvent) => void;
@@ -44,6 +45,7 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 		columns,
 		display,
 		value = $bindable(''),
+		placeholder = '',
 		class: className = '',
 		onchange,
 		onblur
@@ -110,6 +112,8 @@ field to fuzzy-search, and the `display` snippet to render the resolved item whe
 							if (!open) onblur?.(e);
 						}, 0);
 					}}
+					{placeholder}
+					aria-label={placeholder}
 				></Combobox.Input>
 				{#if showDisplay && selected}
 					<div class="pointer-events-none absolute inset-0 flex items-center p-2">

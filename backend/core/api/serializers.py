@@ -130,6 +130,13 @@ class AccountSerializer(serializers.Serializer):
     account_number = serializers.IntegerField(min_value=0, max_value=9999)
 
 
+class VoucherSeriesSerializer(serializers.Serializer):
+    code = serializers.CharField(min_length=1, max_length=10, required=True)
+    description = serializers.CharField(
+        allow_blank=True, max_length=200, required=False, read_only=True
+    )
+
+
 class VoucherRowSerializer(serializers.Serializer):
     account = serializers.IntegerField(min_value=0, max_value=9999, required=True)
     # Fortnox cost centre code, e.g. "ADAALL". Optional: balancing rows

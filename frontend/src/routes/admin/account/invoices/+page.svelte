@@ -86,7 +86,7 @@
 	</div>
 {/snippet}
 
-<ClaimFilterBar includeChecks={false} />
+<ClaimFilterBar includeChecks={false} exclude={['voucher_series']} />
 
 <PaginatedTable
 	paginatedResponse={data.invoices}

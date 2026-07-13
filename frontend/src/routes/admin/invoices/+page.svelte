@@ -125,7 +125,7 @@
 	</div>
 {/snippet}
 
-<ClaimFilterBar exclude={['confirmed', 'flagged']} />
+<ClaimFilterBar exclude={['confirmed', 'flagged', 'voucher_series']} />
 <PaginatedTable
 	paginatedResponse={data.invoices}
 	columns={[

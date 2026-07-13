@@ -13,6 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from structlog import get_logger
 
 from core.api.filters import (
@@ -35,10 +36,12 @@ from core.api.serializers import (
     PaymentCreateSerializer,
     PaymentSerializer,
     PendingPaymentsSerializer,
+    VoucherSeriesSerializer,
 )
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
 from expenses.models import Comment, Expense, ExpensePart, Payment, Profile
+from fortnox import FortnoxRequest
 from invoices.models import Invoice, InvoicePart
 
 UserModel = get_user_model()
@@ -336,3 +339,43 @@ class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
                 },
             }
         )
+
+
+class VoucherSeriesList(GenericAPIView):
+
+    def get_serializer_class(self):
+        return VoucherSeriesSerializer
+
+    def get(self, request: FortnoxRequest):
+
+        series = []
+
+        if request.fortnox_service is not None:
+            series = [
+                {"code": vs.Code, "description": vs.Description}
+                for vs in request.fortnox_service.list_voucher_series()
+            ]
+
+        # Resolve voucher series from existing expenses and invoices
+        expense_codes = [
+            v[0].upper()
+            for v in Expense.objects.all().values_list("verification", flat=True)
+            if v is not None and len(v) > 0
+        ]
+        invoice_codes = [
+            v[0].upper()
+            for v in Invoice.objects.all().values_list("verification", flat=True)
+            if v is not None and len(v) > 0
+        ]
+        inactive = [
+            {"code": code}
+            for code in (*expense_codes, *invoice_codes)
+            if code and code not in [sc["code"] for sc in series]
+        ]
+        series += inactive
+
+        page = self.paginate_queryset(series)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        return Response(VoucherSeriesSerializer(series, many=True).data)
