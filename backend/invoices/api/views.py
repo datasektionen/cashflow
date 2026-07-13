@@ -41,6 +41,7 @@ from core.api.problems import (
     AccountingPermissionDeniedProblem,
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
+    DeletionPermissionDeniedProblem,
 )
 from fortnox import VoucherRow
 from fortnox.api.problems import (
@@ -232,6 +233,17 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 File.objects.create(invoice=invoice, file=normalize_upload(f))
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        invoice = self.get_object()
+        if invoice.payed_at is not None:
+            raise DeletionPermissionDeniedProblem()
+        if not (
+            get_permission_provider().may_delete(self.current_user)
+            or invoice.owner == self.current_user.profile
+        ):
+            raise DeletionPermissionDeniedProblem()
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Invoice.objects.viewable_by(self.current_user)

@@ -81,6 +81,10 @@ export class InvoicesAPI {
 		};
 	}
 
+	delete(id: number) {
+		return this.apiClient.delete<Invoice>(`/invoices/${id}/`, {});
+	}
+
 	comment(id: number, content: string) {
 		return this.apiClient.post<Comment>(`invoices/${id}/comments/`, { content });
 	}

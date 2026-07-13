@@ -47,6 +47,7 @@ from core.api.problems import (
     PartRequiredProblem,
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
+    DeletionPermissionDeniedProblem,
 )
 from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
@@ -70,6 +71,7 @@ from core.exceptions import (
     MismatchedTotalAmountError,
     NoAccountingMethodError,
 )
+from core.permissions import get_permission_provider
 from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
@@ -286,6 +288,17 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 File.objects.create(expense=expense, file=normalize_upload(f))
 
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        expense = self.get_object()
+        if expense.reimbursement is not None:
+            raise DeletionPermissionDeniedProblem()
+        if not (
+            get_permission_provider().may_delete(self.current_user)
+            or expense.owner == self.current_user.profile
+        ):
+            raise DeletionPermissionDeniedProblem()
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Expense.objects.viewable_by(self.current_user)

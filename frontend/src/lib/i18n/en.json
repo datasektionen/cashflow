@@ -272,6 +272,12 @@
 	"expense_unconfirm": "Unconfirm",
 	"expense_flag": "Flag",
 	"expense_unflag": "Unflag",
+	"expense_delete_confirm_title": "Delete expense",
+	"expense_delete_confirm_description": "This will permanently delete the expense.",
+	"expense_delete_confirm_action": "Delete",
+	"invoice_delete_confirm_title": "Delete invoice",
+	"invoice_delete_confirm_description": "This will permanently delete the invoice.",
+	"invoice_delete_confirm_action": "Delete",
 	"action_failed": "Action failed",
 	"alerts": {
 		"expense_part_attested": "The receipt part has been attested",
@@ -280,7 +286,9 @@
 		"expense_unconfirmed": "The expense has been unconfirmed",
 		"invoice_confirmed": "The invoice has been confirmed",
 		"invoice_unconfirmed": "The invoice has been unconfirmed",
-		"expense_unflagged": "The expense has been unflagged"
+		"expense_unflagged": "The expense has been unflagged",
+		"expense_delete": "The expense \"{description}\" has been deleted",
+		"invoice_delete": "The invoice \"{description}\" has been deleted"
 	},
 	"expense_paid": "Reimbursed",
 	"expense_verification": "Voucher number",

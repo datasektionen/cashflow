@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { Check, Copy, Flag, MessageSquarePlus } from '@lucide/svelte';
+	import { Check, Copy, Flag, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import type { PageData } from './$types';
 	import type { Expense } from '$lib/api/types.ts';
@@ -12,6 +12,9 @@
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	let expense: Expense = $state(data.expense);
@@ -43,6 +46,10 @@
 	const canUnflag = $derived(
 		((data.user?.permissions.attest.length ?? 0) > 0 || !!data.user?.permissions.pay) &&
 			!!expense.is_flagged
+	);
+	const canDelete = $derived(
+		(!!data.user?.permissions.delete || expense.owner.username === data.user?.username) &&
+			!expense.reimbursement
 	);
 
 	let confirming = $state(false);
@@ -109,6 +116,27 @@
 				alerts.update((a) => [...a, error(msg)]);
 			})
 			.finally(() => (flagging = false));
+	}
+
+	let deleting = $state(false);
+
+	async function handleDelete() {
+		deleting = true;
+		await api.expenses
+			.delete(expense.id)
+			.then(() => {
+				alerts.update((a) => [
+					...a,
+					success($_('alerts.expense_delete', { values: { description: expense.description } }))
+				]);
+				goto('/admin/expenses/');
+			})
+			.catch((e) => {
+				logger.error(e);
+				const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
+				alerts.update((a) => [...a, error(msg)]);
+			})
+			.finally(() => (deleting = false));
 	}
 
 	let copied = $state(false);
@@ -195,7 +223,49 @@
 		</div>
 	</div>
 
+	{#snippet deleteTitle()}
+		<h1 class="text-xl font-medium text-base-text dark:text-dark-base-text">
+			{$_('expense_delete_confirm_title')}
+		</h1>
+	{/snippet}
+	{#snippet deleteDescription()}
+		<p class="text-base-subtle dark:text-dark-base-subtle">
+			{$_('expense_delete_confirm_description')}
+		</p>
+	{/snippet}
+	{#snippet deleteTrigger()}
+		<button
+			disabled={!canDelete}
+			class="flex cursor-pointer items-center gap-1.5 border border-red-900 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+		>
+			<Trash class="size-3.5" />
+		</button>
+	{/snippet}
+	{#snippet deleteButtons()}
+		<div class="mt-6 flex justify-end gap-2">
+			<DialogPrimitive.Close
+				class="cursor-pointer border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle dark:border-dark-base-500 dark:text-dark-base-subtle"
+			>
+				{$_('cancel')}
+			</DialogPrimitive.Close>
+			<button
+				onclick={handleDelete}
+				disabled={deleting}
+				class="flex cursor-pointer items-center gap-1.5 bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				{#if deleting}
+					<CashSpinner />
+				{:else}
+					{$_('expense_delete_confirm_action')}
+				{/if}
+			</button>
+		</div>
+	{/snippet}
 	<div class="flex items-center gap-2">
+		<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
+			{@render deleteButtons()}
+		</Dialog>
+
 		{#if canUnflag}
 			<button
 				onclick={handleUnflag}
@@ -203,9 +273,9 @@
 				class="flex cursor-pointer items-center gap-1.5 border border-amber-600 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950"
 			>
 				{#if flagging}
-					<CashSpinner />
+					<cashspinner />
 				{:else}
-					<Flag class="size-3.5" />
+					<flag class="size-3.5" />
 					{$_('expense_unflag')}
 				{/if}
 			</button>

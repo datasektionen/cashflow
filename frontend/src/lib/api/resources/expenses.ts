@@ -85,6 +85,10 @@ export class ExpensesAPI {
 		return this.apiClient.post('expenses/', body);
 	}
 
+	delete(id: number) {
+		return this.apiClient.delete<Expense>(`/expenses/${id}/`, {});
+	}
+
 	comment(id: number, content: string) {
 		return this.apiClient.post<Comment>(`/expenses/${id}/comments/`, { content: content });
 	}

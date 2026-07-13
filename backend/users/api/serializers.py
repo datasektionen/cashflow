@@ -65,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             Permission.EDIT_INVOICE: p.may_edit_invoice(),
             Permission.VIEW_ALL_PAYMENTS: p.may_view_all_payments(),
             Permission.MANAGE_FORTNOX: p.may_manage_fortnox(),
+            Permission.DELETE: p.may_delete(),
         }
 
 

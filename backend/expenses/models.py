@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from structlog import get_logger
 
+from invoices.models import Invoice
+
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
     from expenses.search import ExpenseSearchFields
@@ -119,24 +121,11 @@ class Profile(models.Model):
     def may_flag(self):
         return self.may_attest_some() or self.may_pay()
 
-    def may_delete_expense(self, expense):
-        if expense.reimbursement:
-            return False
-        return (
-            get_permission_provider().may_delete(self.user)
-            or expense.owner.user.username == self.user.username
-        )
+    def may_delete(self):
+        return get_permission_provider().may_delete(self.user)
 
     def may_edit_invoice(self):
         return get_permission_provider().may_edit_invoice(self.user)
-
-    def may_delete_invoice(self, invoice):
-        if invoice.is_paid():
-            return False
-        return (
-            get_permission_provider().may_delete(self.user)
-            or invoice.owner.user.username == self.user.username
-        )
 
     def may_delete_comment(self):
         return get_permission_provider().may_moderate_comments(self.user)

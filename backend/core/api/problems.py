@@ -232,3 +232,15 @@ class NotPayableProblem(APIException):
 
 
 register_exception(NotPayableProblem)
+
+
+class DeletionPermissionDeniedProblem(APIException):
+    status_code = 403
+    default_code = "deletion_permission_denied"
+    title = "Permission denied for deleting expense/invoice"
+    default_detail = (
+        "The user lacks the proper permissions to delete this expense or invoice."
+    )
+
+
+register_exception(DeletionPermissionDeniedProblem)

@@ -127,6 +127,13 @@ export class ApiClient {
 			body: JSON.stringify(body)
 		});
 	}
+
+	delete<T>(path: string, body: unknown) {
+		return this.request<T>(path, {
+			method: 'DELETE',
+			body: JSON.stringify(body)
+		});
+	}
 }
 export type ListResponse<T> = {
 	data: T[];

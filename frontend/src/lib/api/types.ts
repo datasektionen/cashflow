@@ -153,6 +153,7 @@ export type Permissions = {
 	'edit-invoice': boolean;
 	'view-all-payments': boolean;
 	'manage-fortnox': boolean;
+	delete: boolean;
 };
 
 export type FortnoxStatus = {

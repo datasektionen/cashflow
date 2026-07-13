@@ -1,20 +1,28 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { Check, Copy, MessageSquarePlus } from '@lucide/svelte';
+	import { Check, Copy, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import type { Invoice } from '$lib/api/types.ts';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { api } from '$lib/api';
 	import { logger } from '$lib/logger.ts';
 	import { alerts, error, success } from '$lib/stores/alerts.ts';
 	import { isErrorResponse } from '$lib/api/errors.ts';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	let invoice: Invoice = $state(data.invoice);
+
+	const canDelete = $derived(
+		(!!data.user?.permissions.delete || invoice.owner.username === data.user?.username) &&
+			!invoice.paid_at
+	);
 
 	const isAttested = $derived(
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
@@ -70,6 +78,27 @@
 			.finally(() => (confirming = false));
 	}
 
+	let deleting = $state(false);
+
+	async function handleDelete() {
+		deleting = true;
+		await api.invoices
+			.delete(invoice.id)
+			.then(() => {
+				alerts.update((a) => [
+					...a,
+					success($_('alerts.invoice_delete', { values: { description: invoice.description } }))
+				]);
+				goto('/admin/invoices/');
+			})
+			.catch((e) => {
+				logger.error(e);
+				const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
+				alerts.update((a) => [...a, error(msg)]);
+			})
+			.finally(() => (deleting = false));
+	}
+
 	let copied = $state(false);
 	function copyId() {
 		navigator.clipboard.writeText(String(invoice.id));
@@ -95,6 +124,45 @@
 			});
 	};
 </script>
+
+{#snippet deleteTitle()}
+	<h1 class="text-xl font-medium text-base-text dark:text-dark-base-text">
+		{$_('invoice_delete_confirm_title')}
+	</h1>
+{/snippet}
+{#snippet deleteDescription()}
+	<p class="text-base-subtle dark:text-dark-base-subtle">
+		{$_('invoice_delete_confirm_description')}
+	</p>
+{/snippet}
+{#snippet deleteTrigger()}
+	<button
+		disabled={!canDelete}
+		class="flex cursor-pointer items-center gap-1.5 border border-red-900 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+	>
+		<Trash class="size-3.5" />
+	</button>
+{/snippet}
+{#snippet deleteButtons()}
+	<div class="mt-6 flex justify-end gap-2">
+		<DialogPrimitive.Close
+			class="cursor-pointer border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle dark:border-dark-base-500 dark:text-dark-base-subtle"
+		>
+			{$_('cancel')}
+		</DialogPrimitive.Close>
+		<button
+			onclick={handleDelete}
+			disabled={deleting}
+			class="flex cursor-pointer items-center gap-1.5 bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			{#if deleting}
+				<CashSpinner />
+			{:else}
+				{$_('invoice_delete_confirm_action')}
+			{/if}
+		</button>
+	</div>
+{/snippet}
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 	<div class="flex flex-wrap items-center gap-3">
@@ -146,6 +214,10 @@
 			{/if}
 		</div>
 	</div>
+
+	<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
+		{@render deleteButtons()}
+	</Dialog>
 </div>
 
 <div class="flex flex-col gap-4 lg:flex-row">
