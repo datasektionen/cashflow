@@ -102,6 +102,28 @@ export interface ExpenseCreate {
 	files: File[];
 }
 
+export type PartUpdate = {
+	cost_centre: string;
+	secondary_cost_centre: string;
+	budget_line: string;
+	amount: string;
+};
+
+export interface ExpenseUpdate {
+	description?: string;
+	expense_date?: string;
+	files?: File[];
+	parts?: PartUpdate[];
+}
+
+export interface InvoiceUpdate {
+	description?: string;
+	invoice_date?: string;
+	due_date?: string;
+	files?: File[];
+	parts?: PartUpdate[];
+}
+
 export type ExpensePart = {
 	id: number;
 	cost_centre: string;

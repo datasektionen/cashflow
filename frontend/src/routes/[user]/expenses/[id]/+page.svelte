@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { Check, Copy, MessageSquarePlus, Trash } from '@lucide/svelte';
+	import { Check, Copy, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import type { Expense } from '$lib/api/types.ts';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -22,6 +22,10 @@
 	const canDelete = $derived(
 		(!!data.user?.permissions.delete || expense.owner.username === data.user?.username) &&
 			!expense.reimbursement
+	);
+
+	const canUpdate = $derived(
+		expense.owner.username === data.user?.username && !expense.reimbursement
 	);
 
 	const isAttested = $derived(
@@ -179,9 +183,19 @@
 		</div>
 	</div>
 
-	<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
-		{@render deleteButtons()}
-	</Dialog>
+	<div class="flex items-center gap-2">
+		{#if canUpdate}
+			<a
+				href="/{expense.owner.username}/expenses/{expense.id}/update"
+				class="flex cursor-pointer items-center gap-1.5 border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle hover:border-money-green-500 hover:text-money-green-700 dark:border-dark-base-300 dark:text-dark-base-subtle dark:hover:border-money-green-600 dark:hover:text-money-green-400"
+			>
+				<Pencil class="size-3.5" />
+			</a>
+		{/if}
+		<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
+			{@render deleteButtons()}
+		</Dialog>
+	</div>
 </div>
 
 <div class="flex flex-col gap-4 lg:flex-row">

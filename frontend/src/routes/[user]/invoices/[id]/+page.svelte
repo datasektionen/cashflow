@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { Copy, Check, MessageSquarePlus, Trash } from '@lucide/svelte';
+	import { Copy, Check, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import type { Invoice } from '$lib/api/types.ts';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -23,6 +23,8 @@
 		(!!data.user?.permissions.delete || invoice.owner.username === data.user?.username) &&
 			!invoice.paid_at
 	);
+
+	const canUpdate = $derived(invoice.owner.username === data.user?.username && !invoice.paid_at);
 
 	const isAttested = $derived(
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
@@ -179,9 +181,19 @@
 		</div>
 	</div>
 
-	<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
-		{@render deleteButtons()}
-	</Dialog>
+	<div class="flex items-center gap-2">
+		{#if canUpdate}
+			<a
+				href="/{invoice.owner.username}/invoices/{invoice.id}/update"
+				class="flex cursor-pointer items-center gap-1.5 border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle hover:border-money-green-500 hover:text-money-green-700 dark:border-dark-base-300 dark:text-dark-base-subtle dark:hover:border-money-green-600 dark:hover:text-money-green-400"
+			>
+				<Pencil class="size-3.5" />
+			</a>
+		{/if}
+		<Dialog title={deleteTitle} triggerContent={deleteTrigger} description={deleteDescription}>
+			{@render deleteButtons()}
+		</Dialog>
+	</div>
 </div>
 
 <div class="flex flex-col gap-4 lg:flex-row">

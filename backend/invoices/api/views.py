@@ -42,6 +42,8 @@ from core.api.problems import (
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
     DeletionPermissionDeniedProblem,
+    UpdatePermissionDeniedProblem,
+    AlreadyAttestedProblem,
 )
 from fortnox import VoucherRow
 from fortnox.api.problems import (
@@ -103,10 +105,6 @@ logger = get_logger(__name__)
             ),
         },
     ),
-    update=extend_schema(
-        tags=["Invoices"],
-        summary="Update an invoice",
-    ),
     retrieve=extend_schema(
         tags=["Invoices"],
         summary="Retrieve an invoice",
@@ -118,6 +116,16 @@ logger = get_logger(__name__)
     partial_update=extend_schema(
         tags=["Invoices"],
         summary="Partially update an invoice",
+        description=(
+            "Updates a subset of fields on an existing invoice. Only the "
+            "fields included in the request body are changed. Submit as "
+            "`multipart/form-data`; `parts` (JSON-encoded array, full "
+            "replacement) is accepted alongside `files` for new uploads."
+        ),
+        responses={
+            status.HTTP_403_FORBIDDEN: problem(UpdatePermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problem(AlreadyAttestedProblem),
+        },
     ),
     destroy=extend_schema(
         tags=["Invoices"],
@@ -204,7 +212,10 @@ logger = get_logger(__name__)
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = [*viewsets.ModelViewSet.http_method_names, "query"]
+    http_method_names = [
+        *(m for m in viewsets.ModelViewSet.http_method_names if m != "put"),
+        "query",
+    ]
 
     def create(self, request: Request, *args, **kwargs) -> Response:
 
@@ -244,6 +255,55 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         ):
             raise DeletionPermissionDeniedProblem()
         return super().destroy(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        invoice = self.get_object()
+        if invoice.payed_at is not None:
+            raise UpdatePermissionDeniedProblem()
+        if not invoice.owner == self.current_user.profile:
+            raise UpdatePermissionDeniedProblem()
+
+        data = (
+            request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
+        )
+
+        parts_data = data.pop("parts", None)
+        if isinstance(parts_data, str):
+            try:
+                parts_data = json.loads(parts_data)
+            except json.JSONDecodeError:
+                raise PartInvalidJSONProblem()
+        if parts_data is not None:
+            if not parts_data:
+                raise PartRequiredProblem()
+            if invoice.parts.filter(attested_by__isnull=False).exists():
+                raise AlreadyAttestedProblem()
+            parts_serializer = InvoicePartSerializer(data=parts_data, many=True)
+            parts_serializer.is_valid(raise_exception=True)
+            parts_data = parts_serializer.validated_data
+
+        files = request.FILES.getlist("files")
+
+        serializer = self.get_serializer(invoice, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            serializer.save()
+            if parts_data is not None:
+                invoice.parts.all().delete()
+                for part in parts_data:
+                    InvoicePart.objects.create(invoice=invoice, **part)
+                if invoice.confirmed_by_id is not None:
+                    invoice.confirmed_by = None
+                    invoice.confirmed_at = None
+                    invoice.save()
+            for f in files:
+                File.objects.create(invoice=invoice, file=normalize_upload(f))
+
+        invoice.refresh_from_db()
+        return Response(
+            InvoiceSerializer(invoice, context=self.get_serializer_context()).data
+        )
 
     def get_queryset(self):
         queryset = Invoice.objects.viewable_by(self.current_user)

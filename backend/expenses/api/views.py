@@ -48,6 +48,8 @@ from core.api.problems import (
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
     DeletionPermissionDeniedProblem,
+    UpdatePermissionDeniedProblem,
+    AlreadyAttestedProblem,
 )
 from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
 from core.api.openapi import problem, problems
@@ -134,22 +136,20 @@ logger = get_logger(__name__)
         operation_id="create_expense",
         tags=["Expenses"],
     ),
-    update=extend_schema(
-        summary="Update an expense",
-        description=(
-            "Replaces an expense in full. All writable fields must be " "provided."
-        ),
-        operation_id="update_expense",
-        tags=["Expenses"],
-    ),
     partial_update=extend_schema(
         summary="Partially update an expense",
         description=(
             "Updates a subset of fields on an existing expense. Only the "
-            "fields included in the request body are changed."
+            "fields included in the request body are changed. Submit as "
+            "`multipart/form-data`; `parts` (JSON-encoded array, full "
+            "replacement) is accepted alongside `files` for new uploads."
         ),
         operation_id="partial_update_expense",
         tags=["Expenses"],
+        responses={
+            status.HTTP_403_FORBIDDEN: problem(UpdatePermissionDeniedProblem),
+            status.HTTP_409_CONFLICT: problem(AlreadyAttestedProblem),
+        },
     ),
     destroy=extend_schema(
         summary="Delete an expense",
@@ -248,7 +248,10 @@ logger = get_logger(__name__)
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = [*viewsets.ModelViewSet.http_method_names, "query"]
+    http_method_names = [
+        *(m for m in viewsets.ModelViewSet.http_method_names if m != "put"),
+        "query",
+    ]
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -299,6 +302,55 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         ):
             raise DeletionPermissionDeniedProblem()
         return super().destroy(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        expense = self.get_object()
+        if expense.reimbursement is not None:
+            raise UpdatePermissionDeniedProblem()
+        if not expense.owner == self.current_user.profile:
+            raise UpdatePermissionDeniedProblem()
+
+        data = (
+            request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
+        )
+
+        parts_data = data.pop("parts", None)
+        if isinstance(parts_data, str):
+            try:
+                parts_data = json.loads(parts_data)
+            except json.JSONDecodeError:
+                raise PartInvalidJSONProblem()
+        if parts_data is not None:
+            if not parts_data:
+                raise PartRequiredProblem()
+            if expense.parts.filter(attested_by__isnull=False).exists():
+                raise AlreadyAttestedProblem()
+            parts_serializer = ExpensePartSerializer(data=parts_data, many=True)
+            parts_serializer.is_valid(raise_exception=True)
+            parts_data = parts_serializer.validated_data
+
+        files = request.FILES.getlist("files")
+
+        serializer = self.get_serializer(expense, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            serializer.save()
+            if parts_data is not None:
+                expense.parts.all().delete()
+                for part in parts_data:
+                    ExpensePart.objects.create(expense=expense, **part)
+                if expense.confirmed_by_id is not None:
+                    expense.confirmed_by = None
+                    expense.confirmed_at = None
+                    expense.save()
+            for f in files:
+                File.objects.create(expense=expense, file=normalize_upload(f))
+
+        expense.refresh_from_db()
+        return Response(
+            ExpenseSerializer(expense, context=self.get_serializer_context()).data
+        )
 
     def get_queryset(self):
         queryset = Expense.objects.viewable_by(self.current_user)

@@ -5,6 +5,7 @@ import type {
 	DescriptionSearch,
 	Invoice,
 	InvoiceCreate,
+	InvoiceUpdate,
 	PaginatedResponse
 } from '$lib/api/types';
 
@@ -79,6 +80,19 @@ export class InvoicesAPI {
 				totalPages: res.pagination.total_pages
 			}
 		};
+	}
+
+	update(id: number, data: InvoiceUpdate): Promise<Invoice> {
+		const body = new FormData();
+		if (data.description !== undefined) body.append('description', data.description);
+		if (data.invoice_date !== undefined) body.append('invoice_date', data.invoice_date);
+		if (data.due_date !== undefined) body.append('due_date', data.due_date);
+		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+		for (const file of data.files ?? []) {
+			body.append('files', file, file.name);
+		}
+
+		return this.apiClient.patch(`/invoices/${id}/`, body);
 	}
 
 	delete(id: number) {

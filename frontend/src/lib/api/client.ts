@@ -121,10 +121,11 @@ export class ApiClient {
 		});
 	}
 
-	patch<T>(path: string, body: unknown) {
+	patch<T>(path: string, body: unknown, contentType?: string) {
 		return this.request<T>(path, {
 			method: 'PATCH',
-			body: JSON.stringify(body)
+			body: body instanceof FormData ? body : JSON.stringify(body),
+			...(contentType && { headers: { 'Content-Type': contentType } })
 		});
 	}
 

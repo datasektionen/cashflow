@@ -7,6 +7,7 @@ import type {
 	Expense,
 	ExpenseCreate,
 	ExpensePart,
+	ExpenseUpdate,
 	PaginatedResponse
 } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
@@ -83,6 +84,18 @@ export class ExpensesAPI {
 		}
 
 		return this.apiClient.post('expenses/', body);
+	}
+
+	update(id: number, data: ExpenseUpdate): Promise<Expense> {
+		const body = new FormData();
+		if (data.description !== undefined) body.append('description', data.description);
+		if (data.expense_date !== undefined) body.append('expense_date', data.expense_date);
+		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+		for (const file of data.files ?? []) {
+			body.append('files', file, file.name);
+		}
+
+		return this.apiClient.patch(`/expenses/${id}/`, body);
 	}
 
 	delete(id: number) {

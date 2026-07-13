@@ -60,6 +60,9 @@ class AlreadyAttestedProblem(APIException):
     default_code = "already_attested"
 
 
+register_exception(AlreadyAttestedProblem)
+
+
 class EmptyCommentProblem(APIException):
     status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
     default_detail = "A comment cannot be blank or consist only of whitespace."
@@ -244,3 +247,15 @@ class DeletionPermissionDeniedProblem(APIException):
 
 
 register_exception(DeletionPermissionDeniedProblem)
+
+
+class UpdatePermissionDeniedProblem(APIException):
+    status_code = 403
+    default_code = "update_permission_denied"
+    title = "Permission denied for updating expense/invoice"
+    default_detail = (
+        "The user lacks the proper permissions to update this expense or invoice."
+    )
+
+
+register_exception(UpdatePermissionDeniedProblem)

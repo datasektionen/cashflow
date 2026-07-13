@@ -319,6 +319,8 @@
 	},
 	"submit": "Submit",
 	"expense_parts": "Expense parts",
+	"expense_parts_locked": "Parts can no longer be edited once any part has been attested.",
+	"alerts_already_attested": "This can't be changed anymore — a part has already been attested.",
 	"amount": "Amount",
 	"cost_centre": "Cost centre",
 	"secondary_cost_centre": "Secondary cost centre",

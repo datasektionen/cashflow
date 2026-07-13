@@ -318,6 +318,8 @@
 	},
 	"submit": "Skicka",
 	"expense_parts": "Kvittodelar",
+	"expense_parts_locked": "Delarna går inte längre att ändra när en del har attesterats.",
+	"alerts_already_attested": "Detta går inte längre att ändra — en del har redan attesterats.",
 	"amount": "Belopp",
 	"cost_centre": "Kostnadsställe",
 	"secondary_cost_centre": "Sekundärt kostnadsställe",
