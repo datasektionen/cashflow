@@ -30,6 +30,7 @@ dependencies = [
     "factory-boy (>=3.3.3,<4.0.0)",
     "drf-spectacular (>=0.29.0,<0.30.0)",
     "mozilla-django-oidc (>=5.0.2,<6.0.0)",
+    "xsdata[cli] (>=26.2,<27.0)",
 ]
 
 

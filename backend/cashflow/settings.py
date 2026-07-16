@@ -141,6 +141,10 @@ LOGIN_REDIRECT_URL = os.getenv("REDIRECT_URL")
 
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 
+# Organisation identity, used as the Dbtr on outgoing ISO 20022 payment files
+ORG_NAME = os.getenv("ORG_NAME", "Datasektionen")
+ORG_NUMBER = os.getenv("ORG_NUMBER")
+
 
 # API
 
