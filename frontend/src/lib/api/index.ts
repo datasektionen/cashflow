@@ -8,6 +8,7 @@ import { PaymentsAPI } from '$lib/api/resources/payments';
 import { FortnoxAPI } from '$lib/api/resources/fortnox';
 import { BudgetAPI } from '$lib/api/resources/budget';
 import { VoucherSeriesAPI } from '$lib/api/resources/voucherSeries.js';
+import { API_URL } from '$lib/config';
 
 export { ApiClient } from './client';
 
@@ -36,4 +37,4 @@ export class API {
 	}
 }
 
-export const api = new API('http://localhost:8000/api/', fetch);
+export const api = new API(API_URL, fetch);

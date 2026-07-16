@@ -1,11 +1,12 @@
 import type { Handle, HandleFetch } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
 import { API } from '$lib/api';
+import { API_URL, BACKEND_URL } from '$lib/config';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { method, url } = event.request;
 	logger.debug({ method, url }, 'incoming request');
-	const api = new API('http://localhost:8000/api/', event.fetch);
+	const api = new API(API_URL, event.fetch);
 	event.locals.user = await api.users.getCurrent().catch(() => null);
 
 	return resolve(event, {
@@ -15,7 +16,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
-	if (request.url.startsWith('http://localhost:8000')) {
+	if (request.url.startsWith(BACKEND_URL)) {
 		const headers = new Headers(request.headers);
 		const sessionid = event.cookies.get('sessionid');
 		const csrftoken = event.cookies.get('csrftoken');

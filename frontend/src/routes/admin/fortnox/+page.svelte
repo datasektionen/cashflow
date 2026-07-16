@@ -7,11 +7,12 @@
 	import { invalidateAll, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { BACKEND_URL } from '$lib/config';
 
 	let { data }: PageProps = $props();
 
 	// The OAuth start flow is a server-side browser redirect, not a fetch.
-	const authUrl = 'http://localhost:8000/fortnox/auth/';
+	const authUrl = `${BACKEND_URL}/fortnox/auth/`;
 
 	let disconnecting = $state(false);
 

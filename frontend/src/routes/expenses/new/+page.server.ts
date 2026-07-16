@@ -1,3 +1,4 @@
+import { API_URL } from '$lib/config';
 import type { Actions } from './$types';
 import { API } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
@@ -11,7 +12,7 @@ export const actions: Actions = {
 		if (!user) {
 			throw redirect(303, '/login');
 		}
-		const api = new API('http://localhost:8000/api/', event.fetch);
+		const api = new API(API_URL, event.fetch);
 
 		const data = await event.request.formData();
 

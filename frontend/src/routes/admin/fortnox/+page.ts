@@ -1,3 +1,4 @@
+import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
 import type { FortnoxStatus } from '$lib/api/types';
@@ -6,7 +7,7 @@ import { isErrorResponse } from '$lib/api/errors';
 import { logger } from '$lib/logger';
 
 export const load: PageLoad = async ({ fetch }) => {
-	const api = new API('http://localhost:8000/api/', fetch);
+	const api = new API(API_URL, fetch);
 
 	let status: FortnoxStatus = {
 		is_connected: false,

@@ -1,3 +1,4 @@
+import { API_URL } from '$lib/config';
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { type InvoiceCreate, type InvoicePart } from '$lib/api/types';
@@ -6,7 +7,7 @@ import { logger } from '$lib/logger';
 
 export const actions: Actions = {
 	default: async (event) => {
-		const api = new API('http://localhost:8000/api/', event.fetch);
+		const api = new API(API_URL, event.fetch);
 		const user = event.locals.user;
 		if (!user) {
 			redirect(303, 'login/');
