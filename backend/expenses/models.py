@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Unpack
@@ -8,6 +9,7 @@ from django.db import models
 from structlog import get_logger
 
 from invoices.models import Invoice
+from iso20022.models import PaymentInitiationFile
 
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
@@ -33,7 +35,7 @@ from core.exceptions import (
     FortnoxRecordMissingError,
     CashflowVerificationMissingError,
     MismatchedTotalAmountError,
-    NoAccountingMethodError,
+    NoAccountingMethodError, MissingBankInfoError,
 )
 
 logger = get_logger()
@@ -58,6 +60,33 @@ class Profile(models.Model):
     def has_bank_info(self) -> bool:
         """Whether the user can be paid: both account and clearing number set."""
         return bool(self.bank_account and self.sorting_number)
+
+    def get_iban(self) -> str:
+        """Returns a properly formatted IBAN for the user.
+
+        Assumes the common Swedish numbering (4-digit clearing number, account number
+        zero-padded to 16 digits). Some banks use other clearing/account digit lengths
+        and padding rules and are not handled here.
+        """
+        if not self.has_bank_info:
+            raise MissingBankInfoError()
+
+        clearing_number = re.sub(r"\D", "", self.sorting_number)
+        account_number = re.sub(r"\D", "", self.bank_account)
+
+        # Some users include the clearing number as a prefix in their bank account field
+        if account_number.startswith(clearing_number):
+            account_number = account_number[len(clearing_number) :]
+
+        bban = clearing_number[:4].zfill(4) + account_number.zfill(16)
+        return f"SE{self._iban_check_digits(bban)}{bban}"
+
+    @staticmethod
+    def _iban_check_digits(bban: str) -> str:
+        """Computes the ISO 13616 (IBAN) mod-97 check digits for a Swedish BBAN."""
+        rearranged = bban + "SE00"
+        numeric = "".join(str(int(c, 36)) for c in rearranged)
+        return str(98 - int(numeric) % 97).zfill(2)
 
     # Return a string representation of the user
     def __str__(self):
@@ -195,6 +224,13 @@ class Payment(models.Model):
     )
     receiver = models.ForeignKey(
         Profile, related_name="receiver", on_delete=models.DO_NOTHING
+    )
+    pain_file = models.ForeignKey(
+        PaymentInitiationFile,
+        related_name="payments",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     # Return a string representation of the payment

@@ -15,7 +15,7 @@ from xsdata.formats.dataclass.context import XmlContext
 from xsdata.formats.dataclass.serializers import XmlSerializer
 from xsdata.formats.dataclass.serializers.config import SerializerConfig
 
-from core.iso20022.pain001.pain_001_001_13 import *
+from iso20022.pain001.pain_001_001_13 import *
 
 
 def normalize_iban(v: str) -> str:
@@ -31,23 +31,25 @@ SE_IBAN = Annotated[
 ]
 
 
+class LocalAccountPayment(BaseModel):
+    debtor_iban: SE_IBAN
+    creditor_iban: SE_IBAN
+    creditor_message: (
+        Annotated[str, StringConstraints(min_length=1, max_length=12)] | None
+    ) = None
+    amount: Decimal
+    date: datetime.date
+    instr_id: str
+    end_to_end_id: str
+
+
 class HandelsbankenISO20022:
 
     BIC = "HANDSESS"
 
-    class LocalAccountPayment(BaseModel):
-        debtor_iban: SE_IBAN
-        creditor_iban: SE_IBAN
-        creditor_message: (
-            Annotated[str, StringConstraints(min_length=1, max_length=12)] | None
-        ) = None
-        amount: Decimal
-        date: datetime.date
-        instr_id: str
-        end_to_end_id: str
-
+    @staticmethod
     def create_transaction(
-        self, payment: LocalAccountPayment
+        payment: LocalAccountPayment,
     ) -> CreditTransferTransaction76:
         return CreditTransferTransaction76(
             pmt_id=PaymentIdentification6(
@@ -69,8 +71,9 @@ class HandelsbankenISO20022:
             ),
         )
 
+    @classmethod
     def create_payment_instruction(
-        self, payments: list[LocalAccountPayment], debtor_iban: SE_IBAN, pmt_inf_id: str
+        cls, payments: list[LocalAccountPayment], debtor_iban: SE_IBAN, pmt_inf_id: str
     ) -> PaymentInstruction51:
         return PaymentInstruction51(
             pmt_inf_id=pmt_inf_id,
@@ -87,7 +90,7 @@ class HandelsbankenISO20022:
             dbtr_agt=BranchAndFinancialInstitutionIdentification8(
                 fin_instn_id=FinancialInstitutionIdentification23(
                     # BIC = Business Identifier Code
-                    bicfi=self.BIC,
+                    bicfi=cls.BIC,
                 )
             ),
             pmt_mtd=PaymentMethod3Code.TRF,
@@ -95,12 +98,12 @@ class HandelsbankenISO20022:
                 svc_lvl=[ServiceLevel8Choice(cd="NURG")],
                 ctgy_purp=CategoryPurpose1Choice(cd="SUPP"),
             ),
-            cdt_trf_tx_inf=[self.create_transaction(p) for p in payments],
+            cdt_trf_tx_inf=[cls.create_transaction(p) for p in payments],
         )
 
-    @validate_call
+    @classmethod
     def local_account_payment(
-        self,
+        cls,
         payments: list[LocalAccountPayment],
         debtor_iban: SE_IBAN,
         msg_id: str,
@@ -116,7 +119,7 @@ class HandelsbankenISO20022:
                     initg_pty=PartyIdentification272(),
                 ),
                 pmt_inf=[
-                    self.create_payment_instruction(payments, debtor_iban, pmt_inf_id)
+                    cls.create_payment_instruction(payments, debtor_iban, pmt_inf_id)
                 ],
             )
         )

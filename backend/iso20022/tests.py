@@ -3,7 +3,7 @@ import pytest
 from decimal import Decimal
 from pydantic import ValidationError, TypeAdapter
 
-from core.iso20022.handelsbanken import HandelsbankenISO20022, SE_IBAN
+from iso20022.handelsbanken import HandelsbankenISO20022, LocalAccountPayment, SE_IBAN
 
 
 class TestSeIban:
@@ -23,7 +23,7 @@ class TestSeIban:
 
 class TestLocalAccountPayment:
     def test_renders_xml_with_expected_values(self):
-        payment = HandelsbankenISO20022.LocalAccountPayment(
+        payment = LocalAccountPayment(
             debtor_iban="SE4550000000058398257466",
             creditor_iban="SE1110000000000123456789",
             amount=Decimal("1250.00"),
@@ -32,7 +32,7 @@ class TestLocalAccountPayment:
             end_to_end_id="E2E-1",
         )
 
-        xml = HandelsbankenISO20022().local_account_payment(
+        xml = HandelsbankenISO20022.local_account_payment(
             [payment],
             debtor_iban="SE4550000000058398257466",
             msg_id="MSG-1",
@@ -46,7 +46,7 @@ class TestLocalAccountPayment:
 
     def test_ctrl_sum_and_count_reflect_batch_size(self):
         payments = [
-            HandelsbankenISO20022.LocalAccountPayment(
+            LocalAccountPayment(
                 debtor_iban="SE4550000000058398257466",
                 creditor_iban="SE1110000000000123456789",
                 amount=Decimal("100.00"),
@@ -57,7 +57,7 @@ class TestLocalAccountPayment:
             for i in range(3)
         ]
 
-        xml = HandelsbankenISO20022().local_account_payment(
+        xml = HandelsbankenISO20022.local_account_payment(
             payments,
             debtor_iban="SE4550000000058398257466",
             msg_id="MSG-1",

@@ -83,6 +83,14 @@ class UnauthorizedPaymentError(PaymentError):
     pass
 
 
+class MissingBankInfoError(PaymentError):
+    pass
+
+
+class ZeroSumReimbursementError(PaymentError):
+    pass
+
+
 class MismatchedTotalAmountError(AccountingError):
     pass
 

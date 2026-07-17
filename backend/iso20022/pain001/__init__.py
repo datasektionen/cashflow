@@ -1,4 +1,4 @@
-from core.iso20022.pain001.pain_001_001_13 import (
+from iso20022.pain001.pain_001_001_13 import (
     AccountIdentification4Choice,
     AccountSchemeName1Choice,
     ActiveCurrencyAndAmount,
