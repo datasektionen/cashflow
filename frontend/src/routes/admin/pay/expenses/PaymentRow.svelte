@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BankInfo, Profile } from '$lib/api/types.ts';
+	import type { BankInfo, Expense, PendingPayment, Profile } from '$lib/api/types.ts';
 	import { api } from '$lib/api';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -11,8 +11,21 @@
 	import { logger } from '$lib/logger';
 	import { formatBankAccount } from '$lib/bankAccount';
 
-	let { owner, bankInfo, onPaid }: { owner: Profile; bankInfo: BankInfo; onPaid?: () => void } =
-		$props();
+	let {
+		owner,
+		bankInfo,
+		onPaid,
+		stagedPayments = $bindable()
+	}: {
+		owner: Profile;
+		bankInfo: BankInfo;
+		onPaid?: () => void;
+		stagedPayments: SvelteSet<Expense>;
+	} = $props();
+
+	function isStaged(id: number) {
+		return [...stagedPayments].some((e) => e.id === id);
+	}
 
 	let copied = $state(false);
 
@@ -37,23 +50,16 @@
 
 	let paying = $state(false);
 
-	async function handlePay() {
+	async function handlePay(data: Expense[]) {
 		if (selected.size === 0) return;
 		paying = true;
-		try {
-			const payment = await api.payments.create([...selected]);
-			alerts.update((a) => [...a, success(`Betalning ${payment.tag} skapad`)]);
-			selected.clear();
-			onPaid?.();
-			refreshKey++;
-			await invalidateAll();
-		} catch (e) {
-			logger.error(e);
-			const msg = isErrorResponse(e) ? e.detail : 'Något gick fel';
-			alerts.update((a) => [...a, error(msg)]);
-		} finally {
-			paying = false;
+
+		for (const expenseId of selected) {
+			const expense = data.find((e) => e.id === expenseId);
+			if (expense) stagedPayments.add(expense);
+			selected.delete(expenseId);
 		}
+		paying = false;
 	}
 </script>
 
@@ -83,7 +89,7 @@
 			<CashSpinner />
 		</div>
 	{:then resolved}
-		{#each resolved.data as expense}
+		{#each resolved.data.filter((e) => !isStaged(e.id)) as expense}
 			{@const total = expense.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0)}
 			{@const costCentres = [...new Set(expense.parts.map((p) => p.cost_centre))]}
 			<div class="flex flex-row items-stretch">
@@ -136,7 +142,8 @@
 			.filter((e) => selected.has(e.id))
 			.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0)}
 		{@const allSelected =
-			resolved.data.length > 0 && resolved.data.every((e) => selected.has(e.id))}
+			resolved.data.filter((e) => !isStaged(e.id)).length > 0 &&
+			resolved.data.every((e) => selected.has(e.id) || isStaged(e.id))}
 		<div
 			class="mt-2 flex items-center justify-end gap-x-4 border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
 		>
@@ -157,7 +164,7 @@
 				})} kr
 			</span>
 			<button
-				onclick={handlePay}
+				onclick={() => handlePay(resolved.data)}
 				disabled={selected.size === 0 || paying}
 				class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
 			>

@@ -11,6 +11,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from core.api.problems import EmptyCommentProblem, NoExpensesProblem
 from expenses.models import File, Profile, Comment, Payment, ExpensePart, Expense
 from invoices.models import InvoicePart
+from iso20022.models import PaymentInitiationFile
 
 
 class ClaimData(TypedDict):
@@ -39,6 +40,12 @@ class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         fields = "__all__"
+
+
+class PaymentInitiationFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentInitiationFile
+        fields = ["id", "msg_id", "file"]
 
 
 class BankInfoSerializer(serializers.ModelSerializer):
@@ -171,7 +178,7 @@ class PaymentCreateSerializer(serializers.Serializer):
         many=True,
         allow_empty=True,
         queryset=Expense.objects.all(),
-        help_text="IDs of the expenses to reimburse. All must belong to the same user.",
+        help_text="IDs of the expenses to reimburse.",
     )
 
     def validate_expenses(self, value):

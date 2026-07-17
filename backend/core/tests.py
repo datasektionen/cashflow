@@ -306,6 +306,9 @@ class TestPaymentCreation:
             autospec=True,
         )
         payee = ProfileFactory.create()
+        payee.bank_account = "1234567"
+        payee.sorting_number = "12345"
+        payee.save()
         expenses = ExpenseFactory.create_batch(5, reimbursement=None, owner=payee)
         api_client.force_authenticate(user=user)
         response = api_client.post(
@@ -313,8 +316,14 @@ class TestPaymentCreation:
         )
 
         assert response.status_code == 201, response.data
-        assert response.data["payer"]["username"] == user.username
-        assert response.data["receiver"]["username"] == payee.user.username
+        assert response.data["msg_id"]
+        assert response.data["file"]
+
+        for expense in expenses:
+            expense.refresh_from_db()
+            assert expense.reimbursement_id is not None
+            assert expense.reimbursement.payer_id == user.profile.id
+            assert expense.reimbursement.receiver_id == payee.id
 
     @pytest.mark.django_db
     def test_rejects_unauthorized(self, api_client, mocker):
@@ -364,19 +373,37 @@ class TestPaymentCreation:
         assert expense.reimbursement_id == existing_payment.id
 
     @pytest.mark.django_db
-    def test_rejects_multiple_receivers(self, user, api_client, mocker):
+    def test_accepts_multiple_receivers(self, user, api_client, mocker):
         mocker.patch(
             "cashflow.dauth.get_permissions",
             return_value={Permission.PAY: True},
             autospec=True,
         )
-        expenses = ExpenseFactory.create_batch(5, reimbursement=None)
+        payee_a = ProfileFactory.create()
+        payee_a.bank_account = "1234567"
+        payee_a.sorting_number = "12345"
+        payee_a.save()
+
+        payee_b = ProfileFactory.create()
+        payee_b.bank_account = "7654321"
+        payee_b.sorting_number = "54321"
+        payee_b.save()
+        expenses_a = ExpenseFactory.create_batch(2, reimbursement=None, owner=payee_a)
+        expenses_b = ExpenseFactory.create_batch(3, reimbursement=None, owner=payee_b)
+        api_client.force_authenticate(user=user)
+
         response = api_client.post(
-            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+            f"/api/payments/",
+            {"expenses": [e.id for e in expenses_a + expenses_b]},
         )
 
-        assert response.status_code == 422
-        assert response.data["detail"].code == "multiple_receivers"
+        assert response.status_code == 201, response.data
+
+        expenses_a[0].refresh_from_db()
+        expenses_b[0].refresh_from_db()
+        assert expenses_a[0].reimbursement.receiver_id == payee_a.id
+        assert expenses_b[0].reimbursement.receiver_id == payee_b.id
+        assert expenses_a[0].reimbursement_id != expenses_b[0].reimbursement_id
 
 
 def _image_upload(name, content_type):

@@ -24,6 +24,12 @@ export type Payment = {
 	tag: string;
 };
 
+export type PaymentInitiationFile = {
+	id: number;
+	msg_id: string;
+	file: string;
+};
+
 export type Comment = {
 	date: string;
 	author: Profile;

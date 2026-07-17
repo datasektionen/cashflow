@@ -1,5 +1,10 @@
 import { ApiClient } from '$lib/api';
-import type { Expense, PaginatedResponse, Payment, PendingPayment } from '$lib/api/types';
+import type {
+	Expense,
+	PaginatedResponse,
+	PaymentInitiationFile,
+	PendingPayment
+} from '$lib/api/types';
 
 export class PaymentsAPI {
 	private apiClient: ApiClient;
@@ -12,8 +17,8 @@ export class PaymentsAPI {
 		return this.apiClient.get<PaginatedResponse<PendingPayment>>('/payments/pending/');
 	}
 
-	create(expenses: number[] | Expense[]): Promise<Payment> {
+	create(expenses: number[] | Expense[]): Promise<PaymentInitiationFile> {
 		const expenseIds = expenses.map((e) => (typeof e === 'number' ? e : e.id));
-		return this.apiClient.post<Payment>('payments/', { expenses: expenseIds });
+		return this.apiClient.post<PaymentInitiationFile>('payments/', { expenses: expenseIds });
 	}
 }

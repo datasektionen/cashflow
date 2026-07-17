@@ -23,6 +23,7 @@ services:
       SPAM_API_KEY: spam-secrect
       RFINGER_API_URL: http://dock:9003
       RFINGER_API_KEY: rfinger-secret
+      ORG_IBAN: SE3150000000000000000000
       S3_ACCESS_KEY_ID: aws-id
       S3_SECRET_ACCESS_KEY: aws-secret
       S3_BUCKET_NAME: cashflow
@@ -67,7 +68,8 @@ services:
           target: /src
           action: sync
         - path: frontend/package.json
-          action: rebuild
+          target: /src/package.json
+          action: sync+restart
     depends_on:
       - app
 

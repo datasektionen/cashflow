@@ -6,7 +6,6 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
 )
-from django.db import transaction
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -25,7 +24,6 @@ from core.api.filters import (
 from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
 from core.api.problems import (
-    MultipleReceiversProblem,
     PaymentPermissionDeniedProblem,
     AlreadyReimbursedProblem,
     NoExpensesProblem,
@@ -34,15 +32,17 @@ from core.api.serializers import (
     ClaimSerializer,
     ClaimData,
     PaymentCreateSerializer,
+    PaymentInitiationFileSerializer,
     PaymentSerializer,
     PendingPaymentsSerializer,
     VoucherSeriesSerializer,
 )
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
-from expenses.models import Comment, Expense, ExpensePart, Payment, Profile
+from expenses.models import Expense, ExpensePart, Profile
 from fortnox import FortnoxRequest
 from invoices.models import Invoice, InvoicePart
+from iso20022.models import PaymentInitiationFile
 
 UserModel = get_user_model()
 logger = get_logger(__name__)
@@ -204,14 +204,12 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
     @extend_schema(
         tags=["Payments"],
         summary="Create a payment",
-        description="Reimburses a single member for the given expenses in one payment. All expenses must belong to the same user and be confirmed and fully attested.",
+        description="Reimburses the owners of the given expenses in one batch, grouping expenses by owner into one payment per owner. Produces a pain.001 payment initiation file covering all the resulting payments.",
         responses={
-            status.HTTP_201_CREATED: PaymentSerializer,
+            status.HTTP_201_CREATED: PaymentInitiationFileSerializer,
             status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
             status.HTTP_409_CONFLICT: problems(AlreadyReimbursedProblem),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
-                MultipleReceiversProblem, NoExpensesProblem
-            ),
+            status.HTTP_422_UNPROCESSABLE_ENTITY: problems(NoExpensesProblem),
         },
         operation_id="create_payment",
     )
@@ -228,26 +226,15 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
                 detail="One or more expenses are already reimbursed."
             )
 
-        receivers = {expense.owner_id for expense in expenses}
-        if len(receivers) > 1:
-            raise MultipleReceiversProblem()
+        pain_file = PaymentInitiationFile.create_batch_reimbursement(
+            expenses=expenses,
+            payer=self.current_user,
+        )
 
-        receiver = expenses[0].owner
-
-        with transaction.atomic():
-            payment = Payment.objects.create(
-                payer=self.current_user.profile, receiver=receiver
-            )
-            for expense in expenses:
-                expense.reimbursement = payment
-                expense.save(update_fields=["reimbursement"])
-                Comment.objects.create(
-                    author=self.current_user.profile,
-                    expense=expense,
-                    content=f"Betalade ut i betalning {payment.id}",
-                )
-
-        return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+        return Response(
+            PaymentInitiationFileSerializer(pain_file).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @extend_schema(
         tags=["Payments"],

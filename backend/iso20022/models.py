@@ -28,7 +28,7 @@ class PaymentInitiationFile(models.Model):
     msg_id = models.CharField(max_length=35)
 
     @classmethod
-    def create_batch_reimbursement(cls, expenses: "QuerySet[Expense]", payer: User):
+    def create_batch_reimbursement(cls, expenses: list[Expense], payer: User):
         """Create a payment initiation file for a batch reimbursement of expenses."""
         from expenses.models import Payment
 
