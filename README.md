@@ -1,13 +1,7 @@
-# Cashflow 3.0
-
-[![Deploy](https://img.shields.io/github/actions/workflow/status/datasektionen/cashflow/deploy.yml?branch=master&style=flat-square&logo=github&label=Deploy)](https://github.com/datasektionen/cashflow/actions/workflows/deploy.yml)
-![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdatasektionen%2Fcashflow%2Frefs%2Fheads%2Fmaster%2Fbackend%2Fpyproject.toml&style=flat-square&logoSize=auto)
-![Django](https://img.shields.io/badge/Django-6-092E20?style=flat-square&logo=django&logoColor=white)
-![SvelteKit](https://img.shields.io/badge/SvelteKit-2-FF3E00?style=flat-square&logo=svelte&logoColor=white)
+# Cashflow 2.0
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdatasektionen%2Fcashflow%2Frefs%2Fheads%2Fmaster%2Fpyproject.toml&style=flat-square&logoSize=auto)
 
 Django project to manage receipts and reimbursements at Datasektionen.
-
-The repository is split in two parts: the Django backend in `backend/` and the SvelteKit frontend in `frontend/`.
 
 ## Developing locally
 
@@ -30,7 +24,7 @@ If you make any model changes, you will need to generate new migration files. Th
 
 ```console
 $ docker exec -it cashflow-app-1 poetry run ./manage.py makemigrations
-$ docker cp cashflow-app-1:/app/expenses/migrations/ ./backend/expenses/
+$ docker cp cashflow-app-1:/app/expenses/migrations/ ./expenses/
 ```
 
 ### Poetry
@@ -46,10 +40,9 @@ Cashflow uses Poetry for dependency management. Depending on your system you can
 > To manage Python several versions, you can use a tool like [pyenv](https://github.com/pyenv/pyenv).
 > Poetry will automatically find and use the correct Python version if it is installed.
 
-To install all dependencies, perform the database migration, and run the application (all Poetry commands are run from the `backend/` directory):
+To install all dependencies, perform the database migration, and run the application:
 
 ```console
-$ cd backend
 $ poetry install
 $ poetry run ./manage.py migrate
 $ poetry run ./manage.py runserver
@@ -64,23 +57,9 @@ $ poetry run ./manage.py makemigrations
 ```
 
 You will then need to perform a database migration:
-
-```console
+```poetry
 $ poetry run ./manage.py migrate
 ```
-
-### Frontend
-
-The SvelteKit frontend lives in `frontend/` and expects the Django backend on `http://localhost:8000`:
-
-```console
-$ cd frontend
-$ bun install
-$ bun run dev
-```
-
-The frontend will be available on `http://localhost:5173`.
-
 ## Environment variables
 
 The following environment variables are required to run the project:

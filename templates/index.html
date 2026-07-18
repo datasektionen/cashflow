@@ -1,0 +1,78 @@
+{% extends "main.html" %}
+
+{% block app %}
+<div id="welcome">
+    <div id="pick">
+        <ul class="alternatives">
+            {% if user.is_authenticated %}
+            <li>
+                <a href="/expenses/new" v-tooltip.bottom="{ content: 'Lägg in ett nytt utlägg (kvitto) i Cashflow' }">
+                    <span class="icon"><i class="fa fa-receipt" aria-hidden="true"></i></span>
+                    <span class="description">Registrera utlägg</span>
+                </a>
+            </li>
+            <li>
+                <a href="/invoices/new" v-tooltip.bottom="{ content: 'Ladda upp en faktura som ska betalas' }">
+                    <span class="icon"><i class="fa fa-file-invoice" aria-hidden="true"></i></span>
+                    <span class="description">Ladda upp faktura</span>
+                </a>
+            </li>
+            {% else %}
+            <li style="width:100%">
+                <a href="/login" v-tooltip.bottom="{ content: 'Logga in för att kunna skapa utlägg' }">
+                    <span class="icon"><i class="fa fa-user" aria-hidden="true"></i></span>
+                    <span class="description">Logga in</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        <div class="clear"></div>
+    </div>
+    <div id="content">
+        {% comment "For later versions" %}
+        <ul class="info">
+            <li>Du har <a href="" v-tooltip="{ content: 'Muta möte<br>Teambuilding<br>Ledslingor' }">8 kvitton</a> du kan <a href="">attestera</a>.</li>
+            <li>Det finns <a href="">5 kvitton</a> att <a href="">bekräfta</a>.</li>
+            <li><a href="">3 personer</a> väntar på <a href="">utbetalning</a>.</li>
+        </ul>
+        {% endcomment %}
+        <p>
+            Är det första gången du använder systemet måste du börja med att 
+
+            <a style="text-decoration: underline !important;" href="/login">logga in</a> och registrera dina uppgifter.
+
+            Därefter är det fritt fram att registrera kvitton i systemet.
+        </p>
+
+        <p>I Cashflow laddar du upp kvitton för dina utlägg digitalt. Detta för att förenkla sektionens ekonomiska arbete. Kvittot bör fortfarande sparas ifall någonting skulle behövas lämnas tillbaka eller liknande.</p>
+
+        <p>När du laddat upp ett kvitto kan du följa kvittot från din användarsida och se när det är godkänt samt när det är utbetalat. På så sätt kan du enkelt jämföra dina bankhändelser med Cashflow och vara säker på att du fått tillbaka allt.</p>
+
+        <h2>Hur använder jag Cashflow och vad händer med kvittot?</h2>
+
+        <ol>
+            <li><b>Registrering.</b> Du som köpt något åt sektionen registrerar ditt kvitto här i Cashflow</li>
+        <li><b>Kvittobekräftelse.</b> Sektionens kassör bekräftar att kvittot uppfyller kravet för ett kvitto samt ser att det inscannade kvitto är av god kvalitet</li>
+        <li><b>Attestering.</b> Din nämndordförande, kassören eller ekonomiansvarig godkänner ditt kvitto.</li>
+        <li><b>Utbetalning.</b> Din nämndordförande, kassören eller ekonomiansvarig betalar ut kvittot. Flera kvitton
+            kan betalas ut samtidigt.
+        </li>
+        <li><b>Bokföring.</b> Kassören eller någon ekonomiansvarig bokför kvittot.</li>
+    </ol>
+</div>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#welcome', 
+        data: function () {
+            return {
+
+            }
+        },
+        created() {
+
+        }
+    })
+</script>
+{% endblock %}

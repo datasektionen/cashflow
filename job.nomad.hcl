@@ -48,7 +48,6 @@ PYTHONUNBUFFERED=1
 BUDGET_URL=https://budget.datasektionen.se
 OIDC_PROVIDER=http://sso.nomad.dsekt.internal/op
 OIDC_ID=cashflow
-PUBLIC_BACKEND_URL=https://cashflow.datasektionen.se
 REDIRECT_URL=https://cashflow.datasektionen.se/login/
 HIVE_URL=https://hive.datasektionen.se
 SPAM_URL=https://spam.datasektionen.se
@@ -56,6 +55,8 @@ RFINGER_API_URL=https://rfinger.datasektionen.se
 S3_REGION=eu-north-1
 S3_USE_SIGV4=False
 S3_BUCKET_NAME=dsekt-cashflow-2
+
+GOOGLE_ANALYTICS_KEY=UA-96183461-2
 ENV
         destination = "local/.env"
         env         = true

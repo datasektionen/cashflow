@@ -1,0 +1,20 @@
+{% extends "../main.html" %}
+{% load fortnox_perms %}
+
+{% block title %}Fortnox{% endblock %}
+
+{% block content %}
+
+
+    {% if user|may_authenticate_fortnox %}
+        {% if is_connected %}
+            <p>Fortnox är auktoriserad av {{ service_account.authenticated_by.get_full_name|default:service_account.authenticated_by.username }}</p>
+            <a href={% url 'fortnox-auth-get' %}>Återautentisera Fortnox</a>
+            <a href={% url 'fortnox-disconnect' %}>Logga ut från Fortnox</a>
+        {% else %}
+            <a href={% url 'fortnox-auth-get' %}>Logga in på Fortnox</a>
+        {% endif %}
+    {% endif %}
+
+
+{% endblock %}
