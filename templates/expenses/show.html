@@ -1,0 +1,318 @@
+{% extends "../detail.html" %}
+{% load humanize %}
+
+{% block title %}
+    {{ expense.description|capfirst }}
+{% endblock %}
+
+{% block action %}
+    {% if user.username == expense.owner.user.username %}
+        <a href="{% url 'expenses-edit' expense.id %}" class="primary-action">
+            Redigera kvitto
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block full_content %}
+<div id="app">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <h2>Kvittodelar</h2>
+    <table>
+      <thead>
+        <tr>
+            <th>Belopp</th>
+            <th>Resultatställe</th>
+            <th>Sekundärt resultatställe</th>
+            <th>Budgetpost</th>
+            <th>Attesterad av</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for expense_part in expense.parts.all %}
+            <tr>
+                <td>{{ expense_part.amount|intcomma }} kr</td>
+                <td>{{ expense_part.cost_centre }}</td>
+                <td>{{ expense_part.secondary_cost_centre }}</td>
+                <td>{{ expense_part.budget_line }}</td>
+                <td>
+                    {% if expense_part.attested_by %}
+                    <a href="{% url 'user-show' expense_part.attested_by.user.username %}">
+                        {{ expense_part.attested_by.user.get_full_name }} ({{ expense_part.attest_date }})
+                    </a>
+                    {% else %}
+                        {% if expense.owner.user.username != user.username and expense_part.id in attestable %}
+                            <span style="display: block;">
+                                <form method="POST" action="{% url 'admin-expensepart-attest' expense_part.id %}">
+                                    {% csrf_token %}
+                                    <button class="pull-right small theme-color btn-color" type="submit" style="margin-right:15px;"><i class="fa fa-check" aria-hidden="true"></i></button>
+                                    <span style="margin: 5px 0;display:inline-block;">Du kan attestera &nbsp;</span>
+                                </form>
+                            </span>
+                        {% else %}
+                            Ej attesterad
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="clear" style="height:50px;"></div>
+
+
+    <div class="col-sm-6 col-lg-6" style="padding-left: 0;">
+        <h2>Information</h2>
+        <table>
+            <tr>
+                <th>Kvitto-id:</th>
+                <td>{{ expense.id }}</td>
+            </tr>
+            <tr>
+                <th>Köpt av:</th>
+                <td>
+                    <a href="{% url 'user-show' expense.owner.user.username %}">
+                        {{ expense.owner.user.get_full_name }} ({{ expense.owner.user.username }}@kth.se)
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Inköpsdatum:</th>
+                <td>
+                    {{ expense.expense_date|date:"Y-m-d" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Totalsumma:</th>
+                <td>
+                    {{ expense.total_amount|intcomma }} kr
+                </td>
+            </tr>
+            <tr>
+                <th>Registrerat i Cashflow:</th>
+                <td>
+                    {{ expense.created_date|date:"Y-m-d" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Giltighet bekräftad:</th>
+                <td v-if="expense.confirmed">
+                    [[expense.confirmed_by]]  ([[expense.confirmed_date]])
+                    {% if user.profile.may_unconfirm %}
+                        <button class="theme-color btn-color" v-on:click="unconfirm(expense)">[[expense.btn_message]]</button>
+                    {% endif %}
+                </td>
+                <td v-else>
+                    {% if user.profile.may_confirm %}
+                        <form v-on:submit.prevent="conf(expense)" method="POST" :action="'expense/' + expense.id + '/confirm/'">
+                            {% csrf_token %}
+                            <button class="theme-color btn-color" v-on:click="conf(expense, $event)">[[expense.btn_message]]</button>
+                        </form>
+                    {% else %}
+                        Inte än
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Återbetalat:</th>
+                <td>
+                    {% if expense.reimbursement %}
+                    <a href="{% url 'expenses-payment' expense.reimbursement.id %}">
+                        {{ expense.reimbursement.tag }}
+                    </a>
+                    {% else %}
+                    Ej återbetald
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Verifikationsnummer:</th>
+                <td>{{ expense.verification|default:"Ej bokförd" }} {% if may_account %}(<a href="{% url 'admin-expense-edit-verification' expense.id %}">Ändra</a>){% endif %}</td>
+            </tr>
+            <tr>
+              {% if may_delete or may_unattest or may_flag%}
+              <td colspan="2">
+                {% if may_delete %}
+                <a href="{% url 'expenses-delete' expense.id %}">
+                  <button type="button" class="btn btn-danger">
+                    <i class="fa fa-trash"></i> Ta bort kvitto
+                  </button>
+                </a>
+                {% endif %}
+                {% if may_unattest %}
+                <form method="POST" action="{% url 'admin-expense-unattest' expense.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-danger" type="submit">Avattestera</button>
+                </form>
+                {% endif %}
+                {% if may_flag %}
+                <form method="POST" action="{% url 'expenses-flag' expense.id %}">
+                  {% csrf_token %}
+                    <button class="btn {% if expense.is_flagged %}btn-default{% else %}btn-danger{% endif %}" type="submit" >
+                        <span class="icon"><i class="fa fa-flag"></i></span> {% if expense.is_flagged %}Avflagga kvitto{% else %}Flagga kvitto{% endif %}
+                  </button> 
+                </form>
+                {% endif %}
+
+              </td>
+              {% endif %}
+            </tr>
+        </table>
+    </div>
+
+    <div class="col-sm-6 col-lg-6 teal" style="padding-right: 0;">
+        <h2>Filer</h2>
+        {% for file in expense.file_set.all %}
+            <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer">{{ file.file.name }}</a>:<br>
+            {% if file.is_image %}
+                <img class="zoom center-block" style="width: 100%" src="{{ file.file.url }}" onclick="document.querySelector('#img-{{ forloop.counter }}').showModal()" />
+                <dialog id="img-{{ forloop.counter }}" onclick="this.close()" style="padding: 0; border: none; width: 70vw">
+                    <img class="zoom center-block" style="width: 100%; max-height: 100%; object-fit: contain" src="{{ file.file.url }}" />
+                </dialog>
+            {% elif file.is_pdf %}
+                <button onclick="document.querySelector('#pdf-{{ forloop.counter }}').showModal()" class="btn-color theme-color">McBig</button>
+                <object data="{{ file.file.url }}" type="application/pdf" width="100%" height="400px"></object>
+                <dialog id="pdf-{{ forloop.counter }}" onclick="this.close()" style="padding: 0; border: none; width: 70vw">
+                    <object data="{{ file.file.url }}" type="application/pdf" style="width: 100%; height: 90vw"></object>
+                </dialog>
+            {% else %}
+                <a href="{{ file.file.url }}" target="_blank" rel="noopener noreferrer" style="font-size: 5em">🧲</a>
+            {% endif %}
+            <br>
+        {% endfor %}
+    </div>
+
+
+    <div class="clearfix"></div>
+
+    <div>
+        <h2>Kommentarer</h2>
+
+        <ul class="comments">
+            {% for comment in comments %}
+            <li class="clearfix {% if comment.username == user.username %}own{% endif %}">
+                <div class="info">
+                    <a v-tooltip="{ content: '{{ comment.full_name }}' }" class="crop" style="background-image:url({{ comment.picture }});" href="/users/{{ comment.username }}"></a>
+                    <span class="name">
+                        <a href="{% url 'user-show' comment.username %}">
+
+                        </a>
+                    </span>
+                </div>
+                <div class="comment" v-tooltip="{ content: 'Skapad {{ comment.date|date:'Y-m-d H:i' }}' }">{{ comment.content }}</div>
+            </li>
+            {% endfor %}
+            <li class="new">
+                <div class="comment">
+                    <form method="POST" id="new" action="{% url 'expenses-comment' expense.id %}">
+                        {% csrf_token %}
+                        <textarea id="content-field" name="content" rows="3" style="width: 100%;border:none;" placeholder="Skriv en kommentar"></textarea>
+                        <button class="pull-right button theme-color btn-color" type="submit">Kommentera</button>
+                        <div class="clearfix"></div>
+                    </form>
+                </div>
+            </li>
+            <li class="alternatives">
+                <h3>Eller skicka en färdig kommentar:</h3>
+                <ul>
+                    <li><a href="#" v-on:click="send">Jag attesterar också detta.</a></li>
+                    <li><a href="#" v-on:click="send">Det här har jag inte godkänt.</a></li>
+                    <li><a href="#" v-on:click="send">Det här överskrider budgeten.</a></li>
+                    <li><a href="#" v-on:click="send">Varje kvitto ska laddas upp som ett eget utlägg på Cashflow.</a></li>
+                    <li><a href="#" v-on:click="send">Du har angivit större belopp än vad som står på kvittot.</a></li>
+                    <li><a href="#" v-on:click="send">Du måste ladda upp både en faktura och ett kontoutdrag.</a></li>
+                    <li><a href="#" v-on:click="send">Avvakta med det här utlägget.</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div class="clearfix"></div>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: function () {
+            return {
+                expense: {
+                    id: {{ expense.id }},
+                    {% if expense.confirmed_by %}
+                    confirmed: true,
+                    confirmed_by: "{{ expense.confirmed_by.get_full_name }}",
+                    confirmed_date: "{{ expense.confirmed_at }}",
+                    btn_message: "Ta bort bekräftelse",
+                    {% else %}
+                    btn_message: "Bekräfta giltighet",
+                    confirmed: false,
+                    {%endif%}
+                },
+                user: {
+                    full_name: "{{ user.first_name }} {{user.last_name}}"
+                }
+            }
+        },
+        methods: {
+            send(e) {
+                e.preventDefault()
+                console.log(e.target.innerHTML)
+                document.getElementById('content-field').value = e.target.innerHTML
+                document.getElementById('new').submit()
+            },
+            conf: function (expense, e) {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+                fetch('/admin/expense/' + expense.id + '/confirm/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => {
+                    if (res.type === "opaqueredirect") {
+                        this.expense.confirmed = true;
+                        this.expense.confirmed_date = (new Date()).toLocaleDateString('sv-SE', {year: 'numeric', month: 'long', day: 'numeric' })
+                        this.expense.confirmed_by = this.user.full_name;
+                        this.expense.btn_message = "Ta bort bekräftelse"
+                    } else {
+                        this.expense.btn_message = "Error! Försök igen"
+                    }
+                    return res.text();
+                })
+                if (e) e.preventDefault()
+            },
+            unconfirm: function (expense) {
+                let form = new FormData()
+                form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                form.append('verification', expense.verificationString)
+                fetch('/admin/expense/' + expense.id + '/unconfirm/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: form,
+                    redirect: 'manual'
+                })
+                .then(res => {
+                    if (res.type === "opaqueredirect"){
+                        this.expense.confirmed = false;
+                        this.expense.confirmed_date = null;
+                        this.expense.confirmed_by = null;
+                        this.expense.btn_message = "Bekräfta giltighet"
+                    } else {
+                        this.expense.btn_message = "Error! Försök igen"
+                    }
+                    return res.text();
+                })
+            },
+        },
+        created() {
+
+        }
+    })
+</script>
+{% endblock %}

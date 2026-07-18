@@ -1,9 +1,0 @@
-# Hej, {{ receiver }}!
-
-{% if comment.expense %}
-Utlägget "[{{ comment.expense.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
-{% else %}
-Fakturan "[{{ comment.invoice.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
-{% endif %}
-
-{{ comment.content }}

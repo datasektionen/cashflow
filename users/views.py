@@ -1,0 +1,141 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import (
+    Http404,
+    HttpResponseRedirect,
+    HttpResponseForbidden,
+    HttpResponseServerError,
+)
+from django.shortcuts import render
+from django.db.models import Sum
+import json
+import requests
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods, require_GET
+from django.forms import modelform_factory
+
+from cashflow import settings
+from cashflow.utils import json_serial
+from expenses import models
+
+"""
+Shows one user.
+"""
+
+
+@require_GET
+@login_required
+def get_user(request, username):
+    try:
+        user = models.User.objects.get_by_natural_key(username)
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
+
+    if not user.profile.may_be_viewed_by(request.user):
+        return HttpResponseForbidden()
+
+    picture_req = requests.get(
+        settings.RFINGER_API_URL + "/api/" + user.username,
+        headers={
+            "Authorization": "Bearer " + settings.RFINGER_API_KEY,
+        },
+    )
+    if not picture_req.status_code == 200:
+        return HttpResponseServerError(
+            f"Misslyckades att hämta bilder från rfinger ({picture_req.status_code} {picture_req.text})"
+        )
+
+    return render(
+        request,
+        "users/information.html",
+        {
+            "showuser": user,
+            "picture": picture_req.text,
+            "total": models.ExpensePart.objects.filter(
+                expense__owner=user.profile
+            ).aggregate(Sum("amount")),
+            "numcashflows": models.ExpensePart.objects.filter(
+                expense__owner=user.profile
+            ).count(),
+        },
+    )
+
+
+"""
+Shows one user's receipts.
+"""
+
+
+@require_GET
+@login_required
+def get_user_receipts(request, username):
+    try:
+        user = models.User.objects.get_by_natural_key(username)
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
+
+    if not user.profile.may_be_viewed_by(request.user):
+        return HttpResponseForbidden()
+
+    non_attested_expenses = []
+    attested_expenses = []
+
+    for expense in user.profile.expense_set.all():
+        if expense.reimbursement is not None:
+            continue  # expense is waay past attesting
+
+        for expense_part in expense.parts.all():
+            if expense_part.attested_by is None:
+                non_attested_expenses.append(expense)
+                break
+        else:
+            attested_expenses.append(expense)  # inner loop didn't break
+
+    non_attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
+
+    attested_expenses.sort(key=(lambda exp: exp.id), reverse=True)
+    return render(
+        request,
+        "users/receipts.html",
+        {
+            "showuser": user,
+            "non_attested_expenses": json.dumps(
+                [x.to_dict() for x in non_attested_expenses],
+                default=json_serial,
+            ),
+            "attested_expenses": attested_expenses,
+            "reimbursements": user.profile.receiver.all(),
+        },
+    )
+
+
+"""
+Shows edit user form and handles its request.
+"""
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+def edit_user(request, username):
+    # noinspection PyPep8Naming
+    UserForm = modelform_factory(
+        models.Profile, fields=("bank_account", "sorting_number", "bank_name")
+    )
+    try:
+        user = models.User.objects.get_by_natural_key(username)
+    except ObjectDoesNotExist:
+        raise Http404("Användaren finns inte")
+
+    if username != request.user.username:
+        return HttpResponseForbidden()
+
+    if request.method == "POST":
+        received_form = UserForm(request.POST, instance=user.profile)
+        if received_form.is_valid():
+            received_form.save()
+            return HttpResponseRedirect(reverse("user-show", args=[username]))
+
+    form = UserForm(instance=user.profile)
+    return render(
+        request, "users/edit.html", {"form": form, "showuser": user, "hide_edit": True}
+    )
