@@ -12,23 +12,37 @@ Class-based views
 Including another URLconf
     1. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.urls import include, re_path
+
 from django.conf.urls.static import static
-from django.contrib import admin
+from django.urls import include, re_path, path
 
 from cashflow import settings
-from expenses import views
-from .authviews import login, login_with_token, logout
+from expenses import views as expenses_views
+from . import views
+from .authviews import login, logout
 
+app_name = "cashflow"
 urlpatterns = [
-    re_path(r'^$', views.index, name='expenses-index'),
-    re_path(r'^accounts/login/$', login, name='login'),
-    re_path(r'^login/$', login, name='login'),
-    re_path(r'^logout/', logout, name='logout'),
-    re_path(r'^admin/', include("admin.urls")),
-    re_path(r'^expenses/', include("expenses.urls")),
-    re_path(r'^invoices/', include("invoices.urls")),
-    re_path(r'^stats/', include("stats.urls")),
-    re_path(r'^users/', include("users.urls")),
-    re_path(r'^api/files/', include("file_api.urls")),
+    re_path(r"^$", expenses_views.index, name="expenses-index"),
+    re_path(r"^accounts/login/$", login, name="login"),
+    re_path(r"^login/$", login, name="login"),
+    re_path(r"^logout/", logout, name="logout"),
+    re_path(r"^admin/", include("admin.urls")),
+    re_path(r"^expenses/", include("expenses.urls")),
+    re_path(r"^invoices/", include("invoices.urls")),
+    re_path(r"^stats/", include("stats.urls")),
+    re_path(r"^users/", include("users.urls")),
+    re_path(r"^api/files/", include("file_api.urls")),
+    path(
+        "api/costcenters/", views.api.CostCenterList.as_view(), name="costcenter-list"
+    ),
+    path(
+        "api/secondarycostcenters/",
+        views.api.SecondaryCostCenterList.as_view(),
+        name="secondarycostcenter-list",
+    ),
+    path(
+        "api/budgetlines/", views.api.BudgetLineList.as_view(), name="budgetline-list"
+    ),
+    path("", include("drf_problems.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -8,13 +8,12 @@ from django.contrib.auth.models import User
 from authlib.integrations.django_client import OAuth
 from authlib.integrations.base_client.errors import OAuthError, MismatchingStateError
 
-
 client = OAuth().register(
     name="sso",
     client_id=settings.OIDC_ID,
     client_secret=settings.OIDC_SECRET,
     server_metadata_url=f"{settings.OIDC_PROVIDER}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email"}
+    client_kwargs={"scope": "openid profile email"},
 )
 
 
@@ -29,31 +28,33 @@ class DAuth(object):
         Do the authentication via the sso system.
         Save user in database if did not exist before.
         """
-        
+
         try:
             token = client.authorize_access_token(request)
         except (OAuthError, MismatchingStateError) as error:
             # These errors are generated for various kinds of invalid codes.
             print(f"Authentication failed: {error}")
             return None
-        
+
         ssoUser = client.userinfo(token=token)
-        
+
         try:
             user = User.objects.get(username=ssoUser["sub"])
-            if (user.first_name != ssoUser["given_name"] or
-                    user.last_name != ssoUser["family_name"] or
-                    user.email != ssoUser["email"]):
-                user.first_name = ssoUser["given_name"];
-                user.last_name = ssoUser["family_name"];
-                user.email = ssoUser["email"];
+            if (
+                user.first_name != ssoUser["given_name"]
+                or user.last_name != ssoUser["family_name"]
+                or user.email != ssoUser["email"]
+            ):
+                user.first_name = ssoUser["given_name"]
+                user.last_name = ssoUser["family_name"]
+                user.email = ssoUser["email"]
                 user.save()
         except User.DoesNotExist:
             user = User(
                 first_name=ssoUser["given_name"],
                 last_name=ssoUser["family_name"],
                 username=ssoUser["sub"],
-                email=ssoUser["email"]
+                email=ssoUser["email"],
             )
             user.save()
         return user
@@ -78,13 +79,13 @@ def get_permissions(user):
 
     # Jag bryr mig inte om regler och om jag vill lägga saker i en godtycklig dict så gör jag det.
 
-    if 'cached_permissions' not in user.__dict__:
+    if "cached_permissions" not in user.__dict__:
         # Fetch permissions from Hive
         response = requests.get(
-            settings.HIVE_URL + '/api/v1/user/' + user.username + '/permissions',
-            headers={"Authorization": "Bearer " + settings.HIVE_SECRET}
+            settings.HIVE_URL + "/api/v1/user/" + user.username + "/permissions",
+            headers={"Authorization": "Bearer " + settings.HIVE_SECRET},
         )
-        perms = json.loads(response.content.decode('utf-8'))
+        perms = json.loads(response.content.decode("utf-8"))
 
         if type(perms) != list:
             raise TypeError(f"Invalid response: {perms}")
@@ -102,9 +103,10 @@ def get_permissions(user):
                 mapping[perm_id].append(scope.lower())
             # else: don't overwrite an existing True (do nothing)
 
-        user.__dict__['cached_permissions'] = mapping
+        user.__dict__["cached_permissions"] = mapping
 
-    return user.__dict__['cached_permissions']
+    return user.__dict__["cached_permissions"]
+
 
 def has_unscoped_permission(perm_id, user):
     """
@@ -112,6 +114,7 @@ def has_unscoped_permission(perm_id, user):
     """
 
     return get_permissions(user).get(perm_id) is True
+
 
 def has_scoped_permission(perm_id, scope, user):
     """
@@ -122,11 +125,10 @@ def has_scoped_permission(perm_id, scope, user):
 
     return scopes is True or scope.lower() in scopes
 
+
 def has_any_permission_scope(perm_id, user):
     """
     Check if user has any scope for a specific permission.
     """
 
     return perm_id in get_permissions(user)
-
-

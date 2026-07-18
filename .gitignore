@@ -188,4 +188,7 @@ tags
 
 .vscode/
 
+### Request caching ###
+gordian.sqlite
+
 # End of https://www.gitignore.io/api/django,pycharm,python,vim
