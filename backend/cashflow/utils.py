@@ -6,6 +6,7 @@ import unicodedata
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from pydantic import ValidationError
 from rapidfuzz import process
 from structlog import get_logger
 
@@ -105,7 +106,19 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
 
     try:
         number = gordian.retrieve_account_from_gordian(part)[0]
-    except IndexError:
+    except ValidationError:
+        # The GOrdian feed itself failed to parse (e.g. a schema change). This is
+        # systemic — it breaks account resolution for *every* part, not just this
+        # one — so log it loudly with the traceback rather than as a per-part miss.
+        logger.error(
+            "failed to parse gordian response while resolving account",
+            part=part,
+            exc_info=True,
+        )
+        return None
+    except (IndexError, ValueError):
+        # IndexError: budget line resolved but has no account.
+        # ValueError: cost centre / secondary / budget line no longer exists on GOrdian.
         logger.error(
             "failed to resolve account from gordian",
             part=part,
