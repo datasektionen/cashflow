@@ -42,4 +42,4 @@ FROM prod AS dev
 RUN apk --no-cache add nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
-CMD ["supervisord", "-c", "/etc/supervisord.conf", "-n"]
+CMD ["sh", "-c", "poetry run ./manage.py migrate && exec supervisord -c /etc/supervisord.conf -n"]
