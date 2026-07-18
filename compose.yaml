@@ -1,6 +1,8 @@
 services:
   app:
     build:
+      context: .
+      dockerfile: Dockerfile
       target: dev
     env_file: .env
     environment:
@@ -11,10 +13,10 @@ services:
       SECRET_KEY: something-super-secret
       BUDGET_URL: https://budget.datasektionen.se
       DATABASE_URL: postgresql://cashflow:cashflow@db:5432/cashflow
-      OIDC_PROVIDER: http://nyckeln:7003
+      OIDC_PROVIDER: http://localhost:7003
       OIDC_ID: client-id
       OIDC_SECRET: client-secret
-      REDIRECT_URL: http://localhost:8000/login/
+      REDIRECT_URL: http://localhost:5173/
       HIVE_URL: http://nyckeln:7004
       HIVE_SECRET: cashflow-secret
       SPAM_URL: http://spam:3000
@@ -26,25 +28,48 @@ services:
       S3_BUCKET_NAME: cashflow
       S3_REGION: eu-west-1
       S3_HOST: http://localhost:9090
+      REDIS_URL: redis://redis:6379
     command: /app/run.sh
     init: true
     ports:
       - "8000:8000"
+      - "5173:5173"
     configs:
       - source: nginx.conf
         target: /etc/nginx/nginx.conf
-    volumes:
-      - ./media:/app/media
     develop:
       watch:
-        - path: .
+        - path: backend
           target: /app
           action: sync+restart
-        - path: pyproject.toml
+        - path: backend/pyproject.toml
           action: rebuild
     depends_on:
       db:
         condition: service_healthy
+
+  frontend:
+    image: oven/bun:1-alpine
+    working_dir: /src
+    # Shares app's network namespace so "localhost:8000" (hardcoded via
+    # PUBLIC_BACKEND_URL below) reaches app's gunicorn from both SSR and
+    # the browser, same as running `bun run dev` directly on the host.
+    network_mode: "service:app"
+    environment:
+      PUBLIC_BACKEND_URL: http://localhost:8000
+    command: sh -c "bun install --frozen-lockfile && bun run dev -- --host 0.0.0.0"
+    volumes:
+      - ./frontend:/src
+      - frontend_node_modules:/src/node_modules
+    develop:
+      watch:
+        - path: frontend
+          target: /src
+          action: sync
+        - path: frontend/package.json
+          action: rebuild
+    depends_on:
+      - app
 
   # Database
   db:
@@ -125,6 +150,9 @@ services:
     ports:
       - 9003:9003
 
+volumes:
+  frontend_node_modules:
+
 configs:
   nginx.conf:
     content: |
@@ -170,7 +198,7 @@ configs:
         - id: "client-id"
           secret: "client-secret"
           redirect_uris:
-            - http://localhost:8000/login/
+            - http://localhost:8000/oidc/callback/
 
       users:
         - ug_kth_id: some-id
@@ -234,6 +262,8 @@ configs:
               - id: attest-firmatecknare
                 scope: "*"
               - id: manage-fortnox
+                scope: "*"
+              - id: view-expenses
                 scope: "*"
           - name: Konglig Lokalchef
             id: lokalchef

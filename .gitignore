@@ -1,5 +1,9 @@
 cashflow.sql
 
+### Claude ###
+CLAUDE.md
+.claude/
+
 ### Node, React, etc ###
 node_modules
 # dependencies
@@ -97,8 +101,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
