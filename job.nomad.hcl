@@ -48,7 +48,6 @@ PYTHONUNBUFFERED=1
 BUDGET_URL=https://budget.datasektionen.se
 OIDC_PROVIDER=http://sso.nomad.dsekt.internal/op
 OIDC_ID=cashflow
-PUBLIC_BACKEND_URL=https://cashflow.datasektionen.se
 REDIRECT_URL=https://cashflow.datasektionen.se/login/
 HIVE_URL=https://hive.datasektionen.se
 SPAM_URL=https://spam.datasektionen.se
