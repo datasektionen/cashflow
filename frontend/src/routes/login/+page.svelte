@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { BACKEND_URL } from '$lib/config';
 </script>
 
 <div class="flex h-full w-full items-center justify-center">
@@ -8,7 +7,7 @@
 		class="flex h-128 w-full items-center justify-center bg-base-400 md:w-1/2 dark:bg-dark-base-200"
 	>
 		<a
-			href="{BACKEND_URL}/oidc/authenticate/"
+			href="/oidc/authenticate/"
 			class="flex w-72 cursor-pointer items-center justify-center bg-money-green-600 p-4 text-dark-base-text hover:bg-money-green-500"
 		>
 			{$_('login_with_sso')}

@@ -6,6 +6,11 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), svelteTesting()],
+	server: {
+		proxy: {
+			'^/(api|admin|oidc|static|media)(/|$)': 'http://localhost:8000'
+		}
+	},
 	test: {
 		environment: 'jsdom',
 		setupFiles: ['./vitest-setup.js']
