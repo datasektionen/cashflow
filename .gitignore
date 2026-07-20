@@ -191,4 +191,7 @@ tags
 ### Request caching ###
 gordian.sqlite
 
+
+frontend/.svelte-kit
+
 # End of https://www.gitignore.io/api/django,pycharm,python,vim
