@@ -55,6 +55,8 @@ RFINGER_API_URL=https://rfinger.datasektionen.se
 S3_REGION=eu-north-1
 S3_USE_SIGV4=False
 S3_BUCKET_NAME=dsekt-cashflow-2
+
+GOOGLE_ANALYTICS_KEY=UA-96183461-2
 ENV
         destination = "local/.env"
         env         = true

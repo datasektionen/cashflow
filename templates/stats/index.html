@@ -1,0 +1,207 @@
+{% extends "main.html" %} {% load humanize %} {% block title %}Välkommen till
+Cashflow!{% endblock %} {% block app %}
+<div id="stats" style="text-align: center">
+  <header>
+    <div class="inner">
+      <span class="label">Utbetalt i år</span>
+      <h2>{{ year|intcomma }} kr</h2>
+    </div>
+  </header>
+  <div id="content">
+    <h2 v-if="selected == 'Total summa'">Mest Cashflowat</h2>
+    <h2 v-if="selected == 'Antal cashflows'">Flest Cashflows</h2>
+    <div style="padding: 0 0 25px">
+      <button
+        style="width: 170px"
+        v-text="selected"
+        v-on:click="click"
+        class="btn-color theme-color"
+      ></button>
+    </div>
+    <div style="display: flex; justify-content: center">
+      <table style="width: 600px">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Namn</th>
+            <th>Total summa</th>
+            <th>Antal cashflows</th>
+          </tr>
+        </thead>
+        <tbody v-if="selected == 'Total summa'">
+          {% for user in highscore_amount %}
+          <tr>
+            <td style="width: 5%">{{ forloop.counter }}</td>
+            <td style="width: 45%">
+              <a href="{% url 'user-show' user.user.username %}"
+                >{{ user.user.get_full_name }}</a
+              >
+            </td>
+            <td style="width: 25%">{{ user.total_amount|intcomma }} kr</td>
+            <td style="width: 25%">{{ user.receipts }} st</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tbody v-if="selected == 'Antal cashflows'">
+          {% for user in highscore_receipts %}
+          <tr>
+            <td style="width: 5%">{{ forloop.counter }}</td>
+            <td style="width: 45%">
+              <a href="{% url 'user-show' user.user.username %}"
+                >{{ user.user.get_full_name }}</a
+              >
+            </td>
+            <td style="width: 25%">{{ user.total_amount|intcomma }} kr</td>
+            <td style="width: 25%">{{ user.receipts }} st</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="padding-top: 15px">
+      OBS. Räknar bara med utlägg mindre än 10 000 kr
+    </div>
+
+    <div class="divide"></div>
+
+    <h2>Vad har spenderats på min budgetpost?</h2>
+    <div style="padding-bottom: 20px">
+      <a
+        href="https://budget.datasektionen.se/resultreport"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Detta hittar du i GOrdian, budgetsystemet!
+      </a>
+    </div>
+
+    <h2>Antal inköp per månad</h2>
+    <div>
+      <input
+        type="number"
+        placeholder="År"
+        step="1"
+        min="2017"
+        max="2099"
+        v-model="monthlyYear"
+        style="max-width: 6em"
+      />
+      <button
+        type="button"
+        @click="updateMonthlyChart"
+        style="background-color: #216c2a"
+      >
+        <i class="fa fa-arrow-right" style="color: white"></i>
+      </button>
+    </div>
+    <div style="margin-top: 1em">
+      {% verbatim %}
+      <strong>Totalt i {{ curMonthlyYear }}:</strong> {{ curMonthlyCount }}
+      utlägg ({{ formatMoney(curMonthlySum) }}) {% endverbatim %}
+    </div>
+    <canvas id="monthly" width="300" height="100"></canvas>
+  </div>
+</div>
+
+<script type="text/javascript">
+   let krFormatter =  new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK" });
+   new Vue({
+       el: '#content',
+       data: function() {
+           return {
+               selected: "Total summa",
+               monthlyYear: {{ month_year }},
+               curMonthlyYear: {{ month_year }}, // currently displayed value; not bound to input
+               curMonthlyCount: {{ month_count_total }},
+               curMonthlySum: {{ month_sum_total }},
+           }
+       },
+          methods: {
+            click() {
+               if (this.selected === "Total summa") this.selected = "Antal cashflows"
+               else this.selected = "Total summa"
+           },
+           updateMonthlyChart() {
+               fetch(`/stats/monthly/${this.monthlyYear}/`)
+                   .then(res => res.json())
+                   .then(res => {
+                       if (window.monthlyChart) {
+                           window.monthlyChart.data.datasets[0].data = res.month_count;
+                           window.monthlyChart.data.datasets[1].data = res.month_sum;
+                           window.monthlyChart.update();
+                           this.curMonthlyYear = res.year;
+                           this.curMonthlyCount = res.month_count.reduce((a, b) => a + b);
+                           this.curMonthlySum = res.month_sum.reduce((a, b) => a + b);
+                       }
+                   });
+           },
+      formatMoney(val) {
+        return krFormatter.format(val);
+      },
+    }
+  })
+</script>
+<script
+  type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"
+></script>
+<script type="text/javascript">
+  var config = {
+      type: 'line',
+      data: {
+          labels: ["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"],
+          datasets: [{
+              label: "Antal utlägg",
+              backgroundColor: '#278032',
+              borderColor: '#278032',
+              data: {{ month_count }},
+              yAxisID: "A",
+              fill: false,
+          }, {
+              label: "Summa utlägg",
+              fill: false,
+              backgroundColor: '#222',
+              borderColor: '#222',
+              data: {{ month_sum }},
+              yAxisID: "B",
+          }]
+      },
+      options: {
+          responsive: true,
+          title:{
+              display:true,
+              text:'Inköp månadsvis'
+          },
+          tooltips: {
+              mode: 'index',
+              intersect: false,
+          },
+          hover: {
+              mode: 'nearest',
+              intersect: true
+          },
+          scales: {
+              xAxes: [{
+                  display: true,
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Månad'
+                  }
+              }],
+              yAxes: [{
+                  id: 'A',
+                  type: 'linear',
+                  position: 'left',
+                }, {
+                  id: 'B',
+                    type: 'linear',
+                    position: 'right'
+              }]
+          }
+      }
+  };
+
+  var ctx = document.getElementById("monthly").getContext("2d");
+  window.monthlyChart = new Chart(ctx, config);
+</script>
+{% endblock %}
