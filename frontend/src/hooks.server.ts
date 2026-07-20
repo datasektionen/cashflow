@@ -1,7 +1,10 @@
 import type { Handle, HandleFetch } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
 import { API } from '$lib/api';
-import { API_URL, BACKEND_URL } from '$lib/config';
+import { API_URL } from '$lib/config';
+
+// Mirrors the paths nginx proxies to the backend (see nginx.conf).
+const BACKEND_PATH = /^\/(api|admin|oidc|fortnox|static|media)(\/|$)/;
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { method, url } = event.request;
@@ -16,7 +19,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
-	if (request.url.startsWith(BACKEND_URL)) {
+	if (BACKEND_PATH.test(new URL(request.url).pathname)) {
 		const headers = new Headers(request.headers);
 		const sessionid = event.cookies.get('sessionid');
 		const csrftoken = event.cookies.get('csrftoken');

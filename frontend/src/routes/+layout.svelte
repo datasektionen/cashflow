@@ -11,7 +11,6 @@
 	import type { LayoutProps } from './$types';
 	import { type Alert, alerts } from '$lib/stores/alerts';
 	import AlertToast from '$lib/components/AlertToast.svelte';
-	import { BACKEND_URL } from '$lib/config';
 	import {
 		ReceiptText,
 		FileText,
@@ -102,7 +101,7 @@
 					<button type="submit" class="cursor-pointer">{$_('logout')}</button>
 				</form>
 			{:else}
-				<a href="{BACKEND_URL}/oidc/authenticate/?next={encodeURIComponent(page.url.origin + '/')}"
+				<a href="/oidc/authenticate/?next={encodeURIComponent(page.url.origin + '/')}"
 					>{$_('login')}</a
 				>
 			{/if}

@@ -1,4 +1,5 @@
-import { env } from '$env/dynamic/public';
+import { browser, dev } from '$app/environment';
 
-export const BACKEND_URL = env.PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
-export const API_URL = `${BACKEND_URL}/api/`;
+
+const BACKEND_PORT = dev ? 8000 : 8001;
+export const API_URL = browser ? '/api/' : `http://127.0.0.1:${BACKEND_PORT}/api/`;

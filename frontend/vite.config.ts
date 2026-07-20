@@ -8,7 +8,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), svelteTesting()],
 	server: {
 		proxy: {
-			'^/(api|admin|oidc|static|media)(/|$)': 'http://localhost:8000'
+			'^/(api|admin|oidc|fortnox|static|media)(/|$)': 'http://localhost:8000'
 		}
 	},
 	test: {

@@ -29,11 +29,13 @@ services:
       S3_REGION: eu-west-1
       S3_HOST: http://localhost:9090
       REDIS_URL: redis://redis:6379
-    command: /app/run.sh
     init: true
     ports:
       - "8000:8000"
       - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend_node_modules:/app/frontend/node_modules
     configs:
       - source: nginx.conf
         target: /etc/nginx/nginx.conf
@@ -44,32 +46,11 @@ services:
           action: sync+restart
         - path: backend/pyproject.toml
           action: rebuild
-    depends_on:
-      db:
-        condition: service_healthy
-
-  frontend:
-    image: oven/bun:1-alpine
-    working_dir: /src
-    # Shares app's network namespace so "localhost:8000" (hardcoded via
-    # PUBLIC_BACKEND_URL below) reaches app's gunicorn from both SSR and
-    # the browser, same as running `bun run dev` directly on the host.
-    network_mode: "service:app"
-    environment:
-      PUBLIC_BACKEND_URL: http://localhost:8000
-    command: sh -c "bun install --frozen-lockfile && bun run dev -- --host 0.0.0.0"
-    volumes:
-      - ./frontend:/src
-      - frontend_node_modules:/src/node_modules
-    develop:
-      watch:
-        - path: frontend
-          target: /src
-          action: sync
         - path: frontend/package.json
           action: rebuild
     depends_on:
-      - app
+      db:
+        condition: service_healthy
 
   # Database
   db:
