@@ -28,15 +28,13 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { api } from '$lib/api';
 	import type { ActionSummary } from '$lib/api/types';
+	import { hasAdminAccess } from '$lib/auth';
 
 	let { children, data }: LayoutProps = $props();
 
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
-	const hasAdminAccess = $derived(
-		data.user?.permissions != null &&
-			Object.values(data.user.permissions).some((v) => (Array.isArray(v) ? v.length > 0 : v))
-	);
+	const canAccessAdmin = $derived(hasAdminAccess(data.user));
 	const pageTitle = $derived(
 		page.data.title ?? (page.data.title_key ? $_(page.data.title_key) : null)
 	);
@@ -88,7 +86,7 @@
 					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
 					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
 					<NavLink to="/{data.user.username}/claims/" text={$_('user_claims')}></NavLink>
-					{#if hasAdminAccess}
+					{#if canAccessAdmin}
 						<NavLink to="/admin/" text={$_('admin')}></NavLink>
 					{/if}
 				</div>
@@ -143,7 +141,7 @@
 			class="lg:hidden"
 		/>
 
-		{#if hasAdminAccess}
+		{#if canAccessAdmin}
 			<p
 				class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wider text-base-subtle uppercase dark:text-dark-base-subtle"
 			>
