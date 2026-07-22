@@ -43,6 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
             "properties": {
                 Permission.ATTEST.value: _SCOPE_LIST,
                 Permission.ACCOUNTING.value: _SCOPE_LIST,
+                Permission.VIEW_EXPENSES.value: _SCOPE_LIST,
                 Permission.PAY.value: _BOOL,
                 Permission.CONFIRM.value: _BOOL,
                 Permission.UNCONFIRM.value: _BOOL,
@@ -58,8 +59,9 @@ class UserSerializer(serializers.ModelSerializer):
         return {
             Permission.ATTEST: p.attestable_cost_centres(),
             Permission.ACCOUNTING: p.accountable_cost_centres(),
+            Permission.VIEW_EXPENSES: p.viewable_cost_centres(),
             Permission.PAY: p.may_pay(),
-            Permission.CONFIRM: p.may_pay(),
+            Permission.CONFIRM: p.may_confirm(),
             Permission.UNCONFIRM: p.may_unconfirm(),
             Permission.UNATTEST: p.may_unattest(),
             Permission.EDIT_INVOICE: p.may_edit_invoice(),

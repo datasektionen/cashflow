@@ -62,6 +62,14 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_unscoped(user, Permission.VIEW_ALL_PAYMENTS)
 
     def viewable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
+        from expenses.models import ExpensePart
+        from invoices.models import InvoicePart
+
+        if self.may_view_all(user):
+            return list(
+                set(ExpensePart.objects.values_list("cost_centre", flat=True))
+                | set(InvoicePart.objects.values_list("cost_centre", flat=True))
+            )
         scopes = get_permissions(user).get(Permission.VIEW_EXPENSES, [])
         return scopes if isinstance(scopes, list) else []
 
