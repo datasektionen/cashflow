@@ -9,13 +9,17 @@ export class VoucherSeriesAPI {
 		this.apiClient = apiClient;
 	}
 
-	async list(page: number, perPage: number, includeFortnox: boolean = true): Promise<PaginatedResponse<VoucherSeries>> {
-		let params: {page: number, perPage: number, include_fortnox?: boolean} = {
+	async list(
+		page: number,
+		perPage: number,
+		includeFortnox: boolean = true
+	): Promise<PaginatedResponse<VoucherSeries>> {
+		let params: { page: number; perPage: number; include_fortnox?: boolean } = {
 			page,
-			perPage,
-		}
+			perPage
+		};
 		if (!includeFortnox) {
-			params = {...params, include_fortnox: false}
+			params = { ...params, include_fortnox: false };
 		}
 		const res = await this.apiClient.get<ListResponse<VoucherSeries>>('/voucher-series/', params);
 
