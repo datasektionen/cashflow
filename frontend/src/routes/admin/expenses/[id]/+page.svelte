@@ -324,7 +324,6 @@
 
 <div class="flex flex-col gap-4 lg:flex-row">
 	<div class="flex max-h-256 flex-col border lg:w-1/3">
-		>
 		{#if expense.files.length > 0}
 			<ReceiptViewer source={expense.files.map((f) => f.file)} />
 		{:else}

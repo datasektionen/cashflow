@@ -95,7 +95,7 @@
 {/snippet}
 
 <svelte:head>
-	<title>{title}</title>
+	<title>Cashflow | {title}</title>
 </svelte:head>
 
 <h1 class="mb-4 text-xl font-bold dark:text-slate-100">{title}</h1>

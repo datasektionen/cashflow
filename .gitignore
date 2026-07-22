@@ -135,9 +135,7 @@ coverage.xml
 # Translations
 *.mo
 
-# Django stuff:
 
-static/
 
 # Flask stuff:
 instance/
