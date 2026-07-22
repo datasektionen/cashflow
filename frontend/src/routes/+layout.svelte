@@ -33,6 +33,9 @@
 
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
+	const pageTitle = $derived(
+		page.data.title ?? (page.data.title_key ? $_(page.data.title_key) : null)
+	);
 
 	let sidebarOpen = $state(false);
 	$effect(() => {
@@ -219,6 +222,7 @@
 {/if}
 
 <svelte:head>
+	<title>{pageTitle ? `Cashflow | ${pageTitle}` : 'Cashflow'}</title>
 	<link rel="icon" href="/favicon.ico" sizes="any" />
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -247,7 +251,7 @@
 <div
 	class="base-text-base-text flex min-h-screen flex-col bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
-	{#if page.data.title_key != null || page.data.title != null}
+	{#if pageTitle != null}
 		<header
 			class={['w-full', adminView ? 'px-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8']}
 		>
@@ -257,7 +261,7 @@
 					'font-semibold tracking-tight'
 				]}
 			>
-				{page.data.title ?? $_(page.data.title_key)}
+				{pageTitle}
 			</h1>
 			<Separator.Root
 				orientation="horizontal"
