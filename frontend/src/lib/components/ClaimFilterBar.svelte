@@ -27,16 +27,16 @@
 
     let showAllFilters: boolean = $state(true);
 
-	// These bind to the comboboxes search strings, and are used to clear e.g. budget line when cost centre is changed
-	let budgetSearchValues = $state({
-		costCentre: '',
-		secondaryCostCentre: '',
-		budgetLine: ''
-	});
+    // These bind to the comboboxes search strings, and are used to clear e.g. budget line when cost centre is changed
+    let budgetSearchValues = $state({
+        costCentre: '',
+        secondaryCostCentre: '',
+        budgetLine: ''
+    });
 
-	let costCentres: CostCentre[] = $state([]);
-	let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
-	let budgetLines: BudgetLine[] = $state([]);
+    let costCentres: CostCentre[] = $state([]);
+    let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
+    let budgetLines: BudgetLine[] = $state([]);
 
     let voucherSeries: VoucherSeries[] = $state([]);
 
@@ -167,32 +167,37 @@
         goto(url, {keepFocus: true, noScroll: true, replaceState: true});
     }
 
-		if (key === 'cost_centre') {
-			const costCentre = costCentres.find((cc) => cc.name === value);
-			// Cost centres with no GOrdian id (inactive/legacy) can't be used to
-			// scope secondary cost centres, so show none rather than the full
-			// unfiltered list.
-			secondaryCostCentres =
-				costCentre?.id != null
-					? await api.budget
-							.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id })
-							.then((res) => res.data)
-					: [];
-			budgetLines = [];
-			budgetSearchValues.secondaryCostCentre = '';
-			budgetSearchValues.budgetLine = '';
-			url.searchParams.delete('secondary_cost_centre');
-			url.searchParams.delete('budget_line');
-		} else if (key === 'secondary_cost_centre') {
-			const secondaryCostCentre = secondaryCostCentres.find((scc) => scc.name === value);
-			const filter =
-				secondaryCostCentre?.id != null
-					? { secondary_cost_centre: secondaryCostCentre.id }
-					: undefined;
-			budgetLines = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
-			budgetSearchValues.budgetLine = '';
-			url.searchParams.delete('budget_line');
-		}
+    async function setFilter(
+        key: (typeof filterKeys)[number] | (typeof tristateKeys)[number],
+        value: string
+    ) {
+
+        if (key === 'cost_centre') {
+            const costCentre = costCentres.find((cc) => cc.name === value);
+            // Cost centres with no GOrdian id (inactive/legacy) can't be used to
+            // scope secondary cost centres, so show none rather than the full
+            // unfiltered list.
+            secondaryCostCentres =
+                costCentre?.id != null
+                    ? await api.budget
+                        .listSecondaryCostCentres(1, 100, {cost_centre: costCentre.id})
+                        .then((res) => res.data)
+                    : [];
+            budgetLines = [];
+            budgetSearchValues.secondaryCostCentre = '';
+            budgetSearchValues.budgetLine = '';
+            url.searchParams.delete('secondary_cost_centre');
+            url.searchParams.delete('budget_line');
+        } else if (key === 'secondary_cost_centre') {
+            const secondaryCostCentre = secondaryCostCentres.find((scc) => scc.name === value);
+            const filter =
+                secondaryCostCentre?.id != null
+                    ? {secondary_cost_centre: secondaryCostCentre.id}
+                    : undefined;
+            budgetLines = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+            budgetSearchValues.budgetLine = '';
+            url.searchParams.delete('budget_line');
+        }
 
         if (key === 'cost_centre') {
             const costCentre = costCentres.find((cc) => cc.name === value);
@@ -267,64 +272,64 @@
         <!--            <span class="text-xs">{$_('show_all_filters')}</span>-->
         <!--        </button>-->
 
-		<ComboBox
-			class="text-sm"
-			value={filterValue('cost_centre')}
-			bind:searchValue={budgetSearchValues.costCentre}
-			onchange={(v) => setFilter('cost_centre', v)}
-			placeholder={$_('cost_centre')}
-			items={costCentres.map((it) => it.name)}
-		/>
-		<ComboBox
-			class="text-sm"
-			value={filterValue('secondary_cost_centre')}
-			bind:searchValue={budgetSearchValues.secondaryCostCentre}
-			onchange={(v) => setFilter('secondary_cost_centre', v)}
-			placeholder={$_('secondary_cost_centre')}
-			items={secondaryCostCentres.map((it) => it.name)}
-		/>
-		<ComboBox
-			class="text-sm"
-			value={filterValue('budget_line')}
-			bind:searchValue={budgetSearchValues.budgetLine}
-			onchange={(v) => setFilter('budget_line', v)}
-			placeholder={$_('budget_line')}
-			items={budgetLines.map((it) => it.name)}
-		/>
-		{#if !exclude.includes('voucher_series')}
-			<AdvancedCombobox
-				name="voucher-series"
-				class="text-sm"
-				columns={voucherSeriesColumns}
-				items={voucherSeries}
-				searchField={['code', 'description']}
-				valueField="code"
-				value={filterValue('voucher_series')}
-				onchange={(v) => setFilter('voucher_series', v ?? '')}
-				display={VoucherSeriesDisplay}
-				placeholder={$_('voucher_series')}
-			/>
-		{/if}
-		{#snippet searchIcon()}
-			<Search class="size-4" />
-		{/snippet}
-		<TextInput
-			class="text-sm"
-			value={filterValue('q')}
-			onchange={setQuery}
-			placeholder={$_('search_description')}
-			icon={searchIcon}
-		/>
-	{/key}
-	{#if includeReset}
-		<button
-			onclick={resetFilter}
-			class="ml-auto flex cursor-pointer flex-row items-center gap-1.5 text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"
-		>
-			<ListRestart class="size-4" />
-			<span class="text-xs uppercase">{$_('reset')}</span>
-		</button>
-	{/if}
+        <ComboBox
+                class="text-sm"
+                value={filterValue('cost_centre')}
+                bind:searchValue={budgetSearchValues.costCentre}
+                onchange={(v) => setFilter('cost_centre', v)}
+                placeholder={$_('cost_centre')}
+                items={costCentres.map((it) => it.name)}
+        />
+        <ComboBox
+                class="text-sm"
+                value={filterValue('secondary_cost_centre')}
+                bind:searchValue={budgetSearchValues.secondaryCostCentre}
+                onchange={(v) => setFilter('secondary_cost_centre', v)}
+                placeholder={$_('secondary_cost_centre')}
+                items={secondaryCostCentres.map((it) => it.name)}
+        />
+        <ComboBox
+                class="text-sm"
+                value={filterValue('budget_line')}
+                bind:searchValue={budgetSearchValues.budgetLine}
+                onchange={(v) => setFilter('budget_line', v)}
+                placeholder={$_('budget_line')}
+                items={budgetLines.map((it) => it.name)}
+        />
+        {#if !exclude.includes('voucher_series')}
+            <AdvancedCombobox
+                    name="voucher-series"
+                    class="text-sm"
+                    columns={voucherSeriesColumns}
+                    items={voucherSeries}
+                    searchField={['code', 'description']}
+                    valueField="code"
+                    value={filterValue('voucher_series')}
+                    onchange={(v) => setFilter('voucher_series', v ?? '')}
+                    display={VoucherSeriesDisplay}
+                    placeholder={$_('voucher_series')}
+            />
+        {/if}
+        {#snippet searchIcon()}
+            <Search class="size-4"/>
+        {/snippet}
+        <TextInput
+                class="text-sm"
+                value={filterValue('q')}
+                onchange={setQuery}
+                placeholder={$_('search_description')}
+                icon={searchIcon}
+        />
+    {/key}
+    {#if includeReset}
+        <button
+                onclick={resetFilter}
+                class="ml-auto flex cursor-pointer flex-row items-center gap-1.5 text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"
+        >
+            <ListRestart class="size-4"/>
+            <span class="text-xs uppercase">{$_('reset')}</span>
+        </button>
+    {/if}
 </div>
 {#if includeChecks}
     <div
