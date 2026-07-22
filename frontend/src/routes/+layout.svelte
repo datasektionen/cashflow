@@ -33,6 +33,10 @@
 
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
+	const hasAdminAccess = $derived(
+		data.user?.permissions != null &&
+			Object.values(data.user.permissions).some((v) => (Array.isArray(v) ? v.length > 0 : v))
+	);
 	const pageTitle = $derived(
 		page.data.title ?? (page.data.title_key ? $_(page.data.title_key) : null)
 	);
@@ -84,7 +88,9 @@
 					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
 					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
 					<NavLink to="/{data.user.username}/claims/" text={$_('user_claims')}></NavLink>
-					<NavLink to="/admin/" text={$_('admin')}></NavLink>
+					{#if hasAdminAccess}
+						<NavLink to="/admin/" text={$_('admin')}></NavLink>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -137,14 +143,16 @@
 			class="lg:hidden"
 		/>
 
-		<p
-			class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wider text-base-subtle uppercase dark:text-dark-base-subtle"
-		>
-			{$_('admin')}
-		</p>
-		<SideNavLink to="/admin/expenses" text={$_('admin_expenses.nav_title')} icon={Receipt} />
-		<SideNavLink to="/admin/invoices" text={$_('admin_invoices.nav_title')} icon={Files} />
-		<SideNavLink to="/admin/vouchers" text={$_('admin_vouchers.nav_title')} icon={BookCheck} />
+		{#if hasAdminAccess}
+			<p
+				class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wider text-base-subtle uppercase dark:text-dark-base-subtle"
+			>
+				{$_('admin')}
+			</p>
+			<SideNavLink to="/admin/expenses" text={$_('admin_expenses.nav_title')} icon={Receipt} />
+			<SideNavLink to="/admin/invoices" text={$_('admin_invoices.nav_title')} icon={Files} />
+			<SideNavLink to="/admin/vouchers" text={$_('admin_vouchers.nav_title')} icon={BookCheck} />
+		{/if}
 
 		{#if data.user?.permissions}
 			{@const perms = data.user.permissions}

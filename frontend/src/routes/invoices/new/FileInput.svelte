@@ -65,7 +65,7 @@
 			id="files"
 			name="files"
 			multiple
-			accept="application/pdf"
+			accept="application/pdf,image/*"
 			class="hidden"
 		/>
 		<HardDriveUpload class="mx-auto mb-4 size-10 transition-all" />
