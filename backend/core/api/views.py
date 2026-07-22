@@ -41,7 +41,7 @@ from core.api.serializers import (
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
 from expenses.models import Comment, Expense, ExpensePart, Payment, Profile
-from fortnox import FortnoxRequest
+from fortnox import FortnoxRequest, FortnoxNotFound, FortnoxServiceNotAvailableProblem
 from invoices.models import Invoice, InvoicePart
 
 UserModel = get_user_model()
@@ -350,26 +350,39 @@ class VoucherSeriesList(GenericAPIView):
 
         series = []
 
-        if request.fortnox_service is not None:
-            series = [
-                {"code": vs.Code, "description": vs.Description}
-                for vs in request.fortnox_service.list_voucher_series()
-            ]
+        include_fortnox = request.GET.get("include_fortnox", "true").lower() != "false"
+
+        if request.fortnox_service is not None and include_fortnox:
+            by_code = {}
+            try:
+                for vs in request.fortnox_service.list_voucher_series():
+                    if vs.Code.isalpha() and len(vs.Code) == 1:
+                        by_code.setdefault(vs.Code, vs.Description)
+                series = [
+                    {"code": code, "description": description}
+                    for code, description in by_code.items()
+                ]
+            except FortnoxNotFound as e:
+                # Indicates the fortnox integration is disconnected
+                raise FortnoxServiceNotAvailableProblem(
+                    detail="Fetching voucher series from Fortnox failed, this most likely means the integration "
+                    "is unavailable."
+                ) from e
 
         # Resolve voucher series from existing expenses and invoices
-        expense_codes = [
+        expense_codes = {
             v[0].upper()
             for v in Expense.objects.all().values_list("verification", flat=True)
-            if v is not None and len(v) > 0
-        ]
-        invoice_codes = [
+            if v is not None and len(v) > 0 and v[0].isalpha()
+        }
+        invoice_codes = {
             v[0].upper()
             for v in Invoice.objects.all().values_list("verification", flat=True)
-            if v is not None and len(v) > 0
-        ]
+            if v is not None and len(v) > 0 and v[0].isalpha()
+        }
         inactive = [
             {"code": code}
-            for code in (*expense_codes, *invoice_codes)
+            for code in expense_codes | invoice_codes
             if code and code not in [sc["code"] for sc in series]
         ]
         series += inactive
