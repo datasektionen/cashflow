@@ -104,8 +104,6 @@
 	</span>
 {/snippet}
 
-
-
 <ClaimFilterBar includeChecks={false} />
 
 <PaginatedTable

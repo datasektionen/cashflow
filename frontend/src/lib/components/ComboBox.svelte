@@ -14,6 +14,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		items,
 		placeholder = '',
 		value = $bindable(''),
+		searchValue = $bindable(''),
 		class: className = '',
 		locked = false,
 		onchange,
@@ -23,13 +24,14 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		items: string[];
 		placeholder?: string;
 		value?: string;
+		searchValue?: string;
 		class?: string;
 		locked?: boolean;
 		onchange?: (value: string) => void;
 		onblur?: (e: FocusEvent) => void;
 	} = $props();
 
-	let searchValue = $state(value ?? '');
+	// let searchValue = $state(value ?? '');
 	let open = $state(false);
 
 	const fuse = $derived(new Fuse(items));
