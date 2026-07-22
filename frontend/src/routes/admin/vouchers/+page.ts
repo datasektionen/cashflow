@@ -34,5 +34,5 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		}
 	}
 
-	return { claims };
+	return { claims, title_key: 'admin_vouchers.title' };
 };

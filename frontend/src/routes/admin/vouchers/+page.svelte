@@ -104,11 +104,7 @@
 	</span>
 {/snippet}
 
-<svelte:head>
-	<title>{$_('admin_vouchers.title')}</title>
-</svelte:head>
 
-<h1 class="mb-4 text-xl font-bold dark:text-slate-100">{$_('admin_vouchers.title')}</h1>
 
 <ClaimFilterBar includeChecks={false} />
 
