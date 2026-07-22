@@ -338,6 +338,7 @@
 	"secondary_cost_centre": "Secondary cost centre",
 	"budget_line": "Budget line",
 	"voucher_series": "Voucher series",
+	"voucher_series_fetch_error": "Could not fetch voucher series",
 	"reset": "Reset",
 	"search_description": "Search by description",
 	"show_all_filters": "Show all filters",
