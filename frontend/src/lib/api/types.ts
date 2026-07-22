@@ -169,6 +169,7 @@ export type PaginatedResponse<T> = {
 export type Permissions = {
 	attest: string[];
 	accounting: string[];
+	'view-expenses': string[];
 	pay: boolean;
 	confirm: boolean;
 	unconfirm: boolean;

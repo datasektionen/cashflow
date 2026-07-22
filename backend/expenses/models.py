@@ -66,6 +66,9 @@ class Profile(models.Model):
     def may_view_all(self):
         return get_permission_provider().may_view_all(self.user)
 
+    def viewable_cost_centres(self):
+        return get_permission_provider().viewable_cost_centres(self.user)
+
     def may_view_all_payments(self):
         return get_permission_provider().may_view_all_payments(self.user)
 
