@@ -38,6 +38,13 @@
 
 	let showAllFilters: boolean = $state(true);
 
+	// These bind to the comboboxes search strings, and are used to clear e.g. budget line when cost centre is changed
+	let budgetSearchValues = $state({
+		costCentre: '',
+		secondaryCostCentre: '',
+		budgetLine: ''
+	});
+
 	let costCentres: CostCentre[] = $state([]);
 	let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
 	let budgetLines: BudgetLine[] = $state([]);
@@ -176,6 +183,8 @@
 							.then((res) => res.data)
 					: [];
 			budgetLines = [];
+			budgetSearchValues.secondaryCostCentre = '';
+			budgetSearchValues.budgetLine = '';
 			url.searchParams.delete('secondary_cost_centre');
 			url.searchParams.delete('budget_line');
 		} else if (key === 'secondary_cost_centre') {
@@ -185,6 +194,7 @@
 					? { secondary_cost_centre: secondaryCostCentre.id }
 					: undefined;
 			budgetLines = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+			budgetSearchValues.budgetLine = '';
 			url.searchParams.delete('budget_line');
 		}
 
@@ -240,6 +250,7 @@
 		<ComboBox
 			class="text-sm"
 			value={filterValue('cost_centre')}
+			bind:searchValue={budgetSearchValues.costCentre}
 			onchange={(v) => setFilter('cost_centre', v)}
 			placeholder={$_('cost_centre')}
 			items={costCentres.map((it) => it.name)}
@@ -247,6 +258,7 @@
 		<ComboBox
 			class="text-sm"
 			value={filterValue('secondary_cost_centre')}
+			bind:searchValue={budgetSearchValues.secondaryCostCentre}
 			onchange={(v) => setFilter('secondary_cost_centre', v)}
 			placeholder={$_('secondary_cost_centre')}
 			items={secondaryCostCentres.map((it) => it.name)}
@@ -254,6 +266,7 @@
 		<ComboBox
 			class="text-sm"
 			value={filterValue('budget_line')}
+			bind:searchValue={budgetSearchValues.budgetLine}
 			onchange={(v) => setFilter('budget_line', v)}
 			placeholder={$_('budget_line')}
 			items={budgetLines.map((it) => it.name)}
