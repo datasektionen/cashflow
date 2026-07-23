@@ -127,6 +127,8 @@ DATABASES["default"].update(db_from_env)
 
 AUTHENTICATION_BACKENDS = ["cashflow.dauth.SSO"]
 
+LOGOUT_REDIRECT_URL = "/"
+
 OIDC_RP_CLIENT_ID = os.getenv("OIDC_ID")
 OIDC_RP_CLIENT_SECRET = os.getenv("OIDC_SECRET")
 OIDC_RP_SIGN_ALGO = "RS256"
@@ -140,7 +142,7 @@ OIDC_OP_USER_ENDPOINT = f"{_oidc_provider}/userinfo"
 OIDC_OP_JWKS_ENDPOINT = f"{_oidc_provider}/keys"
 
 LOGIN_URL = "/oidc/authenticate/"
-LOGIN_REDIRECT_URL = os.getenv("REDIRECT_URL")
+LOGIN_REDIRECT_URL = os.getenv("REDIRECT_URL") or "/"
 
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 
