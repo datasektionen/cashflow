@@ -7,7 +7,7 @@ COPY frontend .
 RUN bun run build
 
 
-FROM python:3.14.3-alpine AS base
+FROM python:3.14.6-alpine AS base
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
