@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/stable/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from typing import Any
 
 import dj_database_url
 import structlog
@@ -107,7 +108,7 @@ TEMPLATES = [
 # Database
 
 # Local defaults; overridden by DATABASE_URL (e.g. in production) via dj_database_url below.
-DATABASES = {
+DATABASES: dict[str, dict[str, Any]] = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME", "cashflow"),

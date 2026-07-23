@@ -102,7 +102,7 @@ class Hive(core.permissions.PermissionProvider):
         from invoices.models import Invoice
 
         scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or "*" in scopes:
+        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
             return True
         if isinstance(target, Expense):
             return target.parts.filter(cost_centre__in=scopes).exists()
@@ -134,7 +134,7 @@ class Hive(core.permissions.PermissionProvider):
         from expenses.models import Expense
 
         scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or "*" in scopes:
+        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
             return Expense.objects.all()
         return Expense.objects.filter(expensepart__cost_centre__in=scopes).distinct()
 
@@ -142,7 +142,7 @@ class Hive(core.permissions.PermissionProvider):
         from invoices.models import Invoice
 
         scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or "*" in scopes:
+        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
             return Invoice.objects.all()
         return Invoice.objects.filter(invoicepart__cost_centre__in=scopes).distinct()
 
@@ -208,7 +208,7 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
         if type(perms) != list:
             raise TypeError(f"Invalid response: {perms}")
 
-        mapping = {}
+        mapping: dict[Permission, bool | list[str]] = {}
 
         for perm in perms:
             perm_id, scope = perm["id"], perm["scope"]
@@ -217,10 +217,11 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
                 mapping[perm_id] = True
             elif perm_id not in mapping:
                 mapping[perm_id] = [scope.lower()]
-            elif mapping[perm_id] is not True:
-                mapping[perm_id].append(
-                    scope.lower()
-                )  # else: don't overwrite an existing True (do nothing)
+            elif (scopes := mapping[perm_id]) is not True:
+                if isinstance(scopes, list):
+                    scopes.append(
+                        scope.lower()
+                    )  # else: don't overwrite an existing True (do nothing)
 
         user.__dict__["cached_permissions"] = mapping
 

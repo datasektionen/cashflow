@@ -14,6 +14,7 @@ from fortnox.api_client.exceptions import (
     ResponseParsingError,
     FortnoxNotFound,
     FortnoxAuthenticationError,
+    FortnoxErrorCode,
 )
 from fortnox.api_client.models import (
     Me,
@@ -38,6 +39,41 @@ from fortnox.api_client.models import (
 logger = get_logger(__name__)
 
 
+class Scope(str, Enum):
+    salary = "salary"
+    bookkeeping = "bookkeeping"
+    archive = "archive"
+    connectfile = "connectfile"
+    article = "article"
+    assets = "assets"
+    companyinformation = "companyinformation"
+    settings = "settings"
+    invoice = "invoice"
+    costcenter = "costcenter"
+    currency = "currency"
+    customer = "customer"
+    inbox = "inbox"
+    payment = "payment"
+    noxfinansinvoice = "noxfinansinvoice"
+    offer = "offer"
+    order = "order"
+    price = "price"
+    print = "print"
+    project = "project"
+    profile = "profile"
+    supplierinvoice = "supplierinvoice"
+    supplier = "supplier"
+    timereporting = "timereporting"
+
+
+class AuthErrorInfo(BaseModel):
+    # Annoyingly Fortnox uses a different format for their auth API
+    # Example response:
+    # {'error': 'invalid_grant', 'error_description': "Authorization code doesn't exist or is invalid for the client"}
+    error: str
+    error_description: str
+
+
 class FortnoxAPIClient:
     """HTTP client for the Fortnox API.
 
@@ -55,12 +91,12 @@ class FortnoxAPIClient:
         client_secret: str,
         scope: list[str],
         access_type: Literal["offline"] = "offline",
-        token_provider: Callable = None,
+        token_provider: Callable | None = None,
     ):
         self.client_id = client_id
         self.client_secret = client_secret
         # Ensure valid scopes to prevent future errors
-        self.scope = TypeAdapter(list[self._ScopeEnum]).validate_python(scope)
+        self.scope = TypeAdapter(list[Scope]).validate_python(scope)
         self.access_type = access_type
         self.token_provider = token_provider
 
@@ -110,13 +146,15 @@ class FortnoxAPIClient:
 
         # Parse/deserialize response or error
         response = requests.post(token_url, headers=headers, data=body)
-        adapter = TypeAdapter(Union[AccessTokenResponse, self._AuthErrorInfo])
+        adapter: TypeAdapter[Union[AccessTokenResponse, AuthErrorInfo]] = TypeAdapter(
+            Union[AccessTokenResponse, AuthErrorInfo]
+        )
         match adapter.validate_python(response.json()):
-            case AccessTokenResponse() as response:
-                user_info = self.retrieve_current_user(response.access_token)
+            case AccessTokenResponse() as token_response:
+                user_info = self.retrieve_current_user(token_response.access_token)
                 logger.debug(f"{user_info.Name} fetched new access token")
-                return response
-            case self._AuthErrorInfo() as e:
+                return token_response
+            case AuthErrorInfo() as e:
                 raise FortnoxAuthenticationError(f"{e.error}: {e.error_description}")
             case _:
                 raise ResponseParsingError(
@@ -128,7 +166,7 @@ class FortnoxAPIClient:
     # ======================
 
     def list_accounts(
-        self, access_token: str = None, limit: int = 100, page: int = 1
+        self, access_token: str | None = None, limit: int = 100, page: int = 1
     ) -> list[Account]:
         response = self._get(
             "accounts",
@@ -137,7 +175,7 @@ class FortnoxAPIClient:
         )
         return self._parse_list_response(response, Account, "Accounts")[0]
 
-    def retrieve_account(self, number: int, access_token: str = None) -> Account:
+    def retrieve_account(self, number: int, access_token: str | None = None) -> Account:
         response = self._get(f"accounts/{number}", access_token=access_token)
         return self._parse_retrieve_response(response, Account, "Account")
 
@@ -146,7 +184,7 @@ class FortnoxAPIClient:
     # ======================
 
     def list_cost_centers(
-        self, access_token: str = None, limit: int = 100, page: int = 1
+        self, access_token: str | None = None, limit: int = 100, page: int = 1
     ) -> list[CostCenter]:
         response = self._get(
             "costcenters", {"limit": limit, "page": page}, access_token=access_token
@@ -154,7 +192,7 @@ class FortnoxAPIClient:
         return self._parse_list_response(response, CostCenter, "CostCenters")[0]
 
     def find_cost_center(
-        self, access_token: str = None, **fields: Unpack[_CostCenterFields]
+        self, access_token: str | None = None, **fields: Unpack[_CostCenterFields]
     ) -> CostCenter:
         """Finds the first cost center on Fortnox that matches the given fields."""
         page = 1
@@ -181,7 +219,9 @@ class FortnoxAPIClient:
     # Company information
     # ======================
 
-    def retrieve_company_info(self, access_token: str = None) -> CompanyInformation:
+    def retrieve_company_info(
+        self, access_token: str | None = None
+    ) -> CompanyInformation:
         response = self._get("companyinformation", access_token=access_token)
         return self._parse_retrieve_response(
             response, CompanyInformation, "CompanyInformation"
@@ -192,7 +232,7 @@ class FortnoxAPIClient:
     # ======================
 
     def list_expenses(
-        self, access_token: str = None, limit: int = 100, page: int = 1
+        self, access_token: str | None = None, limit: int = 100, page: int = 1
     ) -> list[Expense]:
         response = self._get(
             "claims",
@@ -201,7 +241,7 @@ class FortnoxAPIClient:
         )
         return self._parse_list_response(response, Expense, "Expenses")[0]
 
-    def retrieve_expense(self, code: str, access_token: str = None) -> Expense:
+    def retrieve_expense(self, code: str, access_token: str | None = None) -> Expense:
         response = self._get(f"claims/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, Expense, "Expense")
 
@@ -210,7 +250,7 @@ class FortnoxAPIClient:
     # ======================
 
     def list_financial_years(
-        self, access_token: str = None, limit: int = 100, page: int = 1
+        self, access_token: str | None = None, limit: int = 100, page: int = 1
     ) -> list[FinancialYear]:
         response = self._get(
             "financialyears",
@@ -220,16 +260,18 @@ class FortnoxAPIClient:
         return self._parse_list_response(response, FinancialYear, "FinancialYears")[0]
 
     def retrieve_financial_year(
-        self, id: int, access_token: str = None
+        self, financial_year_id: int, access_token: str | None = None
     ) -> FinancialYear:
-        response = self._get(f"financialyears/{id}", access_token=access_token)
+        response = self._get(
+            f"financialyears/{financial_year_id}", access_token=access_token
+        )
         return self._parse_retrieve_response(response, FinancialYear, "FinancialYear")
 
     # ======================
     # Users
     # ======================
 
-    def retrieve_current_user(self, access_token: str = None) -> Me:
+    def retrieve_current_user(self, access_token: str | None = None) -> Me:
         """Retrieves information about the user connected to the given token"""
         try:
             response = self._get("me", access_token=access_token)
@@ -242,7 +284,7 @@ class FortnoxAPIClient:
     # ======================
 
     def list_vouchers(
-        self, limit: int = 100, page: int = 1, access_token: str = None
+        self, limit: int = 100, page: int = 1, access_token: str | None = None
     ) -> list[Voucher]:
         response = self._get(
             "vouchers",
@@ -252,7 +294,7 @@ class FortnoxAPIClient:
         return self._parse_list_response(response, Voucher, "Vouchers")[0]
 
     def retrieve_voucher(
-        self, voucher_series: str, voucher_number: int, access_token: str = None
+        self, voucher_series: str, voucher_number: int, access_token: str | None = None
     ) -> Voucher:
         response = self._get(
             f"vouchers/{voucher_series}/{voucher_number}", access_token=access_token
@@ -262,7 +304,7 @@ class FortnoxAPIClient:
     def create_voucher(
         self,
         voucher: Optional[VoucherCreate] = None,
-        access_token: str = None,
+        access_token: str | None = None,
         **fields,
     ) -> Voucher:
         if voucher is None:
@@ -276,7 +318,7 @@ class FortnoxAPIClient:
         return self._parse_retrieve_response(response, Voucher, "Voucher")
 
     def list_voucher_series(
-        self, limit: int = 100, page: int = 1, access_token: str = None
+        self, limit: int = 100, page: int = 1, access_token: str | None = None
     ) -> list[VoucherSeriesListItem]:
         response = self._get(
             "voucherseries",
@@ -288,13 +330,13 @@ class FortnoxAPIClient:
         )[0]
 
     def retrieve_voucher_series(
-        self, code: str, access_token: str = None
+        self, code: str, access_token: str | None = None
     ) -> VoucherSeries:
         response = self._get(f"voucherseries/{code}", access_token=access_token)
         return self._parse_retrieve_response(response, VoucherSeries, "VoucherSeries")
 
     def find_voucher(
-        self, access_token: str = None, **fields: Unpack[_VoucherFields]
+        self, access_token: str | None = None, **fields: Unpack[_VoucherFields]
     ) -> Voucher:
         """Finds the first voucher that matches the given fields"""
         page = 1
@@ -344,9 +386,12 @@ class FortnoxAPIClient:
     ) -> tuple[list[T], ListMetaInformaion]:
         class ResponseModel(BaseModel):
             MetaInformation: ListMetaInformaion
-            Collection: list[model] = Field(alias=label)
+            # noinspection PyTypeHints
+            Collection: list[model] = Field(alias=label)  # type: ignore[valid-type,literal-required]
 
-        adapter = TypeAdapter(Union[ResponseModel, Error])
+        adapter: TypeAdapter[Union[ResponseModel, Error]] = TypeAdapter(
+            Union[ResponseModel, Error]
+        )
 
         match adapter.validate_python(response.json()):
             case ResponseModel() as resp:
@@ -367,12 +412,18 @@ class FortnoxAPIClient:
                 )
 
     def _get(
-        self, endpoint: str, parameters: dict[str, Any] = None, access_token: str = None
+        self,
+        endpoint: str,
+        parameters: dict[str, Any] | None = None,
+        access_token: str | None = None,
     ) -> requests.Response:
         """Performs a GET request to a Fortnox API endpoint, returning a response object"""
 
         if access_token is None:
-            access_token = self.token_provider()
+            if self.token_provider:
+                access_token = self.token_provider()
+            else:
+                raise ValueError("No access token or callback provided")
 
         headers = {"Authorization": f"Bearer {access_token}"}
         url_params = "?" + parse.urlencode(parameters) if parameters is not None else ""
@@ -406,9 +457,12 @@ class FortnoxAPIClient:
 
         return response
 
-    def _post(self, endpoint: str, json: dict, access_token: str = None):
+    def _post(self, endpoint: str, json: dict, access_token: str | None = None):
         if access_token is None:
-            access_token = self.token_provider()
+            if self.token_provider:
+                access_token = self.token_provider()
+            else:
+                raise ValueError("No access token or callback provided")
         headers = {"Authorization": f"Bearer {access_token}"}
         url = f"{self.API_URL}/{endpoint}/"
         bind_contextvars(fortnox_request_url=url)
@@ -421,6 +475,7 @@ class FortnoxAPIClient:
     @classmethod
     def _validate(cls, model, response):
         # response -> InfoModel or Error
+        # noinspection PyTypeHints
         return (
             cls._APIResponse[Union[model, Error]].model_validate(response.json()).root
         )
@@ -436,45 +491,16 @@ class FortnoxAPIClient:
         # }
         pass
 
-    class _AuthErrorInfo(BaseModel):
-        # Annoyingly Fortnox uses a different format for their auth API
-        # Example response:
-        # {'error': 'invalid_grant', 'error_description': "Authorization code doesn't exist or is invalid for the client"}
-        error: str
-        error_description: str
-
-    class _ScopeEnum(str, Enum):
-        salary = "salary"
-        bookkeeping = "bookkeeping"
-        archive = "archive"
-        connectfile = "connectfile"
-        article = "article"
-        assets = "assets"
-        companyinformation = "companyinformation"
-        settings = "settings"
-        invoice = "invoice"
-        costcenter = "costcenter"
-        currency = "currency"
-        customer = "customer"
-        inbox = "inbox"
-        payment = "payment"
-        noxfinansinvoice = "noxfinansinvoice"
-        offer = "offer"
-        order = "order"
-        price = "price"
-        print = "print"
-        project = "project"
-        profile = "profile"
-        supplierinvoice = "supplierinvoice"
-        supplier = "supplier"
-        timereporting = "timereporting"
-
     @classmethod
-    def _parse_error(cls, error: Error) -> Exception:
+    def _parse_error(cls, error: Error) -> FortnoxAPIError:
         # Takes an ErrorInformation object and tries to generate a suitable exception
-        exception = CODE_EXCEPTION_MAPPING.get(error.Code)
+        try:
+            error_code = FortnoxErrorCode(error.Code)
+        except ValueError:
+            error_code = None
+        exception = CODE_EXCEPTION_MAPPING.get(error_code) if error_code else None
         if exception is not None:
-            return exception
+            return exception()
         else:
             return FortnoxAPIError(
                 f"Unknown error from Fortnox API ({error.Code=}):\n{error.Message}"

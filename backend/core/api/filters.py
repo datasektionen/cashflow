@@ -130,7 +130,7 @@ def apply_expense_filters(
     queryset: ExpenseQuerySet[Expense],
     params: QueryDict | dict[str, Any],
     user: User | None = None,
-) -> QuerySet[Expense]:
+) -> ExpenseQuerySet:
     """Applies filters to an expense queryset based on query parameters."""
     if username := params.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
@@ -202,10 +202,10 @@ def apply_expense_filters(
 
 
 def apply_invoice_filters(
-    queryset: InvoiceQuerySet[Invoice],
+    queryset: InvoiceQuerySet,
     params: QueryDict | dict[str, Any],
     user: User | None = None,
-) -> QuerySet[Invoice]:
+) -> InvoiceQuerySet:
     """Applies filters to an invoice queryset based on query parameters."""
     if username := params.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
