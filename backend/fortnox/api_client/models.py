@@ -3,9 +3,9 @@ This module defines Pydantic data modules that are used to
 validate and (de)serialize data passed to and from the API.
 """
 
-from typing import Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict, Annotated
 
-from pydantic import BaseModel, constr, conint, Field, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices, StringConstraints
 
 
 class Account(BaseModel):
@@ -16,8 +16,11 @@ class Account(BaseModel):
     BalanceCarriedForward: Optional[float] = None
     CostCenter: Optional[str] = None
     CostCenterSettings: Optional[Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]] = None
-    Description: constr(min_length=1, max_length=200)
-    Number: conint(ge=1000, le=9999)
+    Description: Annotated[str, StringConstraints(min_length=1, max_length=200)]
+    Number: Annotated[
+        int,
+        Field(ge=1000, le=9999),
+    ]
     OpeningQuantities: Optional[list[OpeningQuantity]] = None
     Project: Optional[str] = None
     ProjectSettings: Optional[Literal["ALLOWED", "MANDATORY", "NOTALLOWED"]] = None
@@ -55,8 +58,14 @@ class CompanyInformation(BaseModel):
 class CostCenter(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     Active: Optional[bool] = None
-    Code: constr(min_length=1, max_length=6)
-    Description: constr(min_length=1)
+    Code: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=6),
+    ]
+    Description: Annotated[
+        str,
+        StringConstraints(min_length=1),
+    ]
     Note: Optional[str] = None
 
 
@@ -95,7 +104,7 @@ class Me(BaseModel):
 
 
 class VoucherRow(BaseModel):
-    Account: conint(ge=1000, le=9999)
+    Account: Annotated[int, Field(ge=1000, le=9999)]
     CostCenter: Optional[str] = None
     Credit: Optional[float] = None
     Debit: Optional[float] = None
@@ -103,15 +112,17 @@ class VoucherRow(BaseModel):
     Project: Optional[str] = None
     Quantity: Optional[float] = None
     Removed: Optional[bool] = None
-    TransactionInformation: Optional[constr(max_length=100)] = None
+    TransactionInformation: Annotated[str, StringConstraints(max_length=100)] | None = (
+        None
+    )
 
 
 class Voucher(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     ApprovalState: Optional[int] = None
-    Comments: Optional[constr(max_length=1000)] = None
+    Comments: Annotated[str, StringConstraints(max_length=1000)] | None = None
     CostCenter: Optional[str] = None
-    Description: constr(min_length=1, max_length=200)
+    Description: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     Project: Optional[str] = None
     ReferenceNumber: Optional[str] = None
     ReferenceType: Optional[
@@ -135,9 +146,9 @@ class Voucher(BaseModel):
 class _VoucherFields(TypedDict, total=False):
     url: Optional[str]
     ApprovalState: Optional[int]
-    Comments: Optional[constr(max_length=1000)]
+    Comments: Annotated[str, StringConstraints(max_length=1000)] | None
     CostCenter: Optional[str]
-    Description: Optional[constr(min_length=1, max_length=200)]
+    Description: Annotated[str, StringConstraints(min_length=1, max_length=200)] | None
     Project: Optional[str]
     ReferenceNumber: Optional[str]
     ReferenceType: Optional[
@@ -161,9 +172,9 @@ class _VoucherFields(TypedDict, total=False):
 class VoucherCreate(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     ApprovalState: Optional[int] = None
-    Comments: Optional[constr(max_length=1000)] = None
+    Comments: Annotated[str, StringConstraints(max_length=1000)] | None = None
     CostCenter: Optional[str] = None
-    Description: constr(min_length=1, max_length=200)
+    Description: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     Project: Optional[str] = None
     ReferenceNumber: Optional[str] = None
     ReferenceType: Optional[
@@ -213,8 +224,8 @@ class VoucherSeries(BaseModel):
 
     url: Optional[str] = Field(alias="@url", default=None)
     Approver: Optional[ApproverModel] = None
-    Code: constr(min_length=1, max_length=10)
-    Description: Optional[constr(max_length=200)] = None
+    Code: Annotated[str, StringConstraints(min_length=1, max_length=10)]
+    Description: Annotated[str, StringConstraints(max_length=200)] | None = None
     Manual: Optional[bool] = None
     NextVoucherNumber: Optional[int] = None
     Year: Optional[int] = None
@@ -223,8 +234,9 @@ class VoucherSeries(BaseModel):
 class VoucherSeriesListItem(BaseModel):
     url: Optional[str] = Field(alias="@url", default=None)
     Approver: Optional[VoucherSeries.ApproverModel] = None
-    Code: constr(min_length=1, max_length=10)
-    Description: Optional[constr(max_length=200)]
+    Code: Annotated[str, StringConstraints(min_length=1, max_length=10)]
+
+    Description: Annotated[str, StringConstraints(max_length=200)] | None
     Manual: Optional[bool] = None
     Year: Optional[int] = None
 
