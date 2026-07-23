@@ -40,7 +40,14 @@ from core.api.serializers import (
 )
 from core.api.utils import AuthenticatedUserMixin
 from core.permissions import get_permission_provider
-from expenses.models import Comment, Expense, ExpensePart, Payment, Profile
+from expenses.models import (
+    Comment,
+    Expense,
+    ExpensePart,
+    Payment,
+    Profile,
+    ExpenseQuerySet,
+)
 from fortnox import FortnoxRequest, FortnoxNotFound, FortnoxServiceNotAvailableProblem
 from invoices.models import Invoice, InvoicePart
 
@@ -60,7 +67,7 @@ class _WindowedClaims(list):
         super().__init__(rows)
         self._total = total
 
-    def count(self) -> int:
+    def count(self, *_, **__) -> int:
         return self._total
 
 
@@ -87,7 +94,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         # on or before the requested page, so page cost does not grow with
         # table size. Non-numeric pages ("last") materialize everything.
         window = None
-        if self.paginator is not None:
+        if isinstance(self.paginator, DefaultPagination):
             page_size = self.paginator.get_page_size(request)
             raw_page = request.GET.get(self.paginator.page_query_param, "1")
             if page_size and raw_page.isdigit():
@@ -96,7 +103,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         total = 0
         expense_data: list[ClaimData] = []
         if claim_type != "invoice":
-            expenses = (
+            expenses: ExpenseQuerySet = (
                 Expense.objects.viewable_by(self.current_user)
                 .select_related("reimbursement", "owner__user")
                 .prefetch_related(
@@ -116,12 +123,11 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     "id": expense.id,
                     "type": "expense",
                     "description": expense.description,
-                    "amount": expense.total_amount(),
+                    "amount": expense.total_amount().to_eng_string(),
                     "created_date": expense.created_date,
                     "is_attested": expense.is_attested(),
                     "is_confirmed": expense.confirmed_by_id is not None,
                     "is_paid": expense.is_paid(),
-                    # Model stores "" for not-yet-accounted; API exposes null
                     "voucher": expense.verification or None,
                     "owner": expense.owner,
                     "parts": expense.parts.all(),
@@ -348,12 +354,12 @@ class VoucherSeriesList(GenericAPIView):
 
     def get(self, request: FortnoxRequest):
 
-        series = []
+        series: list[dict[str, str | None]] = []
 
         include_fortnox = request.GET.get("include_fortnox", "true").lower() != "false"
 
         if request.fortnox_service is not None and include_fortnox:
-            by_code = {}
+            by_code: dict[str, str | None] = {}
             try:
                 for vs in request.fortnox_service.list_voucher_series():
                     if vs.Code.isalpha() and len(vs.Code) == 1:
@@ -380,14 +386,14 @@ class VoucherSeriesList(GenericAPIView):
             for v in Invoice.objects.all().values_list("verification", flat=True)
             if v is not None and len(v) > 0 and v[0].isalpha()
         }
-        inactive = [
+        inactive: list[dict[str, str | None]] = [
             {"code": code}
             for code in expense_codes | invoice_codes
             if code and code not in [sc["code"] for sc in series]
         ]
         series += inactive
 
-        page = self.paginate_queryset(series)
+        page: list[dict[str, str | None]] | None = self.paginate_queryset(series)  # type: ignore[arg-type]
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)

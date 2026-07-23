@@ -4,6 +4,7 @@ from datetime import timedelta
 import structlog
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -52,6 +53,7 @@ def get_auth_code(request):
 @login_required
 @require_fortnox_permission
 def auth_complete(request: FortnoxRequest):
+    assert isinstance(request.user, User)
     redirect_uri = request.build_absolute_uri(reverse("fortnox-auth-complete"))
 
     # Validate CSRF token integrity

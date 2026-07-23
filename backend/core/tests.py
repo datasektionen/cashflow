@@ -219,7 +219,7 @@ class TestClaimsList:
             ("expense", ExpenseFactory(owner=user.profile).id) for _ in range(7)
         } | {("invoice", InvoiceFactory(owner=user.profile).id) for _ in range(7)}
 
-        seen: list[tuple[str, int]] = []
+        seen = []
         for page in range(1, 6):
             response = api_client.get(f"/api/claims/?per_page=3&page={page}")
             assert response.status_code == 200
@@ -240,7 +240,7 @@ class TestClaimSerializer:
     def test_serializes_claim_data(self):
         from unittest.mock import MagicMock
 
-        data: ClaimData = {
+        data = {
             "id": 1,
             "type": "expense",
             "description": "Lunch",
