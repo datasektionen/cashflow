@@ -1,11 +1,9 @@
 from drf_problems.utils import register
 from rest_framework import exceptions
 
-from core.exceptions import ErrorToDictMixin
-
 
 @register
-class AccountingPermissionDeniedProblem(exceptions.PermissionDenied, ErrorToDictMixin):
+class AccountingPermissionDeniedProblem(exceptions.PermissionDenied):
     status_code = 403
     default_code = "accounting_permission_denied"
     title = "Permission denied for accounting expense/invoice"

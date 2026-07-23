@@ -10,7 +10,6 @@ from pydantic import RootModel, HttpUrl, TypeAdapter
 from rest_framework.exceptions import APIException
 from structlog import get_logger
 
-from core.exceptions import ErrorToDictMixin
 from users.pictures import ProfilePictureProvider, ProfilePicture
 
 logger = get_logger(__name__)
@@ -23,7 +22,7 @@ class _RFingerResponse(RootModel):
 URL_ADAPTER = TypeAdapter(HttpUrl)
 
 
-class RFingerRequestFailed(APIException, ErrorToDictMixin):
+class RFingerRequestFailed(APIException):
     status_code = 500
     default_code = "rfinger_request_failed"
     title = "rfinger request Failed"
