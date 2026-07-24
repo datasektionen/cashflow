@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { File as FileIcon, HardDriveUpload, X } from '@lucide/svelte';
+	import { HardDriveUpload, X } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
+	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
+	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 
 	let { files = $bindable<File[]>([]) }: { files?: File[] } = $props();
 	let fileInput: HTMLInputElement;
+
+	// Shared PDFium engine used to render first-page thumbnails for PDF uploads.
+	const pdfium = usePdfiumEngine();
 
 	function syncInput() {
 		const dt = new DataTransfer();
@@ -32,10 +37,7 @@
 				<div
 					class="mx-4 flex flex-row space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
 				>
-					<span class="flex h-16 w-12">
-						<FileIcon class="m-auto my-auto" />
-					</span>
-					<!-- Thumbnail coming soon(tm) -->
+					<FileThumbnail {file} engine={pdfium.engine} class="m-2 h-12 w-9" />
 					<div class="flex flex-1 flex-col">
 						<span class="my-auto">{file.name}</span>
 						<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
