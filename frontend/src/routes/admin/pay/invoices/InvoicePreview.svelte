@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { ExternalLink } from '@lucide/svelte';
-	import type { Invoice } from '$lib/api/types.ts';
+	import type { Invoice } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -10,8 +10,8 @@
 	import { api } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
 	import { logger } from '$lib/logger';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
+	import { alerts, error, success } from '$lib/stores/alerts';
+	import { isErrorResponse } from '$lib/api/errors';
 
 	let { invoiceId, onPaid }: { invoiceId: number; onPaid?: () => void } = $props();
 
@@ -99,6 +99,6 @@
 			<CommentDisplay comments={invoice.comments} />
 		</div>
 	</div>
-{:catch}
+{:catch e}
 	<div class="py-24 text-center text-sm text-red-500">{$_('action_failed')}</div>
 {/await}

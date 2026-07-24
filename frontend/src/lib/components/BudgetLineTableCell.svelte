@@ -11,7 +11,7 @@ Table cell component that shows cost centre, secondary cost centre, and budget l
 		budgetLine
 	}: {
 		costCentre: string;
-		secondaryCost: string;
+		secondaryCostCentre: string;
 		budgetLine: string;
 	} = $props();
 </script>

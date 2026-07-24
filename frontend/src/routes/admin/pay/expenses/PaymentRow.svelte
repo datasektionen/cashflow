@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { BankInfo, Profile } from '$lib/api/types.ts';
+	import type { BankInfo, Profile } from '$lib/api/types';
 	import { api } from '$lib/api';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { Check, Copy, ExternalLink } from '@lucide/svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
+	import { alerts, error, success } from '$lib/stores/alerts';
+	import { isErrorResponse } from '$lib/api/errors';
 	import { logger } from '$lib/logger';
 	import { formatBankAccount } from '$lib/bankAccount';
 

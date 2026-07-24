@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { ExternalLink } from '@lucide/svelte';
-	import type { Expense, User } from '$lib/api/types.ts';
+	import type { Expense, User } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -9,8 +9,8 @@
 	import { api } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
 	import { logger } from '$lib/logger';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
+	import { alerts, error, success } from '$lib/stores/alerts';
+	import { isErrorResponse } from '$lib/api/errors';
 	import UserLink from '$lib/components/UserLink.svelte';
 
 	let { expenseId, currentUser }: { expenseId: number; currentUser?: User } = $props();

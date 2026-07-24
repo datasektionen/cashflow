@@ -3,7 +3,7 @@ import type { Actions } from './$types';
 import { API } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
-import type { ExpenseUpdate, PartUpdate } from '$lib/api/types';
+import type { ExpenseUpdate, PartCreateUpdate } from '$lib/api/types';
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -29,7 +29,7 @@ export const actions: Actions = {
 		// Parts are only present in the form when they're still editable (the
 		// parts editor is swapped for a read-only table once any part is
 		// attested), so an empty list here means "leave parts unchanged".
-		const parts: PartUpdate[] = [];
+		const parts: PartCreateUpdate[] = [];
 		let i = 0;
 		for (const field of data) {
 			if (field[0].startsWith(`part-${i}-`)) {

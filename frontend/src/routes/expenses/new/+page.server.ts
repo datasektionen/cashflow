@@ -3,7 +3,7 @@ import type { Actions } from './$types';
 import { API } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
-import type { ExpenseCreate, ExpensePart } from '$lib/api/types';
+import type { ExpenseCreate, PartCreateUpdate } from '$lib/api/types';
 
 export const actions: Actions = {
 	// This action handles the form submit when creating new claims
@@ -27,7 +27,7 @@ export const actions: Actions = {
 		const files = data.getAll('files').filter((f): f is File => f instanceof File);
 
 		// We need to parse expense parts into a JSON string for the API post request
-		const parts: ExpensePart[] = [];
+		const parts: PartCreateUpdate[] = [];
 		let i = 0;
 		for (const field of data) {
 			if (field[0].startsWith(`part-${i}-`)) {

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Check } from '@lucide/svelte';
-	import type { ExpensePart, InvoicePart, Profile, User } from '$lib/api/types.ts';
+	import type { ExpensePart, InvoicePart, Profile, User } from '$lib/api/types';
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
+	import { alerts, error, success } from '$lib/stores/alerts';
 	import { sumAmounts } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 
@@ -77,11 +77,7 @@
 				{#if includeAttest}
 					<td class="w-40 py-3 pl-4 text-right">
 						{#if attested.has(part.id) || ('attested_by' in part && part.attested_by)}
-							{@const attestedBy = attested.has(part.id)
-								? (currentUser ?? null)
-								: 'attested_by' in part
-									? part.attested_by
-									: null}
+							{@const attestedBy = attested.has(part.id) ? (currentUser ?? null) : part.attested_by}
 							<div class="flex items-center justify-end gap-1.5">
 								<Check class="size-5 shrink-0 text-money-green-500" />
 								{#if attestedBy}

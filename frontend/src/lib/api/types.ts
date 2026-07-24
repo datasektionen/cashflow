@@ -91,7 +91,7 @@ export interface InvoiceCreate {
 	invoice_date: string;
 	due_date: string;
 	files: File[];
-	parts: InvoicePart[];
+	parts: PartCreateUpdate[];
 	accounted?: boolean;
 	verification?: string;
 }
@@ -99,11 +99,11 @@ export interface InvoiceCreate {
 export interface ExpenseCreate {
 	description: string;
 	expense_date: string;
-	parts: ExpensePart[];
+	parts: PartCreateUpdate[];
 	files: File[];
 }
 
-export type PartUpdate = {
+export type PartCreateUpdate = {
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
@@ -114,7 +114,7 @@ export interface ExpenseUpdate {
 	description?: string;
 	expense_date?: string;
 	files?: File[];
-	parts?: PartUpdate[];
+	parts?: PartCreateUpdate[];
 }
 
 export interface InvoiceUpdate {
@@ -122,7 +122,7 @@ export interface InvoiceUpdate {
 	invoice_date?: string;
 	due_date?: string;
 	files?: File[];
-	parts?: PartUpdate[];
+	parts?: PartCreateUpdate[];
 }
 
 export type ExpensePart = {

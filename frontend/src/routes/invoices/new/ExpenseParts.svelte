@@ -125,11 +125,11 @@
 							>{$_('new_expense.form.expense_parts.amount_label')}</span
 						>{/if}
 					<div class="relative flex items-center">
-						<input type="hidden" name="part-{i}-amount" value={part.raw ?? ''} />
+						<input type="hidden" name="part-{i}-amount" value={part.amountRaw ?? ''} />
 						<input
 							type="text"
 							id="part-{i}-amount"
-							bind:value={part.display}
+							bind:value={part.amountDisplay}
 							onfocus={() => onAmountFocus(i)}
 							onblur={(e) => onAmountBlur(i, (e.currentTarget as HTMLInputElement).value)}
 							placeholder="0,00"
