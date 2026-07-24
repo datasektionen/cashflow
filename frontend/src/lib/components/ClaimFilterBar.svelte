@@ -18,16 +18,11 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
 	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
-	import type {
-		BudgetLine,
-		CostCentre,
-		SecondaryCostCentre,
-		VoucherSeries
-	} from '$lib/api/types.ts';
+	import type { BudgetLine, CostCentre, SecondaryCostCentre, VoucherSeries } from '$lib/api/types';
 	import { api } from '$lib/api';
-	import { isErrorResponse } from '$lib/api/errors.ts';
-	import { alerts, error } from '$lib/stores/alerts.ts';
-	import { logger } from '$lib/logger.ts';
+	import { isErrorResponse } from '$lib/api/errors';
+	import { alerts, error } from '$lib/stores/alerts';
+	import { logger } from '$lib/logger';
 
 	let {
 		includeReset = true,
@@ -268,6 +263,7 @@
 		<!--        </button>-->
 
 		<ComboBox
+			name="cost-centre"
 			class="text-sm"
 			value={filterValue('cost_centre')}
 			bind:searchValue={budgetSearchValues.costCentre}
@@ -276,6 +272,7 @@
 			items={costCentres.map((it) => it.name)}
 		/>
 		<ComboBox
+			name="secondary-cost-centre"
 			class="text-sm"
 			value={filterValue('secondary_cost_centre')}
 			bind:searchValue={budgetSearchValues.secondaryCostCentre}
@@ -284,6 +281,7 @@
 			items={secondaryCostCentres.map((it) => it.name)}
 		/>
 		<ComboBox
+			name="budget-line"
 			class="text-sm"
 			value={filterValue('budget_line')}
 			bind:searchValue={budgetSearchValues.budgetLine}

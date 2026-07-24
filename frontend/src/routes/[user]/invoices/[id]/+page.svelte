@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Copy, Check, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import type { PageData } from './$types';
-	import type { Invoice } from '$lib/api/types.ts';
+	import type { Invoice, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -10,14 +10,14 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { api } from '$lib/api';
-	import { logger } from '$lib/logger.ts';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
+	import { logger } from '$lib/logger';
+	import { alerts, error, success } from '$lib/stores/alerts';
+	import { isErrorResponse } from '$lib/api/errors';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
-	let { invoice }: { invoice: Invoice } = data;
+	let { invoice }: { invoice: Invoice } = $derived(data);
 
 	const canDelete = $derived(
 		(!!data.user?.permissions.delete || invoice.owner.username === data.user?.username) &&
@@ -30,16 +30,10 @@
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
 	);
 
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
 	const totalAmount = $derived(
-		fmt.format(
-			invoice.parts.reduce(
-				(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-				0
-			)
+		invoice.parts.reduce(
+			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
+			0
 		)
 	);
 
@@ -71,7 +65,7 @@
 			.finally(() => (deleting = false));
 	}
 
-	let comments = $state(invoice.comments);
+	let comments: Comment[] = $derived(invoice.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 
@@ -321,7 +315,7 @@
 					</div>
 				</div>
 			{/if}
-			<CommentDisplay {comments} currentUser={data.user} />
+			<CommentDisplay {comments} currentUser={data.user ? data.user : undefined} />
 		</div>
 	</div>
 </div>

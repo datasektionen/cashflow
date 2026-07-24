@@ -38,7 +38,7 @@
 		{
 			key: 'voucher',
 			header: $_('admin_expenses.columns.voucher'),
-			render: (e) => e.voucher,
+			render: (e) => (e.voucher ? e.voucher : ''),
 			width: 'w-32'
 		},
 		{

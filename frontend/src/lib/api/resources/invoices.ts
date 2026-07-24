@@ -2,6 +2,7 @@ import { ApiClient } from '$lib/api';
 import type {
 	AccountPayload,
 	ClaimFilter,
+	Comment,
 	DescriptionSearch,
 	Invoice,
 	InvoiceCreate,

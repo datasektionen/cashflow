@@ -1,7 +1,7 @@
 import { API_URL } from '$lib/config';
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { type InvoiceCreate, type InvoicePart } from '$lib/api/types';
+import { type InvoiceCreate, type PartCreateUpdate } from '$lib/api/types';
 import { API, ApiClient } from '$lib/api';
 import { logger } from '$lib/logger';
 
@@ -32,7 +32,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Due date is required' });
 		}
 
-		const parts: InvoicePart[] = [];
+		const parts: PartCreateUpdate[] = [];
 		let i = 0;
 		for (const field of data) {
 			if (field[0].startsWith(`part-${i}-`)) {

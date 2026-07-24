@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { PaginatedResponse, PendingPayment } from '$lib/api/types.ts';
+	import type { PaginatedResponse, PendingPayment } from '$lib/api/types';
 	import { api } from '$lib/api';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';

@@ -25,7 +25,7 @@
 	<Dialog.Trigger>
 		{@render triggerContent()}
 	</Dialog.Trigger>
-	<Dialog.Portal class={['m-auto']}>
+	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed top-0 left-0 z-40 size-full bg-black opacity-50 blur-2xl']} />
 		<Dialog.Content
 			class={[

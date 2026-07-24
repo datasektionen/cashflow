@@ -3,36 +3,30 @@
 	import { Check, Copy, Flag, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import type { PageData } from './$types';
-	import type { Expense } from '$lib/api/types.ts';
+	import type { Expense } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import { api } from '$lib/api';
-	import { logger } from '$lib/logger.ts';
-	import { alerts, error, success } from '$lib/stores/alerts.ts';
-	import { isErrorResponse } from '$lib/api/errors.ts';
+	import { logger } from '$lib/logger';
+	import { alerts, error, success } from '$lib/stores/alerts';
+	import { isErrorResponse } from '$lib/api/errors';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
-	let expense: Expense = $state(data.expense);
+	let expense: Expense = $derived(data.expense);
 
 	const isAttested = $derived(
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
 	const totalAmount = $derived(
-		fmt.format(
-			expense.parts.reduce(
-				(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-				0
-			)
+		expense.parts.reduce(
+			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
+			0
 		)
 	);
 
@@ -147,7 +141,7 @@
 		setTimeout(() => (copied = false), 2000);
 	}
 
-	let comments = $state(expense.comments);
+	let comments = $derived(expense.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 	const commentSubmit = async () => {
@@ -273,9 +267,9 @@
 				class="flex cursor-pointer items-center gap-1.5 border border-amber-600 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950"
 			>
 				{#if flagging}
-					<cashspinner />
+					<CashSpinner></CashSpinner>
 				{:else}
-					<flag class="size-3.5" />
+					<flag class="size-3.5"></flag>
 					{$_('expense_unflag')}
 				{/if}
 			</button>
@@ -344,7 +338,7 @@
 				{totalAmount}
 				includeAttest={true}
 				attestDisabled={!!expense.is_flagged}
-				currentUser={data.user}
+				currentUser={data.user ? data.user : undefined}
 			/>
 		</div>
 
@@ -454,7 +448,7 @@
 					</div>
 				</div>
 			{/if}
-			<CommentDisplay {comments} currentUser={data.user} />
+			<CommentDisplay {comments} currentUser={data.user ? data.user : undefined} />
 		</div>
 	</div>
 </div>

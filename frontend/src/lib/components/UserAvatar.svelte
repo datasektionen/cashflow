@@ -10,12 +10,13 @@
 
 	let { url, username, placeholder = false, class: className, ...more }: UserAvatarProps = $props();
 
-	const resolved =
+	const resolved = $derived(
 		placeholder || (!url && !username)
 			? Promise.reject()
 			: url
 				? Promise.resolve(url)
-				: api.profilePictures.get(username!);
+				: api.profilePictures.get(username!)
+	);
 </script>
 
 {#await resolved}

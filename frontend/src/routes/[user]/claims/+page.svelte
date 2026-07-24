@@ -45,13 +45,16 @@
 
 	const rowProps: TableRowProps<Claim> = {
 		onClick: (claim) => {
-			console.log('Claim clicked:', claim);
-			if (claim.type === 'expense') {
-				goto(`/${data.user.username}/expenses/${claim.id}`);
-			} else if (claim.type === 'invoice') {
-				goto(`/${data.user.username}/invoices/${claim.id}`);
+			if (data.user) {
+				if (claim.type === 'expense') {
+					goto(`/${data.user.username}/expenses/${claim.id}`);
+				} else if (claim.type === 'invoice') {
+					goto(`/${data.user.username}/invoices/${claim.id}`);
+				} else {
+					logger.warn('unexpected claim type');
+				}
 			} else {
-				logger.warn('unexpected claim type');
+				logger.warn('expected user to be defined');
 			}
 		},
 		class: 'cursor-pointer'

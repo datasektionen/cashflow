@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { type Alert, AlertType, dismiss } from '$lib/stores/alerts';
 	import { CircleAlert, CircleDollarSign, CircleX, Lightbulb, X } from '@lucide/svelte';
-	import { logger } from '$lib/logger';
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { linear } from 'svelte/easing';
@@ -25,12 +24,10 @@
 	});
 
 	function handleDismiss(): void {
-		logger.debug('dismiss');
-		console.log('test');
 		dismiss(alert.id);
 	}
 
-	const progress = new Tween(100, { duration: alert.duration, easing: linear });
+	const progress = new Tween(100, { duration: () => alert.duration, easing: linear });
 
 	onMount(() => {
 		progress.set(0);

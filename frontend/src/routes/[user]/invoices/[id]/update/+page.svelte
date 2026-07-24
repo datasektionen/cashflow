@@ -3,7 +3,7 @@
 	import { BanknoteArrowUp, Check, CircleAlert, Copy } from '@lucide/svelte';
 	import { parseDate, type DateValue } from '@internationalized/date';
 	import type { PageData } from './$types';
-	import type { Invoice } from '$lib/api/types.ts';
+	import type { Invoice } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
@@ -13,20 +13,18 @@
 	import validation from './validation.ts';
 
 	let { data }: { data: PageData } = $props();
-	let { invoice }: { invoice: Invoice } = data;
+	let { invoice }: { invoice: Invoice } = $derived(data);
 
-	const partsLocked = invoice.parts.some((p) => p.attested_by != null);
+	const partsLocked = $derived(invoice.parts.some((p) => p.attested_by != null));
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	});
 	const totalAmount = $derived(
-		fmt.format(
-			invoice.parts.reduce(
-				(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-				0
-			)
+		invoice.parts.reduce(
+			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
+			0
 		)
 	);
 
@@ -38,15 +36,15 @@
 	}
 
 	let submitting = $state(false);
-	let description = $state(invoice.description);
+	let description = $derived(invoice.description);
 	let newFiles: File[] = $state([]);
-	let invoiceDate: DateValue | undefined = $state(
+	let invoiceDate: DateValue | undefined = $derived(
 		invoice.invoice_date ? parseDate(invoice.invoice_date) : undefined
 	);
-	let dueDate: DateValue | undefined = $state(
+	let dueDate: DateValue | undefined = $derived(
 		invoice.due_date ? parseDate(invoice.due_date) : undefined
 	);
-	let parts: Part[] = $state(
+	let parts: Part[] = $derived(
 		invoice.parts.length > 0
 			? invoice.parts.map((p) => {
 					const amountRaw = parseFloat(p.amount);
