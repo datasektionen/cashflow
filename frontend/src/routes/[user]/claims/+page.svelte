@@ -9,6 +9,7 @@
 	import { alerts, success } from '$lib/stores/alerts';
 	import { logger } from '$lib/logger';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
 
 	let { data }: PageProps = $props();
@@ -84,9 +85,19 @@
 			header: $_('admin_expenses.columns.expense_date'),
 			render: (row) => row.created_date,
 			width: 'w-28'
+		},
+		{
+			id: 'status',
+			header: $_('admin_expenses.columns.status'),
+			renderSnippet: statusCell,
+			width: 'w-40'
 		}
 	];
 </script>
+
+{#snippet statusCell(c: Claim)}
+	<ClaimStatusPills claim={c} />
+{/snippet}
 
 {#snippet costCentres(c: Claim)}
 	{@const unique = [...new Set(c.parts.map((p) => p.cost_centre))]}

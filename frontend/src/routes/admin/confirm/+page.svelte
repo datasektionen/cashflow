@@ -9,6 +9,7 @@
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ExpensePreview from './ExpensePreview.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import { ScrollArea } from 'bits-ui';
 
 	let { data }: PageProps = $props();
@@ -73,36 +74,7 @@
 {/snippet}
 
 {#snippet statusCell(c: Claim)}
-	<div class="flex gap-3">
-		{#if c.is_paid}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-600 dark:bg-money-green-400"
-				></span>
-				{$_('expense_paid')}
-			</span>
-		{:else if c.is_confirmed}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-500 dark:bg-money-green-400"
-				></span>
-				{$_('expense_confirmed')}
-			</span>
-		{:else if c.is_attested}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-400 dark:bg-money-green-500"
-				></span>
-				{$_('expense_attested')}
-			</span>
-		{:else}
-			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
-				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
-				></span>
-				{$_('expense_status.unconfirmed')}
-			</span>
-		{/if}
-	</div>
+	<ClaimStatusPills claim={c} />
 {/snippet}
 
 <!-- height = viewport - navbar (4rem) - main's py-4 (2rem) - page-title header (~4rem) -->
