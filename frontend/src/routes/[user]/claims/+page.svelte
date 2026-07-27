@@ -7,7 +7,6 @@
 	import type { TableColumn, TableRowProps } from '$lib/components/types';
 	import type { Claim } from '$lib/api/types';
 	import { alerts, success } from '$lib/stores/alerts';
-	import { logger } from '$lib/logger';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
@@ -45,19 +44,10 @@
 	}
 
 	const rowProps: TableRowProps<Claim> = {
-		onClick: (claim) => {
-			if (data.user) {
-				if (claim.type === 'expense') {
-					goto(`/${data.user.username}/expenses/${claim.id}`);
-				} else if (claim.type === 'invoice') {
-					goto(`/${data.user.username}/invoices/${claim.id}`);
-				} else {
-					logger.warn('unexpected claim type');
-				}
-			} else {
-				logger.warn('expected user to be defined');
-			}
-		},
+		href: (claim) =>
+			data.user
+				? `/${data.user.username}/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`
+				: '',
 		class: 'cursor-pointer'
 	};
 

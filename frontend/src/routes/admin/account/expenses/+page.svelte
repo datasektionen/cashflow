@@ -61,7 +61,7 @@
 </script>
 
 {#snippet ownerCell(e: Expense)}
-	<UserLink user={e.owner} />
+	<UserLink user={e.owner} class="relative z-10" />
 {/snippet}
 
 {#snippet idCell(e: Expense)}
@@ -93,7 +93,7 @@
 	{loading}
 	scrollable
 	rowProps={{
-		onClick: (e) => goto(`/admin/account/expenses/${e.id}`),
+		href: (e) => `/admin/account/expenses/${e.id}`,
 		class: 'cursor-pointer'
 	}}
 />

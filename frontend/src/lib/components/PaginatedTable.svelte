@@ -76,13 +76,36 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 						<tr
 							class={[
 								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+								rowProps?.href && 'relative',
 								resolveRowClass(row)
 							]}
-							onclick={() => rowProps?.onClick?.(row)}
+							onclick={rowProps?.onClick ? () => rowProps.onClick?.(row) : undefined}
 						>
-							{#each columns as column}
-								<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
-									{#if column.renderSnippet}
+							{#each columns as column, ci}
+								<td
+									class={[
+										'px-4',
+										// The first cell hosts the stretched row link, so it must not clip
+										// the overlay; every other cell keeps overflow-hidden for truncation.
+										ci === 0 && rowProps?.href ? '' : 'overflow-hidden',
+										!column.renderSnippet && 'truncate'
+									]}
+								>
+									{#if ci === 0 && rowProps?.href}
+										<!-- The ::before overlay covers the whole row (the <tr> is the
+										     positioning context). Interactive cell content is elevated
+										     with z-10 so it stays clickable above the overlay. -->
+										<a
+											href={rowProps.href(row)}
+											class="before:absolute before:inset-0 before:content-['']"
+										>
+											{#if column.renderSnippet}
+												{@render column.renderSnippet(row)}
+											{:else}
+												{column.render?.(row) ?? ''}
+											{/if}
+										</a>
+									{:else if column.renderSnippet}
 										{@render column.renderSnippet(row)}
 									{:else}
 										{column.render?.(row) ?? ''}
