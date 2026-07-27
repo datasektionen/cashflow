@@ -27,6 +27,12 @@
 	import ComboBox from '$lib/components/ComboBox.svelte';
 	import { api } from '$lib/api';
 	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
+	import {
+		cachedCostCentres,
+		cachedSecondaryCostCentres,
+		cachedBudgetLines
+	} from '$lib/stores/state.svelte';
+	import { logger } from '$lib/logger';
 
 	type Props = {
 		parts: Part[];
@@ -46,9 +52,16 @@
 	let budgetLinesByPart: BudgetLine[][] = $state([]);
 
 	onMount(async () => {
-		costCentres = await api.budget
-			.listCostCentres(1, 100, { active: true })
-			.then((res) => res.data);
+		if (cachedCostCentres.length === 0) {
+			logger.debug('cost centres: cache miss, fetching');
+			const allCostCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
+			cachedCostCentres.push(...allCostCentres);
+			costCentres = allCostCentres.filter((cc) => cc.active);
+		} else {
+			logger.debug('cost centres: cache hit');
+			costCentres = cachedCostCentres.filter((cc) => cc.active);
+		}
+
 		secondaryCostCentresByPart = parts.map(() => []);
 		budgetLinesByPart = parts.map(() => []);
 		await Promise.all(parts.map((_, i) => loadSecondaryCostCentres(i)));
@@ -56,12 +69,27 @@
 
 	async function loadSecondaryCostCentres(i: number) {
 		const costCentre = costCentres.find((cc) => cc.name === parts[i].costcenter);
-		secondaryCostCentresByPart[i] =
-			costCentre?.id != null
-				? await api.budget
-						.listSecondaryCostCentres(1, 100, { active: true, cost_centre: costCentre.id })
-						.then((res) => res.data)
-				: [];
+		if (costCentre?.id != null) {
+			let cached = cachedSecondaryCostCentres.get(costCentre);
+			if (cached == null) {
+				logger.debug(
+					{ costCentre: costCentre.name },
+					'secondary cost centres: cache miss, fetching'
+				);
+				// Cache the full list (incl. inactive) so it can be shared with other
+				// consumers; filter to active ones for display here.
+				const fetched = await api.budget
+					.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id })
+					.then((res) => res.data);
+				cachedSecondaryCostCentres.set(costCentre, fetched);
+				cached = fetched;
+			} else {
+				logger.debug({ costCentre: costCentre.name }, 'secondary cost centres: cache hit');
+			}
+			secondaryCostCentresByPart[i] = cached.filter((scc) => scc.active);
+		} else {
+			secondaryCostCentresByPart[i] = [];
+		}
 
 		await loadBudgetLines(i);
 	}
@@ -70,11 +98,29 @@
 		const secondaryCostCentre = secondaryCostCentresByPart[i]?.find(
 			(scc) => scc.name === parts[i].secondarycostcenter
 		);
-		const filter =
-			secondaryCostCentre?.id != null
-				? { active: true, secondary_cost_centre: secondaryCostCentre.id }
-				: { active: true };
-		budgetLinesByPart[i] = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+		if (secondaryCostCentre?.id != null) {
+			let cached = cachedBudgetLines.get(secondaryCostCentre);
+			if (cached == null) {
+				logger.debug(
+					{ secondaryCostCentre: secondaryCostCentre.name },
+					'budget lines: cache miss, fetching'
+				);
+				const fetched = await api.budget
+					.listBudgetLines(1, 100, { secondary_cost_centre: secondaryCostCentre.id })
+					.then((res) => res.data);
+				cachedBudgetLines.set(secondaryCostCentre, fetched);
+				cached = fetched;
+			} else {
+				logger.debug({ secondaryCostCentre: secondaryCostCentre.name }, 'budget lines: cache hit');
+			}
+			budgetLinesByPart[i] = cached.filter((bl) => bl.active);
+		} else {
+			// No secondary cost centre selected: fall back to the full active list,
+			// which has no stable key in the per-secondary cache.
+			budgetLinesByPart[i] = await api.budget
+				.listBudgetLines(1, 100, { active: true })
+				.then((res) => res.data);
+		}
 	}
 
 	function onCostCentreChange(i: number, value: string) {
