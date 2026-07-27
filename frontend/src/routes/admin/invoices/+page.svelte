@@ -34,9 +34,9 @@
 			width: 'w-48'
 		},
 		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (r) => r.created_date,
+			id: 'invoice_date',
+			header: $_('admin_invoices.columns.invoice_date'),
+			render: (r) => r.invoice_date,
 			width: 'w-28'
 		},
 		{

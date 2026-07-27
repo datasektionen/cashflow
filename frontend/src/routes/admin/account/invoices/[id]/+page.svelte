@@ -189,16 +189,6 @@
 						</dt>
 						<dd>{new Date(invoice.invoice_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 					{/if}
-
-					{#if invoice.due_date}
-						<dt class="text-base-subtle dark:text-dark-base-subtle">
-							{$_('admin_invoices.columns.due_date')}
-						</dt>
-						<dd>{new Date(invoice.due_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-					{/if}
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
-					<dd>{new Date(invoice.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 				</dl>
 			</div>
 

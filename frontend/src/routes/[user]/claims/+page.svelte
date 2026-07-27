@@ -82,7 +82,7 @@
 		},
 		{
 			id: 'created_date',
-			header: $_('admin_expenses.columns.expense_date'),
+			header: $_('expense_created_at'),
 			render: (row) => row.created_date,
 			width: 'w-28'
 		},

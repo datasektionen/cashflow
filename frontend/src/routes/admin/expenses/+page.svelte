@@ -34,9 +34,9 @@
 			width: 'w-48'
 		},
 		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (e) => e.created_date,
+			id: 'expense_date',
+			header: $_('expense_date'),
+			render: (e) => e.expense_date,
 			width: 'w-28'
 		}
 	]);
