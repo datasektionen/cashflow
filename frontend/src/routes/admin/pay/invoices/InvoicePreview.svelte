@@ -13,7 +13,11 @@
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { isErrorResponse } from '$lib/api/errors';
 
-	let { invoiceId, onPaid }: { invoiceId: number; onPaid?: () => void } = $props();
+	let {
+		invoiceId,
+		canPay = false,
+		onPaid
+	}: { invoiceId: number; canPay?: boolean; onPaid?: () => void } = $props();
 
 	let invoicePromise = $derived(api.invoices.get(invoiceId));
 
@@ -56,7 +60,7 @@
 				</a>
 				<button
 					onclick={() => handlePay(invoice)}
-					disabled={paying}
+					disabled={paying || !canPay}
 					class="flex cursor-pointer items-center gap-1.5 bg-money-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-money-green-700 dark:hover:bg-money-green-600"
 				>
 					{#if paying}

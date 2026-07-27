@@ -178,6 +178,7 @@ export type Permissions = {
 	'view-all-payments': boolean;
 	'manage-fortnox': boolean;
 	delete: boolean;
+	'view-all': boolean;
 };
 
 export type FortnoxStatus = {

@@ -11,8 +11,12 @@
 	import { logger } from '$lib/logger';
 	import { formatBankAccount } from '$lib/bankAccount';
 
-	let { owner, bankInfo, onPaid }: { owner: Profile; bankInfo: BankInfo; onPaid?: () => void } =
-		$props();
+	let {
+		owner,
+		bankInfo,
+		canPay = false,
+		onPaid
+	}: { owner: Profile; bankInfo: BankInfo; canPay?: boolean; onPaid?: () => void } = $props();
 
 	let copied = $state(false);
 
@@ -158,7 +162,7 @@
 			</span>
 			<button
 				onclick={handlePay}
-				disabled={selected.size === 0 || paying}
+				disabled={selected.size === 0 || paying || !canPay}
 				class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
 			>
 				{paying ? 'Betalar…' : 'Betala'}

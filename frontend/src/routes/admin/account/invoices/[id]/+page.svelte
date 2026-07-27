@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 	import { api } from '$lib/api';
+	import { mayAccount } from '$lib/auth';
 	import { isErrorResponse } from '$lib/api/errors';
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
@@ -123,7 +124,10 @@
 					<button
 						type="button"
 						onclick={submitVoucherRows}
-						disabled={submitting != null || isAccounted || !hasSubmittableRows}
+						disabled={submitting != null ||
+							isAccounted ||
+							!hasSubmittableRows ||
+							!mayAccount(data.user)}
 						class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if submitting === 'rows'}
@@ -147,7 +151,10 @@
 					<button
 						type="button"
 						onclick={submitVoucherNumber}
-						disabled={submitting != null || isAccounted || voucherNumber.trim() === ''}
+						disabled={submitting != null ||
+							isAccounted ||
+							voucherNumber.trim() === '' ||
+							!mayAccount(data.user)}
 						class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if submitting === 'number'}

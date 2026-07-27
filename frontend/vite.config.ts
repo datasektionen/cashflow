@@ -9,6 +9,10 @@ export default defineConfig({
 	server: {
 		proxy: {
 			'^/(api|oidc|fortnox|static|media)(/|$)': 'http://localhost:8000'
+		},
+		watch: {
+			usePolling: true,
+			interval: 100
 		}
 	},
 	test: {

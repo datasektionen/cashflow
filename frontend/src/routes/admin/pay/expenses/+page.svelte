@@ -8,6 +8,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import PaymentRow from './PaymentRow.svelte';
 	import { _ } from 'svelte-i18n';
+	import { mayPay } from '$lib/auth';
 
 	type pageData = {
 		pendingPayments: PaginatedResponse<PendingPayment>;
@@ -15,6 +16,7 @@
 
 	let { data }: PageProps = $props();
 	let { pendingPayments }: pageData = $derived(data);
+	const canPay = $derived(mayPay(data.user));
 
 	let avatars: Promise<Record<string, string | null>> = $derived.by(() => {
 		const usernames = pendingPayments.data.map((p) => p.owner.username);
@@ -104,6 +106,7 @@
 									<PaymentRow
 										owner={pending.owner}
 										bankInfo={pending.bank_info}
+										{canPay}
 										onPaid={() => expandedRows.delete(i)}
 									/>
 								</td>

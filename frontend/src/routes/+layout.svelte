@@ -35,6 +35,7 @@
 	let currentAlerts: Alert[] = $state([]);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 	const canAccessAdmin = $derived(hasAdminAccess(data.user));
+	const viewAll = $derived(data.user?.permissions?.['view-all'] === true);
 	const pageTitle = $derived(
 		page.data.title ?? (page.data.title_key ? $_(page.data.title_key) : null)
 	);
@@ -154,12 +155,12 @@
 
 		{#if data.user?.permissions}
 			{@const perms = data.user.permissions}
-			{#if perms.confirm || perms.attest.length > 0 || perms.pay || perms.accounting.length > 0}
+			{#if viewAll || perms.confirm || perms.attest.length > 0 || perms.pay || perms.accounting.length > 0}
 				<Separator.Root
 					orientation="horizontal"
 					class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
 				/>
-				{#if perms.attest.length > 0}
+				{#if viewAll || perms.attest.length > 0}
 					<SideNavLink
 						to="/admin/attest"
 						text={$_('tasks.attest')}
@@ -169,7 +170,7 @@
 							: undefined}
 					/>
 				{/if}
-				{#if perms.confirm}
+				{#if viewAll || perms.confirm}
 					<SideNavLink
 						to="/admin/confirm"
 						text={$_('tasks.confirm')}
@@ -177,7 +178,7 @@
 						badge={availableActions ? availableActions.expenses.confirmable : undefined}
 					/>
 				{/if}
-				{#if perms.pay}
+				{#if viewAll || perms.pay}
 					<SideNavLink
 						to="/admin/pay"
 						text={$_('tasks.pay')}
@@ -187,7 +188,7 @@
 							: undefined}
 					/>
 				{/if}
-				{#if perms.accounting.length > 0}
+				{#if viewAll || perms.accounting.length > 0}
 					<SideNavLink
 						to="/admin/account"
 						text={$_('tasks.account')}
@@ -200,7 +201,7 @@
 			{/if}
 		{/if}
 
-		{#if data.user?.permissions?.['manage-fortnox']}
+		{#if viewAll || data.user?.permissions?.['manage-fortnox']}
 			<Separator.Root
 				orientation="horizontal"
 				class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
