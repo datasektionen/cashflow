@@ -266,6 +266,14 @@ configs:
                 scope: Sektionslokalsgruppen
               - id: accounting
                 scope: "*"
+          - name: Mottagningen
+            id: mottagningen
+            domain: example.com
+            members:
+              - bilbek
+            permissions:
+              - id: accounting
+                scope: "Mottagningen 2026"
           - name: Allseeing Eye
             id: allseeing
             domain: example.com
@@ -273,11 +281,3 @@ configs:
               - sauron
             permissions:
               - id: view-all
-          - name: Räkenskapsförare
-            id: rakenskap
-            domain: example.com
-            members:
-              - bilbek
-            permissions:
-              - id: accounting
-                scope: "*"

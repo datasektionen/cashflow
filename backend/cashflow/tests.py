@@ -143,6 +143,98 @@ class TestHiveAccountingPermissions:
         for i in cc_invoices:
             assert provider.may_account(user, i) == True
 
+    def test_scope_matches_cost_centre_case_insensitively(self, provider, user, mocker):
+        # Hive preserves scope case; get_permissions lowercases it, while the
+        # stored cost centre keeps its original case. Matching must therefore be
+        # case-insensitive (regression: a mixed-case cost centre was rejected
+        # even though the user held the scope).
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: ["mottagningen 2026"]},
+        )
+        cc_expenses = ExpenseFactory.create_batch(3)
+        for e in cc_expenses:
+            ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+        cc_invoices = InvoiceFactory.create_batch(2)
+        for i in cc_invoices:
+            InvoicePartFactory.create(invoice=i, cost_centre="Mottagningen 2026")
+
+        assert provider.accountable_expenses(user).count() == 3
+        assert provider.accountable_invoices(user).count() == 2
+        for e in cc_expenses:
+            assert provider.may_account(user, e) == True
+        for i in cc_invoices:
+            assert provider.may_account(user, i) == True
+
+
+class TestHiveViewExpensesPermissions:
+    def test_scoped_view_matches_cost_centre_case_insensitively(
+        self, provider, user, mocker
+    ):
+        # Same casing pitfall as accounting: scope comes back lowercased while the
+        # stored cost centre keeps its case. viewable_cost_centres must return the
+        # original-case name so the case-sensitive `cost_centre__in` filter matches.
+        from expenses.models import Expense
+
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.VIEW_EXPENSES: ["mottagningen 2026"]},
+        )
+        cc_expenses = ExpenseFactory.create_batch(3)
+        for e in cc_expenses:
+            ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+
+        assert provider.viewable_cost_centres(user) == ["Mottagningen 2026"]
+        viewable_ids = set(
+            Expense.objects.viewable_by(user).values_list("id", flat=True)
+        )
+        assert {e.id for e in cc_expenses} <= viewable_ids
+
+    def test_accounting_scope_grants_visibility(self, provider, user, mocker):
+        # Accounting permission alone (no view-expenses) must make the expense
+        # visible, so it shows up in the account queue (viewable_by ∩ accountable).
+        from expenses.models import Expense
+
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ACCOUNTING: ["mottagningen 2026"]},
+        )
+        e = ExpenseFactory.create()
+        ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+
+        viewable = set(Expense.objects.viewable_by(user).values_list("id", flat=True))
+        assert e.id in viewable
+
+    def test_attest_scope_grants_visibility(self, provider, user, mocker):
+        from expenses.models import Expense
+
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.ATTEST: ["mottagningen 2026"]},
+        )
+        e = ExpenseFactory.create()
+        ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+
+        viewable = set(Expense.objects.viewable_by(user).values_list("id", flat=True))
+        assert e.id in viewable
+
+    def test_confirm_permission_grants_full_visibility(
+        self, provider, user, expense_set, mocker
+    ):
+        # confirm is unscoped, so a confirmer may view every expense.
+        from expenses.models import Expense
+
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            autospec=True,
+            return_value={Permission.CONFIRM: True},
+        )
+        assert Expense.objects.viewable_by(user).count() == Expense.objects.count() > 0
+
 
 class TestGordianParsing:
     def test_unknown_cost_centre_type_normalized_to_other(self):
