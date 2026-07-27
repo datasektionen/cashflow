@@ -3,11 +3,10 @@ from enum import Enum
 
 import requests
 from django.conf import settings
-from django.contrib.auth.models import User, AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser
 from django.db.models import QuerySet
-from pydantic import BaseModel
-
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from pydantic import BaseModel
 
 import core.permissions
 
@@ -25,6 +24,7 @@ class Permission(str, Enum):
     UNCONFIRM = "unconfirm"
     VIEW_ALL_PAYMENTS = "view-all-payments"
     VIEW_EXPENSES = "view-expenses"
+    VIEW_ALL = "view-all"
 
 
 class HivePermission(BaseModel):
@@ -54,7 +54,7 @@ class Hive(core.permissions.PermissionProvider):
         return perm in get_permissions(user)  # type: ignore[arg-type]
 
     def may_view_all(self, user: AbstractBaseUser) -> bool:
-        return self._has_unscoped(user, "view-all") or self._has_scoped(
+        return self._has_unscoped(user, Permission.VIEW_ALL) or self._has_scoped(
             user, Permission.VIEW_EXPENSES, "*"
         )
 
@@ -97,12 +97,23 @@ class Hive(core.permissions.PermissionProvider):
     def may_confirm(self, user: AbstractBaseUser) -> bool:
         return self._has_unscoped(user, Permission.CONFIRM)
 
+    def _accounting_scopes(self, user: AbstractBaseUser) -> list[str] | None:
+        """Cost-centre scopes for the accounting permission.
+
+        Returns None when the user may account everything (unscoped/wildcard),
+        otherwise the concrete list of scoped cost centres.
+        """
+        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
+        if scopes is True or (isinstance(scopes, list) and "*" in scopes):
+            return None
+        return scopes if isinstance(scopes, list) else []
+
     def may_account(self, user: AbstractBaseUser, target) -> bool:
         from expenses.models import Expense
         from invoices.models import Invoice
 
-        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
+        scopes = self._accounting_scopes(user)
+        if scopes is None:
             return True
         if isinstance(target, Expense):
             return target.parts.filter(cost_centre__in=scopes).exists()
@@ -133,16 +144,16 @@ class Hive(core.permissions.PermissionProvider):
     def accountable_expenses(self, user: AbstractBaseUser) -> QuerySet:
         from expenses.models import Expense
 
-        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
+        scopes = self._accounting_scopes(user)
+        if scopes is None:
             return Expense.objects.all()
         return Expense.objects.filter(expensepart__cost_centre__in=scopes).distinct()
 
     def accountable_invoices(self, user: AbstractBaseUser) -> QuerySet:
         from invoices.models import Invoice
 
-        scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or scopes == "*" or isinstance(scopes, list) and "*" in scopes:
+        scopes = self._accounting_scopes(user)
+        if scopes is None:
             return Invoice.objects.all()
         return Invoice.objects.filter(invoicepart__cost_centre__in=scopes).distinct()
 
@@ -213,7 +224,7 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
         for perm in perms:
             perm_id, scope = perm["id"], perm["scope"]
 
-            if scope is None or scope == "*":
+            if scope is None or scope == "" or scope == "*":
                 mapping[perm_id] = True
             elif perm_id not in mapping:
                 mapping[perm_id] = [scope.lower()]

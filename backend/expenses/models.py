@@ -7,8 +7,6 @@ from django.contrib.auth.models import User
 from django.db import models
 from structlog import get_logger
 
-from invoices.models import Invoice
-
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
     from expenses.search import ExpenseSearchFields
@@ -224,19 +222,29 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             .exclude(is_flagged=True)
             .exclude(owner__user=user)
         )
-        cost_centres = user.profile.attestable_cost_centres()
-        if cost_centres is not True:
+        if get_permission_provider().may_view_all(user):
+            return qs.order_by("id", "expense_date").distinct()
+        else:
+            cost_centres = user.profile.attestable_cost_centres()
             qs = qs.filter(expensepart__cost_centre__in=cost_centres)
-        return qs.order_by("id", "expense_date").distinct()
+            return qs.order_by("id", "expense_date").distinct()
 
     def accountable_for(self, user: User) -> "ExpenseQuerySet":
         qs = self.exclude(reimbursement=None).filter(verification="")
         cost_centres = user.profile.accountable_cost_centres()
-        if cost_centres is not True:
+        if get_permission_provider().may_view_all(user):
+            return qs.order_by("id", "expense_date").distinct()
+        if not cost_centres:
             qs = qs.filter(expensepart__cost_centre__in=cost_centres)
         return qs.order_by("expense_date").distinct()
 
     def confirmable_for(self, user: User) -> "ExpenseQuerySet":
+        if get_permission_provider().may_view_all(user):
+            return (
+                self.filter(confirmed_by__isnull=True)
+                .exclude(is_flagged=True)
+                .distinct()
+            )
         if not get_permission_provider().may_confirm(user):
             return self.none()
         return (
@@ -244,6 +252,13 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
         )
 
     def payable_for(self, user: User) -> "ExpenseQuerySet":
+        if get_permission_provider().may_view_all(user):
+            return (
+                self.filter(reimbursement=None)
+                .exclude(expensepart__attested_by=None)
+                .exclude(confirmed_by=None)
+                .order_by("owner__user__username")
+            )
         if not get_permission_provider().may_pay(user):
             return self.none()
         return (
