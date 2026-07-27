@@ -1,8 +1,9 @@
 from django.conf import settings
+from django.core.cache import cache
+from django.utils.module_loading import import_string
 from drf_spectacular.utils import extend_schema_view, extend_schema, inline_serializer
 from rest_framework import generics, exceptions, status, serializers
 from rest_framework.response import Response
-from django.utils.module_loading import import_string
 
 from .serializers import UserSerializer, ProfilePictureQuerySerializer
 from ..pictures import ProfilePictureProvider
@@ -65,10 +66,27 @@ class ProfilePictureView(generics.ListAPIView):
         query.is_valid(raise_exception=True)
         usernames = query.validated_data["usernames"]
 
-        pictures = profile_picture_provider.get_many(usernames)
-        return Response(
-            {
+        keys = {username: f"rfinger:{username}" for username in usernames}
+        cached = cache.get_many(keys.values())
+
+        result: dict[str, str | None] = {}
+        missing = []
+        for username, key in keys.items():
+            if key in cached:
+                result[username] = cached[key]
+            else:
+                missing.append(username)
+
+        if missing:
+            pictures = profile_picture_provider.get_many(missing)
+            fetched = {
                 username: str(picture.url) if picture else None
                 for username, picture in pictures.items()
             }
-        )
+            cache.set_many(
+                {keys[username]: url for username, url in fetched.items()},
+                timeout=settings.PROFILE_PICTURE_CACHE_TIMEOUT * 60 * 60,
+            )
+            result.update(fetched)
+
+        return Response(result)

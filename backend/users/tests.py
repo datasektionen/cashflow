@@ -1,8 +1,7 @@
 import pytest
 from hypothesis import given, strategies as st
-from rest_framework.test import APIClient
-
 from pydantic import HttpUrl
+from rest_framework.test import APIClient
 
 from users.pictures import ProfilePictureProvider, ProfilePicture
 
@@ -36,6 +35,62 @@ class TestGetProfilePictures:
             for name in names
         }
         assert response.json() == expected
+
+
+def _picture_url(name: str) -> str:
+    return str(HttpUrl(f"https://pictures.example.com/{name}.jpg"))
+
+
+class TestProfilePictureCache:
+    @pytest.fixture(autouse=True)
+    def _clear_cache(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        yield
+        cache.clear()
+
+    @pytest.mark.django_db
+    def test_repeat_request_served_from_cache(self, mocker):
+        from users.api import views
+
+        spy = mocker.spy(views.profile_picture_provider, "get_many")
+        client = APIClient()
+        client.force_authenticate()
+        expected = {"alice": _picture_url("alice"), "bob": _picture_url("bob")}
+
+        first = client.get("/api/users/profile-pictures/", {"usernames": "alice,bob"})
+        assert first.status_code == 200
+        assert first.json() == expected
+        assert spy.call_count == 1
+
+        second = client.get("/api/users/profile-pictures/", {"usernames": "alice,bob"})
+        assert second.status_code == 200
+        assert second.json() == expected
+        # Fully cached: the provider must not be hit again.
+        assert spy.call_count == 1
+
+    @pytest.mark.django_db
+    def test_partial_hit_only_fetches_missing(self, mocker):
+        from users.api import views
+
+        client = APIClient()
+        client.force_authenticate()
+
+        # Warm the cache for "alice" only.
+        client.get("/api/users/profile-pictures/", {"usernames": "alice"})
+
+        spy = mocker.spy(views.profile_picture_provider, "get_many")
+        response = client.get(
+            "/api/users/profile-pictures/", {"usernames": "alice,bob"}
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "alice": _picture_url("alice"),
+            "bob": _picture_url("bob"),
+        }
+        # Only the uncached username is fetched from the provider.
+        spy.assert_called_once_with(["bob"])
 
 
 class TestCurrentUserBankInfo:
