@@ -205,6 +205,16 @@ configs:
           first_name: Jobbig
           family_name: "\"Speciell\" Jävel"
           year_tag: B-99
+        - ug_kth_id: the-one-ring-id
+          kth_id: sauron
+          email: sauron@kth.se
+          first_name: Sauron
+          family_name: Mordor
+        - ug_kth_id: the-accountant-id
+          kth_id: bilbek
+          email: bilbek@kth.se
+          first_name: Bilbo
+          family_name: Baggins
 
 
       hive:
@@ -254,5 +264,20 @@ configs:
             permissions:
               - id: attest
                 scope: Sektionslokalsgruppen
+              - id: accounting
+                scope: "*"
+          - name: Allseeing Eye
+            id: allseeing
+            domain: example.com
+            members:
+              - sauron
+            permissions:
+              - id: view-all
+          - name: Räkenskapsförare
+            id: rakenskap
+            domain: example.com
+            members:
+              - bilbek
+            permissions:
               - id: accounting
                 scope: "*"

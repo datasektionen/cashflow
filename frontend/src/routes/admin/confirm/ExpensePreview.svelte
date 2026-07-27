@@ -7,6 +7,7 @@
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { api } from '$lib/api';
+	import { mayConfirm } from '$lib/auth';
 	import { invalidateAll } from '$app/navigation';
 	import { logger } from '$lib/logger';
 	import { alerts, error, success } from '$lib/stores/alerts';
@@ -38,8 +39,7 @@
 {#await expensePromise}
 	<div class="flex justify-center py-24"><CashSpinner /></div>
 {:then expense}
-	{@const canConfirm =
-		!!currentUser?.permissions.confirm && !expense.confirmed_at && !expense.is_flagged}
+	{@const canConfirm = mayConfirm(currentUser) && !expense.confirmed_at && !expense.is_flagged}
 	<div class="flex flex-col gap-6">
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">

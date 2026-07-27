@@ -9,8 +9,10 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import InvoicePreview from './InvoicePreview.svelte';
 	import { ScrollArea } from 'bits-ui';
+	import { mayPay } from '$lib/auth';
 
 	let { data }: PageProps = $props();
+	const canPay = $derived(mayPay(data.user));
 
 	let loading = $state(false);
 
@@ -129,7 +131,7 @@
 						</div>
 					{:else}
 						{#key preview.id}
-							<InvoicePreview invoiceId={preview.id} onPaid={() => (preview = null)} />
+							<InvoicePreview invoiceId={preview.id} {canPay} onPaid={() => (preview = null)} />
 						{/key}
 					{/if}
 				</div>
