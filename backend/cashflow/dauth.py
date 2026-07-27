@@ -104,7 +104,7 @@ class Hive(core.permissions.PermissionProvider):
         otherwise the concrete list of scoped cost centres.
         """
         scopes = get_permissions(user).get(Permission.ACCOUNTING, [])
-        if scopes is True or (isinstance(scopes, list) and "*" in scopes):
+        if scopes is True or scopes == "*" or (isinstance(scopes, list) and "*" in scopes):
             return None
         return scopes if isinstance(scopes, list) else []
 
