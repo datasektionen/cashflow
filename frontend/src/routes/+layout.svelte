@@ -10,6 +10,7 @@
 	import type { LayoutProps } from './$types';
 	import { type Alert, alerts } from '$lib/stores/alerts';
 	import AlertToast from '$lib/components/AlertToast.svelte';
+	import { getProfilePicture, clearProfilePicture } from '$lib/stores/state.svelte';
 	import {
 		ReceiptText,
 		FileText,
@@ -102,9 +103,13 @@
 					class="flex items-center gap-2 transition-opacity hover:opacity-80"
 				>
 					<p>{data.user.first_name} {data.user.last_name}</p>
-					<UserAvatar class="bg-white dark:bg-dark-base-50" username={data.user.username} />
+					{#await getProfilePicture(data.user.username)}
+						<UserAvatar class="bg-white dark:bg-dark-base-50" placeholder />
+					{:then profilePicture}
+						<UserAvatar class="bg-white dark:bg-dark-base-50" url={profilePicture ?? undefined} />
+					{/await}
 				</a>
-				<form method="POST" action="/logout">
+				<form method="POST" action="/logout" onsubmit={() => clearProfilePicture()}>
 					<button type="submit" class="cursor-pointer">{$_('logout')}</button>
 				</form>
 			{:else}
