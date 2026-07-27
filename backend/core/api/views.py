@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.db.models.aggregates import Sum, Count
 from drf_spectacular.utils import (
@@ -6,14 +7,12 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
 )
-from django.db import transaction
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from structlog import get_logger
 
 from core.api.filters import (
@@ -267,7 +266,9 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
     )
     @action(detail=False, methods=["GET"])
     def pending(self, request: Request) -> Response:
-        if not get_permission_provider().may_pay(self.current_user):
+        if not get_permission_provider().may_pay(
+            self.current_user
+        ) and not get_permission_provider().may_view_all(self.current_user):
             raise PermissionDenied()
 
         payable = Q(

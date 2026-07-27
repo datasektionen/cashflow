@@ -51,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
                 Permission.EDIT_INVOICE.value: _BOOL,
                 Permission.VIEW_ALL_PAYMENTS.value: _BOOL,
                 Permission.MANAGE_FORTNOX.value: _BOOL,
+                Permission.VIEW_ALL.value: _BOOL,
             },
         }
     )
@@ -68,6 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
             Permission.VIEW_ALL_PAYMENTS: p.may_view_all_payments(),
             Permission.MANAGE_FORTNOX: p.may_manage_fortnox(),
             Permission.DELETE: p.may_delete(),
+            Permission.VIEW_ALL: p.may_view_all(),
         }
 
 
