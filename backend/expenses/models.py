@@ -270,11 +270,19 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
 
     def viewable_by(self, user: User) -> "ExpenseQuerySet":
         provider = get_permission_provider()
-        if provider.may_view_all(user):
+        if (
+            provider.may_view_all(user)
+            or provider.may_pay(user)
+            or provider.may_confirm(user)
+        ):
             return self.all()
-        cc_scopes = provider.viewable_cost_centres(user)
+        cost_centres = (
+            set(provider.viewable_cost_centres(user))
+            | set(provider.accountable_cost_centres(user))
+            | set(provider.attestable_cost_centres(user))
+        )
         return self.filter(
-            Q(expensepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
+            Q(expensepart__cost_centre__in=cost_centres) | Q(owner__user=user)
         ).distinct()
 
     def search(
