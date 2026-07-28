@@ -1,16 +1,14 @@
 """Defines functions for filtering expenses and invoices in list views."""
 
-from typing import Any
-
-from django.db.models import QuerySet
 from enum import Enum
+from typing import Any
 
 from django.contrib.auth.models import User
 from django.http import QueryDict
 from drf_spectacular.utils import OpenApiParameter
 
-from expenses.models import Expense, ExpenseQuerySet
-from invoices.models import Invoice, InvoiceQuerySet
+from expenses.models import ExpenseQuerySet
+from invoices.models import InvoiceQuerySet
 
 
 class Filter(str, Enum):
@@ -30,6 +28,7 @@ class Filter(str, Enum):
     CONFIRMED = "confirmed"
     PAID = "paid"
     VOUCHER_SERIES = "voucher_series"
+    VOUCHER_NUMBER = "voucher_number"
 
 
 # For use in extend_schema() to generate OpenAPI documentation
@@ -123,11 +122,17 @@ OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
         required=False,
         description="Filter by voucher series code, e.g. 'E'",
     ),
+    Filter.VOUCHER_NUMBER: OpenApiParameter(
+        Filter.VOUCHER_NUMBER.value,
+        type=str,
+        required=False,
+        description="Filter by partial voucher number",
+    ),
 }
 
 
 def apply_expense_filters(
-    queryset: ExpenseQuerySet[Expense],
+    queryset: ExpenseQuerySet,
     params: QueryDict | dict[str, Any],
     user: User | None = None,
 ) -> ExpenseQuerySet:
@@ -197,6 +202,8 @@ def apply_expense_filters(
             queryset = queryset.filter(is_flagged=True)
     if voucher_series := params.get(Filter.VOUCHER_SERIES):
         queryset = queryset.filter(verification__startswith=voucher_series)
+    if voucher := params.get(Filter.VOUCHER_NUMBER):
+        queryset = queryset.filter(verification__icontains=voucher)
 
     return queryset
 
@@ -263,4 +270,6 @@ def apply_invoice_filters(
             queryset = queryset.filter(payed_at__isnull=False)
     if voucher_series := params.get(Filter.VOUCHER_SERIES):
         queryset = queryset.filter(verification__startswith=voucher_series)
+    if voucher := params.get(Filter.VOUCHER_NUMBER):
+        queryset = queryset.filter(verification__icontains=voucher)
     return queryset
