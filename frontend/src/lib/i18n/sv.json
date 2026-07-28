@@ -129,7 +129,9 @@
 	"admin_account": {
 		"title": "Bokföring",
 		"create_voucher": "Skapa verifikat",
+		"create_voucher_help": "Här kan du skapa en ny verifikation som laddas upp till Fortnox. Cashflow kommer att försöka fylla i verifikationsraderna automatiskt baserat på utläggets/fakturans kvittodelar, men du kan också redigera dem innan du bokför verifikationen. Den totala summan måste motsvara utläggets/fakturans belopp.",
 		"existing_voucher": "Befintligt verifikat",
+		"existing_voucher_help": "Här kan du ange ett befintligt verifikationsnummer som redan finns i Fortnox. Gör detta om du redan har bokfört utlägget/fakturan för att markera det som bokfört i Cashflow.",
 		"voucher_number_placeholder": "Verifikatnummer",
 		"success": "Verifikat {verification} bokfördes",
 		"error": "Verifikatet kunde inte bokföras",
@@ -330,6 +332,7 @@
 	},
 	"submit": "Skicka",
 	"expense_parts": "Kvittodelar",
+	"expense_receipt": "Kvitto",
 	"expense_parts_locked": "Delarna går inte längre att ändra när en del har attesterats.",
 	"alerts_already_attested": "Detta går inte längre att ändra — en del har redan attesterats.",
 	"amount": "Belopp",
