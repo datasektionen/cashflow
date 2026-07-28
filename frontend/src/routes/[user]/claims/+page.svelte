@@ -7,8 +7,8 @@
 	import type { TableColumn, TableRowProps } from '$lib/components/types';
 	import type { Claim } from '$lib/api/types';
 	import { alerts, success } from '$lib/stores/alerts';
-	import { logger } from '$lib/logger';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
 
 	let { data }: PageProps = $props();
@@ -44,19 +44,10 @@
 	}
 
 	const rowProps: TableRowProps<Claim> = {
-		onClick: (claim) => {
-			if (data.user) {
-				if (claim.type === 'expense') {
-					goto(`/${data.user.username}/expenses/${claim.id}`);
-				} else if (claim.type === 'invoice') {
-					goto(`/${data.user.username}/invoices/${claim.id}`);
-				} else {
-					logger.warn('unexpected claim type');
-				}
-			} else {
-				logger.warn('expected user to be defined');
-			}
-		},
+		href: (claim) =>
+			data.user
+				? `/${data.user.username}/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`
+				: '',
 		class: 'cursor-pointer'
 	};
 
@@ -81,12 +72,22 @@
 		},
 		{
 			id: 'created_date',
-			header: $_('admin_expenses.columns.expense_date'),
+			header: $_('expense_created_at'),
 			render: (row) => row.created_date,
 			width: 'w-28'
+		},
+		{
+			id: 'status',
+			header: $_('admin_expenses.columns.status'),
+			renderSnippet: statusCell,
+			width: 'w-40'
 		}
 	];
 </script>
+
+{#snippet statusCell(c: Claim)}
+	<ClaimStatusPills claim={c} />
+{/snippet}
 
 {#snippet costCentres(c: Claim)}
 	{@const unique = [...new Set(c.parts.map((p) => p.cost_centre))]}

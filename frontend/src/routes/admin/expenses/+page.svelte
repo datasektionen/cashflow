@@ -8,7 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
-	import { Flag } from '@lucide/svelte';
+	import ExpenseStatusPills from '$lib/components/ExpenseStatusPills.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -34,9 +34,9 @@
 			width: 'w-48'
 		},
 		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (e) => e.created_date,
+			id: 'expense_date',
+			header: $_('expense_date'),
+			render: (e) => e.expense_date,
 			width: 'w-28'
 		}
 	]);
@@ -62,59 +62,11 @@
 </script>
 
 {#snippet statusCell(e: Expense)}
-	{@const isAttested = e.parts.length > 0 && e.parts.every((p) => p.attested_by != null)}
-	{@const done = e.payment || e.voucher}
-	<div class="flex gap-3">
-		{#if e.is_flagged}
-			<span class="flex items-center gap-1 text-xs text-amber-800 dark:text-amber-400">
-				<Flag class="size-3 shrink-0" />
-				{$_('expense_flagged')}
-			</span>
-		{/if}
-		{#if !done && isAttested}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-400 dark:bg-money-green-500"
-				></span>
-				{$_('expense_attested')}
-			</span>
-		{/if}
-		{#if !done && e.confirmed_at}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-500 dark:bg-money-green-400"
-				></span>
-				{$_('expense_confirmed')}
-			</span>
-		{/if}
-		{#if e.payment}
-			<span class="flex items-center gap-1.5 text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-600 dark:bg-money-green-400"
-				></span>
-				{$_('expense_paid')}
-			</span>
-		{/if}
-		{#if e.voucher}
-			<span class="flex items-center gap-1.5 font-mono text-xs">
-				<span
-					class="inline-block size-1.5 shrink-0 rounded-full bg-money-green-700 dark:bg-money-green-300"
-				></span>
-				{e.voucher}
-			</span>
-		{/if}
-		{#if !isAttested && !e.confirmed_at && !e.payment && !e.voucher && !e.is_flagged}
-			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
-				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
-				></span>
-				{$_('expense_status.unconfirmed')}
-			</span>
-		{/if}
-	</div>
+	<ExpenseStatusPills expense={e} />
 {/snippet}
 
 {#snippet ownerCell(e: Expense)}
-	<UserLink user={e.owner} />
+	<UserLink user={e.owner} class="relative z-10" />
 {/snippet}
 
 {#snippet idCell(e: Expense)}
@@ -151,7 +103,7 @@
 	{loading}
 	scrollable
 	rowProps={{
-		onClick: (e) => goto(`/admin/expenses/${e.id}`),
+		href: (e) => `/admin/expenses/${e.id}`,
 		class: 'cursor-pointer'
 	}}
 />

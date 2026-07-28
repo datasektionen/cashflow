@@ -33,15 +33,9 @@
 			width: 'w-48'
 		},
 		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (r) => r.created_date,
-			width: 'w-28'
-		},
-		{
-			id: 'due_date',
-			header: $_('admin_invoices.columns.due_date'),
-			render: (r) => r.due_date,
+			id: 'invoice_date',
+			header: $_('admin_invoices.columns.invoice_date'),
+			render: (r) => r.invoice_date,
 			width: 'w-28'
 		}
 	]);
@@ -76,7 +70,7 @@
 {/snippet}
 
 {#snippet ownerCell(r: Invoice)}
-	<UserLink user={r.owner} />
+	<UserLink user={r.owner} class="relative z-10" />
 {/snippet}
 
 {#snippet idCell(r: Invoice)}
@@ -99,7 +93,7 @@
 	{loading}
 	scrollable
 	rowProps={{
-		onClick: (r) => goto(`/admin/account/invoices/${r.id}`),
+		href: (r) => `/admin/account/invoices/${r.id}`,
 		class: 'cursor-pointer'
 	}}
 />

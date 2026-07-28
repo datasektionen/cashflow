@@ -306,7 +306,19 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         )
 
     def get_queryset(self):
-        queryset = Invoice.objects.viewable_by(self.current_user)
+        queryset = (
+            Invoice.objects.select_related(
+                "owner__user",
+                "confirmed_by__profile__user",
+                "payed_by__profile__user",
+            )
+            .prefetch_related(
+                "file_set",
+                "parts__attested_by__user",
+                "comment_set__author__user",
+            )
+            .viewable_by(self.current_user)
+        )
 
         if username := self.request.GET.get(Filter.USER):
             try:

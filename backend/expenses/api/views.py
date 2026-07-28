@@ -31,6 +31,8 @@ from rest_framework.status import (
 )
 from structlog import get_logger
 
+from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
+from core.api.openapi import problem, problems
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
@@ -51,11 +53,8 @@ from core.api.problems import (
     UpdatePermissionDeniedProblem,
     AlreadyAttestedProblem,
 )
-from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
-from core.api.openapi import problem, problems
 from core.api.serializers import CommentSerializer, CommentCreateSerializer
 from core.api.utils import AuthenticatedUserMixin
-from core.files import normalize_upload
 from core.exceptions import (
     UnauthorizedAttestationError,
     SelfAttestationError,
@@ -73,6 +72,7 @@ from core.exceptions import (
     MismatchedTotalAmountError,
     NoAccountingMethodError,
 )
+from core.files import normalize_upload
 from core.permissions import get_permission_provider
 from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
@@ -353,7 +353,20 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         )
 
     def get_queryset(self):
-        queryset = Expense.objects.viewable_by(self.current_user)
+        queryset = (
+            Expense.objects.select_related(
+                "owner__user",
+                "confirmed_by__profile__user",
+                "reimbursement__payer__user",
+                "reimbursement__receiver__user",
+            )
+            .prefetch_related(
+                "file_set",
+                "parts__attested_by__user",
+                "comment_set__author__user",
+            )
+            .viewable_by(self.current_user)
+        )
 
         if username := self.request.GET.get(Filter.USER):
             try:

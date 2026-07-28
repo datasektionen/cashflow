@@ -184,9 +184,6 @@
 
 					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
 					<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
-					<dd>{new Date(expense.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 				</dl>
 			</div>
 

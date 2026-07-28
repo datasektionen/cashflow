@@ -20,6 +20,11 @@
 	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
 	import type { BudgetLine, CostCentre, SecondaryCostCentre, VoucherSeries } from '$lib/api/types';
 	import { api } from '$lib/api';
+	import {
+		cachedCostCentres,
+		cachedSecondaryCostCentres,
+		cachedBudgetLines
+	} from '$lib/stores/state.svelte';
 	import { isErrorResponse } from '$lib/api/errors';
 	import { alerts, error } from '$lib/stores/alerts';
 	import { logger } from '$lib/logger';
@@ -49,8 +54,49 @@
 
 	let voucherSeries: VoucherSeries[] = $state([]);
 
+	// Get-or-fetch helpers backed by the module-level caches shared with the
+	// expense form. The cache holds the full list per key; this filter bar shows
+	// all of them (incl. inactive), so no client-side filtering is applied.
+	async function fetchSecondaryCostCentres(costCentre: CostCentre): Promise<SecondaryCostCentre[]> {
+		const existing = cachedSecondaryCostCentres.get(costCentre);
+		if (existing != null) {
+			logger.debug({ costCentre: costCentre.name }, 'secondary cost centres: cache hit');
+			return existing;
+		}
+		logger.debug({ costCentre: costCentre.name }, 'secondary cost centres: cache miss, fetching');
+		const fetched = await api.budget
+			.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id! })
+			.then((res) => res.data);
+		cachedSecondaryCostCentres.set(costCentre, fetched);
+		return fetched;
+	}
+
+	async function fetchBudgetLines(secondaryCostCentre: SecondaryCostCentre): Promise<BudgetLine[]> {
+		const existing = cachedBudgetLines.get(secondaryCostCentre);
+		if (existing != null) {
+			logger.debug({ secondaryCostCentre: secondaryCostCentre.name }, 'budget lines: cache hit');
+			return existing;
+		}
+		logger.debug(
+			{ secondaryCostCentre: secondaryCostCentre.name },
+			'budget lines: cache miss, fetching'
+		);
+		const fetched = await api.budget
+			.listBudgetLines(1, 100, { secondary_cost_centre: secondaryCostCentre.id! })
+			.then((res) => res.data);
+		cachedBudgetLines.set(secondaryCostCentre, fetched);
+		return fetched;
+	}
+
 	onMount(async () => {
-		costCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
+		if (cachedCostCentres.length === 0) {
+			logger.debug('cost centres: cache miss, fetching');
+			costCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
+			cachedCostCentres.push(...costCentres);
+		} else {
+			logger.debug('cost centres: cache hit');
+			costCentres = cachedCostCentres;
+		}
 		voucherSeries = await api.voucherSeries
 			.list(1, 100)
 			.then((res) => res.data)
@@ -71,26 +117,18 @@
 			});
 
 		const selectedCostCentre = costCentres.find((cc) => cc.name === filterValue('cost_centre'));
-		secondaryCostCentres = await api.budget
-			.listSecondaryCostCentres(
-				1,
-				100,
-				selectedCostCentre?.id != null ? { cost_centre: selectedCostCentre.id } : undefined
-			)
-			.then((res) => res.data);
+		secondaryCostCentres =
+			selectedCostCentre?.id != null
+				? await fetchSecondaryCostCentres(selectedCostCentre)
+				: await api.budget.listSecondaryCostCentres(1, 100).then((res) => res.data);
 
 		const selectedSecondaryCostCentre = secondaryCostCentres.find(
 			(scc) => scc.name === filterValue('secondary_cost_centre')
 		);
-		budgetLines = await api.budget
-			.listBudgetLines(
-				1,
-				100,
-				selectedSecondaryCostCentre?.id != null
-					? { secondary_cost_centre: selectedSecondaryCostCentre.id }
-					: undefined
-			)
-			.then((res) => res.data);
+		budgetLines =
+			selectedSecondaryCostCentre?.id != null
+				? await fetchBudgetLines(selectedSecondaryCostCentre)
+				: await api.budget.listBudgetLines(1, 100).then((res) => res.data);
 	});
 
 	const filterKeys = [
@@ -192,11 +230,7 @@
 			// scope secondary cost centres, so show none rather than the full
 			// unfiltered list.
 			secondaryCostCentres =
-				costCentre?.id != null
-					? await api.budget
-							.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id })
-							.then((res) => res.data)
-					: [];
+				costCentre?.id != null ? await fetchSecondaryCostCentres(costCentre) : [];
 			budgetLines = [];
 			budgetSearchValues.secondaryCostCentre = '';
 			budgetSearchValues.budgetLine = '';
@@ -204,11 +238,10 @@
 			url.searchParams.delete('budget_line');
 		} else if (key === 'secondary_cost_centre') {
 			const secondaryCostCentre = secondaryCostCentres.find((scc) => scc.name === value);
-			const filter =
+			budgetLines =
 				secondaryCostCentre?.id != null
-					? { secondary_cost_centre: secondaryCostCentre.id }
-					: undefined;
-			budgetLines = await api.budget.listBudgetLines(1, 100, filter).then((res) => res.data);
+					? await fetchBudgetLines(secondaryCostCentre)
+					: await api.budget.listBudgetLines(1, 100).then((res) => res.data);
 			budgetSearchValues.budgetLine = '';
 			url.searchParams.delete('budget_line');
 		}
