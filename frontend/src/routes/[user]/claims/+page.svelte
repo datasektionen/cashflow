@@ -10,6 +10,7 @@
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -51,38 +52,46 @@
 		class: 'cursor-pointer'
 	};
 
-	const columns: TableColumn<Claim>[] = [
-		{
-			id: 'type',
-			header: $_('claims_type'),
-			render: (row) => $_(row.type),
-			width: 'w-24'
-		},
-		{
-			id: 'description',
-			header: $_('admin_invoices.columns.description'),
-			render: (row) => row.description,
-			width: ''
-		},
-		{
-			id: 'cost_centres',
-			header: $_('admin_expenses.columns.cost_centres'),
-			renderSnippet: costCentres,
-			width: 'w-48'
-		},
-		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (row) => row.created_date,
-			width: 'w-28'
-		},
-		{
-			id: 'status',
-			header: $_('admin_expenses.columns.status'),
-			renderSnippet: statusCell,
-			width: 'w-40'
-		}
-	];
+	const columns: TableColumn<Claim>[] = $derived(
+		(
+			[
+				{
+					id: 'type',
+					header: $_('claims_type'),
+					render: (row) => $_(row.type),
+					width: 'w-24'
+				},
+				{
+					id: 'description',
+					header: $_('admin_invoices.columns.description'),
+					render: (row) => row.description,
+					width: ''
+				},
+				{
+					id: 'cost_centres',
+					header: $_('admin_expenses.columns.cost_centres'),
+					renderSnippet: costCentres,
+					width: 'w-48'
+				},
+				{
+					id: 'created_date',
+					header: $_('expense_created_at'),
+					render: (row) => row.created_date,
+					width: 'w-28'
+				},
+				{
+					id: 'status',
+					header: $_('admin_expenses.columns.status'),
+					renderSnippet: statusCell,
+					width: 'w-40'
+				}
+			] as TableColumn<Claim>[]
+		).filter((col) => {
+			if (isExtraSmallLayout.current) return ['type', 'description'].includes(col.id);
+			if (isSmallLayout.current) return ['type', 'description', 'status'].includes(col.id);
+			return true;
+		})
+	);
 </script>
 
 {#snippet statusCell(c: Claim)}

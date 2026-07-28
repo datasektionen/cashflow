@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -133,7 +134,11 @@
 			renderSnippet: statusCell,
 			width: 'w-40'
 		}
-	]}
+	].filter((col) => {
+		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
+		if (isSmallLayout.current) return !['id', 'expense_date', 'is_attested'].includes(col.id);
+		return true;
+	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}

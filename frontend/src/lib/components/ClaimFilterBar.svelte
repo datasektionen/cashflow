@@ -10,7 +10,8 @@
 		ListRestart,
 		Receipt,
 		Search,
-		Stamp
+		Stamp,
+		SlidersHorizontal
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -40,7 +41,7 @@
 		exclude?: ((typeof tristateKeys)[number] | 'voucher_series' | 'voucher_number')[];
 	} = $props();
 
-	let showAllFilters: boolean = $state(true);
+	let showAllFilters: boolean = $state(false);
 
 	// These bind to the comboboxes search strings, and are used to clear e.g. budget line when cost centre is changed
 	let budgetSearchValues = $state({
@@ -282,17 +283,9 @@
 {/snippet}
 
 <div
-	class="mb-4 flex flex-row items-center space-x-2 border-b border-base-500 pb-4 dark:border-dark-base-200"
+	class="mb-4 flex flex-col items-center space-y-1 space-x-2 border-b border-base-500 pb-4 md:flex-row dark:border-dark-base-200"
 >
 	{#key resetKey}
-		<!--        <button-->
-		<!--                class="group flex min-w-fit cursor-pointer flex-row items-center gap-1.5 text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"-->
-		<!--                onclick={() => showAllFilters = !showAllFilters}-->
-		<!--        >-->
-		<!--            <SlidersHorizontal class="size-4 shrink-0 transition-transform group-hover:scale-125"/>-->
-		<!--            <span class="text-xs">{$_('show_all_filters')}</span>-->
-		<!--        </button>-->
-
 		<ComboBox
 			name="cost-centre"
 			class="text-sm"
@@ -357,25 +350,39 @@
 			/>
 		{/if}
 	{/key}
-	{#if includeReset}
+
+	<div class="flex w-full flex-row gap-2 md:justify-between">
 		<button
-			onclick={resetFilter}
-			class="ml-auto flex cursor-pointer flex-row items-center gap-1.5 text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"
+			class="group flex min-w-fit flex-1 cursor-pointer flex-row items-center justify-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:hidden dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
+			onclick={() => (showAllFilters = !showAllFilters)}
 		>
-			<ListRestart class="size-4" />
-			<span class="text-xs uppercase">{$_('reset')}</span>
+			<SlidersHorizontal class="size-4 shrink-0 transition-transform group-hover:scale-125" />
+			<span class="text-xs uppercase">{$_('show_all_filters')}</span>
 		</button>
-	{/if}
+
+		{#if includeReset}
+			<button
+				onclick={resetFilter}
+				class="group flex min-w-fit flex-1 cursor-pointer flex-row items-center justify-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:flex-none md:justify-start md:border-0 md:px-0 md:py-0 dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
+			>
+				<ListRestart class="size-4 shrink-0 transition-transform group-hover:scale-125" />
+				<span class="text-xs uppercase">{$_('reset')}</span>
+			</button>
+		{/if}
+	</div>
 </div>
 {#if includeChecks}
 	<div
-		class="mb-4 flex flex-row items-center space-x-2 border-b border-base-500 pb-4 dark:border-dark-base-200"
+		class={[
+			'mb-4 flex-col items-start space-x-2 gap-y-3 border-b border-base-500 pb-4 md:flex md:flex-row md:items-center md:gap-y-0 dark:border-dark-base-200',
+			showAllFilters ? 'flex' : 'hidden'
+		]}
 	>
 		<div
-			class="flex flex-1 flex-wrap items-center divide-x divide-base-400 dark:divide-dark-base-150"
+			class="grid grid-cols-[auto_auto_auto] items-center justify-items-end gap-x-3 gap-y-2.5 md:flex md:flex-1 md:flex-wrap md:justify-items-start md:gap-0 md:divide-x md:divide-base-400 dark:md:divide-dark-base-150"
 		>
 			{#if !exclude.includes('attested')}
-				<div class="flex items-center gap-1.5 py-1 pr-4">
+				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pr-4">
 					<Stamp
 						class={[
 							'size-4 shrink-0 transition-colors',
@@ -384,24 +391,26 @@
 								: 'text-base-subtle dark:text-dark-base-subtle'
 						]}
 					/>
-					<Checkbox
-						checked={tristateChecked('attested', 'true')}
-						onCheckedChange={(v) =>
-							setTristateFilter('attested', v, tristateChecked('attested', 'false'))}
-					>
-						{$_('attested')}
-					</Checkbox>
-					<Checkbox
-						checked={tristateChecked('attested', 'false')}
-						onCheckedChange={(v) =>
-							setTristateFilter('attested', tristateChecked('attested', 'true'), v)}
-					>
-						{$_('not_attested')}
-					</Checkbox>
+					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
+						<Checkbox
+							checked={tristateChecked('attested', 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter('attested', v, tristateChecked('attested', 'false'))}
+						>
+							{$_('attested')}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked('attested', 'false')}
+							onCheckedChange={(v) =>
+								setTristateFilter('attested', tristateChecked('attested', 'true'), v)}
+						>
+							{$_('not_attested')}
+						</Checkbox>
+					</div>
 				</div>
 			{/if}
 			{#if !exclude.includes('confirmed')}
-				<div class="flex items-center gap-1.5 py-1 pr-4">
+				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pr-4">
 					<CircleCheck
 						class={[
 							'size-4 shrink-0 transition-colors',
@@ -410,24 +419,26 @@
 								: 'text-base-subtle dark:text-dark-base-subtle'
 						]}
 					/>
-					<Checkbox
-						checked={tristateChecked('confirmed', 'true')}
-						onCheckedChange={(v) =>
-							setTristateFilter('confirmed', v, tristateChecked('confirmed', 'false'))}
-					>
-						{$_('confirmed')}
-					</Checkbox>
-					<Checkbox
-						checked={tristateChecked('confirmed', 'false')}
-						onCheckedChange={(v) =>
-							setTristateFilter('confirmed', tristateChecked('confirmed', 'true'), v)}
-					>
-						{$_('not_confirmed')}
-					</Checkbox>
+					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
+						<Checkbox
+							checked={tristateChecked('confirmed', 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter('confirmed', v, tristateChecked('confirmed', 'false'))}
+						>
+							{$_('confirmed')}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked('confirmed', 'false')}
+							onCheckedChange={(v) =>
+								setTristateFilter('confirmed', tristateChecked('confirmed', 'true'), v)}
+						>
+							{$_('not_confirmed')}
+						</Checkbox>
+					</div>
 				</div>
 			{/if}
 			{#if !exclude.includes('paid')}
-				<div class="flex items-center gap-1.5 px-4 py-1">
+				<div class="contents md:flex md:items-center md:gap-1.5 md:px-4 md:py-1">
 					<Banknote
 						class={[
 							'size-4 shrink-0 transition-colors',
@@ -436,22 +447,25 @@
 								: 'text-base-subtle dark:text-dark-base-subtle'
 						]}
 					/>
-					<Checkbox
-						checked={tristateChecked('paid', 'true')}
-						onCheckedChange={(v) => setTristateFilter('paid', v, tristateChecked('paid', 'false'))}
-					>
-						{$_('paid')}
-					</Checkbox>
-					<Checkbox
-						checked={tristateChecked('paid', 'false')}
-						onCheckedChange={(v) => setTristateFilter('paid', tristateChecked('paid', 'true'), v)}
-					>
-						{$_('not_paid')}
-					</Checkbox>
+					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
+						<Checkbox
+							checked={tristateChecked('paid', 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter('paid', v, tristateChecked('paid', 'false'))}
+						>
+							{$_('paid')}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked('paid', 'false')}
+							onCheckedChange={(v) => setTristateFilter('paid', tristateChecked('paid', 'true'), v)}
+						>
+							{$_('not_paid')}
+						</Checkbox>
+					</div>
 				</div>
 			{/if}
 			{#if !exclude.includes('accounted')}
-				<div class="flex items-center gap-1.5 px-4 py-1">
+				<div class="contents md:flex md:items-center md:gap-1.5 md:px-4 md:py-1">
 					<Receipt
 						class={[
 							'size-4 shrink-0 transition-colors',
@@ -460,24 +474,26 @@
 								: 'text-base-subtle dark:text-dark-base-subtle'
 						]}
 					/>
-					<Checkbox
-						checked={tristateChecked('accounted', 'true')}
-						onCheckedChange={(v) =>
-							setTristateFilter('accounted', v, tristateChecked('accounted', 'false'))}
-					>
-						{$_('accounted')}
-					</Checkbox>
-					<Checkbox
-						checked={tristateChecked('accounted', 'false')}
-						onCheckedChange={(v) =>
-							setTristateFilter('accounted', tristateChecked('accounted', 'true'), v)}
-					>
-						{$_('not_accounted')}
-					</Checkbox>
+					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
+						<Checkbox
+							checked={tristateChecked('accounted', 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter('accounted', v, tristateChecked('accounted', 'false'))}
+						>
+							{$_('accounted')}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked('accounted', 'false')}
+							onCheckedChange={(v) =>
+								setTristateFilter('accounted', tristateChecked('accounted', 'true'), v)}
+						>
+							{$_('not_accounted')}
+						</Checkbox>
+					</div>
 				</div>
 			{/if}
 			{#if !exclude.includes('flagged')}
-				<div class="flex items-center gap-1.5 py-1 pl-4">
+				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pl-4">
 					<Flag
 						class={[
 							'size-4 shrink-0 transition-colors',
@@ -486,26 +502,28 @@
 								: 'text-base-subtle dark:text-dark-base-subtle'
 						]}
 					/>
-					<Checkbox
-						checked={tristateChecked('flagged', 'true')}
-						onCheckedChange={(v) =>
-							setTristateFilter('flagged', v, tristateChecked('flagged', 'false'))}
-					>
-						{$_('flagged')}
-					</Checkbox>
-					<Checkbox
-						checked={tristateChecked('flagged', 'false')}
-						onCheckedChange={(v) =>
-							setTristateFilter('flagged', tristateChecked('flagged', 'true'), v)}
-					>
-						{$_('not_flagged')}
-					</Checkbox>
+					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
+						<Checkbox
+							checked={tristateChecked('flagged', 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter('flagged', v, tristateChecked('flagged', 'false'))}
+						>
+							{$_('flagged')}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked('flagged', 'false')}
+							onCheckedChange={(v) =>
+								setTristateFilter('flagged', tristateChecked('flagged', 'true'), v)}
+						>
+							{$_('not_flagged')}
+						</Checkbox>
+					</div>
 				</div>
 			{/if}
 		</div>
 		<button
 			onclick={clearTristateFilters}
-			class="ml-auto flex shrink-0 cursor-pointer flex-row items-center gap-1.5 text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"
+			class="flex shrink-0 cursor-pointer flex-row items-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:ml-auto md:border-0 md:px-0 md:py-0 dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
 		>
 			<Eraser class="size-4" />
 			<span class="text-xs uppercase">{$_('clear_all')}</span>

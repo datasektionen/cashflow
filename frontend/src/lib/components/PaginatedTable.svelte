@@ -9,6 +9,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import { isSmallLayout } from '$lib/stores/state.svelte';
 
 	interface Props {
 		paginatedResponse?: PaginatedResponse<T>;
@@ -76,7 +77,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 						<tr
 							class={[
 								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-								rowProps?.href && 'relative',
+								rowProps?.href && 'relative isolate',
 								resolveRowClass(row)
 							]}
 							onclick={rowProps?.onClick ? () => rowProps.onClick?.(row) : undefined}
@@ -152,10 +153,11 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		</div>
 
 		<Pagination.Root
-			class="flex flex-row items-center space-x-2"
+			class="flex max-w-full flex-row items-center space-x-1 md:space-x-2"
 			count={resolved.pagination.total}
 			perPage={resolved.pagination.perPage}
 			page={resolved.pagination.page}
+			siblingCount={isSmallLayout.current ? 0 : 1}
 			onPageChange={onPageChange ?? (() => {})}
 		>
 			{#snippet children({ pages, range })}
