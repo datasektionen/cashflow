@@ -114,8 +114,8 @@
 	</div>
 </div>
 
-<div class="flex flex-col gap-8 lg:flex-row">
-	<div class="flex flex-col gap-8 lg:w-3/5 lg:pt-1">
+<div class="flex flex-wrap gap-8">
+	<div class="flex min-w-0 grow basis-[51rem] flex-col gap-8 pt-1">
 		<div>
 			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.create_voucher')}</h2>
 			<p
@@ -191,7 +191,7 @@
 		</div>
 	</div>
 
-	<div class="flex flex-col gap-8 lg:w-2/5 lg:pt-1">
+	<div class="flex min-w-0 grow basis-80 flex-col gap-8 pt-1">
 		<div>
 			<h2 class="text-base font-semibold">Information</h2>
 			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
