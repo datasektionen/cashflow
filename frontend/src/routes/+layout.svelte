@@ -3,8 +3,7 @@
 	import '$lib/i18n'; // initialize i18n
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import NavLink from '$lib/components/NavLink.svelte';
+	import NavBar from '$lib/components/nav/NavBar.svelte';
 	import SideNavLink from '$lib/components/SideNavLink.svelte';
 	import { Separator } from 'bits-ui';
 	import type { LayoutProps } from './$types';
@@ -26,7 +25,6 @@
 		X,
 		Wallet
 	} from '@lucide/svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { api } from '$lib/api';
 	import type { ActionSummary } from '$lib/api/types';
 	import { hasAdminAccess } from '$lib/auth';
@@ -60,66 +58,7 @@
 	alerts.subscribe((val) => (currentAlerts = val));
 </script>
 
-<nav
-	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-dark-base-200 dark:text-dark-base-text"
->
-	<div
-		class={[
-			'flex h-full w-full flex-row justify-between',
-			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'mx-auto max-w-7xl px-4 lg:px-8'
-		]}
-	>
-		<div class="flex h-full">
-			{#if data.user != null}
-				<button
-					type="button"
-					onclick={() => (sidebarOpen = !sidebarOpen)}
-					aria-label="Toggle sidebar"
-					aria-expanded={sidebarOpen}
-					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-dark-base-300"
-				>
-					{#if sidebarOpen}
-						<X class="size-5" />
-					{:else}
-						<Menu class="size-5" />
-					{/if}
-				</button>
-				<div class="hidden h-full lg:flex">
-					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
-					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
-					<NavLink to="/{data.user.username}/claims/" text={$_('user_claims')}></NavLink>
-					{#if canAccessAdmin}
-						<NavLink to="/admin/" text={$_('admin')}></NavLink>
-					{/if}
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex h-full items-center space-x-2">
-			<ThemeToggle />
-			{#if data.user != null}
-				<a
-					href="/{data.user.username}/claims/"
-					class="flex items-center gap-2 transition-opacity hover:opacity-80"
-				>
-					<p>{data.user.first_name} {data.user.last_name}</p>
-					{#await getProfilePicture(data.user.username)}
-						<UserAvatar class="bg-white dark:bg-dark-base-50" placeholder />
-					{:then profilePicture}
-						<UserAvatar class="bg-white dark:bg-dark-base-50" url={profilePicture ?? undefined} />
-					{/await}
-				</a>
-				<form method="POST" action="/logout" onsubmit={() => clearProfilePicture()}>
-					<button type="submit" class="cursor-pointer">{$_('logout')}</button>
-				</form>
-			{:else}
-				<a href="/oidc/authenticate/?next={encodeURIComponent(page.url.origin + '/')}"
-					>{$_('login')}</a
-				>
-			{/if}
-		</div>
-	</div>
-</nav>
+<NavBar user={data.user} bind:sidebarOpen {canAccessAdmin} />
 
 {#if data.user != null && sidebarOpen}
 	<button
