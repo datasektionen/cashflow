@@ -340,6 +340,7 @@
 	"voucher_series_fetch_error": "Kunde inte hämta verifikationsserier",
 	"reset": "Återställ",
 	"search_description": "Sök på beskrivning",
+	"search_voucher_number": "Sök på verifikationsnummer",
 	"show_all_filters": "Visa alla filter",
 	"attested": "Attesterad",
 	"not_attested": "Ej attesterad",

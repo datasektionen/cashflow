@@ -91,7 +91,7 @@
 	<InvoiceStatusPills invoice={r} />
 {/snippet}
 
-<ClaimFilterBar exclude={['confirmed', 'flagged', 'voucher_series']} />
+<ClaimFilterBar exclude={['confirmed', 'flagged', 'voucher_series', 'voucher_number']} />
 <PaginatedTable
 	paginatedResponse={data.invoices}
 	columns={[
