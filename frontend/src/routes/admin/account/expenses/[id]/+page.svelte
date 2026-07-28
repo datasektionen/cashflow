@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
+	import { ChevronDown } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import { api } from '$lib/api';
 	import { mayAccount } from '$lib/auth';
@@ -9,6 +10,8 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
+	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
+	import UserLink from '$lib/components/UserLink.svelte';
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
 	import { sumAmounts } from '$lib/money';
@@ -17,6 +20,7 @@
 	const expense = $derived(data.expense);
 	const expectedTotal = $derived(sumAmounts(expense.parts.map((p) => p.amount)));
 	let voucherRowFields: VoucherRowFields | undefined = $state();
+	let showReceipt = $state(true);
 
 	// Prefill once; the form must not reset if data refreshes while editing.
 	// svelte-ignore state_referenced_locally
@@ -107,99 +111,131 @@
 	</div>
 </div>
 
-<div class="flex flex-col gap-10">
-	<div class="flex flex-col gap-8 lg:flex-row">
-		<div class="flex flex-col gap-8 lg:w-3/5 lg:pt-1">
-			<div>
-				<h2 class="mb-2 text-base font-semibold">{$_('admin_account.create_voucher')}</h2>
-				<VoucherRowFields
-					bind:this={voucherRowFields}
-					bind:voucherRows
-					accounts={data.accounts}
-					costCentres={data.costCentres}
-					{expectedTotal}
-				/>
-				<div class="mt-4 flex justify-end">
-					<button
-						type="button"
-						onclick={submitVoucherRows}
-						disabled={submitting != null ||
-							isAccounted ||
-							!hasSubmittableRows ||
-							!mayAccount(data.user)}
-						class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if submitting === 'rows'}
-							<CashSpinner class="size-5" />
-						{:else}
-							{$_('submit')}
-						{/if}
-					</button>
-				</div>
-			</div>
-
-			<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">
-				<h2 class="mb-2 text-base font-semibold">{$_('admin_account.existing_voucher')}</h2>
-				<div class="flex gap-2">
-					<input
-						type="text"
-						bind:value={voucherNumber}
-						placeholder={$_('admin_account.voucher_number_placeholder')}
-						class="border border-base-500 bg-base-200 p-2 text-sm placeholder:text-base-subtle dark:border-dark-base-200 dark:bg-dark-base-200 dark:placeholder:text-dark-base-subtle"
-					/>
-					<button
-						type="button"
-						onclick={submitVoucherNumber}
-						disabled={submitting != null ||
-							isAccounted ||
-							voucherNumber.trim() === '' ||
-							!mayAccount(data.user)}
-						class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if submitting === 'number'}
-							<CashSpinner class="size-5" />
-						{:else}
-							{$_('submit')}
-						{/if}
-					</button>
-				</div>
+<div class="flex flex-col gap-8 lg:flex-row">
+	<div class="flex flex-col gap-8 lg:w-3/5 lg:pt-1">
+		<div>
+			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.create_voucher')}</h2>
+			<p
+				class="hidden max-w-prose pb-4 text-xs leading-relaxed text-base-subtle md:flex dark:text-dark-base-subtle"
+			>
+				{$_('admin_account.create_voucher_help')}
+			</p>
+			<VoucherRowFields
+				bind:this={voucherRowFields}
+				bind:voucherRows
+				accounts={data.accounts}
+				costCentres={data.costCentres}
+				{expectedTotal}
+			/>
+			<div class="mt-4 flex justify-end">
+				<button
+					type="button"
+					onclick={submitVoucherRows}
+					disabled={submitting != null ||
+						isAccounted ||
+						!hasSubmittableRows ||
+						!mayAccount(data.user)}
+					class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{#if submitting === 'rows'}
+						<CashSpinner class="size-5" />
+					{:else}
+						{$_('submit')}
+					{/if}
+				</button>
 			</div>
 		</div>
 
-		<div class="flex flex-col gap-8 lg:w-2/5 lg:pt-1">
-			<div>
-				<h2 class="text-base font-semibold">Information</h2>
-				<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
-					<dt class="text-base-subtle dark:text-dark-base-subtle">
-						{$_('new_expense.form.description.label')}
-					</dt>
-					<dd>{expense.description}</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
-					<dd>
-						{expense.owner.first_name}
-						{expense.owner.last_name}
-						<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>
-					</dd>
-
-					<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
-					<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
-				</dl>
+		<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">
+			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.existing_voucher')}</h2>
+			<p
+				class="hidden max-w-prose pb-4 text-xs leading-relaxed text-base-subtle md:flex dark:text-dark-base-subtle"
+			>
+				{$_('admin_account.existing_voucher_help')}
+			</p>
+			<div class="flex gap-2">
+				<input
+					type="text"
+					bind:value={voucherNumber}
+					placeholder={$_('admin_account.voucher_number_placeholder')}
+					class="border border-base-500 bg-base-200 p-2 text-sm placeholder:text-base-subtle dark:border-dark-base-200 dark:bg-dark-base-200 dark:placeholder:text-dark-base-subtle"
+				/>
+				<button
+					type="button"
+					onclick={submitVoucherNumber}
+					disabled={submitting != null ||
+						isAccounted ||
+						voucherNumber.trim() === '' ||
+						!mayAccount(data.user)}
+					class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{#if submitting === 'number'}
+						<CashSpinner class="size-5" />
+					{:else}
+						{$_('submit')}
+					{/if}
+				</button>
 			</div>
+		</div>
 
-			<div>
-				<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-				<PartsTable parts={expense.parts} owner={expense.owner} dense />
-			</div>
+		<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">
+			<h2 class="mb-3 text-base font-semibold">{$_('expense_comments')}</h2>
+			<CommentDisplay
+				variant="compact"
+				comments={expense.comments}
+				currentUser={data.user ?? undefined}
+			/>
 		</div>
 	</div>
 
-	<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">
-		<h2 class="mb-3 text-base font-semibold">{$_('expense_comments')}</h2>
-		<CommentDisplay
-			variant="compact"
-			comments={expense.comments}
-			currentUser={data.user ?? undefined}
-		/>
+	<div class="flex flex-col gap-8 lg:w-2/5 lg:pt-1">
+		<div>
+			<h2 class="text-base font-semibold">Information</h2>
+			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
+				<dt class="text-base-subtle dark:text-dark-base-subtle">
+					{$_('new_expense.form.description.label')}
+				</dt>
+				<dd>{expense.description}</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
+				<dd>
+					<UserLink user={expense.owner} />
+					<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>
+				</dd>
+
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
+				<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+			</dl>
+		</div>
+
+		<div>
+			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
+			<PartsTable parts={expense.parts} owner={expense.owner} dense />
+		</div>
+
+		<div>
+			<button
+				type="button"
+				onclick={() => (showReceipt = !showReceipt)}
+				class="flex w-full cursor-pointer items-center gap-1.5 text-base font-semibold"
+				aria-expanded={showReceipt}
+			>
+				<ChevronDown class="size-4 transition-transform {showReceipt ? '' : '-rotate-90'}" />
+				{$_('expense_receipt')}
+			</button>
+			{#if showReceipt}
+				<div class="mt-3 flex h-160 flex-col border dark:border-dark-base-200">
+					{#if expense.files.length > 0}
+						<ReceiptViewer source={expense.files.map((f) => f.file)} />
+					{:else}
+						<div
+							class="flex flex-1 items-center justify-center p-8 text-sm text-base-subtle dark:text-dark-base-subtle"
+						>
+							{$_('expense_no_files')}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
