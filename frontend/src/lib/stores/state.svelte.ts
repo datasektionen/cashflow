@@ -1,7 +1,11 @@
 import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
-import { SvelteMap } from 'svelte/reactivity';
+import { MediaQuery, SvelteMap } from 'svelte/reactivity';
 import { api } from '$lib/api';
 import { logger } from '$lib/logger';
+
+export const isExtraSmallLayout = new MediaQuery('max-width: 575.98px');
+export const isSmallLayout = new MediaQuery('max-width: 767.98px'); // < md
+export const isMediumLayout = new MediaQuery('max-width: 1023.98px'); // < lg
 
 export const cachedCostCentres: CostCentre[] = $state([]);
 

@@ -9,6 +9,7 @@
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ExpenseStatusPills from '$lib/components/ExpenseStatusPills.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -19,19 +20,19 @@
 			id: 'description',
 			header: $_('admin_expenses.columns.description'),
 			render: (e) => e.description,
-			width: ''
+			width: 'min-w-48'
 		},
 		{
 			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
 			renderSnippet: ownerCell,
-			width: 'w-48'
+			width: ''
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: 'w-48'
+			width: ''
 		},
 		{
 			id: 'expense_date',
@@ -66,7 +67,7 @@
 {/snippet}
 
 {#snippet ownerCell(e: Expense)}
-	<UserLink user={e.owner} class="relative z-10" />
+	<UserLink user={e.owner} class="relative z-10 block truncate" />
 {/snippet}
 
 {#snippet idCell(e: Expense)}
@@ -97,7 +98,13 @@
 			renderSnippet: statusCell,
 			width: 'w-56'
 		}
-	]}
+	].filter((col) => {
+		// Extra small is a subset of small, so check it first: show only the
+		// essentials, dropping cost centres on top of the small-screen hides.
+		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
+		if (isSmallLayout.current) return !['id', 'expense_date', 'confirmed_at'].includes(col.id);
+		return true;
+	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}

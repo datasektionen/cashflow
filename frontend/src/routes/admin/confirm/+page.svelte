@@ -11,6 +11,7 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import { ScrollArea } from 'bits-ui';
+	import { isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -100,7 +101,10 @@
 					renderSnippet: statusCell,
 					width: 'w-28'
 				}
-			]}
+			].filter((col) => {
+				if (isSmallLayout.current) return !['id', 'is_confirmed'].includes(col.id);
+				return true;
+			})}
 			onPageChange={handlePageChange}
 			onPerPageChange={handlePerPageChange}
 			{loading}

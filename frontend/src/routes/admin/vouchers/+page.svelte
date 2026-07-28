@@ -8,55 +8,64 @@
 	import { _ } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
 
-	const columns: TableColumn<Claim>[] = $derived([
-		{
-			id: 'voucher',
-			header: $_('admin_expenses.columns.voucher'),
-			renderSnippet: voucherCell,
-			width: 'w-28'
-		},
-		{
-			id: 'type',
-			header: $_('claims_type'),
-			render: (c) => $_(c.type),
-			width: 'w-24'
-		},
-		{
-			id: 'description',
-			header: $_('admin_expenses.columns.description'),
-			render: (c) => c.description,
-			width: ''
-		},
-		{
-			id: 'owner',
-			header: $_('admin_expenses.columns.owner'),
-			renderSnippet: ownerCell,
-			width: 'w-48'
-		},
-		{
-			id: 'cost_centres',
-			header: $_('admin_expenses.columns.cost_centres'),
-			renderSnippet: costCentres,
-			width: 'w-48'
-		},
-		{
-			id: 'amount',
-			header: $_('amount'),
-			renderSnippet: amountCell,
-			width: 'w-32'
-		},
-		{
-			id: 'created_date',
-			header: $_('expense_created_at'),
-			render: (c) => c.created_date,
-			width: 'w-28'
-		}
-	]);
+	const columns: TableColumn<Claim>[] = $derived(
+		(
+			[
+				{
+					id: 'voucher',
+					header: $_('admin_expenses.columns.voucher'),
+					renderSnippet: voucherCell,
+					width: 'w-28'
+				},
+				{
+					id: 'type',
+					header: $_('claims_type'),
+					render: (c) => $_(c.type),
+					width: 'w-24'
+				},
+				{
+					id: 'description',
+					header: $_('admin_expenses.columns.description'),
+					render: (c) => c.description,
+					width: ''
+				},
+				{
+					id: 'owner',
+					header: $_('admin_expenses.columns.owner'),
+					renderSnippet: ownerCell,
+					width: ''
+				},
+				{
+					id: 'cost_centres',
+					header: $_('admin_expenses.columns.cost_centres'),
+					renderSnippet: costCentres,
+					width: 'w-48'
+				},
+				{
+					id: 'amount',
+					header: $_('amount'),
+					renderSnippet: amountCell,
+					width: 'w-32'
+				},
+				{
+					id: 'created_date',
+					header: $_('expense_created_at'),
+					render: (c) => c.created_date,
+					width: 'w-28'
+				}
+			] as TableColumn<Claim>[]
+		).filter((col) => {
+			if (isExtraSmallLayout.current) return ['voucher', 'description'].includes(col.id);
+			if (isSmallLayout.current) return ['voucher', 'description', 'cost_centres'].includes(col.id);
+			return true;
+		})
+	);
 
 	function handlePageChange(p: number) {
 		loading = true;

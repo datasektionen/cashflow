@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -87,7 +88,11 @@
 	columns={[
 		{ id: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
 		...columns
-	]}
+	].filter((col) => {
+		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
+		if (isSmallLayout.current) return !['id', 'expense_date'].includes(col.id);
+		return true;
+	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}
