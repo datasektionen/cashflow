@@ -108,7 +108,7 @@
 	<ProfileCard user={data.user} />
 {/if}
 
-<ClaimFilterBar includeChecks={false} exclude={['voucher_series']} />
+<ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
 <PaginatedTable
 	paginatedResponse={data.claims}
 	{columns}

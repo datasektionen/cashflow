@@ -269,6 +269,7 @@ export type ClaimFilter = {
 	accountable?: boolean;
 	payable?: boolean;
 	voucher_series?: string;
+	voucher_number?: string;
 	q?: string;
 };
 

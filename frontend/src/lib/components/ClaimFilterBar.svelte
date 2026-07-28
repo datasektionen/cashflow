@@ -6,6 +6,7 @@
 		CircleCheck,
 		Eraser,
 		Flag,
+		Hash,
 		ListRestart,
 		Receipt,
 		Search,
@@ -36,7 +37,7 @@
 	}: {
 		includeReset?: boolean;
 		includeChecks?: boolean;
-		exclude?: ((typeof tristateKeys)[number] | 'voucher_series')[];
+		exclude?: ((typeof tristateKeys)[number] | 'voucher_series' | 'voucher_number')[];
 	} = $props();
 
 	let showAllFilters: boolean = $state(true);
@@ -135,7 +136,8 @@
 		'cost_centre',
 		'secondary_cost_centre',
 		'budget_line',
-		'voucher_series'
+		'voucher_series',
+		'voucher_number'
 	] as const;
 
 	const voucherSeriesColumns: ComboboxColumn<VoucherSeries>[] = [
@@ -175,10 +177,6 @@
 		return resetting ? '' : (page.url.searchParams.get(key) ?? '');
 	}
 
-	// Each tristate filter (attested, confirmed, paid, accounted, flagged) is a
-	// single URL param with three effective states (plus absent = show both):
-	// 'true' (only the positive box checked), 'false' (only the negative box
-	// checked), 'none' (neither box checked -> match nothing).
 	const tristateKeys = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
 
 	function visibleTristateKeys() {
@@ -346,6 +344,18 @@
 			placeholder={$_('search_description')}
 			icon={searchIcon}
 		/>
+		{#snippet voucherIcon()}
+			<Hash class="size-4" />
+		{/snippet}
+		{#if !exclude.includes('voucher_number')}
+			<TextInput
+				class="text-sm"
+				value={filterValue('voucher_number')}
+				onchange={(v) => setFilter('voucher_number', v ?? '')}
+				placeholder={$_('search_voucher_number')}
+				icon={voucherIcon}
+			/>
+		{/if}
 	{/key}
 	{#if includeReset}
 		<button

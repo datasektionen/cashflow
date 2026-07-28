@@ -341,6 +341,7 @@
 	"voucher_series_fetch_error": "Could not fetch voucher series",
 	"reset": "Reset",
 	"search_description": "Search by description",
+	"search_voucher_number": "Search by voucher number",
 	"show_all_filters": "Show all filters",
 	"attested": "Attested",
 	"not_attested": "Not attested",
