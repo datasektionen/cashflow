@@ -58,12 +58,23 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
         )
 
     def viewable_by(self, user: User) -> "InvoiceQuerySet":
+        # Mirror Profile.may_view_invoice at the queryset level: a user may see an
+        # invoice if they can act on it. pay/confirm are unscoped (any invoice);
+        # view/account/attest are cost-centre scoped; owners always see their own.
         provider = get_permission_provider()
-        if provider.may_view_all(user):
+        if (
+            provider.may_view_all(user)
+            or provider.may_pay(user)
+            or provider.may_confirm(user)
+        ):
             return self.all()
-        cc_scopes = provider.viewable_cost_centres(user)
+        cost_centres = (
+            set(provider.viewable_cost_centres(user))
+            | set(provider.accountable_cost_centres(user))
+            | set(provider.attestable_cost_centres(user))
+        )
         return self.filter(
-            Q(invoicepart__cost_centre__in=cc_scopes) | Q(owner__user=user)
+            Q(invoicepart__cost_centre__in=cost_centres) | Q(owner__user=user)
         ).distinct()
 
     def search(
@@ -134,7 +145,6 @@ class Invoice(models.Model):
     def is_paid(self):
         return bool(self.payed_at and self.payed_by_id)
 
-    # TODO
     def is_payable(self):
         if self.payed_at:
             return False
