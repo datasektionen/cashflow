@@ -309,3 +309,9 @@ export type VoucherSeries = {
 	code: string;
 	description?: string;
 };
+
+export type LeaderboardEntry = {
+	owner: Profile;
+	expense_total: string;
+	expense_count: number;
+};

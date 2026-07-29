@@ -8,6 +8,7 @@ import { PaymentsAPI } from '$lib/api/resources/payments';
 import { FortnoxAPI } from '$lib/api/resources/fortnox';
 import { BudgetAPI } from '$lib/api/resources/budget';
 import { VoucherSeriesAPI } from '$lib/api/resources/voucherSeries.js';
+import { StatsAPI } from '$lib/api/resources/stats';
 import { API_URL } from '$lib/config';
 
 export { ApiClient } from './client';
@@ -22,6 +23,7 @@ export class API {
 	fortnox: FortnoxAPI;
 	budget: BudgetAPI;
 	voucherSeries: VoucherSeriesAPI;
+	stats: StatsAPI;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
@@ -34,6 +36,7 @@ export class API {
 		this.fortnox = new FortnoxAPI(client);
 		this.budget = new BudgetAPI(client);
 		this.voucherSeries = new VoucherSeriesAPI(client);
+		this.stats = new StatsAPI(client);
 	}
 }
 

@@ -355,5 +355,15 @@
 	"not_flagged": "Ej flaggad",
 	"accounted": "Bokförd",
 	"not_accounted": "Ej bokförd",
-	"clear_all": "Rensa alla"
+	"clear_all": "Rensa alla",
+	"leaderboard": {
+		"help": "Här visas de personer som har registrerat störst summa utlägg. Endast utlägg (ej fakturor) under 10 000 kr räknas med i listan.",
+		"help_count": "Här visas de personer som har registrerat flest utlägg.",
+		"title": "Topplistor",
+		"position": "Placering",
+		"amount": "Belopp",
+		"count": "Antal",
+		"total_title": "Summa av utlägg",
+		"count_title": "Antal utlägg"
+	}
 }

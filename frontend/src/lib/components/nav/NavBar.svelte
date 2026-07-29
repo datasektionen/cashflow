@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Menu, X, LogOut } from '@lucide/svelte';
+	import { Menu, X, LogOut, Trophy } from '@lucide/svelte';
 	import { Separator } from 'bits-ui';
 	import NavLink from './NavLink.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
@@ -70,6 +70,14 @@
 		</div>
 
 		<div class="flex h-full items-center space-x-2">
+			<a
+				href="/stats"
+				aria-label={$_('leaderboard.title')}
+				class="cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 dark:hover:bg-dark-base-300"
+			>
+				<Trophy class="size-5" />
+			</a>
+
 			<ThemeToggle />
 
 			{#if user != null}
