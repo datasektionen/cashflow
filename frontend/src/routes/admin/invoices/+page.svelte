@@ -9,6 +9,7 @@
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import InvoiceStatusPills from '$lib/components/InvoiceStatusPills.svelte';
+	import { isExtraSmallLayout, isSmallLayout, isMediumLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -19,19 +20,19 @@
 			id: 'description',
 			header: $_('admin_invoices.columns.description'),
 			render: (r) => r.description,
-			width: ''
+			width: 'w-48'
 		},
 		{
 			id: 'owner',
 			header: $_('admin_invoices.columns.owner'),
 			renderSnippet: ownerCell,
-			width: 'w-48'
+			width: ''
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: 'w-48'
+			width: ''
 		},
 		{
 			id: 'invoice_date',
@@ -103,7 +104,13 @@
 			renderSnippet: statusCell,
 			width: 'w-56'
 		}
-	]}
+	].filter((col) => {
+		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
+		if (isSmallLayout.current) return ['description', 'owner', 'confirmed_at'].includes(col.id);
+		if (isMediumLayout.current)
+			return ['description', 'owner', 'invoice_date', 'confirmed_at'].includes(col.id);
+		return true;
+	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{loading}
