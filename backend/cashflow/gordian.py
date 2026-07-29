@@ -4,16 +4,14 @@ https://github.com/datasektionen/gordian
 """
 
 import re
-from typing import Literal, Union, Any, Annotated
-
-from requests import Response
-from structlog import get_logger
-from structlog.contextvars import bind_contextvars
-
 import requests
 from django.conf import settings
 from django.core.cache import cache
 from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
+from requests import Response
+from structlog import get_logger
+from structlog.contextvars import bind_contextvars
+from typing import Literal, Union, Any, Annotated
 
 from expenses.models import ExpensePart
 from invoices.models import InvoicePart
@@ -25,12 +23,7 @@ logger = get_logger(__name__)
 # Data models
 # ======================
 def validate_cost_centre_type(value: Any) -> Any:
-    """Normalizes unknown cost centre types to "other".
-
-    GOrdian occasionally contains cost centres with made-up types (e.g.
-    "projectX"); one such entry must not make the whole list unparseable.
-    """
-    if value not in ("committee", "partition", "project", "other"):
+    if value not in ("committee", "partition", "project", "projectX", "other"):
         return "other"
     return value
 
@@ -39,7 +32,7 @@ class GCostCenter(BaseModel):
     id: int = Field(alias="CostCentreID")
     name: str = Field(alias="CostCentreName")
     type: Annotated[
-        Literal["committee", "partition", "project", "other"],
+        Literal["committee", "partition", "project", "projectX", "other"],
         BeforeValidator(validate_cost_centre_type),
     ] = Field(alias="CostCentreType")
 
@@ -230,9 +223,7 @@ def list_budget_lines_from_gordian(
             return budget_lines
 
     if secondary_cost_center is not None:
-        response = _get(
-            f"{settings.BUDGET_URL}/api/BudgetLines", params={"id": scc_id}
-        )
+        response = _get(f"{settings.BUDGET_URL}/api/BudgetLines", params={"id": scc_id})
         budget_lines = BL_LIST.validate_json(response.text)
 
         cache.set(
