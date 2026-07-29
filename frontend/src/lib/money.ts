@@ -21,3 +21,13 @@ export function sumCents(amounts: string[]): bigint {
 export function sumAmounts(amounts: string[]): number {
 	return Number(sumCents(amounts)) / 100;
 }
+
+const amountFmt = new Intl.NumberFormat('sv-SE', {
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2
+});
+
+/** Formats a decimal amount string or number as e.g. "1 234,56 kr". */
+export function formatAmount(amount: string | number): string {
+	return `${amountFmt.format(Number(amount))} kr`;
+}

@@ -356,5 +356,15 @@
 	"not_flagged": "Not flagged",
 	"accounted": "Accounted",
 	"not_accounted": "Not accounted",
-	"clear_all": "Clear all"
+	"clear_all": "Clear all",
+	"leaderboard": {
+		"help": "These are the people who have registered the largest total of expenses. Only expenses (not invoices) under 10,000 kr are counted in the list.",
+		"help_count": "These are the people who have registered the most expenses.",
+		"title": "Leaderboards",
+		"position": "Position",
+		"amount": "Amount",
+		"count": "Count",
+		"total_title": "Sum of expenses",
+		"count_title": "Number of expenses"
+	}
 }
