@@ -59,6 +59,33 @@
 }
 
 @layer base {
+	/* LayerChart surface tokens. It strokes a halo behind axis tick labels using
+	   --color-surface-100 (falling back to light-dark(white, black)); since we
+	   theme via a .dark class instead of color-scheme, that fallback resolves to
+	   white and fattens/blurs labels on dark backgrounds. Map the surface scale to
+	   our base scale so the halo matches the chart background instead. */
+	:root {
+		--color-surface-50: var(--color-base-200);
+		--color-surface-100: var(--color-base-100);
+		--color-surface-200: var(--color-base-200);
+		--color-surface-300: var(--color-base-300);
+		--color-surface-700: var(--color-base-700);
+		--color-surface-800: var(--color-base-800);
+		--color-surface-900: var(--color-base-900);
+		--color-surface-content: var(--color-base-text);
+	}
+
+	:root.dark {
+		--color-surface-50: var(--color-dark-base-50);
+		--color-surface-100: var(--color-dark-base-100);
+		--color-surface-200: var(--color-dark-base-200);
+		--color-surface-300: var(--color-dark-base-300);
+		--color-surface-700: var(--color-dark-base-700);
+		--color-surface-800: var(--color-dark-base-800);
+		--color-surface-900: var(--color-dark-base-900);
+		--color-surface-content: var(--color-dark-base-text);
+	}
+
 	/* disable chrome cancel button */
 	input[type='search']::-webkit-search-cancel-button {
 		display: none;
