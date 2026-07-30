@@ -2,6 +2,20 @@ import { ApiClient } from '$lib/api';
 import type { LeaderboardEntry, PaginatedResponse } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
 
+export type MonthlyStatistics = {
+	year: number;
+	month: number;
+	expense_count: number;
+	invoice_count: number;
+	expense_total: string;
+	invoice_total: string;
+};
+
+export type YearlyStatistics = {
+	year: number;
+	months: MonthlyStatistics[];
+};
+
 export class StatsAPI {
 	private apiClient: ApiClient;
 
@@ -37,5 +51,9 @@ export class StatsAPI {
 				totalPages: res.pagination.total_pages
 			}
 		};
+	}
+
+	async yearly(year: number): Promise<YearlyStatistics> {
+		return await this.apiClient.get<YearlyStatistics>(`/stats/yearly/${year}/`);
 	}
 }

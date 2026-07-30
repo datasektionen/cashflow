@@ -366,5 +366,9 @@
 		"count": "Count",
 		"total_title": "Sum of expenses",
 		"count_title": "Number of expenses"
+	},
+	"stats": {
+		"title": "Statistics",
+		"yearly_title": "Yearly overview"
 	}
 }

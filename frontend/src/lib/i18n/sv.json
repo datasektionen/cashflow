@@ -365,5 +365,9 @@
 		"count": "Antal",
 		"total_title": "Summa av utlägg",
 		"count_title": "Antal utlägg"
+	},
+	"stats": {
+		"title": "Statistik",
+		"yearly_title": "Årsöversikt"
 	}
 }
