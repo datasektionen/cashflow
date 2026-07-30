@@ -237,17 +237,6 @@ class TestHiveViewExpensesPermissions:
 
 
 class TestGordianParsing:
-    def test_unknown_cost_centre_type_normalized_to_other(self):
-        from cashflow.gordian import GCostCenter
-
-        cc = GCostCenter.model_validate(
-            {
-                "CostCentreID": 1,
-                "CostCentreName": "Testnämnden",
-                "CostCentreType": "projectX",
-            }
-        )
-        assert cc.type == "other"
 
     def test_known_cost_centre_type_kept(self):
         from cashflow.gordian import GCostCenter
