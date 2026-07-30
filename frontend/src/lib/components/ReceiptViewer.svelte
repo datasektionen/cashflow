@@ -33,22 +33,24 @@ render. Accepts one or more url sources, of either kind, mixed or not.
 	{/each}
 
 	{#if pdfSources.length > 0}
-		<PDFViewer
-			config={{
-				documentManager: {
-					initialDocuments: pdfSources.map((s, i) => ({
-						url: s,
-						name: (i + 1).toString()
-					}))
-				},
-				tabBar: pdfSources.length > 1 ? 'multiple' : 'never',
-				theme: { preference: 'system' },
-				disabledCategories: ['annotation', 'redaction', 'search'],
-				zoom: { defaultZoomLevel: ZoomMode.FitWidth },
-				scroll: { defaultStrategy: ScrollStrategy.Vertical },
-				i18n: { defaultLocale: $locale ?? 'sv', fallbackLocale: 'en' }
-			}}
-			style="width: 100%; height: 100%"
-		/>
+		<div class="h-[80dvh] w-full shrink-0">
+			<PDFViewer
+				config={{
+					documentManager: {
+						initialDocuments: pdfSources.map((s, i) => ({
+							url: s,
+							name: (i + 1).toString()
+						}))
+					},
+					tabBar: pdfSources.length > 1 ? 'multiple' : 'never',
+					theme: { preference: 'system' },
+					disabledCategories: ['annotation', 'redaction', 'search'],
+					zoom: { defaultZoomLevel: ZoomMode.FitWidth },
+					scroll: { defaultStrategy: ScrollStrategy.Vertical },
+					i18n: { defaultLocale: $locale ?? 'sv', fallbackLocale: 'en' }
+				}}
+				style="width: 100%; height: 100%"
+			/>
+		</div>
 	{/if}
 </div>
