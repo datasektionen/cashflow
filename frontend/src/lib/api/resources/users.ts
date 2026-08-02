@@ -9,7 +9,7 @@ export class UsersAPI {
 	}
 
 	async getCurrent(): Promise<User> {
-		return this.apiClient.get<User>('/users/me');
+		return this.apiClient.get<User>('/users/me/');
 	}
 
 	updateBankInfo(bankInfo: BankInfo): Promise<User> {
