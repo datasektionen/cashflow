@@ -20,7 +20,7 @@
 			id: 'description',
 			header: $_('admin_invoices.columns.description'),
 			render: (r) => r.description,
-			width: 'w-48'
+			width: 'w-48 lg:w-auto'
 		},
 		{
 			id: 'owner',

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Menu, X, LogOut } from '@lucide/svelte';
+	import { Menu, X, LogOut, Wallet } from '@lucide/svelte';
 	import { Separator } from 'bits-ui';
 	import NavLink from './NavLink.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
@@ -135,6 +135,15 @@
 				orientation="horizontal"
 				class="my-1 h-px w-full bg-base-500 md:hidden dark:bg-dark-base-300"
 			/>
+
+			<a
+				href="/{user.username}/claims/"
+				role="menuitem"
+				class="flex w-full cursor-pointer flex-row items-center gap-x-1 px-3 py-2 text-left text-base-subtle transition-colors hover:bg-base-300 dark:text-dark-base-subtle dark:hover:bg-dark-base-300"
+			>
+				<Wallet class="size-4" />
+				{$_('user_claims')}
+			</a>
 
 			<form method="POST" action="/logout" onsubmit={() => clearProfilePicture()}>
 				<button

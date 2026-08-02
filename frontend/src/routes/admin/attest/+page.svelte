@@ -25,13 +25,13 @@
 			id: 'description',
 			header: $_('admin_attestable.columns.description'),
 			render: (c) => c.description,
-			width: ''
+			width: 'w-48 truncate'
 		},
 		{
 			id: 'owner',
 			header: $_('admin_attestable.columns.owner'),
 			renderSnippet: ownerCell,
-			width: 'w-48'
+			width: 'w-24 lg:w-40'
 		},
 		{
 			id: 'cost_centres',
@@ -77,7 +77,7 @@
 {/snippet}
 
 {#snippet ownerCell(c: Claim)}
-	<UserLink user={c.owner} />
+	<UserLink user={c.owner} class="block truncate" />
 {/snippet}
 
 {#snippet idCell(c: Claim)}
