@@ -427,6 +427,12 @@ class Expense(models.Model):
             raise FlaggedConfirmationError()
         self.confirmed_by = user
         self.confirmed_at = date.today()
+        self.save()
+        Comment.objects.create(
+            author=user.profile,
+            expense=self,
+            content="Jag bekräftar att kvittot finns i pärmen.",
+        )
 
     def unconfirm(self, user: User):
         if not user.profile.may_unconfirm():
