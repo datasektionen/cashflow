@@ -26,11 +26,13 @@ class ManageFortnoxPermission(permissions.BasePermission):
 
 
 class AccountingPermission(permissions.BasePermission):
-    """Only users who may account something may read Fortnox reference data."""
 
     def has_permission(self, request, view):
         user = request.user
-        return bool(user.is_authenticated and user.profile.may_account_some())
+        return bool(
+            user.is_authenticated
+            and (user.profile.may_account_some() or user.profile.may_view_all())
+        )
 
 
 def _status_payload() -> dict:
