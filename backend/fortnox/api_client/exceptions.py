@@ -17,7 +17,9 @@ class FortnoxAPIError(Exception):
 
 
 class FortnoxAuthenticationError(FortnoxAPIError):
-    pass
+    def __init__(self, *args, code: str | None = None):
+        super().__init__(*args)
+        self.code = code
 
 
 class MissingTokenOrSecret(FortnoxAPIError):

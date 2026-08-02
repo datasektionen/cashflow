@@ -180,14 +180,21 @@ def retrieve_or_refresh_token(client):
                     new_token_expires_at=service_account.expires_at,
                 )
                 return response.access_token
-            except FortnoxAuthenticationError:
-                # Most likely both tokens are expired
-                # Better to "de-authenticate" user completely
-                existing = ServiceAccount.objects.get()
+            except FortnoxAuthenticationError as e:
+                if e.code == "invalid_grant":
+                    logger.error(
+                        "failed to refresh access token for Fortnox (invalid_grant), invalidating tokens",
+                        token_id=service_account.pk,
+                        access_token_expires_at=service_account.expires_at,
+                    )
+                    service_account.delete()
+                    return None
+
+
                 logger.error(
-                    "failed to refresh access token for Fortnox, invalidating tokens",
-                    token_id=existing.pk,
-                    access_token_expires_at=existing.expires_at,
+                    "unknown error trying to refresh Fortnox tokens",
+                    error_code=e.code,
+                    error=str(e),
+                    token_id=service_account.pk,
                 )
-                ServiceAccount.objects.get().delete()
                 return None

@@ -151,11 +151,11 @@ class FortnoxAPIClient:
         )
         match adapter.validate_python(response.json()):
             case AccessTokenResponse() as token_response:
-                user_info = self.retrieve_current_user(token_response.access_token)
-                logger.debug(f"{user_info.Name} fetched new access token")
                 return token_response
             case AuthErrorInfo() as e:
-                raise FortnoxAuthenticationError(f"{e.error}: {e.error_description}")
+                raise FortnoxAuthenticationError(
+                    f"{e.error}: {e.error_description}", code=e.error
+                )
             case _:
                 raise ResponseParsingError(
                     "Unknown or invalid API response from Fortnox"
