@@ -44,37 +44,37 @@
 		</p>
 
 		<div
-			class="relative flex w-36 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300"
+			class="relative flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300"
 		>
 			<div
 				class={[
-					'absolute inset-y-0 w-12 bg-money-green-500 transition-all',
+					'absolute inset-y-0 w-16 bg-money-green-500 transition-all',
 					range === 0 && 'left-0',
-					range === 1 && 'left-12',
-					range === 2 && 'left-24'
+					range === 1 && 'left-16',
+					range === 2 && 'left-32'
 				]}
 			></div>
 
 			<button
 				onclick={() => (range = 0)}
 				class={[
-					'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
+					'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
 					range === 0 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-				]}>Alltid</button
+				]}>{$_('leaderboard.all_time')}</button
 			>
 			<button
 				onclick={() => (range = 1)}
 				class={[
-					'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
+					'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
 					range === 1 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-				]}>År</button
+				]}>{$_('leaderboard.year')}</button
 			>
 			<button
 				onclick={() => (range = 2)}
 				class={[
-					'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
+					'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
 					range === 2 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-				]}>Månad</button
+				]}>{$_('leaderboard.month')}</button
 			>
 		</div>
 	</div>

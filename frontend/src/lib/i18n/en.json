@@ -366,7 +366,11 @@
 		"amount": "Amount",
 		"count": "Count",
 		"total_title": "Sum of expenses",
-		"count_title": "Number of expenses"
+		"count_title": "Number of expenses",
+		"sum": "Sum",
+		"all_time": "All time",
+		"year": "Year",
+		"month": "Month"
 	},
 	"stats": {
 		"title": "Statistics",
