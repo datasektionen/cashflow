@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { Menu, X, LogOut, Trophy } from '@lucide/svelte';
+	import { Menu, X, LogOut } from '@lucide/svelte';
 	import { Separator } from 'bits-ui';
 	import NavLink from './NavLink.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import { getProfilePicture, clearProfilePicture } from '$lib/stores/state.svelte';
+	import LanguageToggle from './LanguageToggle.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import type { Profile } from '$lib/api/types';
 
@@ -62,6 +63,7 @@
 					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
 					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
 					<NavLink to="/{user.username}/claims/" text={$_('user_claims')}></NavLink>
+					<NavLink to="/stats" text={$_('statistics')}></NavLink>
 					{#if canAccessAdmin}
 						<NavLink to="/admin/" text={$_('admin')}></NavLink>
 					{/if}
@@ -70,13 +72,7 @@
 		</div>
 
 		<div class="flex h-full items-center space-x-2">
-			<a
-				href="/stats"
-				aria-label={$_('leaderboard.title')}
-				class="cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 dark:hover:bg-dark-base-300"
-			>
-				<Trophy class="size-5" />
-			</a>
+			<LanguageToggle />
 
 			<ThemeToggle />
 
@@ -116,9 +112,6 @@
 		></button>
 	{/if}
 
-	<!-- Full-width aligner: reuses the nav's inner container classes so the menu's
-	     right edge tracks the avatar in both the centred (non-admin) and
-	     full-width (admin) layouts. Non-interactive except for the panel itself. -->
 	<div
 		class={[
 			'pointer-events-none fixed inset-x-0 top-16 z-30 flex justify-end',
@@ -142,6 +135,7 @@
 				orientation="horizontal"
 				class="my-1 h-px w-full bg-base-500 md:hidden dark:bg-dark-base-300"
 			/>
+
 			<form method="POST" action="/logout" onsubmit={() => clearProfilePicture()}>
 				<button
 					type="submit"

@@ -23,7 +23,8 @@
 		Settings2,
 		Menu,
 		X,
-		Wallet
+		Wallet,
+		Trophy
 	} from '@lucide/svelte';
 	import { api } from '$lib/api';
 	import type { ActionSummary } from '$lib/api/types';
@@ -85,6 +86,7 @@
 			icon={Wallet}
 			class="lg:hidden"
 		/>
+		<SideNavLink to="/stats" text={$_('statistics')} icon={Trophy} class="lg:hidden" />
 
 		{#if canAccessAdmin}
 			<p
