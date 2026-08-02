@@ -65,7 +65,10 @@ class StructlogContextMiddleware:
         duration_ms = (time.perf_counter() - start) * 1000
 
         response.headers["X-Request-ID"] = request_id
-        if not (request.path in self._QUIET_PATHS and response.status_code < 400):
+        quiet = request.path in self._QUIET_PATHS and (
+            response.status_code < 400 or response.status_code in (401, 403)
+        )
+        if not quiet:
             logger.info(
                 "request completed",
                 method=request.method,

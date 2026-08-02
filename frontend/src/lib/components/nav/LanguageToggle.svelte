@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
+	import { LOCALE_STORAGE_KEY } from '$lib/i18n';
 	import FlagEN from '$lib/components/FlagEN.svelte';
 	import FlagSE from '$lib/components/FlagSE.svelte';
 
@@ -8,7 +9,7 @@
 	function toggle() {
 		const next = isSwedish ? 'en' : 'sv';
 		locale.set(next);
-		localStorage.setItem('locale', next);
+		localStorage.setItem(LOCALE_STORAGE_KEY, next);
 	}
 </script>
 

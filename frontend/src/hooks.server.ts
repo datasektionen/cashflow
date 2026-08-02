@@ -10,7 +10,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const { method, url } = event.request;
 	logger.debug({ method, url }, 'incoming request');
 	const api = new API(API_URL, event.fetch);
-	event.locals.user = await api.users.getCurrent().catch(() => null);
+	event.locals.user = event.cookies.get('sessionid')
+		? await api.users.getCurrent().catch(() => null)
+		: null;
 
 	return resolve(event, {
 		filterSerializedResponseHeaders: (name) =>

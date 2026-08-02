@@ -365,7 +365,11 @@
 		"amount": "Belopp",
 		"count": "Antal",
 		"total_title": "Summa av utlägg",
-		"count_title": "Antal utlägg"
+		"count_title": "Antal utlägg",
+		"sum": "Summa",
+		"all_time": "Alltid",
+		"year": "År",
+		"month": "Månad"
 	},
 	"stats": {
 		"title": "Statistik",

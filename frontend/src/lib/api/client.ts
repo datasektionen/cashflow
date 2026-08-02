@@ -64,7 +64,8 @@ export class ApiClient {
 						status: response.status,
 						code: 'unexpected_response'
 					};
-			log.error(
+			const level = response.status === 401 || response.status === 403 ? 'warn' : 'error';
+			log[level](
 				{ path, status: response.status, duration_ms: duration, error },
 				'API request failed'
 			);

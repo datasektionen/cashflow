@@ -3,7 +3,7 @@
 	import { Axis, Bar, Chart, Layer } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
 	import { api } from '$lib/api';
-	import { locale } from 'svelte-i18n';
+	import { _, locale } from 'svelte-i18n';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
 
@@ -74,7 +74,7 @@
 				'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
 				mode === 'total' ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
 			]}
-			>Summa
+			>{$_('leaderboard.sum')}
 		</button>
 		<button
 			onclick={() => (mode = 'count')}
@@ -82,7 +82,7 @@
 				'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
 				mode === 'count' ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
 			]}
-			>Antal
+			>{$_('leaderboard.count')}
 		</button>
 	</div>
 </div>
