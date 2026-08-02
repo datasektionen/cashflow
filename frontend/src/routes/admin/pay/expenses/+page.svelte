@@ -59,7 +59,9 @@
 							}}
 						>
 							<td class="relative flex flex-1 flex-row items-center gap-x-2 px-4 py-2">
-								<span class="relative z-10 rounded-full bg-base-200 dark:bg-dark-base-100">
+								<span
+									class="relative z-10 hidden rounded-full bg-base-200 sm:block dark:bg-dark-base-100"
+								>
 									{#await avatars}
 										<UserAvatar placeholder={true} />
 									{:then resolved}

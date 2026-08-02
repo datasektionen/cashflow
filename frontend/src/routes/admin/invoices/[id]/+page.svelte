@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { Check, Copy, MessageSquarePlus, Trash } from '@lucide/svelte';
+	import { Check, MessageSquarePlus, Trash } from '@lucide/svelte';
+	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
+	import { formatAmount } from '$lib/money';
 	import type { PageData } from './$types';
 	import type { Invoice } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -93,13 +95,6 @@
 			.finally(() => (deleting = false));
 	}
 
-	let copied = $state(false);
-	function copyId() {
-		navigator.clipboard.writeText(String(invoice.id));
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
-	}
-
 	let comments = $derived(invoice.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
@@ -159,21 +154,14 @@
 {/snippet}
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-	<div class="flex flex-wrap items-center gap-3">
-		<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
-			<button
-				onclick={copyId}
-				class="flex cursor-pointer items-center gap-1 transition-colors hover:text-base-text dark:hover:text-dark-base-text"
-			>
-				<span>{$_('invoice')} #{invoice.id}</span>
-				{#if copied}
-					<Check class="size-3" />
-				{:else}
-					<Copy class="size-3" />
-				{/if}
-			</button>
-			<span>·</span>
-			<span><UserLink user={invoice.owner} /></span>
+	<div class="flex flex-col items-start gap-3">
+		<div class="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+			<CopyableValue display={`${$_('invoice')} #${invoice.id}`} value={invoice.id} />
+			<CopyableValue display={`${invoice.owner.first_name} ${invoice.owner.last_name}`} />
+			<CopyableValue display={invoice.description} />
+			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
+			<CopyableValue display={invoice.invoice_date} />
+			<CopyableValue display={invoice.due_date} />
 		</div>
 		<div class="flex items-center gap-2">
 			{#if isAttested}
