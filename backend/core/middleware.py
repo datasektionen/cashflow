@@ -29,6 +29,8 @@ class StructlogContextMiddleware:
     _ID_ALPHABET = string.ascii_lowercase + string.digits
     _ID_PATTERN = re.compile(r"[a-z0-9]{8}")
 
+    _QUIET_PATHS = frozenset({"/users/me/"})
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -63,13 +65,14 @@ class StructlogContextMiddleware:
         duration_ms = (time.perf_counter() - start) * 1000
 
         response.headers["X-Request-ID"] = request_id
-        logger.info(
-            "request completed",
-            method=request.method,
-            path=request.path,
-            status_code=response.status_code,
-            duration_ms=round(duration_ms, 2),
-        )
+        if not (request.path in self._QUIET_PATHS and response.status_code < 400):
+            logger.info(
+                "request completed",
+                method=request.method,
+                path=request.path,
+                status_code=response.status_code,
+                duration_ms=round(duration_ms, 2),
+            )
         return response
 
     def generate_id(self):
