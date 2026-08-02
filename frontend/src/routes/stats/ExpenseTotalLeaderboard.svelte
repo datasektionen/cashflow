@@ -87,61 +87,61 @@
 		{@const avatarUrls = api.profilePictures.getMany(res.data.map((entry) => entry.owner.username))}
 
 		<div class="overflow-x-auto">
-		<table class="w-full border-collapse">
-			<thead>
-				<tr>
-					<th
-						class="px-4 py-3 text-center text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-						>{$_('leaderboard.position')}</th
-					>
-					<th></th>
-					<th></th>
-					<th
-						class="px-4 py-3 text-right text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-						>{$_('leaderboard.amount')}</th
-					>
-				</tr>
-			</thead>
-			<tbody>
-				{#each res.data as entry, idx}
-					{@const isCurrentUser = entry.owner.username === page.data.user?.username}
-					<tr
-						class={[
-							'border-b border-b-base-400 last:border-0 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-							isCurrentUser && 'bg-money-green-500/10'
-						]}
-					>
-						<td class="w-16 px-4 py-3 text-center align-middle">
-							{@render leaderboardPosition(idx)}
-						</td>
-
-						<td class="w-14 px-4 py-3 align-middle">
-							{#await avatarUrls}
-								<UserAvatar placeholder={true} class={idx < 3 ? 'size-10' : ''} />
-							{:then avatars}
-								<UserAvatar
-									url={avatars[entry.owner.username] ?? undefined}
-									class={idx < 3 ? 'size-10' : ''}
-								/>
-							{/await}
-						</td>
-
-						<td
-							class={[
-								'px-4 py-3 align-middle',
-								idx < 3 && 'font-medium uppercase',
-								idx === 0 && 'font-bold',
-								idx >= 3 && 'text-sm'
-							]}>{entry.owner.first_name} {entry.owner.last_name}</td
+			<table class="w-full border-collapse">
+				<thead>
+					<tr>
+						<th
+							class="px-4 py-3 text-center text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+							>{$_('leaderboard.position')}</th
 						>
-
-						<td class="px-4 py-3 text-right align-middle whitespace-nowrap tabular-nums"
-							>{formatAmount(entry.expense_total)}</td
+						<th></th>
+						<th></th>
+						<th
+							class="px-4 py-3 text-right text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+							>{$_('leaderboard.amount')}</th
 						>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{#each res.data as entry, idx}
+						{@const isCurrentUser = entry.owner.username === page.data.user?.username}
+						<tr
+							class={[
+								'border-b border-b-base-400 last:border-0 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+								isCurrentUser && 'bg-money-green-500/10'
+							]}
+						>
+							<td class="w-16 px-4 py-3 text-center align-middle">
+								{@render leaderboardPosition(idx)}
+							</td>
+
+							<td class="w-14 px-4 py-3 align-middle">
+								{#await avatarUrls}
+									<UserAvatar placeholder={true} class={idx < 3 ? 'size-10' : ''} />
+								{:then avatars}
+									<UserAvatar
+										url={avatars[entry.owner.username] ?? undefined}
+										class={idx < 3 ? 'size-10' : ''}
+									/>
+								{/await}
+							</td>
+
+							<td
+								class={[
+									'px-4 py-3 align-middle',
+									idx < 3 && 'font-medium uppercase',
+									idx === 0 && 'font-bold',
+									idx >= 3 && 'text-sm'
+								]}>{entry.owner.first_name} {entry.owner.last_name}</td
+							>
+
+							<td class="px-4 py-3 text-right align-middle whitespace-nowrap tabular-nums"
+								>{formatAmount(entry.expense_total)}</td
+							>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	{/await}
 </div>

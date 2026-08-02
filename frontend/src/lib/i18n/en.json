@@ -3,6 +3,7 @@
 	"invoice": "Invoice",
 	"user_expenses": "My expenses",
 	"user_claims": "My claims",
+	"statistics": "Statistics",
 	"admin": "Administration",
 	"tasks": {
 		"confirm": "Confirm",
