@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { _ } from 'svelte-i18n';
+	import { _, locale } from 'svelte-i18n';
 	import { ExternalLink } from '@lucide/svelte';
 	import type { Expense, User } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -83,10 +83,24 @@
 			{/if}
 		</div>
 
+		<dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
+			<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
+			<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+
+			<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_created_at')}</dt>
+			<dd>{new Date(expense.created_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+
+			{#if expense.confirmed_at}
+				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_confirmed')}</dt>
+				<dd>{new Date(expense.confirmed_at).toLocaleDateString($locale ?? 'sv-SE')}</dd>
+			{/if}
+		</dl>
+
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
 			<PartsTable parts={expense.parts} owner={expense.owner} {currentUser} />
 		</div>
+
 
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
