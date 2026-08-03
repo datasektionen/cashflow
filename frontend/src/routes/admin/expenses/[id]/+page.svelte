@@ -135,21 +135,26 @@
 			.finally(() => (deleting = false));
 	}
 
+	let submittingComment = $state(false);
+
 	let comments = $derived(expense.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 	const commentSubmit = async () => {
+		submittingComment = true;
 		await api.expenses
 			.comment(expense.id, commentContent)
 			.then((comment) => {
 				comments.push(comment);
 				showCommentForm = false;
 				alerts.update((a) => [...a, success($_('comment_submitted'))]);
+				submittingComment = false;
 			})
 			.catch((e) => {
 				logger.error(e);
 				const msg = isErrorResponse(e) ? e.detail : $_('comment_submission_failed');
 				alerts.update((a) => [...a, error(msg)]);
+				submittingComment = false;
 			});
 	};
 </script>
@@ -427,7 +432,8 @@
 						</button>
 						<button
 							onclick={commentSubmit}
-							class="bg-money-green-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-money-green-500"
+							class="bg-money-green-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+							disabled={submittingComment}
 						>
 							{$_('submit')}
 						</button>
