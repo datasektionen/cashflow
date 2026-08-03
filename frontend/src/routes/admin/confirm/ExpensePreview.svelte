@@ -101,7 +101,6 @@
 			<PartsTable parts={expense.parts} owner={expense.owner} {currentUser} />
 		</div>
 
-
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_comments')}</h2>
 			<CommentDisplay comments={expense.comments} {currentUser} />
