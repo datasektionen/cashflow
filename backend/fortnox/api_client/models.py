@@ -5,7 +5,7 @@ validate and (de)serialize data passed to and from the API.
 
 from typing import Literal, Optional, TypedDict, Annotated
 
-from pydantic import BaseModel, Field, AliasChoices, StringConstraints
+from pydantic import BaseModel, Field, AliasChoices, StringConstraints, field_validator
 
 
 class Account(BaseModel):
@@ -142,6 +142,11 @@ class Voucher(BaseModel):
     VoucherSeries: str
     Year: int
 
+    @field_validator("ReferenceType", mode="before")
+    @classmethod
+    def empty_string_to_none(cls, v: object) -> object:
+        return None if v == "" else v
+
 
 class _VoucherFields(TypedDict, total=False):
     url: Optional[str]
@@ -215,6 +220,11 @@ class VoucherListItem(BaseModel):
     VoucherNumber: Optional[int] = None
     VoucherSeries: Optional[str] = None
     Year: Optional[int] = None
+
+    @field_validator("ReferenceType", mode="before")
+    @classmethod
+    def empty_string_to_none(cls, v: object) -> object:
+        return None if v == "" else v
 
 
 class VoucherSeries(BaseModel):
