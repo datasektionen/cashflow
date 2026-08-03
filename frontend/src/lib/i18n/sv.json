@@ -352,6 +352,7 @@
 	"not_confirmed": "Ej bekräftad",
 	"paid": "Betald",
 	"not_paid": "Ej betald",
+	"completed_payments": "Skapade betalningar",
 	"flagged": "Flaggad",
 	"not_flagged": "Ej flaggad",
 	"accounted": "Bokförd",

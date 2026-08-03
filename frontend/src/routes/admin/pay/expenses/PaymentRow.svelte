@@ -10,6 +10,7 @@
 	import { isErrorResponse } from '$lib/api/errors';
 	import { logger } from '$lib/logger';
 	import { formatBankAccount } from '$lib/bankAccount';
+	import { completedPayments } from './completedPayments.svelte';
 
 	let {
 		owner,
@@ -45,7 +46,12 @@
 		if (selected.size === 0) return;
 		paying = true;
 		try {
+			const resolved = await expenses;
+			const amount = resolved.data
+				.filter((e) => selected.has(e.id))
+				.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0);
 			const payment = await api.payments.create([...selected]);
+			completedPayments.push({ ...payment, amount: amount.toFixed(2) });
 			alerts.update((a) => [...a, success(`Betalning ${payment.tag} skapad`)]);
 			selected.clear();
 			onPaid?.();

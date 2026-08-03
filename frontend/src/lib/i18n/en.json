@@ -353,6 +353,7 @@
 	"not_confirmed": "Not confirmed",
 	"paid": "Paid",
 	"not_paid": "Not paid",
+	"completed_payments": "Completed payments",
 	"flagged": "Flagged",
 	"not_flagged": "Not flagged",
 	"accounted": "Accounted",
