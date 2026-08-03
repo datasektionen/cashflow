@@ -116,6 +116,7 @@
 			"invoices": "Fakturor"
 		},
 		"columns": {
+			"user": "Användare",
 			"invoice": "Faktura",
 			"due_date": "Förfaller",
 			"total": "Total"
@@ -124,7 +125,18 @@
 		"preview": {
 			"empty": "Välj en faktura för att förhandsgranska och betala",
 			"open_detail": "Öppna"
-		}
+		},
+		"select_all": "Markera alla",
+		"load_error": "Kunde inte ladda utgifter",
+		"payment_created": "Betalning {tag} skapad",
+		"error": "Något gick fel"
+	},
+
+	"pay_confirm": {
+		"title": "Skapa betalningar för dessa utlägg?",
+		"description": "Du kommer att kunna se den skapade taggen och beloppen efteråt.",
+		"action": "Betala",
+		"action_loading": "Betalar…"
 	},
 
 	"admin_account": {
