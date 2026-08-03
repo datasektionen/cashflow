@@ -10,6 +10,9 @@
 	import { isErrorResponse } from '$lib/api/errors';
 	import { logger } from '$lib/logger';
 	import { formatBankAccount } from '$lib/bankAccount';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import { _ } from 'svelte-i18n';
 	import { completedPayments } from './completedPayments.svelte';
 
 	let {
@@ -41,6 +44,7 @@
 	let selected = new SvelteSet<number>();
 
 	let paying = $state(false);
+	let payDialogOpen = $state(false);
 
 	async function handlePay() {
 		if (selected.size === 0) return;
@@ -51,21 +55,60 @@
 				.filter((e) => selected.has(e.id))
 				.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0);
 			const payment = await api.payments.create([...selected]);
-			completedPayments.push({ ...payment, amount: amount.toFixed(2) });
-			alerts.update((a) => [...a, success(`Betalning ${payment.tag} skapad`)]);
+			completedPayments.push({ ...payment, amount: amount.toFixed(2), bankInfo });
+			alerts.update((a) => [
+				...a,
+				success($_('admin_pay.payment_created', { values: { tag: payment.tag } }))
+			]);
 			selected.clear();
+			payDialogOpen = false;
 			onPaid?.();
 			refreshKey++;
 			await invalidateAll();
 		} catch (e) {
 			logger.error(e);
-			const msg = isErrorResponse(e) ? e.detail : 'Något gick fel';
+			const msg = isErrorResponse(e) ? e.detail : $_('admin_pay.error');
 			alerts.update((a) => [...a, error(msg)]);
 		} finally {
 			paying = false;
 		}
 	}
 </script>
+
+{#snippet payTitle()}
+	<h1 class="text-xl font-medium text-base-text dark:text-dark-base-text">
+		{$_('pay_confirm.title')}
+	</h1>
+{/snippet}
+{#snippet payDescription()}
+	<p class="text-base-subtle dark:text-dark-base-subtle">
+		{$_('pay_confirm.description')}
+	</p>
+{/snippet}
+{#snippet payTrigger()}
+	<button
+		disabled={selected.size === 0 || paying || !canPay}
+		class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
+	>
+		{paying ? $_('pay_confirm.action_loading') : $_('pay_confirm.action')}
+	</button>
+{/snippet}
+{#snippet payButtons()}
+	<div class="mt-6 flex justify-end gap-2">
+		<DialogPrimitive.Close
+			class="cursor-pointer border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle dark:border-dark-base-500 dark:text-dark-base-subtle"
+		>
+			{$_('cancel')}
+		</DialogPrimitive.Close>
+		<button
+			onclick={handlePay}
+			disabled={selected.size === 0 || paying || !canPay}
+			class="flex cursor-pointer items-center gap-1.5 bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
+		>
+			{paying ? $_('pay_confirm.action_loading') : $_('pay_confirm.action')}
+		</button>
+	</div>
+{/snippet}
 
 <div class="flex flex-col pb-2 pl-8">
 	{#if owner.has_bank_info}
@@ -158,7 +201,7 @@
 					else selected.clear();
 				}}
 			>
-				Markera alla
+				{$_('admin_pay.select_all')}
 			</Checkbox>
 			<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
 				{selectedTotal.toLocaleString('sv-SE', {
@@ -166,17 +209,18 @@
 					maximumFractionDigits: 2
 				})} kr
 			</span>
-			<button
-				onclick={handlePay}
-				disabled={selected.size === 0 || paying || !canPay}
-				class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-money-green-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-money-green-600"
+			<Dialog
+				bind:open={payDialogOpen}
+				title={payTitle}
+				description={payDescription}
+				triggerContent={payTrigger}
 			>
-				{paying ? 'Betalar…' : 'Betala'}
-			</button>
+				{@render payButtons()}
+			</Dialog>
 		</div>
-	{:catch _}
+	{:catch err}
 		<div class="p-4">
-			<span class="text-sm text-red-500">Kunde inte ladda utgifter</span>
+			<span class="text-sm text-red-500">{$_('admin_pay.load_error')}</span>
 		</div>
 	{/await}
 </div>

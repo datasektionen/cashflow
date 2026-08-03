@@ -10,6 +10,7 @@
 	import { _ } from 'svelte-i18n';
 	import { mayPay } from '$lib/auth';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
+	import { formatBankAccount } from '$lib/bankAccount';
 	import { completedPayments } from './completedPayments.svelte';
 
 	type pageData = {
@@ -38,12 +39,12 @@
 							<th
 								class="flex-1 px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
 							>
-								Användare
+								{$_('admin_pay.columns.user')}
 							</th>
 							<th
 								class="w-36 px-4 py-3 text-right text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
 							>
-								Total
+								{$_('admin_pay.columns.total')}
 							</th>
 							<th class="w-20 py-2 pr-4"></th>
 						</tr>
@@ -133,6 +134,10 @@
 			</h2>
 			<ul class="flex flex-col">
 				{#each completedPayments as completed}
+					{@const account = formatBankAccount(
+						completed.bankInfo.sorting_number,
+						completed.bankInfo.bank_account
+					)}
 					<li
 						class="flex flex-col gap-y-2 border-t border-base-400 px-2 py-3 dark:border-dark-base-150"
 					>
@@ -156,7 +161,13 @@
 								})} kr`}
 								value={completed.amount}
 							/>
+							<CopyableValue display={account} />
 						</div>
+						{#if completed.bankInfo.bank_name}
+							<span class="px-0.5 text-xs text-base-subtle dark:text-dark-base-subtle">
+								{completed.bankInfo.bank_name}
+							</span>
+						{/if}
 					</li>
 				{/each}
 			</ul>
