@@ -10,6 +10,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	import { _ } from 'svelte-i18n';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		paginatedResponse?: PaginatedResponse<T>;
@@ -47,6 +48,29 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		return typeof c === 'function' ? c(row) : c;
 	}
 
+
+	function handleRowClick(e: MouseEvent, row: T) {
+		if ((e.target as HTMLElement).closest('a, button')) return;
+		if (rowProps?.href) {
+			const href = rowProps.href(row);
+			if (e.metaKey || e.ctrlKey || e.shiftKey) {
+				window.open(href, '_blank', 'noopener');
+			} else if (!e.altKey) {
+				goto(href);
+			}
+		} else {
+			rowProps?.onClick?.(row);
+		}
+	}
+
+	function handleRowAuxClick(e: MouseEvent, row: T) {
+		if (e.button !== 1) return;
+		if ((e.target as HTMLElement).closest('a, button')) return;
+		if (rowProps?.href) {
+			window.open(rowProps.href(row), '_blank', 'noopener');
+		}
+	}
+
 	const rangeStart = $derived(
 		resolved.pagination.total === 0
 			? 0
@@ -77,29 +101,15 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 						<tr
 							class={[
 								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-								rowProps?.href && 'relative isolate',
 								resolveRowClass(row)
 							]}
-							onclick={rowProps?.onClick ? () => rowProps.onClick?.(row) : undefined}
+							onclick={(e) => handleRowClick(e, row)}
+							onauxclick={(e) => handleRowAuxClick(e, row)}
 						>
 							{#each columns as column, ci}
-								<td
-									class={[
-										'px-4',
-										// The first cell hosts the stretched row link, so it must not clip
-										// the overlay; every other cell keeps overflow-hidden for truncation.
-										ci === 0 && rowProps?.href ? '' : 'overflow-hidden',
-										!column.renderSnippet && 'truncate'
-									]}
-								>
+								<td class={['px-4 overflow-hidden', !column.renderSnippet && 'truncate']}>
 									{#if ci === 0 && rowProps?.href}
-										<!-- The ::before overlay covers the whole row (the <tr> is the
-										     positioning context). Interactive cell content is elevated
-										     with z-10 so it stays clickable above the overlay. -->
-										<a
-											href={rowProps.href(row)}
-											class="before:absolute before:inset-0 before:content-['']"
-										>
+										<a href={rowProps.href(row)}>
 											{#if column.renderSnippet}
 												{@render column.renderSnippet(row)}
 											{:else}
