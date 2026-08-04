@@ -4,9 +4,16 @@ from django.utils.module_loading import import_string
 from drf_spectacular.utils import extend_schema_view, extend_schema, inline_serializer
 from rest_framework import generics, exceptions, status, serializers
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.request import Request
+from django.contrib.auth.models import User
+from core.api.pagination import DefaultPagination
 
 from .serializers import UserSerializer, ProfilePictureQuerySerializer
 from ..pictures import ProfilePictureProvider
+from core.permissions import get_permission_provider
+from core.api.utils import AuthenticatedUserMixin
 
 profile_picture_provider: ProfilePictureProvider = import_string(
     settings.PROFILE_PICTURE_PROVIDER
@@ -90,3 +97,28 @@ class ProfilePictureView(generics.ListAPIView):
             result.update(fetched)
 
         return Response(result)
+
+
+@extend_schema(
+    summary="List users",
+    tags=["Users"],
+    operation_id="list_users",
+    description="Lists all users.",
+)
+class UserListView(APIView, AuthenticatedUserMixin):
+
+    def get(self, request: Request) -> Response:
+        permissions = get_permission_provider()
+
+        if not (
+            permissions.may_pay(self.current_user)
+            or permissions.may_view_all(self.current_user)
+        ):
+            raise PermissionDenied()
+
+        users = User.objects.order_by("username")
+        pagination = DefaultPagination()
+        page = pagination.paginate_queryset(users, request, view=self)
+        serializer = UserSerializer(page, many=True)
+
+        return pagination.get_paginated_response(serializer.data)
