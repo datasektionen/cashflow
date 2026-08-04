@@ -5,6 +5,8 @@ from rest_framework.test import APIClient
 
 from users.pictures import ProfilePictureProvider, ProfilePicture
 
+from cashflow.dauth import Permission
+
 
 class FakeProfilePictureProvider(ProfilePictureProvider):
 
@@ -179,3 +181,29 @@ class TestHasBankInfo:
     def test_bank_name_alone_is_not_enough(self, profile):
         profile.bank_name = "Swedbank"
         assert profile.has_bank_info is False
+
+
+class TestUserListPermissions:
+
+    def test_normal_user_gets_403(self, api_client, mocker):
+        mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
+        response = api_client.get("/api/users/")
+        assert response.status_code == 403
+
+    def test_user_with_pay_permissions(self, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.PAY: True},
+            autospec=True,
+        )
+        response = api_client.get("/api/users/")
+        assert response.status_code == 200
+
+    def test_user_with_view_all_permissions(self, api_client, mocker):
+        mocker.patch(
+            "cashflow.dauth.get_permissions",
+            return_value={Permission.VIEW_ALL: True},
+            autospec=True,
+        )
+        response = api_client.get("/api/users/")
+        assert response.status_code == 200
