@@ -89,6 +89,8 @@ export class InvoicesAPI {
 		if (data.invoice_date !== undefined) body.append('invoice_date', data.invoice_date);
 		if (data.due_date !== undefined) body.append('due_date', data.due_date);
 		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+		if (data.delete_files !== undefined)
+			body.append('delete_files', JSON.stringify(data.delete_files));
 		for (const file of data.files ?? []) {
 			body.append('files', file, file.name);
 		}

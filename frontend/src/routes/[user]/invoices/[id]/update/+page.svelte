@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { BanknoteArrowUp, Check, CircleAlert, Copy } from '@lucide/svelte';
+	import { BanknoteArrowUp, Check, CircleAlert, Copy, Undo2, X } from '@lucide/svelte';
 	import { parseDate, type DateValue } from '@internationalized/date';
+	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
 	import type { PageData } from './$types';
 	import type { Invoice } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -9,13 +10,19 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FileInput from '../../../../invoices/new/FileInput.svelte';
+	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
 	import validation from './validation.ts';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
 	let { invoice }: { invoice: Invoice } = $derived(data);
 
+	const pdfium = usePdfiumEngine();
+
 	const partsLocked = $derived(invoice.parts.some((p) => p.attested_by != null));
+
+	let deletedFiles: SvelteSet<number> = new SvelteSet<number>();
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
 		minimumFractionDigits: 2,
@@ -248,8 +255,41 @@
 					<span class="text-s mb-1 font-medium">
 						{$_('new_invoice.form.files.label')}
 					</span>
+					<div class="flex flex-wrap gap-2 bg-base-300 p-2 dark:bg-dark-base-300 justify-between">
+						<input type="hidden" name="deleteFiles" value={JSON.stringify([...deletedFiles])} />
+						{#each invoice.files as file}
+							{@const isDeleted = deletedFiles.has(file.id)}
+							<div
+								class="mx-4 flex flex-row w-full space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
+							>
+								<FileThumbnail
+									source={file.file}
+									engine={pdfium.engine}
+									class={isDeleted ? 'w-9 h-12 opacity-50' : 'w-9 h-12'}
+								/>
+								<div class="flex flex-1 flex-col">
+									<span class={['my-auto', isDeleted && 'opacity-50']}>
+										{decodeURIComponent(new URL(file.file).pathname.split('/').pop() ?? '')}
+									</span>
+								</div>
+								<button
+									type="button"
+									class="ml-auto text-base-subtle transition-all hover:scale-115 hover:cursor-pointer dark:text-dark-base-subtle"
+									onclick={isDeleted
+										? () => deletedFiles.delete(file.id)
+										: () => deletedFiles.add(file.id)}
+								>
+									{#if isDeleted}
+										<Undo2 />
+									{:else}
+										<X />
+									{/if}
+								</button>
+							</div>
+						{/each}
+					</div>
 					<div class="flex h-56">
-						<FileInput bind:files={newFiles} />
+						<FileInput bind:files={newFiles} engine={pdfium.engine} />
 					</div>
 				</div>
 			</div>

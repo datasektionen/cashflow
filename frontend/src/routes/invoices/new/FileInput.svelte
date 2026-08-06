@@ -2,13 +2,19 @@
 	import { HardDriveUpload, X } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
+	import type { PdfEngine } from '@embedpdf/models';
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 
-	let { files = $bindable<File[]>([]) }: { files?: File[] } = $props();
+	let {
+		files = $bindable<File[]>([]),
+		engine: providedEngine = undefined
+	}: { files?: File[]; engine?: PdfEngine | null } = $props();
 	let fileInput: HTMLInputElement;
 
-	// Shared PDFium engine used to render first-page thumbnails for PDF uploads.
-	const pdfium = usePdfiumEngine();
+	// Reuse a caller-provided PDFium engine if given, otherwise spin up our own
+	// to render first-page thumbnails for PDF uploads.
+	const ownPdfium = providedEngine === undefined ? usePdfiumEngine() : null;
+	const engine = $derived(providedEngine !== undefined ? providedEngine : (ownPdfium?.engine ?? null));
 
 	function syncInput() {
 		const dt = new DataTransfer();
@@ -37,7 +43,7 @@
 				<div
 					class="mx-4 flex flex-row space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
 				>
-					<FileThumbnail {file} engine={pdfium.engine} class="m-2 h-12 w-9" />
+					<FileThumbnail source={file} {engine} class="m-2 h-12 w-9" />
 					<div class="flex flex-1 flex-col">
 						<span class="my-auto">{file.name}</span>
 						<span class="text-sm text-base-subtle dark:text-dark-base-subtle">

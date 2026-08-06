@@ -138,6 +138,7 @@ logger = get_logger(__name__)
     ),
     partial_update=extend_schema(
         summary="Partially update an expense",
+        request={"multipart/form-data": ExpenseCreateSerializer},
         description=(
             "Updates a subset of fields on an existing expense. Only the "
             "fields included in the request body are changed. Submit as "
@@ -313,6 +314,14 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         data = (
             request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
         )
+
+        # Allow passing IDs for files to be removed
+        if deletes := data.pop("delete_files", None):
+            try:
+                deletes_data: list[int] = json.loads(deletes)
+                File.objects.filter(id__in=deletes_data).delete()
+            except json.JSONDecodeError:
+                raise PartInvalidJSONProblem()
 
         parts_data = data.pop("parts", None)
         if isinstance(parts_data, str):

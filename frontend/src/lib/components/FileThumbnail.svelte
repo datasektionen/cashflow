@@ -1,16 +1,30 @@
 <script lang="ts">
 	import { File as FileIcon, X } from '@lucide/svelte';
 	import { Dialog } from 'bits-ui';
-	import type { PdfEngine } from '@embedpdf/models';
+	import type { PdfDocumentObject, PdfEngine } from '@embedpdf/models';
 
 	let {
-		file,
+		source,
 		engine,
 		class: className = 'h-16 w-12'
-	}: { file: File; engine: PdfEngine | null; class?: string } = $props();
+	}: { source: File | string; engine: PdfEngine | null; class?: string } = $props();
 
-	const isImage = $derived(file.type.startsWith('image/'));
-	const isPdf = $derived(file.type === 'application/pdf' || /\.pdf$/i.test(file.name));
+	const IMAGE_EXTENSION = /\.(png|jpe?g|gif|webp|bmp|avif|heic|heif)$/i;
+	const PDF_EXTENSION = /\.pdf$/i;
+
+	const name = $derived(
+		typeof source === 'string'
+			? decodeURIComponent(new URL(source).pathname.split('/').pop() ?? '')
+			: source.name
+	);
+	const isImage = $derived(
+		typeof source === 'string' ? IMAGE_EXTENSION.test(name) : source.type.startsWith('image/')
+	);
+	const isPdf = $derived(
+		typeof source === 'string'
+			? PDF_EXTENSION.test(name)
+			: source.type === 'application/pdf' || PDF_EXTENSION.test(source.name)
+	);
 
 	let fileUrl = $state<string | null>(null);
 	let pdfThumbUrl = $state<string | null>(null);
@@ -18,32 +32,57 @@
 
 	const thumbSrc = $derived(isImage ? fileUrl : pdfThumbUrl);
 
-	async function renderPdf(engine: PdfEngine, file: File): Promise<string | null> {
+	async function renderThumbnail(engine: PdfEngine, doc: PdfDocumentObject): Promise<string | null> {
+		try {
+			const blob = await engine
+				.renderThumbnail(doc, doc.pages[0], { scaleFactor: 0.4 })
+				.toPromise();
+			return URL.createObjectURL(blob);
+		} catch {
+			return null;
+		} finally {
+			engine.closeDocument(doc);
+		}
+	}
+
+	async function renderPdfFromUrl(engine: PdfEngine, url: string): Promise<string | null> {
+		try {
+			const doc = await engine.openDocumentUrl({ id: crypto.randomUUID(), url }).toPromise();
+			return await renderThumbnail(engine, doc);
+		} catch {
+			return null;
+		}
+	}
+
+	async function renderPdfFromFile(engine: PdfEngine, file: File): Promise<string | null> {
 		try {
 			const content = await file.arrayBuffer();
 			const doc = await engine.openDocumentBuffer({ id: crypto.randomUUID(), content }).toPromise();
-			try {
-				const blob = await engine
-					.renderThumbnail(doc, doc.pages[0], { scaleFactor: 0.4 })
-					.toPromise();
-				return URL.createObjectURL(blob);
-			} finally {
-				engine.closeDocument(doc);
-			}
+			return await renderThumbnail(engine, doc);
 		} catch {
 			return null;
 		}
 	}
 
 	$effect(() => {
-		const objectUrl = URL.createObjectURL(file);
-		fileUrl = objectUrl;
-
+		let objectUrl: string | null = null;
 		let pdfUrl: string | null = null;
 		let cancelled = false;
 
+		if (typeof source === 'string') {
+			fileUrl = source;
+		} else {
+			objectUrl = URL.createObjectURL(source);
+			fileUrl = objectUrl;
+		}
+
 		if (isPdf && engine) {
-			renderPdf(engine, file).then((u) => {
+			const task =
+				typeof source === 'string'
+					? renderPdfFromUrl(engine, source)
+					: renderPdfFromFile(engine, source);
+
+			task.then((u) => {
 				if (cancelled) {
 					if (u) URL.revokeObjectURL(u);
 					return;
@@ -57,7 +96,7 @@
 			cancelled = true;
 			fileUrl = null;
 			pdfThumbUrl = null;
-			URL.revokeObjectURL(objectUrl);
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
 			if (pdfUrl) URL.revokeObjectURL(pdfUrl);
 		};
 	});
@@ -70,10 +109,10 @@
 			'flex cursor-pointer items-center justify-center transition-all hover:opacity-80',
 			className
 		]}
-		title={file.name}
+		title={name}
 	>
 		{#if thumbSrc}
-			<img src={thumbSrc} alt={file.name} class="size-full object-cover" />
+			<img src={thumbSrc} alt={name} class="size-full object-cover" />
 		{:else}
 			<FileIcon class="m-auto" />
 		{/if}
@@ -91,13 +130,9 @@
 			</div>
 
 			{#if isImage && fileUrl}
-				<img
-					src={fileUrl}
-					alt={file.name}
-					class="max-h-[80vh] max-w-[85vw] object-contain p-3 pt-0"
-				/>
+				<img src={fileUrl} alt={name} class="max-h-[80vh] max-w-[85vw] object-contain p-3 pt-0" />
 			{:else if isPdf && fileUrl}
-				<iframe src={fileUrl} title={file.name} class="h-[80vh] w-[85vw] border-0"></iframe>
+				<iframe src={fileUrl} title={name} class="h-[80vh] w-[85vw] border-0"></iframe>
 			{/if}
 		</Dialog.Content>
 	</Dialog.Portal>

@@ -91,6 +91,7 @@ export class ExpensesAPI {
 		if (data.description !== undefined) body.append('description', data.description);
 		if (data.expense_date !== undefined) body.append('expense_date', data.expense_date);
 		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+		if (data.delete_files !== undefined) body.append('delete_files', JSON.stringify(data.delete_files));
 		for (const file of data.files ?? []) {
 			body.append('files', file, file.name);
 		}
