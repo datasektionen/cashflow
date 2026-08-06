@@ -66,6 +66,9 @@ class InvoiceAccountSerializer(serializers.Serializer):
 
 
 class InvoicePartSerializer(PartRecommendationsMixin, serializers.ModelSerializer):
+    invoice: serializers.PrimaryKeyRelatedField[Invoice] = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
     attested_by = ProfileSerializer(read_only=True)
 
     class Meta:

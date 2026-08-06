@@ -115,6 +115,7 @@ export interface ExpenseUpdate {
 	expense_date?: string;
 	files?: File[];
 	parts?: PartCreateUpdate[];
+	delete_files?: number[]
 }
 
 export interface InvoiceUpdate {
@@ -123,6 +124,7 @@ export interface InvoiceUpdate {
 	due_date?: string;
 	files?: File[];
 	parts?: PartCreateUpdate[];
+	delete_files?: number[];
 }
 
 export type ExpensePart = {

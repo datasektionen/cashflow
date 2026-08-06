@@ -267,6 +267,14 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             request.data.dict() if hasattr(request.data, "dict") else dict(request.data)
         )
 
+        # Allow passing IDs for files to be removed
+        if deletes := data.pop("delete_files", None):
+            try:
+                deletes_data: list[int] = json.loads(deletes)
+                File.objects.filter(id__in=deletes_data).delete()
+            except json.JSONDecodeError:
+                raise PartInvalidJSONProblem()
+
         parts_data = data.pop("parts", None)
         if isinstance(parts_data, str):
             try:
