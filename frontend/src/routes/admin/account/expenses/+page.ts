@@ -21,6 +21,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	};
 	try {
 		expenses = await api.expenses.list(page, perPage, {
+			sorting: '-date',
 			...claimFilterFromUrl(url),
 			accountable: true
 		});

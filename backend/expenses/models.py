@@ -219,7 +219,6 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
     def attestable_for(self, user: User) -> "ExpenseQuerySet":
         qs = (
             self.filter(expensepart__attested_by__isnull=True)
-            .exclude(is_flagged=True)
             .exclude(owner__user=user)
         )
         if get_permission_provider().may_view_all(user):
@@ -242,13 +241,12 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
         if get_permission_provider().may_view_all(user):
             return (
                 self.filter(confirmed_by__isnull=True)
-                .exclude(is_flagged=True)
                 .distinct()
             )
         if not get_permission_provider().may_confirm(user):
             return self.none()
         return (
-            self.filter(confirmed_by__isnull=True).exclude(is_flagged=True).distinct()
+            self.filter(confirmed_by__isnull=True).distinct()
         )
 
     def payable_for(self, user: User) -> "ExpenseQuerySet":
