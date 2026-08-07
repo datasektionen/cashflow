@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Prefetch, Q
@@ -18,8 +20,9 @@ from structlog import get_logger
 from core.api.filters import (
     apply_expense_filters,
     apply_invoice_filters,
+    ClaimQuerySerializer,
     Filter,
-    OPENAPI_PARAMS,
+    Sorting,
 )
 from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
@@ -76,7 +79,7 @@ class _WindowedClaims(list):
         summary="List claims",
         description="List all claims (expenses and invoices). Defaults to the requesting user. Pass `?user=<username>` to view another user's claims (admins only).",
         responses=ClaimSerializer(many=True),
-        parameters=list(OPENAPI_PARAMS.values()),
+        parameters=[ClaimQuerySerializer],
     )
 )
 class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
@@ -89,6 +92,12 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
 
         claim_type = request.GET.get(Filter.TYPE)
 
+        query = ClaimQuerySerializer(data=request.GET)
+        query.is_valid(raise_exception=True)
+        sorting = Sorting(query.validated_data["sorting"])
+        reverse = sorting in (Sorting.CREATED_AT_DESC, Sorting.DATE_DESC)
+        date_sort = sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC)
+
         # Each source queryset is sliced in SQL to the rows that can appear
         # on or before the requested page, so page cost does not grow with
         # table size. Non-numeric pages ("last") materialize everything.
@@ -100,7 +109,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 window = int(raw_page) * page_size
 
         total = 0
-        expense_data: list[ClaimData] = []
+        rows: list[tuple[ClaimData, date]] = []
         if claim_type != "invoice":
             expenses: ExpenseQuerySet = (
                 Expense.objects.viewable_by(self.current_user)
@@ -114,27 +123,29 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
             )
             expenses = apply_expense_filters(expenses, request.GET, self.current_user)
             total += expenses.count()
-            expenses = expenses.order_by("-created_date", "-id")
             if window is not None:
                 expenses = expenses[:window]
-            expense_data = [
-                {
-                    "id": expense.id,
-                    "type": "expense",
-                    "description": expense.description,
-                    "amount": expense.total_amount().to_eng_string(),
-                    "created_date": expense.created_date,
-                    "is_attested": expense.is_attested(),
-                    "is_confirmed": expense.confirmed_by_id is not None,
-                    "is_paid": expense.is_paid(),
-                    "voucher": expense.verification or None,
-                    "owner": expense.owner,
-                    "parts": expense.parts.all(),
-                }
+            rows += [
+                (
+                    {
+                        "id": expense.id,
+                        "type": "expense",
+                        "description": expense.description,
+                        "amount": expense.total_amount().to_eng_string(),
+                        "created_date": expense.created_date,
+                        "is_attested": expense.is_attested(),
+                        "is_confirmed": expense.confirmed_by_id is not None,
+                        "is_paid": expense.is_paid(),
+                        "is_flagged": expense.is_flagged,
+                        "voucher": expense.verification or None,
+                        "owner": expense.owner,
+                        "parts": expense.parts.all(),
+                    },
+                    expense.expense_date if date_sort else expense.created_date,
+                )
                 for expense in expenses
             ]
 
-        invoice_data: list[ClaimData] = []
         if claim_type != "expense":
             invoices = (
                 Invoice.objects.viewable_by(self.current_user)
@@ -148,33 +159,34 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
             )
             invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
             total += invoices.count()
-            invoices = invoices.order_by("-created_date", "-id")
             if window is not None:
                 invoices = invoices[:window]
-            invoice_data = [
-                {
-                    "id": invoice.id,
-                    "type": "invoice",
-                    "description": invoice.description,
-                    "amount": invoice.total_amount(),
-                    "created_date": invoice.created_date,
-                    "is_attested": invoice.is_attested(),
-                    "is_confirmed": invoice.confirmed_by_id is not None,
-                    "is_paid": invoice.is_paid(),
-                    "voucher": invoice.verification or None,
-                    "owner": invoice.owner,
-                    "parts": invoice.parts.all(),
-                }
+            rows += [
+                (
+                    {
+                        "id": invoice.id,
+                        "type": "invoice",
+                        "description": invoice.description,
+                        "amount": invoice.total_amount(),
+                        "created_date": invoice.created_date,
+                        "is_attested": invoice.is_attested(),
+                        "is_confirmed": invoice.confirmed_by_id is not None,
+                        "is_paid": invoice.is_paid(),
+                        "is_flagged": False,
+                        "voucher": invoice.verification or None,
+                        "owner": invoice.owner,
+                        "parts": invoice.parts.all(),
+                    },
+
+                    (invoice.invoice_date or date.max) if date_sort else invoice.created_date,
+                )
                 for invoice in invoices
             ]
 
         # The merge key must match the querysets' ordering so the per-source
         # windows and the merged window select the same rows.
-        data: list[ClaimData] = sorted(
-            expense_data + invoice_data,
-            key=lambda x: (x["created_date"], x["id"]),
-            reverse=True,
-        )
+        rows.sort(key=lambda row: (row[1], row[0]["id"]), reverse=reverse)
+        data: list[ClaimData] = [claim for claim, _ in rows]
         if window is not None:
             data = data[:window]
 

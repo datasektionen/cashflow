@@ -86,3 +86,47 @@ class TestExpenseListFilters:
         assert response.status_code == 200
         assert response.data["pagination"]["total"] == 5
         assert len(response.data["data"]) == 5
+
+
+class TestExpenseListSorting:
+    def test_defaults_to_created_at_desc(self, user, client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        first = ExpenseFactory()
+        second = ExpenseFactory()
+
+        response = client.get("/api/expenses/")
+
+        assert response.status_code == 200
+        ids = [e["id"] for e in response.data["data"]]
+        assert ids.index(second.id) < ids.index(first.id)
+
+    def test_sorting_by_date_asc(self, user, client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        earlier = ExpenseFactory(expense_date="2024-01-01")
+        later = ExpenseFactory(expense_date="2024-06-01")
+
+        response = client.get("/api/expenses/", {"sorting": "date"})
+
+        assert response.status_code == 200
+        ids = [e["id"] for e in response.data["data"]]
+        assert ids.index(earlier.id) < ids.index(later.id)
+
+    def test_sorting_by_date_desc(self, user, client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        earlier = ExpenseFactory(expense_date="2024-01-01")
+        later = ExpenseFactory(expense_date="2024-06-01")
+
+        response = client.get("/api/expenses/", {"sorting": "-date"})
+
+        assert response.status_code == 200
+        ids = [e["id"] for e in response.data["data"]]
+        assert ids.index(later.id) < ids.index(earlier.id)

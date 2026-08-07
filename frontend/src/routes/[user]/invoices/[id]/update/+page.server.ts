@@ -17,6 +17,12 @@ export const actions: Actions = {
 		const data = await event.request.formData();
 
 		const description = data.get('description');
+		const deleteJson = data.get('deleteFiles');
+
+		let deleteFiles: number[] = [];
+		if (deleteJson) {
+			deleteFiles = JSON.parse(deleteJson.toString());
+		}
 		if (description == null || description.toString().trim() === '') {
 			return fail(400, { error: 'Description is required' });
 		}
@@ -70,7 +76,8 @@ export const actions: Actions = {
 			invoice_date: invoiceDate.toString(),
 			due_date: dueDate.toString(),
 			files,
-			...(parts.length > 0 && { parts })
+			...(parts.length > 0 && { parts }),
+			...(deleteFiles.length > 0 && { delete_files: deleteFiles })
 		};
 
 		logger.debug({ id, files: files.length, parts: parts.length }, 'updating invoice');

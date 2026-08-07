@@ -13,7 +13,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import Filter, apply_invoice_filters, OPENAPI_PARAMS
+from core.api.filters import ClaimQuerySerializer, Filter, apply_invoice_filters
 from core.api.openapi import problem, problems
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
@@ -82,7 +82,7 @@ logger = get_logger(__name__)
     list=extend_schema(
         tags=["Invoices"],
         summary="List invoices",
-        parameters=list(OPENAPI_PARAMS.values()),
+        parameters=[ClaimQuerySerializer],
         responses={
             status.HTTP_200_OK: InvoiceSerializer,
             status.HTTP_401_UNAUTHORIZED: problems(NotAuthenticated),
@@ -336,11 +336,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             except User.DoesNotExist:
                 pass
 
-        return (
-            apply_invoice_filters(queryset, self.request.GET, self.current_user)
-            .distinct()
-            .order_by("-created_date")
-        )
+        return apply_invoice_filters(
+            queryset, self.request.GET, self.current_user
+        ).distinct()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

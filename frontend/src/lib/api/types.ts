@@ -149,6 +149,7 @@ type ClaimBase = {
 	is_attested: boolean;
 	is_confirmed: boolean;
 	is_paid: boolean;
+	is_flagged: boolean | null;
 	owner: Profile;
 	// Fortnox voucher (verification) number; null if not yet accounted.
 	voucher: string | null;
@@ -255,6 +256,8 @@ export type ActionSummary = {
 
 export type TristateFilter = 'true' | 'false' | 'none';
 
+export type ClaimSorting = 'created_at' | '-created_at' | 'date' | '-date';
+
 export type ClaimFilter = {
 	type?: 'expense' | 'invoice';
 	user?: string;
@@ -273,6 +276,7 @@ export type ClaimFilter = {
 	voucher_series?: string;
 	voucher_number?: string;
 	q?: string;
+	sorting?: ClaimSorting;
 };
 
 export type DescriptionSearch = {

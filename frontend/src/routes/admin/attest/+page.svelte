@@ -8,6 +8,7 @@
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import StatusPill from '$lib/components/StatusPill.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
@@ -89,6 +90,9 @@
 
 {#snippet statusCell(c: Claim)}
 	<div class="flex gap-3">
+		{#if c.is_flagged}
+			<StatusPill tone="flagged" label={$_('expense_flagged')} />
+		{/if}
 		{#if c.is_paid}
 			<span class="flex items-center gap-1.5 text-xs">
 				<span
@@ -130,7 +134,7 @@
 			id: 'is_attested',
 			header: $_('admin_attestable.columns.status'),
 			renderSnippet: statusCell,
-			width: 'w-40'
+			width: 'w-56'
 		}
 	].filter((col) => {
 		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);

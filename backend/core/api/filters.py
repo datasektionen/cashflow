@@ -5,10 +5,92 @@ from typing import Any
 
 from django.contrib.auth.models import User
 from django.http import QueryDict
-from drf_spectacular.utils import OpenApiParameter
+from rest_framework import serializers
 
 from expenses.models import ExpenseQuerySet
 from invoices.models import InvoiceQuerySet
+
+
+class TristateField(serializers.ChoiceField):
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(choices=["true", "false", "none"], **kwargs)
+
+    def to_internal_value(self, data: Any) -> Any:
+        if isinstance(data, bool):
+            data = "true" if data else "false"
+        return super().to_internal_value(data)
+
+
+class Sorting(str, Enum):
+    CREATED_AT_ASC = "created_at"
+    CREATED_AT_DESC = "-created_at"
+    DATE_ASC = "date"
+    DATE_DESC = "-date"
+
+
+class ClaimQuerySerializer(serializers.Serializer):
+    """Query parameters accepted by the expense/invoice/claim list endpoints.
+
+    Also doubles as the OpenAPI schema for those endpoints' query parameters
+    (passed directly to `extend_schema(parameters=[...])`).
+    """
+
+    user = serializers.CharField(required=False)
+    cost_centre = serializers.CharField(required=False)
+    secondary_cost_centre = serializers.CharField(required=False)
+    budget_line = serializers.CharField(required=False)
+    attestable = serializers.BooleanField(required=False)
+    confirmable = serializers.BooleanField(required=False)
+    accountable = serializers.BooleanField(required=False)
+    payable = serializers.BooleanField(required=False)
+    type = serializers.ChoiceField(
+        choices=["expense", "invoice"],
+        required=False,
+        help_text="Restrict the claims list to a single type.",
+    )
+    accounted = TristateField(
+        required=False,
+        help_text="Whether or not the claim is accounted (has a registered voucher)",
+    )
+    attested = TristateField(
+        required=False,
+        help_text="Whether or not every part of the claim has been attested.",
+    )
+    confirmed = TristateField(
+        required=False,
+        help_text="Whether or not the claim has been confirmed.",
+    )
+    paid = TristateField(
+        required=False,
+        help_text="Whether or not the claim has been paid out.",
+    )
+    flagged = TristateField(
+        required=False,
+        help_text="Whether or not this claim is flagged. Expenses only.",
+    )
+    q = serializers.CharField(
+        required=False, help_text="Substring search on the claim's description."
+    )
+    voucher_series = serializers.CharField(
+        max_length=1,
+        required=False,
+        help_text="Filter by voucher series code, e.g. 'E'",
+    )
+    voucher_number = serializers.CharField(
+        required=False, help_text="Filter by partial voucher number"
+    )
+    sorting = serializers.ChoiceField(
+        choices=[
+            Sorting.CREATED_AT_ASC,
+            Sorting.CREATED_AT_DESC,
+            Sorting.DATE_ASC,
+            Sorting.DATE_DESC,
+        ],
+        required=False,
+        default=Sorting.CREATED_AT_DESC.value,
+        help_text="Sort order for the results.",
+    )
 
 
 class Filter(str, Enum):
@@ -31,104 +113,28 @@ class Filter(str, Enum):
     VOUCHER_NUMBER = "voucher_number"
 
 
-# For use in extend_schema() to generate OpenAPI documentation
-OPENAPI_PARAMS: dict[Filter, OpenApiParameter] = {
-    Filter.USER: OpenApiParameter(
-        Filter.USER.value,
-        type=int,
-        required=False,
-    ),
-    Filter.COST_CENTRE: OpenApiParameter(
-        Filter.COST_CENTRE.value,
-        type=str,
-        required=False,
-    ),
-    Filter.SECONDARY_COST_CENTRE: OpenApiParameter(
-        Filter.SECONDARY_COST_CENTRE.value,
-        type=str,
-        required=False,
-    ),
-    Filter.BUDGET_LINE: OpenApiParameter(
-        Filter.BUDGET_LINE.value,
-        type=str,
-        required=False,
-    ),
-    Filter.ATTESTABLE: OpenApiParameter(
-        Filter.ATTESTABLE.value,
-        type=bool,
-        required=False,
-    ),
-    Filter.CONFIRMABLE: OpenApiParameter(
-        Filter.CONFIRMABLE.value,
-        type=bool,
-        required=False,
-    ),
-    Filter.ACCOUNTABLE: OpenApiParameter(
-        Filter.ACCOUNTABLE.value,
-        type=bool,
-        required=False,
-    ),
-    Filter.PAYABLE: OpenApiParameter(
-        Filter.PAYABLE.value,
-        type=bool,
-        required=False,
-    ),
-    Filter.TYPE: OpenApiParameter(
-        Filter.TYPE.value,
-        type=str,
-        required=False,
-        enum=["expense", "invoice"],
-        description="Restrict the claims list to a single type.",
-    ),
-    Filter.ACCOUNTED: OpenApiParameter(
-        Filter.ACCOUNTED.value,
-        type=bool,
-        required=False,
-        description="Whether or not the claim is accounted (has a registered voucher)",
-    ),
-    Filter.ATTESTED: OpenApiParameter(
-        Filter.ATTESTED.value,
-        type=bool,
-        required=False,
-        description="Whether or not every part of the claim has been attested.",
-    ),
-    Filter.QUERY: OpenApiParameter(
-        Filter.QUERY.value,
-        type=str,
-        required=False,
-        description="Substring search on the claim's description.",
-    ),
-    Filter.FLAGGED: OpenApiParameter(
-        Filter.FLAGGED.value,
-        type=bool,
-        required=False,
-        description="Whether or not this claim is flagged. Expenses only.",
-    ),
-    Filter.CONFIRMED: OpenApiParameter(
-        Filter.CONFIRMED.value,
-        type=bool,
-        required=False,
-        description="Whether or not the claim has been confirmed.",
-    ),
-    Filter.PAID: OpenApiParameter(
-        Filter.PAID.value,
-        type=bool,
-        required=False,
-        description="Whether or not the claim has been paid out.",
-    ),
-    Filter.VOUCHER_SERIES: OpenApiParameter(
-        Filter.VOUCHER_SERIES.value,
-        type=str,
-        required=False,
-        description="Filter by voucher series code, e.g. 'E'",
-    ),
-    Filter.VOUCHER_NUMBER: OpenApiParameter(
-        Filter.VOUCHER_NUMBER.value,
-        type=str,
-        required=False,
-        description="Filter by partial voucher number",
-    ),
+# Maps the generic `sorting` choices onto the field that actually holds that
+# concept on each model, since "date" means `expense_date` on Expense but
+# `invoice_date` on Invoice.
+EXPENSE_SORT_FIELDS: dict[Sorting, str] = {
+    Sorting.CREATED_AT_ASC: "created_date",
+    Sorting.CREATED_AT_DESC: "-created_date",
+    Sorting.DATE_ASC: "expense_date",
+    Sorting.DATE_DESC: "-expense_date",
 }
+INVOICE_SORT_FIELDS: dict[Sorting, str] = {
+    Sorting.CREATED_AT_ASC: "created_date",
+    Sorting.CREATED_AT_DESC: "-created_date",
+    Sorting.DATE_ASC: "invoice_date",
+    Sorting.DATE_DESC: "-invoice_date",
+}
+
+
+def _order_by_sorting(queryset, sorting: Sorting, sort_fields: dict[Sorting, str]):
+    """Orders by the requested field plus an id tiebreaker for stable pagination."""
+    field = sort_fields[sorting]
+    tiebreaker = "-id" if field.startswith("-") else "id"
+    return queryset.order_by(field, tiebreaker)
 
 
 def apply_expense_filters(
@@ -137,25 +143,29 @@ def apply_expense_filters(
     user: User | None = None,
 ) -> ExpenseQuerySet:
     """Applies filters to an expense queryset based on query parameters."""
-    if username := params.get(Filter.USER):
+    query = ClaimQuerySerializer(data=params)
+    query.is_valid(raise_exception=True)
+    validated = query.validated_data
+
+    if username := validated.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
-    if user and params.get(Filter.ATTESTABLE):
+    if user and validated.get(Filter.ATTESTABLE):
         queryset = queryset.attestable_for(user)
-    if user and params.get(Filter.CONFIRMABLE):
+    if user and validated.get(Filter.CONFIRMABLE):
         queryset = queryset.confirmable_for(user)
-    if user and params.get(Filter.ACCOUNTABLE):
+    if user and validated.get(Filter.ACCOUNTABLE):
         queryset = queryset.accountable_for(user)
-    if user and params.get(Filter.PAYABLE):
+    if user and validated.get(Filter.PAYABLE):
         queryset = queryset.payable_for(user)
-    if name := params.get(Filter.COST_CENTRE):
+    if name := validated.get(Filter.COST_CENTRE):
         queryset = queryset.filter(expensepart__cost_centre=name)
-    if name := params.get(Filter.SECONDARY_COST_CENTRE):
+    if name := validated.get(Filter.SECONDARY_COST_CENTRE):
         queryset = queryset.filter(expensepart__secondary_cost_centre=name)
-    if name := params.get(Filter.BUDGET_LINE):
+    if name := validated.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(expensepart__budget_line=name)
-    if query := params.get(Filter.QUERY):
-        queryset = queryset.filter(description__icontains=query)
-    match params.get(Filter.ACCOUNTED):
+    if description := validated.get(Filter.QUERY):
+        queryset = queryset.filter(description__icontains=description)
+    match validated.get(Filter.ACCOUNTED):
         case None:
             pass
         case "none":
@@ -164,7 +174,7 @@ def apply_expense_filters(
             queryset = queryset.filter(verification="")
         case _:
             queryset = queryset.exclude(verification="")
-    match params.get(Filter.ATTESTED):
+    match validated.get(Filter.ATTESTED):
         case None:
             pass
         case "none":
@@ -173,7 +183,7 @@ def apply_expense_filters(
             queryset = queryset.filter(expensepart__attested_by__isnull=True)
         case _:
             queryset = queryset.exclude(expensepart__attested_by__isnull=True)
-    match params.get(Filter.CONFIRMED):
+    match validated.get(Filter.CONFIRMED):
         case None:
             pass
         case "none":
@@ -182,7 +192,7 @@ def apply_expense_filters(
             queryset = queryset.filter(confirmed_by__isnull=True)
         case _:
             queryset = queryset.filter(confirmed_by__isnull=False)
-    match params.get(Filter.PAID):
+    match validated.get(Filter.PAID):
         case None:
             pass
         case "none":
@@ -191,7 +201,7 @@ def apply_expense_filters(
             queryset = queryset.filter(reimbursement__isnull=True)
         case _:
             queryset = queryset.filter(reimbursement__isnull=False)
-    match params.get(Filter.FLAGGED):
+    match validated.get(Filter.FLAGGED):
         case None:
             pass
         case "none":
@@ -200,12 +210,14 @@ def apply_expense_filters(
             queryset = queryset.exclude(is_flagged=True)
         case _:
             queryset = queryset.filter(is_flagged=True)
-    if voucher_series := params.get(Filter.VOUCHER_SERIES):
+    if voucher_series := validated.get(Filter.VOUCHER_SERIES):
         queryset = queryset.filter(verification__startswith=voucher_series)
-    if voucher := params.get(Filter.VOUCHER_NUMBER):
+    if voucher := validated.get(Filter.VOUCHER_NUMBER):
         queryset = queryset.filter(verification__icontains=voucher)
 
-    return queryset
+    return _order_by_sorting(
+        queryset, Sorting(validated["sorting"]), EXPENSE_SORT_FIELDS
+    )
 
 
 def apply_invoice_filters(
@@ -214,25 +226,29 @@ def apply_invoice_filters(
     user: User | None = None,
 ) -> InvoiceQuerySet:
     """Applies filters to an invoice queryset based on query parameters."""
-    if username := params.get(Filter.USER):
+    query = ClaimQuerySerializer(data=params)
+    query.is_valid(raise_exception=True)
+    validated = query.validated_data
+
+    if username := validated.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
-    if user and params.get(Filter.ATTESTABLE):
+    if user and validated.get(Filter.ATTESTABLE):
         queryset = queryset.attestable_for(user)
-    if user and params.get(Filter.CONFIRMABLE):
+    if user and validated.get(Filter.CONFIRMABLE):
         queryset = queryset.confirmable_for(user)
-    if user and params.get(Filter.ACCOUNTABLE):
+    if user and validated.get(Filter.ACCOUNTABLE):
         queryset = queryset.accountable_for(user)
-    if user and params.get(Filter.PAYABLE):
+    if user and validated.get(Filter.PAYABLE):
         queryset = queryset.payable_for(user)
-    if name := params.get(Filter.COST_CENTRE):
+    if name := validated.get(Filter.COST_CENTRE):
         queryset = queryset.filter(invoicepart__cost_centre=name)
-    if name := params.get(Filter.SECONDARY_COST_CENTRE):
+    if name := validated.get(Filter.SECONDARY_COST_CENTRE):
         queryset = queryset.filter(invoicepart__secondary_cost_centre=name)
-    if name := params.get(Filter.BUDGET_LINE):
+    if name := validated.get(Filter.BUDGET_LINE):
         queryset = queryset.filter(invoicepart__budget_line=name)
-    if query := params.get(Filter.QUERY):
-        queryset = queryset.filter(description__icontains=query)
-    match params.get(Filter.ACCOUNTED):
+    if description := validated.get(Filter.QUERY):
+        queryset = queryset.filter(description__icontains=description)
+    match validated.get(Filter.ACCOUNTED):
         case None:
             pass
         case "none":
@@ -241,7 +257,7 @@ def apply_invoice_filters(
             queryset = queryset.filter(verification="")
         case _:
             queryset = queryset.exclude(verification="")
-    match params.get(Filter.ATTESTED):
+    match validated.get(Filter.ATTESTED):
         case None:
             pass
         case "none":
@@ -250,7 +266,7 @@ def apply_invoice_filters(
             queryset = queryset.filter(invoicepart__attested_by__isnull=True)
         case _:
             queryset = queryset.exclude(invoicepart__attested_by__isnull=True)
-    match params.get(Filter.CONFIRMED):
+    match validated.get(Filter.CONFIRMED):
         case None:
             pass
         case "none":
@@ -259,7 +275,7 @@ def apply_invoice_filters(
             queryset = queryset.filter(confirmed_by__isnull=True)
         case _:
             queryset = queryset.filter(confirmed_by__isnull=False)
-    match params.get(Filter.PAID):
+    match validated.get(Filter.PAID):
         case None:
             pass
         case "none":
@@ -268,8 +284,23 @@ def apply_invoice_filters(
             queryset = queryset.filter(payed_at__isnull=True)
         case _:
             queryset = queryset.filter(payed_at__isnull=False)
-    if voucher_series := params.get(Filter.VOUCHER_SERIES):
+    # Invoices can never be flagged, so a request for flagged=true (or the
+    # nonsensical "none") should exclude them entirely rather than silently
+    # ignoring the filter and returning every invoice.
+    match validated.get(Filter.FLAGGED):
+        case None:
+            pass
+        case "none":
+            queryset = queryset.none()
+        case False | "false" | "0":
+            pass
+        case _:
+            queryset = queryset.none()
+    if voucher_series := validated.get(Filter.VOUCHER_SERIES):
         queryset = queryset.filter(verification__startswith=voucher_series)
-    if voucher := params.get(Filter.VOUCHER_NUMBER):
+    if voucher := validated.get(Filter.VOUCHER_NUMBER):
         queryset = queryset.filter(verification__icontains=voucher)
-    return queryset
+
+    return _order_by_sorting(
+        queryset, Sorting(validated["sorting"]), INVOICE_SORT_FIELDS
+    )

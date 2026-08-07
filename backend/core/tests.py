@@ -182,6 +182,35 @@ class TestClaimsList:
         assert types == {"expense", "invoice"}
 
     @pytest.mark.django_db
+    def test_exposes_flagged_status(self, user, api_client, confirm_and_view_all):
+        flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
+        unflagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=False)
+        invoice = InvoiceFactory(owner=user.profile, confirmed_by=None)
+
+        response = api_client.get("/api/claims/?confirmable=true&per_page=100")
+
+        assert response.status_code == 200
+        by_id = {c["id"]: c["is_flagged"] for c in response.data["data"] if c["type"] == "expense"}
+        assert by_id[flagged.id] is True
+        assert by_id[unflagged.id] is False
+        invoice_row = next(
+            c for c in response.data["data"] if c["type"] == "invoice" and c["id"] == invoice.id
+        )
+        assert invoice_row["is_flagged"] is False
+
+    @pytest.mark.django_db
+    def test_flagged_true_excludes_invoices(self, user, api_client, confirm_and_view_all):
+        flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
+        InvoiceFactory(owner=user.profile, confirmed_by=None)
+
+        response = api_client.get("/api/claims/?confirmable=true&flagged=true&per_page=100")
+
+        assert response.status_code == 200
+        types = {c["type"] for c in response.data["data"]}
+        assert types == {"expense"}
+        assert [c["id"] for c in response.data["data"]] == [flagged.id]
+
+    @pytest.mark.django_db
     def test_type_expense_excludes_invoices(
         self, user, api_client, confirm_and_view_all
     ):
@@ -227,6 +256,24 @@ class TestClaimsList:
 
         assert len(seen) == len(set(seen)) == 14
         assert set(seen) == expected
+
+    @pytest.mark.django_db
+    def test_sorting_by_date_merges_expenses_and_invoices(
+        self, user, api_client, confirm_and_view_all
+    ):
+        earliest = ExpenseFactory(owner=user.profile, expense_date="2024-01-01")
+        middle = InvoiceFactory(owner=user.profile, invoice_date="2024-03-01")
+        latest = ExpenseFactory(owner=user.profile, expense_date="2024-06-01")
+
+        response = api_client.get("/api/claims/?sorting=date&per_page=100")
+
+        assert response.status_code == 200
+        keys = [(c["type"], c["id"]) for c in response.data["data"]]
+        assert (
+            keys.index(("expense", earliest.id))
+            < keys.index(("invoice", middle.id))
+            < keys.index(("expense", latest.id))
+        )
 
 
 class TestClaimSerializer:

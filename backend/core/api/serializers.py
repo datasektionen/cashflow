@@ -22,6 +22,7 @@ class ClaimData(TypedDict):
     is_attested: bool
     is_confirmed: bool
     is_paid: bool
+    is_flagged: bool | None
     voucher: str | None
     owner: Profile
     parts: QuerySet[InvoicePart | ExpensePart]
@@ -82,6 +83,11 @@ class ClaimSerializer(serializers.Serializer):
     is_attested = serializers.BooleanField(read_only=True)
     is_confirmed = serializers.BooleanField(read_only=True)
     is_paid = serializers.BooleanField(read_only=True)
+    is_flagged = serializers.BooleanField(
+        read_only=True,
+        allow_null=True,
+        help_text="Whether or not this claim is flagged. Expenses only.",
+    )
     voucher = serializers.CharField(
         allow_null=True,
         help_text="Fortnox voucher (verification) number. Null if not yet accounted.",

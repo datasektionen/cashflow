@@ -31,7 +31,7 @@ from rest_framework.status import (
 )
 from structlog import get_logger
 
-from core.api.filters import Filter, apply_expense_filters, OPENAPI_PARAMS
+from core.api.filters import ClaimQuerySerializer, Filter, apply_expense_filters
 from core.api.openapi import problem, problems
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
@@ -101,7 +101,7 @@ logger = get_logger(__name__)
         summary="List expenses",
         operation_id="list_expenses",
         tags=["Expenses"],
-        parameters=list(OPENAPI_PARAMS.values()),
+        parameters=[ClaimQuerySerializer],
         responses={
             HTTP_200_OK: ExpenseAdminSerializer,
             HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
@@ -385,11 +385,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             except UserModel.DoesNotExist:
                 pass
 
-        return (
-            apply_expense_filters(queryset, self.request.GET, self.current_user)
-            .distinct()
-            .order_by("-created_date")
-        )
+        return apply_expense_filters(
+            queryset, self.request.GET, self.current_user
+        ).distinct()
 
     # drf_spectacular's schema generator can't build a mock request for the
     # QUERY method (DRF's APIRequestFactory has no `.query()`), so exclude it
