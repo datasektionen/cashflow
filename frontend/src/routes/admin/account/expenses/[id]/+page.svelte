@@ -224,7 +224,7 @@
 				{$_('expense_receipt')}
 			</button>
 			{#if showReceipt}
-				<div class="mt-3 flex h-160 flex-col border dark:border-dark-base-200">
+				<div class="mt-3 flex h-160 flex-col">
 					{#if expense.files.length > 0}
 						<ReceiptViewer source={expense.files.map((f) => f.file)} />
 					{:else}

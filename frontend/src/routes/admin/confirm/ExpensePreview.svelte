@@ -71,7 +71,7 @@
 			</div>
 		</div>
 
-		<div class="flex max-h-128 flex-col border">
+		<div class="flex max-h-128 flex-col">
 			{#if expense.files.length > 0}
 				<ReceiptViewer source={expense.files.map((f) => f.file)} />
 			{:else}
