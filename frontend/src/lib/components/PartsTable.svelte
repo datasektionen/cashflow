@@ -95,7 +95,7 @@
 								{@const mayAttest =
 									!!currentUser &&
 									currentUser.permissions.attest.includes(part.cost_centre) &&
-									owner.username !== currentUser.username}
+									(partType === 'invoice' || owner.username !== currentUser.username)}
 								{#if mayAttest}
 									<button
 										onclick={() => attestCallback(part)}

@@ -28,6 +28,6 @@
 		<StatusPill tone="voucher" label={expense.voucher} mono />
 	{/if}
 	{#if !isAttested && !expense.confirmed_at && !expense.payment && !expense.voucher && !expense.is_flagged}
-		<StatusPill tone="neutral" label={$_('expense_status.unconfirmed')} />
+		<StatusPill tone="neutral" label={$_('expense_status.unprocessed')} />
 	{/if}
 </div>

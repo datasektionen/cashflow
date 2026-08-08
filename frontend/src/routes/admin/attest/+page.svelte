@@ -118,7 +118,7 @@
 			<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
 				<span class="inline-block size-1.5 shrink-0 rounded-full bg-base-400 dark:bg-dark-base-400"
 				></span>
-				{$_('expense_status.unconfirmed')}
+				{$_('expense_status.unprocessed')}
 			</span>
 		{/if}
 	</div>

@@ -17,6 +17,6 @@
 	{:else if claim.is_attested}
 		<StatusPill tone="attested" label={$_('expense_attested')} />
 	{:else}
-		<StatusPill tone="neutral" label={$_('expense_status.unconfirmed')} />
+		<StatusPill tone="neutral" label={$_('expense_status.unprocessed')} />
 	{/if}
 </div>
