@@ -322,7 +322,7 @@
 	"expense_paid": "Utbetald",
 	"expense_verification": "Verifikationsnummer",
 	"expense_status": {
-		"unconfirmed": "Ej bekräftad",
+		"unprocessed": "Obehandlad",
 		"paid": "Utbetald",
 		"unpaid": "Ej utbetald",
 		"not_booked": "Ej bokförd",

@@ -28,9 +28,8 @@ if TYPE_CHECKING:
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
     def attestable_for(self, user: User) -> "InvoiceQuerySet":
-        qs = self.filter(invoicepart__attested_by__isnull=True).exclude(
-            owner__user=user
-        )
+        # Note that you are allowed to attest your own invoices
+        qs = self.filter(invoicepart__attested_by__isnull=True)
         cost_centres = user.profile.attestable_cost_centres()
         if cost_centres is not True:
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)

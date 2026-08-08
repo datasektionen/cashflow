@@ -322,7 +322,7 @@
 	"expense_paid": "Reimbursed",
 	"expense_verification": "Voucher number",
 	"expense_status": {
-		"unconfirmed": "Not confirmed",
+		"unprocessed": "Unprocessed",
 		"paid": "Reimbursed",
 		"unpaid": "Not reimbursed",
 		"not_booked": "Not booked",

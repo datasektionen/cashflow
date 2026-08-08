@@ -157,7 +157,7 @@
 			{#if !isAttested && !invoice.confirmed_at && !invoice.paid_at && !invoice.voucher}
 				<span
 					class="bg-base-300 px-2.5 py-0.5 text-xs font-semibold text-base-subtle dark:bg-dark-base-300 dark:text-dark-base-subtle"
-					>{$_('expense_status.unconfirmed')}</span
+					>{$_('expense_status.unprocessed')}</span
 				>
 			{/if}
 		</div>
@@ -231,7 +231,7 @@
 						</span>
 					{:else}
 						<span class="text-base-subtle dark:text-dark-base-subtle"
-							>{$_('expense_status.unconfirmed')}</span
+							>{$_('expense_status.unprocessed')}</span
 						>
 					{/if}
 				</dd>
