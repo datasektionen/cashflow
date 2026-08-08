@@ -13,8 +13,10 @@
 
 	// Reuse a caller-provided PDFium engine if given, otherwise spin up our own
 	// to render first-page thumbnails for PDF uploads.
-	const ownPdfium = providedEngine === undefined ? usePdfiumEngine() : null;
-	const engine = $derived(providedEngine !== undefined ? providedEngine : (ownPdfium?.engine ?? null));
+	const ownPdfium = $derived(providedEngine === undefined ? usePdfiumEngine() : null);
+	const engine = $derived(
+		providedEngine !== undefined ? providedEngine : (ownPdfium?.engine ?? null)
+	);
 
 	function syncInput() {
 		const dt = new DataTransfer();

@@ -48,7 +48,6 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		return typeof c === 'function' ? c(row) : c;
 	}
 
-
 	function handleRowClick(e: MouseEvent, row: T) {
 		if ((e.target as HTMLElement).closest('a, button')) return;
 		if (rowProps?.href) {
@@ -107,7 +106,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 							onauxclick={(e) => handleRowAuxClick(e, row)}
 						>
 							{#each columns as column, ci}
-								<td class={['px-4 overflow-hidden', !column.renderSnippet && 'truncate']}>
+								<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
 									{#if ci === 0 && rowProps?.href}
 										<a href={rowProps.href(row)}>
 											{#if column.renderSnippet}

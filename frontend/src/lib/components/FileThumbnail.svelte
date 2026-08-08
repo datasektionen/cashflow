@@ -32,7 +32,10 @@
 
 	const thumbSrc = $derived(isImage ? fileUrl : pdfThumbUrl);
 
-	async function renderThumbnail(engine: PdfEngine, doc: PdfDocumentObject): Promise<string | null> {
+	async function renderThumbnail(
+		engine: PdfEngine,
+		doc: PdfDocumentObject
+	): Promise<string | null> {
 		try {
 			const blob = await engine
 				.renderThumbnail(doc, doc.pages[0], { scaleFactor: 0.4 })
