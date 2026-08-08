@@ -158,7 +158,7 @@
 	</div>
 
 	<div class="flex flex-col gap-4 lg:flex-row">
-		<div class="flex max-h-256 flex-col border lg:w-2/5">
+		<div class="flex max-h-256 flex-col lg:w-2/5">
 			{#if invoice.files.length > 0}
 				<ReceiptViewer source={invoice.files.map((f) => f.file)} />
 			{:else}
@@ -255,17 +255,17 @@
 					<span class="text-s mb-1 font-medium">
 						{$_('new_invoice.form.files.label')}
 					</span>
-					<div class="flex flex-wrap gap-2 bg-base-300 p-2 dark:bg-dark-base-300 justify-between">
+					<div class="flex flex-wrap justify-between gap-2 bg-base-300 p-2 dark:bg-dark-base-300">
 						<input type="hidden" name="deleteFiles" value={JSON.stringify([...deletedFiles])} />
 						{#each invoice.files as file}
 							{@const isDeleted = deletedFiles.has(file.id)}
 							<div
-								class="mx-4 flex flex-row w-full space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
+								class="mx-4 flex w-full flex-row space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
 							>
 								<FileThumbnail
 									source={file.file}
 									engine={pdfium.engine}
-									class={isDeleted ? 'w-9 h-12 opacity-50' : 'w-9 h-12'}
+									class={isDeleted ? 'h-12 w-9 opacity-50' : 'h-12 w-9'}
 								/>
 								<div class="flex flex-1 flex-col">
 									<span class={['my-auto', isDeleted && 'opacity-50']}>
