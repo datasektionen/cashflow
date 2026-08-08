@@ -429,7 +429,7 @@ class Expense(models.Model):
         Comment.objects.create(
             author=user.profile,
             expense=self,
-            content="Jag bekräftar att kvittot finns i pärmen.",
+            content="Jag har bekräftat kvittots giltighet.",
         )
 
     def unconfirm(self, user: User):
