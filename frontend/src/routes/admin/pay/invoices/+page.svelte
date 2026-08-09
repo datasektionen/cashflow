@@ -9,7 +9,9 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import InvoicePreview from './InvoicePreview.svelte';
 	import { ScrollArea } from 'bits-ui';
+	import { Check } from '@lucide/svelte';
 	import { mayPay } from '$lib/auth';
+	import { paidInvoices } from '../expenses/completedPayments.svelte';
 
 	let { data }: PageProps = $props();
 	const canPay = $derived(mayPay(data.user));
@@ -77,22 +79,39 @@
 </script>
 
 {#snippet invoiceCell(invoice: Invoice)}
+	{@const paid = paidInvoices.has(invoice.id)}
 	<div class="flex min-w-0 flex-col gap-y-1">
-		<span class="min-w-0 truncate font-medium">{invoice.description}</span>
-		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">
-			<UserLink user={invoice.owner} />
+		<span class="flex min-w-0 items-center gap-1.5 font-medium">
+			<span class={['min-w-0 truncate', paid && 'opacity-50']}>{invoice.description}</span>
+			{#if paid}
+				<Check class="size-4 shrink-0 text-money-green-600 dark:text-money-green-500" />
+			{/if}
+		</span>
+		<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
+			<span class={[paid && 'opacity-50']}><UserLink user={invoice.owner} /></span>
+			{#if paid}
+				<span>·</span>
+				<span class="tabular-nums">CF {invoice.id}</span>
+			{/if}
 		</span>
 	</div>
 {/snippet}
 
 {#snippet dueDateCell(invoice: Invoice)}
-	<span class="text-base-subtle tabular-nums dark:text-dark-base-subtle">
+	<span
+		class={[
+			'text-base-subtle tabular-nums dark:text-dark-base-subtle',
+			paidInvoices.has(invoice.id) && 'opacity-50'
+		]}
+	>
 		{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString($locale ?? 'sv-SE') : '–'}
 	</span>
 {/snippet}
 
 {#snippet totalCell(invoice: Invoice)}
-	<span class="font-semibold tabular-nums">{fmt.format(total(invoice))} kr</span>
+	<span class={['font-semibold tabular-nums', paidInvoices.has(invoice.id) && 'opacity-50']}
+		>{fmt.format(total(invoice))} kr</span
+	>
 {/snippet}
 
 <div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
@@ -131,7 +150,7 @@
 						</div>
 					{:else}
 						{#key preview.id}
-							<InvoicePreview invoiceId={preview.id} {canPay} onPaid={() => (preview = null)} />
+							<InvoicePreview invoiceId={preview.id} {canPay} />
 						{/key}
 					{/if}
 				</div>
