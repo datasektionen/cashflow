@@ -64,6 +64,12 @@
 				</a>
 
 				{#if !paidInvoices.has(invoice.id)}
+					<CopyableValue display="CF {invoice.id}" class="self-stretch" />
+					<CopyableValue
+						display={formatAmount(sumAmounts(invoice.parts.map((p) => p.amount)))}
+						value={sumAmounts(invoice.parts.map((p) => p.amount))}
+						class="self-stretch"
+					/>
 					<button
 						onclick={() => handlePay(invoice)}
 						disabled={paying || !canPay}
@@ -76,10 +82,11 @@
 						{/if}
 					</button>
 				{:else}
-					<CopyableValue display="CF {invoice.id}" />
+					<CopyableValue display="CF {invoice.id}" class="self-stretch" />
 					<CopyableValue
 						display={formatAmount(sumAmounts(invoice.parts.map((p) => p.amount)))}
 						value={sumAmounts(invoice.parts.map((p) => p.amount))}
+						class="self-stretch"
 					/>
 				{/if}
 			</div>

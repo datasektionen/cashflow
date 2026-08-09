@@ -161,7 +161,7 @@
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 	<div class="flex flex-col items-start gap-3">
 		<div class="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-			<CopyableValue display={`${$_('invoice')} #${invoice.id}`} value={invoice.id} />
+			<CopyableValue display={`CF ${invoice.id}`} />
 			<CopyableValue display={`${invoice.owner.first_name} ${invoice.owner.last_name}`} />
 			<CopyableValue display={invoice.description} />
 			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
