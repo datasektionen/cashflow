@@ -7,11 +7,14 @@
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
+	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
+	import { formatAmount, sumAmounts } from '$lib/money';
 	import { api } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
 	import { logger } from '$lib/logger';
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { isErrorResponse } from '$lib/api/errors';
+	import { paidInvoices } from '../expenses/completedPayments.svelte';
 
 	let {
 		invoiceId,
@@ -28,7 +31,8 @@
 		try {
 			await api.invoices.pay(invoice.id);
 			alerts.update((a) => [...a, success($_('alerts.invoice_paid'))]);
-			await invalidateAll();
+			paidInvoices.add(invoice.id);
+			// await invalidateAll();
 			onPaid?.();
 		} catch (e) {
 			logger.error(e);
@@ -58,17 +62,26 @@
 					{$_('admin_pay.preview.open_detail')}
 					<ExternalLink class="size-3.5" />
 				</a>
-				<button
-					onclick={() => handlePay(invoice)}
-					disabled={paying || !canPay}
-					class="flex cursor-pointer items-center gap-1.5 bg-money-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-money-green-700 dark:hover:bg-money-green-600"
-				>
-					{#if paying}
-						<CashSpinner />
-					{:else}
-						{$_('invoice_pay')}
-					{/if}
-				</button>
+
+				{#if !paidInvoices.has(invoice.id)}
+					<button
+						onclick={() => handlePay(invoice)}
+						disabled={paying || !canPay}
+						class="flex cursor-pointer items-center gap-1.5 bg-money-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-money-green-700 dark:hover:bg-money-green-600"
+					>
+						{#if paying}
+							<CashSpinner />
+						{:else}
+							{$_('invoice_pay')}
+						{/if}
+					</button>
+				{:else}
+					<CopyableValue display="CF {invoice.id}" />
+					<CopyableValue
+						display={formatAmount(sumAmounts(invoice.parts.map((p) => p.amount)))}
+						value={sumAmounts(invoice.parts.map((p) => p.amount))}
+					/>
+				{/if}
 			</div>
 		</div>
 
