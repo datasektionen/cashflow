@@ -48,6 +48,12 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
         return self.filter(confirmed_by__isnull=True).distinct()
 
     def payable_for(self, user: User) -> "InvoiceQuerySet":
+        if get_permission_provider().may_view_all(user):
+            return (
+                self.filter(payed_at__isnull=True, invoicepart__attested_by__isnull=False)
+                .distinct()
+                .order_by("due_date")
+            )
         if not get_permission_provider().may_pay(user):
             return self.none()
         return (
