@@ -6,13 +6,26 @@ render. Accepts one or more url sources, of either kind, mixed or not.
 -->
 <script lang="ts">
 	import { RotateCcw, RotateCw, Expand, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
-	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import {createPluginRegistration} from "@embedpdf/core"
+	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
+	import {EmbedPDF} from "@embedpdf/core/svelte"
+	import {DocumentManagerPluginPackage, DocumentContent} from "@embedpdf/plugin-document-manager/svelte"
+	import { ViewportPluginPackage, Viewport } from '@embedpdf/plugin-viewport/react'
 	import type { PdfEngine } from '@embedpdf/models';
 
 	export type ReceiptViewerProps = {
 		source: string[] | string;
 	};
+
+
+	const plugins = [
+		createPluginRegistration(DocumentManagerPluginPackage),
+		createPluginRegistration(ViewportPluginPackage, {
+			viewportGap: 20, // Adds 20px of padding inside the viewport
+		}),
+	]
+
 
 	const { source }: ReceiptViewerProps = $props();
 
@@ -24,8 +37,21 @@ render. Accepts one or more url sources, of either kind, mixed or not.
 		return IMAGE_EXTENSION.test(new URL(url).pathname);
 	}
 
+	type Source = { url: string; kind: 'image' | 'pdf' };
+
+	let typedSources: Source[] = $derived(
+		sources.map((url) => ({ url, kind: isImage(url) ? 'image' : 'pdf' }) as const)
+	);
+
 	let imageSources: string[] = $derived(sources.filter(isImage));
 	let pdfSources: string[] = $derived(sources.filter((s) => !isImage(s)));
+
+
+	let documents = $derived(
+			pdfSources.map(src => {
+				openDocumentUrl({src, id: crypto.randomUUID()});
+			})
+	)
 
 	const pdfium = usePdfiumEngine();
 
@@ -84,16 +110,41 @@ render. Accepts one or more url sources, of either kind, mixed or not.
 </script>
 
 <div class="relative flex h-full w-full flex-col gap-4 overflow-auto border-0">
-	{#each allSources as src, i (src)}
+	{#each typedSources as { url, kind }, i (url)}
 		<div
 			class="group relative flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden"
 		>
-			<img
-				{src}
-				alt={(i + 1).toString()}
-				class="h-full w-full object-contain"
-				style="transform: rotate({rotationMap.get(src) ?? 0}deg)"
-			/>
+			{#if kind === 'pdf'}
+				<EmbedPDF engine={pdfium.engine} {plugins}>
+					{#snippet children({ activeDocumentId })}
+						{#if !activeDocumentId}
+							<div>No document selected</div>
+						{:else}
+							<DocumentContent documentId={activeDocumentId}>
+								{#snippet children(documentContent)}
+									{#if documentContent.isLoading}
+										loading
+									{:else if documentContent.isError}
+										error
+									{:else if documentContent.isLoaded}
+										<!-- Only render the heavy viewer components when loaded -->
+										<Viewport {documentId}>
+											<!-- ... Scroller, etc ... -->
+										</Viewport>
+									{/if}
+								{/snippet}
+							</DocumentContent>
+						{/if}
+					{/snippet}
+				</EmbedPDF>
+			{:else}
+				<img
+					src={url}
+					alt={(i + 1).toString()}
+					class="h-full w-full object-contain"
+					style="transform: rotate({rotationMap.get(url) ?? 0}deg)"
+				/>
+			{/if}
 
 			<!-- Toolbar -->
 			<div
@@ -104,20 +155,20 @@ render. Accepts one or more url sources, of either kind, mixed or not.
 				]}
 			>
 				<button
-					onclick={() => handleRotation(src, -90)}
+					onclick={() => handleRotation(url, -90)}
 					class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
 				>
 					<RotateCcw class="size-4" />
 				</button>
 				<button
-					onclick={() => handleRotation(src, 90)}
+					onclick={() => handleRotation(url, 90)}
 					class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
 				>
 					<RotateCw class="size-4" />
 				</button>
 				<button
 					onclick={() => {
-						enlarged = src;
+						enlarged = url;
 					}}
 					class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
 				>
