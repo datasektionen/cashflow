@@ -13,6 +13,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Sum
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -304,7 +305,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             raise DeletionPermissionDeniedProblem()
         return super().destroy(request, *args, **kwargs)
 
-    def partial_update(self, request, *args, **kwargs):
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         expense = self.get_object()
         if expense.reimbursement is not None:
             raise UpdatePermissionDeniedProblem()
@@ -375,6 +376,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
+            .annotate(
+                total=Sum("expensepart__amount")
+            )
         )
 
         if username := self.request.GET.get(Filter.USER):
@@ -395,6 +399,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @extend_schema(methods=["QUERY"], exclude=True)
     @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
     def search(self, request: Request) -> Response:
+        assert isinstance(request.data, dict)
         query = request.data.get("query") or {}
         expenses = self.get_queryset().search(**query)
         page = self.paginate_queryset(expenses)

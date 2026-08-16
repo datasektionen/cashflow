@@ -68,7 +68,7 @@ class ProfilePictureView(generics.ListAPIView):
 
     pagination_class = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs) -> Response:
         query = ProfilePictureQuerySerializer(data=request.query_params)
         query.is_valid(raise_exception=True)
         usernames = query.validated_data["usernames"]

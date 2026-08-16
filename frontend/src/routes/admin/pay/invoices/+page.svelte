@@ -17,6 +17,7 @@
 	const canPay = $derived(mayPay(data.user));
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
 
 	function total(invoice: Invoice): number {
 		return invoice.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0);
@@ -41,6 +42,19 @@
 		const url = new URL(page.url);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
 			() => (loading = false)
 		);
@@ -73,7 +87,8 @@
 			id: 'total',
 			header: $_('admin_pay.columns.total'),
 			renderSnippet: totalCell,
-			width: 'w-32'
+			width: 'w-32',
+			sorting: ['-total', 'total']
 		}
 	];
 </script>
@@ -119,8 +134,10 @@
 		<PaginatedTable
 			paginatedResponse={data.invoices}
 			{columns}
+			bind:sorting
 			onPageChange={handlePageChange}
 			onPerPageChange={handlePerPageChange}
+			onSortChange={handleSortChange}
 			{loading}
 			scrollable
 			rowProps={{

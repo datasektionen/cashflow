@@ -31,6 +31,8 @@ class Sorting(str, Enum):
     CREATED_AT_DESC = "-created_at"
     DATE_ASC = "date"
     DATE_DESC = "-date"
+    TOTAL_DESC = "-total"
+    TOTAL_ASC = "total"
 
 
 class ClaimQuerySerializer(serializers.Serializer):
@@ -91,6 +93,8 @@ class ClaimQuerySerializer(serializers.Serializer):
             Sorting.CREATED_AT_DESC,
             Sorting.DATE_ASC,
             Sorting.DATE_DESC,
+            Sorting.TOTAL_DESC,
+            Sorting.TOTAL_ASC,
         ],
         required=False,
         default=Sorting.ID_DESC.value,
@@ -118,15 +122,14 @@ class Filter(str, Enum):
     VOUCHER_NUMBER = "voucher_number"
 
 
-# Maps the generic `sorting` choices onto the field that actually holds that
-# concept on each model, since "date" means `expense_date` on Expense but
-# `invoice_date` on Invoice.
 EXPENSE_SORT_FIELDS: dict[Sorting, str] = {
     Sorting.ID_DESC: "-id",
     Sorting.CREATED_AT_ASC: "created_date",
     Sorting.CREATED_AT_DESC: "-created_date",
     Sorting.DATE_ASC: "expense_date",
     Sorting.DATE_DESC: "-expense_date",
+    Sorting.TOTAL_DESC: "-total",
+    Sorting.TOTAL_ASC: "total",
 }
 INVOICE_SORT_FIELDS: dict[Sorting, str] = {
     Sorting.ID_DESC: "-id",
@@ -134,6 +137,8 @@ INVOICE_SORT_FIELDS: dict[Sorting, str] = {
     Sorting.CREATED_AT_DESC: "-created_date",
     Sorting.DATE_ASC: "invoice_date",
     Sorting.DATE_DESC: "-invoice_date",
+    Sorting.TOTAL_DESC: "-total",
+    Sorting.TOTAL_ASC: "total",
 }
 
 
@@ -144,6 +149,11 @@ def _order_by_sorting(queryset, sorting: Sorting, sort_fields: dict[Sorting, str
     if sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC):
         name = field.lstrip("-")
         expr = Coalesce(name, Value(date.min))
+        ordering = expr.desc() if field.startswith("-") else expr.asc()
+        return queryset.order_by(ordering, "-id")
+    elif sorting in (Sorting.TOTAL_ASC, Sorting.DATE_DESC):
+        name = field.lstrip("-")
+        expr = Coalesce(name, Value(0))
         ordering = expr.desc() if field.startswith("-") else expr.asc()
         return queryset.order_by(ordering, "-id")
     return queryset.order_by(field, "-id")

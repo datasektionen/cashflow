@@ -38,6 +38,7 @@ export type Expense = {
 	confirmed_at: string | null;
 	confirmed_by: Profile | null;
 	owner: Profile;
+	total: string;
 	reimbursement: number | null;
 	payment: Payment | null;
 	// Fortnox voucher (verification) number; null if not yet accounted.
@@ -75,6 +76,7 @@ export type Invoice = {
 	confirmed_at: string | null;
 	owner: Profile;
 	description: string;
+	total: string;
 	voucher: string | null;
 	paid_by: Profile | null;
 	paid_at: string | null;
@@ -256,7 +258,7 @@ export type ActionSummary = {
 
 export type TristateFilter = 'true' | 'false' | 'none';
 
-export type ClaimSorting = 'created_at' | '-created_at' | 'date' | '-date';
+export type ClaimSorting = 'created_at' | '-created_at' | 'date' | '-date' | 'total' | '-total';
 
 export type ClaimFilter = {
 	type?: 'expense' | 'invoice';

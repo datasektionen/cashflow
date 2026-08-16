@@ -3,6 +3,7 @@ from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Sum
 from django.http import QueryDict
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse
 from rest_framework import generics, viewsets, status
@@ -256,7 +257,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             raise DeletionPermissionDeniedProblem()
         return super().destroy(request, *args, **kwargs)
 
-    def partial_update(self, request, *args, **kwargs):
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         invoice = self.get_object()
         if invoice.payed_at is not None:
             raise UpdatePermissionDeniedProblem()
@@ -326,6 +327,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
+            .annotate(total=Sum("invoicepart__amount"))
         )
 
         if username := self.request.GET.get(Filter.USER):
@@ -354,6 +356,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @extend_schema(methods=["QUERY"], exclude=True)
     @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
     def search(self, request: Request) -> Response:
+        assert isinstance(request.data, dict)
         query = request.data.get("query") or {}
         invoices = self.get_queryset().search(**query)
         page = self.paginate_queryset(invoices)

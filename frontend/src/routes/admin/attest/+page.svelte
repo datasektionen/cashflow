@@ -14,6 +14,12 @@
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
+
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
 
 	const columns: TableColumn<Claim>[] = $derived([
 		{
@@ -46,6 +52,13 @@
 			render: (c) => c.created_date,
 			width: 'w-28',
 			sorting: ['-date', 'date']
+		},
+		{
+			id: 'amount',
+			header: $_('admin_attestable.columns.amount'),
+			renderSnippet: amountCell,
+			width: 'w-32',
+			sorting: ['-total', 'total']
 		}
 	]);
 
@@ -93,6 +106,10 @@
 
 {#snippet ownerCell(c: Claim)}
 	<UserLink user={c.owner} class="block truncate" />
+{/snippet}
+
+{#snippet amountCell(c: Claim)}
+	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
 {/snippet}
 
 {#snippet idCell(c: Claim)}
@@ -152,9 +169,11 @@
 		}
 	].filter((col) => {
 		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
-		if (isSmallLayout.current) return !['id', 'expense_date', 'is_attested'].includes(col.id);
+		if (isSmallLayout.current)
+			return !['id', 'expense_date', 'amount', 'is_attested'].includes(col.id);
 		return true;
 	})}
+	bind:sorting
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	onSortChange={handleSortChange}

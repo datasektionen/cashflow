@@ -130,3 +130,42 @@ class TestExpenseListSorting:
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
         assert ids.index(later.id) < ids.index(earlier.id)
+
+    def _expense_with_total(self, amount: str):
+        # ExpenseFactory auto-creates one part with a random amount, so clear it
+        # and set a known amount to make the total deterministic.
+        expense = ExpenseFactory.create()
+        expense.parts.all().delete()
+        ExpensePartFactory(expense=expense, amount=amount)
+        return expense
+
+    def test_sorting_by_total_desc(self, user, client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        cheap = self._expense_with_total("10.00")
+        pricey = self._expense_with_total("100.00")
+
+        response = client.get("/api/expenses/", {"sorting": "-total"})
+
+        assert response.status_code == 200
+        ids = [e["id"] for e in response.data["data"]]
+        assert ids.index(pricey.id) < ids.index(cheap.id)
+        totals = {e["id"]: e["total"] for e in response.data["data"]}
+        assert totals[cheap.id] == "10.00"
+        assert totals[pricey.id] == "100.00"
+
+    def test_sorting_by_total_asc(self, user, client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        cheap = self._expense_with_total("10.00")
+        pricey = self._expense_with_total("100.00")
+
+        response = client.get("/api/expenses/", {"sorting": "total"})
+
+        assert response.status_code == 200
+        ids = [e["id"] for e in response.data["data"]]
+        assert ids.index(cheap.id) < ids.index(pricey.id)

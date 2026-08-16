@@ -184,6 +184,7 @@
 			"owner": "Ägare",
 			"cost_centres": "Resultatställen",
 			"expense_date": "Inköpsdatum",
+			"total": "Summa",
 			"status": "Status"
 		},
 		"pagination": {
@@ -208,6 +209,7 @@
 			"owner": "Ägare",
 			"invoice_date": "Fakturadatum",
 			"due_date": "Förfallodatum",
+			"total": "Summa",
 			"verification": "Verifikat",
 			"confirmed_at": "Bekräftad",
 			"paid_at": "Betald",

@@ -16,6 +16,12 @@
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
+
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
 
 	const columns: TableColumn<Claim>[] = $derived([
 		{
@@ -36,6 +42,13 @@
 			render: (c) => c.created_date,
 			width: 'w-28',
 			sorting: ['-date', 'date']
+		},
+		{
+			id: 'amount',
+			header: $_('admin_confirmable.columns.amount'),
+			renderSnippet: amountCell,
+			width: 'w-32',
+			sorting: ['-total', 'total']
 		}
 	]);
 
@@ -87,6 +100,10 @@
 	<UserLink user={c.owner} />
 {/snippet}
 
+{#snippet amountCell(c: Claim)}
+	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
+{/snippet}
+
 {#snippet idCell(c: Claim)}
 	<div class="flex flex-row items-center">
 		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">#</span>
@@ -122,9 +139,11 @@
 					width: 'w-28'
 				}
 			].filter((col) => {
-				if (isSmallLayout.current) return !['id', 'expense_date', 'is_confirmed'].includes(col.id);
+				if (isSmallLayout.current)
+					return !['id', 'expense_date', 'amount', 'is_confirmed'].includes(col.id);
 				return true;
 			})}
+			bind:sorting
 			onPageChange={handlePageChange}
 			onPerPageChange={handlePerPageChange}
 			onSortChange={handleSortChange}

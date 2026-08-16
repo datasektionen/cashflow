@@ -14,6 +14,12 @@
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
+
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
 
 	const columns: TableColumn<Invoice>[] = $derived([
 		{
@@ -46,6 +52,13 @@
 			header: $_('admin_invoices.columns.due_date'),
 			render: (r) => r.due_date,
 			width: 'w-28'
+		},
+		{
+			id: 'total',
+			header: $_('admin_invoices.columns.total'),
+			renderSnippet: totalCell,
+			width: 'w-32',
+			sorting: ['-total', 'total']
 		}
 	]);
 
@@ -106,6 +119,10 @@
 	<InvoiceStatusPills invoice={r} />
 {/snippet}
 
+{#snippet totalCell(r: Invoice)}
+	<span class="tabular-nums">{fmt.format(parseFloat(r.total))} kr</span>
+{/snippet}
+
 <ClaimFilterBar exclude={['confirmed', 'flagged', 'voucher_series', 'voucher_number']} />
 <PaginatedTable
 	paginatedResponse={data.invoices}
@@ -125,6 +142,7 @@
 			return ['description', 'owner', 'invoice_date', 'confirmed_at'].includes(col.id);
 		return true;
 	})}
+	bind:sorting
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	onSortChange={handleSortChange}

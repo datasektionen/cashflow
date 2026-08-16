@@ -2,7 +2,7 @@
 # InvoiceFileFactory, InvoicePartFactory). Invoice tests go here.
 
 from cashflow.dauth import Permission
-from invoices.factories import InvoiceFactory
+from invoices.factories import InvoiceFactory, InvoicePartFactory
 
 
 class TestInvoiceListSorting:
@@ -19,6 +19,25 @@ class TestInvoiceListSorting:
         assert response.status_code == 200
         ids = [i["id"] for i in response.data["data"]]
         assert ids.index(second.id) < ids.index(first.id)
+
+    def test_sorting_by_total_desc(self, user, api_client, mocker):
+        permissions = {Permission.VIEW_EXPENSES: True}
+        mocker.patch(
+            "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
+        )
+        cheap = InvoiceFactory()
+        InvoicePartFactory(invoice=cheap, amount="10.00")
+        pricey = InvoiceFactory()
+        InvoicePartFactory(invoice=pricey, amount="100.00")
+
+        response = api_client.get("/api/invoices/", {"sorting": "-total"})
+
+        assert response.status_code == 200
+        ids = [i["id"] for i in response.data["data"]]
+        assert ids.index(pricey.id) < ids.index(cheap.id)
+        totals = {i["id"]: i["total"] for i in response.data["data"]}
+        assert totals[cheap.id] == "10.00"
+        assert totals[pricey.id] == "100.00"
 
     def test_sorting_by_date_asc(self, user, api_client, mocker):
         permissions = {Permission.VIEW_EXPENSES: True}
