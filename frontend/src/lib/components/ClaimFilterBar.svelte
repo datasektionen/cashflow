@@ -235,6 +235,7 @@
 		for (const key of visibleTristateKeys()) {
 			url.searchParams.set(key, 'none');
 		}
+		url.searchParams.delete('page');
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
@@ -271,6 +272,7 @@
 			url.searchParams.delete('budget_line');
 		}
 
+		url.searchParams.delete('page');
 		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 	}
 
@@ -286,6 +288,7 @@
 			} else {
 				url.searchParams.delete('q');
 			}
+			url.searchParams.delete('page');
 			goto(url, { keepFocus: true, noScroll: true, replaceState: true });
 		}, 500);
 	}
