@@ -179,12 +179,20 @@ def apply_expense_filters(
         queryset = queryset.accountable_for(user)
     if user and validated.get(Filter.PAYABLE):
         queryset = queryset.payable_for(user)
+
+    budget_filter = {}
     if name := validated.get(Filter.COST_CENTRE):
-        queryset = queryset.filter(expensepart__cost_centre=name)
+        budget_filter["expensepart__cost_centre"] = name
     if name := validated.get(Filter.SECONDARY_COST_CENTRE):
-        queryset = queryset.filter(expensepart__secondary_cost_centre=name)
+        budget_filter["expensepart__secondary_cost_centre"] = name
     if name := validated.get(Filter.BUDGET_LINE):
-        queryset = queryset.filter(expensepart__budget_line=name)
+        budget_filter["expensepart__budget_line"] = name
+
+    # We need to put all conditions in the same filter to make sure they all apply
+    # to the same expense part
+    # See https://github.com/datasektionen/cashflow/issues/399
+    queryset = queryset.filter(**budget_filter)
+
     if description := validated.get(Filter.QUERY):
         queryset = queryset.filter(description__icontains=description)
     match validated.get(Filter.ACCOUNTED):
@@ -262,12 +270,18 @@ def apply_invoice_filters(
         queryset = queryset.accountable_for(user)
     if user and validated.get(Filter.PAYABLE):
         queryset = queryset.payable_for(user)
+    budget_filter = {}
     if name := validated.get(Filter.COST_CENTRE):
-        queryset = queryset.filter(invoicepart__cost_centre=name)
+        budget_filter["invoicepart__cost_centre"] = name
     if name := validated.get(Filter.SECONDARY_COST_CENTRE):
-        queryset = queryset.filter(invoicepart__secondary_cost_centre=name)
+        budget_filter["invoicepart__secondary_cost_centre"] = name
     if name := validated.get(Filter.BUDGET_LINE):
-        queryset = queryset.filter(invoicepart__budget_line=name)
+        budget_filter["invoicepart__budget_line"] = name
+
+    # We need to put all conditions in the same filter to make sure they all apply
+    # to the same invoice part
+    # See https://github.com/datasektionen/cashflow/issues/399
+    queryset = queryset.filter(**budget_filter)
     if description := validated.get(Filter.QUERY):
         queryset = queryset.filter(description__icontains=description)
     match validated.get(Filter.ACCOUNTED):
