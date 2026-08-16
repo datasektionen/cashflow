@@ -275,6 +275,29 @@ class TestClaimsList:
             < keys.index(("expense", latest.id))
         )
 
+    @pytest.mark.django_db
+    def test_sorting_by_total_merges_expenses_and_invoices(
+        self, user, api_client, confirm_and_view_all
+    ):
+        cheap = ExpenseFactory(owner=user.profile)
+        cheap.parts.all().delete()
+        ExpensePartFactory(expense=cheap, amount="10.00")
+        middle = InvoiceFactory(owner=user.profile)
+        InvoicePartFactory(invoice=middle, amount="50.00")
+        pricey = ExpenseFactory(owner=user.profile)
+        pricey.parts.all().delete()
+        ExpensePartFactory(expense=pricey, amount="100.00")
+
+        response = api_client.get("/api/claims/?sorting=-total&per_page=100")
+
+        assert response.status_code == 200
+        keys = [(c["type"], c["id"]) for c in response.data["data"]]
+        assert (
+            keys.index(("expense", pricey.id))
+            < keys.index(("invoice", middle.id))
+            < keys.index(("expense", cheap.id))
+        )
+
 
 class TestClaimSerializer:
 

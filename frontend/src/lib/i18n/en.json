@@ -89,6 +89,7 @@
 			"owner": "Owner",
 			"cost_centres": "Cost centres",
 			"expense_date": "Expense date",
+			"total": "Total",
 			"status": "Status"
 		},
 		"pagination": {
@@ -208,6 +209,7 @@
 			"owner": "Owner",
 			"invoice_date": "Invoice date",
 			"due_date": "Due date",
+			"total": "Total",
 			"verification": "Voucher",
 			"confirmed_at": "Confirmed",
 			"paid_at": "Paid",

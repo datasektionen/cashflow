@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -51,7 +52,7 @@ from expenses.models import (
     ExpenseQuerySet,
 )
 from fortnox import FortnoxRequest, FortnoxNotFound, FortnoxServiceNotAvailableProblem
-from invoices.models import Invoice, InvoicePart
+from invoices.models import Invoice, InvoicePart, InvoiceQuerySet
 
 UserModel = get_user_model()
 logger = get_logger(__name__)
@@ -95,8 +96,22 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         query = ClaimQuerySerializer(data=request.GET)
         query.is_valid(raise_exception=True)
         sorting = Sorting(query.validated_data["sorting"])
-        reverse = sorting in (Sorting.CREATED_AT_DESC, Sorting.DATE_DESC)
+        reverse = sorting in (
+            Sorting.CREATED_AT_DESC,
+            Sorting.DATE_DESC,
+            Sorting.TOTAL_DESC,
+        )
         date_sort = sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC)
+        total_sort = sorting in (Sorting.TOTAL_ASC, Sorting.TOTAL_DESC)
+
+        def sort_value(total: Decimal, item_date: date | None, created: date):
+            """The value each row is sorted on, matching the SQL ordering the
+            source querysets were sliced by."""
+            if total_sort:
+                return total
+            if date_sort:
+                return item_date or date.min
+            return created
 
         # Each source queryset is sliced in SQL to the rows that can appear
         # on or before the requested page, so page cost does not grow with
@@ -120,6 +135,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         ExpensePart.objects.select_related("attested_by__user"),
                     )
                 )
+                .annotate(total=Sum("expensepart__amount"))
             )
             expenses = apply_expense_filters(expenses, request.GET, self.current_user)
             total += expenses.count()
@@ -141,13 +157,17 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         "owner": expense.owner,
                         "parts": expense.parts.all(),
                     },
-                    (expense.expense_date or date.min) if date_sort else expense.created_date,
+                    sort_value(
+                        expense.total_amount(),
+                        expense.expense_date,
+                        expense.created_date,
+                    ),
                 )
                 for expense in expenses
             ]
 
         if claim_type != "expense":
-            invoices = (
+            invoices: InvoiceQuerySet = (
                 Invoice.objects.viewable_by(self.current_user)
                 .select_related("owner__user")
                 .prefetch_related(
@@ -156,6 +176,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         InvoicePart.objects.select_related("attested_by__user"),
                     )
                 )
+                .annotate(total=Sum("invoicepart__amount"))
             )
             invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
             total += invoices.count()
@@ -177,8 +198,11 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         "owner": invoice.owner,
                         "parts": invoice.parts.all(),
                     },
-
-                    (invoice.invoice_date or date.min) if date_sort else invoice.created_date,
+                    sort_value(
+                        invoice.total_amount(),
+                        invoice.invoice_date,
+                        invoice.created_date,
+                    ),
                 )
                 for invoice in invoices
             ]

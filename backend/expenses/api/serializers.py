@@ -57,6 +57,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "responses."
         )
     )
+    total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, read_only=True)
 
     class Meta:
         model = Expense
@@ -77,6 +78,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "payment",
             "is_flagged",
             "recommended_credit_account",
+            "total",
         ]
 
     def get_voucher(self, expense: Expense) -> str | None:

@@ -119,6 +119,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "invoice (the accounts payable account). Null in list responses."
         )
     )
+    total = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False, read_only=True
+    )
 
     class Meta:
         model = Invoice
@@ -139,6 +142,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "paid_by",
             "paid_at",
             "recommended_credit_account",
+            "total",
         ]
 
     def get_voucher(self, invoice: Invoice) -> str | None:

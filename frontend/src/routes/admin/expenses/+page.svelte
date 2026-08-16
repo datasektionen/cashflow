@@ -14,6 +14,12 @@
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
+
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
 
 	const columns: TableColumn<Expense>[] = $derived([
 		{
@@ -40,6 +46,13 @@
 			render: (e) => e.expense_date,
 			width: 'w-28',
 			sorting: ['-date', 'date']
+		},
+		{
+			id: 'total',
+			header: $_('admin_expenses.columns.total'),
+			renderSnippet: totalCell,
+			width: 'w-32',
+			sorting: ['-total', 'total']
 		}
 	]);
 
@@ -99,6 +112,10 @@
 		{/each}
 	</div>
 {/snippet}
+
+{#snippet totalCell(e: Expense)}
+	<span class="tabular-nums">{fmt.format(parseFloat(e.total))} kr</span>
+{/snippet}
 <ClaimFilterBar exclude={['voucher_series', 'voucher_number']} />
 
 <PaginatedTable
@@ -116,9 +133,11 @@
 		// Extra small is a subset of small, so check it first: show only the
 		// essentials, dropping cost centres on top of the small-screen hides.
 		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
-		if (isSmallLayout.current) return !['id', 'expense_date', 'confirmed_at'].includes(col.id);
+		if (isSmallLayout.current)
+			return !['id', 'expense_date', 'total', 'confirmed_at'].includes(col.id);
 		return true;
 	})}
+	bind:sorting
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	onSortChange={handleSortChange}

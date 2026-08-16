@@ -239,15 +239,10 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
 
     def confirmable_for(self, user: User) -> "ExpenseQuerySet":
         if get_permission_provider().may_view_all(user):
-            return (
-                self.filter(confirmed_by__isnull=True)
-                .distinct()
-            )
+            return self.filter(confirmed_by__isnull=True).distinct()
         if not get_permission_provider().may_confirm(user):
             return self.none()
-        return (
-            self.filter(confirmed_by__isnull=True).distinct()
-        )
+        return self.filter(confirmed_by__isnull=True).distinct()
 
     def payable_for(self, user: User) -> "ExpenseQuerySet":
         if get_permission_provider().may_view_all(user):

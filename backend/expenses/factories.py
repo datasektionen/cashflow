@@ -5,7 +5,7 @@ from core.factories import ProfileFactory
 from expenses.models import Expense, ExpensePart, File, Payment
 
 
-class ExpenseFactory(DjangoModelFactory):
+class ExpenseFactory(DjangoModelFactory[Expense]):
     class Meta:
         model = Expense
         skip_postgeneration_save = True
