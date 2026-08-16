@@ -217,16 +217,16 @@ class Payment(models.Model):
 class ExpenseQuerySet(models.QuerySet["Expense"]):
 
     def attestable_for(self, user: User) -> "ExpenseQuerySet":
-        qs = (
-            self.filter(expensepart__attested_by__isnull=True)
-            .exclude(owner__user=user)
-        )
+        qs = self.exclude(owner__user=user)
         if get_permission_provider().may_view_all(user):
-            return qs.order_by("id", "expense_date").distinct()
+            qs = qs.filter(expensepart__attested_by__isnull=True)
         else:
             cost_centres = user.profile.attestable_cost_centres()
-            qs = qs.filter(expensepart__cost_centre__in=cost_centres)
-            return qs.order_by("id", "expense_date").distinct()
+            qs = qs.filter(
+                expensepart__attested_by__isnull=True,
+                expensepart__cost_centre__in=cost_centres,
+            )
+        return qs.order_by("id", "expense_date").distinct()
 
     def accountable_for(self, user: User) -> "ExpenseQuerySet":
         qs = self.exclude(reimbursement=None).filter(verification="")
