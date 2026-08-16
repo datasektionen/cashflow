@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { Payment } from '$lib/api/types';
 
 export type TableColumn<T> = {
 	id: string;
@@ -14,4 +15,5 @@ export type TableRowProps<T> = {
 	onClick?: (row: T) => void;
 	href?: (row: T) => string;
 	class?: string | ((row: T) => string);
+	expandedSnippet?: Snippet<[x: T]>;
 };

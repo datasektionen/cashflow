@@ -2,6 +2,7 @@ from datetime import date
 from typing import TypedDict
 
 from django.db.models import QuerySet
+from django.db.models.aggregates import Sum
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -103,10 +104,14 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only=True,
         help_text="Bank-facing payment reference, e.g. 'Data1234'.",
     )
+    total = serializers.SerializerMethodField()
+
+    def get_total(self, obj):
+        return obj.amount()
 
     class Meta:
         model = Payment
-        fields = ["id", "date", "payer", "receiver", "tag"]
+        fields = ["id", "date", "payer", "receiver", "tag", "total"]
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -1,10 +1,12 @@
 from datetime import date, datetime
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import CharField, Prefetch, Q, Value
 from django.db.models.aggregates import Sum, Count
+from django.db.models.functions import Cast, Concat
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
@@ -247,6 +249,35 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
         if self.action == "pending":
             return PendingPaymentsSerializer
         return PaymentSerializer
+
+
+
+    @extend_schema(
+        tags=["Payments"],
+        summary="List payments",
+        operation_id="list_payments"
+    )
+    def list(self, request: Request) -> Response:
+        if not get_permission_provider().may_pay(self.current_user) and not get_permission_provider().may_view_all(self.current_user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        payments = Payment.objects.all().order_by("-date")
+
+        if tag := request.query_params.get("tag"):
+            payments = payments.annotate(
+                tag=Concat(
+                    Value(settings.PAYMENT_TAG_PREFIX),
+                    Cast("pk", CharField()),
+                )
+            ).filter(tag__icontains=tag)
+
+        page = self.paginate_queryset(payments)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(payments, many=True)
+        return Response(serializer.data)
 
     @extend_schema(
         tags=["Payments"],

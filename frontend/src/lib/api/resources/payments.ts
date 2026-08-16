@@ -8,6 +8,18 @@ export class PaymentsAPI {
 		this.apiClient = apiClient;
 	}
 
+	list(
+		page: number,
+		perPage: number,
+		filter?: { tag?: string }
+	): Promise<PaginatedResponse<Payment>> {
+		return this.apiClient.get<PaginatedResponse<Payment>>('/payments/', {
+			page,
+			per_page: perPage,
+			...filter
+		});
+	}
+
 	listPending(): Promise<PaginatedResponse<PendingPayment>> {
 		return this.apiClient.get<PaginatedResponse<PendingPayment>>('/payments/pending/');
 	}

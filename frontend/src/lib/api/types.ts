@@ -22,6 +22,7 @@ export type Payment = {
 	payer: Profile;
 	receiver: Profile;
 	tag: string;
+	total: string;
 };
 
 export type Comment = {
@@ -277,6 +278,7 @@ export type ClaimFilter = {
 	payable?: boolean;
 	voucher_series?: string;
 	voucher_number?: string;
+	reimbursement?: number;
 	q?: string;
 	sorting?: ClaimSorting;
 };
