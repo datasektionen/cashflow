@@ -7,12 +7,11 @@ export type TableColumn<T> = {
 	render?: (row: T) => string;
 	renderSnippet?: Snippet<[T]>;
 	width: string;
+	sorting?: string[];
 };
 
 export type TableRowProps<T> = {
 	onClick?: (row: T) => void;
-	// When set, the row's first cell renders a stretched link covering the whole
-	// row, giving native "open in new tab" support (middle/⌘-click, etc.).
 	href?: (row: T) => string;
 	class?: string | ((row: T) => string);
 };
