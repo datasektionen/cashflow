@@ -11,7 +11,8 @@
 		Receipt,
 		Search,
 		Stamp,
-		SlidersHorizontal
+		SlidersHorizontal,
+		HandCoins
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -32,13 +33,21 @@
 	import { logger } from '$lib/logger';
 
 	let {
+		includeBudget = true,
 		includeReset = true,
 		includeChecks = true,
 		exclude = []
 	}: {
+		includeBudget?: boolean;
 		includeReset?: boolean;
 		includeChecks?: boolean;
-		exclude?: ((typeof tristateKeys)[number] | 'voucher_series' | 'voucher_number')[];
+		exclude?: (
+			| (typeof tristateKeys)[number]
+			| 'voucher_series'
+			| 'voucher_number'
+			| 'reimbursement'
+			| 'description'
+		)[];
 	} = $props();
 
 	let showAllFilters: boolean = $state(false);
@@ -164,7 +173,8 @@
 		'secondary_cost_centre',
 		'budget_line',
 		'voucher_series',
-		'voucher_number'
+		'voucher_number',
+		'reimbursement'
 	] as const;
 
 	const voucherSeriesColumns: ComboboxColumn<VoucherSeries>[] = [
@@ -315,33 +325,36 @@
 	class="mb-4 flex flex-col items-center space-y-1 space-x-2 border-b border-base-500 pb-4 md:flex-row dark:border-dark-base-200"
 >
 	{#key resetKey}
-		<ComboBox
-			name="cost-centre"
-			class="text-sm"
-			value={filterValue('cost_centre')}
-			bind:searchValue={budgetSearchValues.costCentre}
-			onchange={(v) => setFilter('cost_centre', v)}
-			placeholder={$_('cost_centre')}
-			items={costCentres.map((it) => it.name)}
-		/>
-		<ComboBox
-			name="secondary-cost-centre"
-			class="text-sm"
-			value={filterValue('secondary_cost_centre')}
-			bind:searchValue={budgetSearchValues.secondaryCostCentre}
-			onchange={(v) => setFilter('secondary_cost_centre', v)}
-			placeholder={$_('secondary_cost_centre')}
-			items={secondaryCostCentres.map((it) => it.name)}
-		/>
-		<ComboBox
-			name="budget-line"
-			class="text-sm"
-			value={filterValue('budget_line')}
-			bind:searchValue={budgetSearchValues.budgetLine}
-			onchange={(v) => setFilter('budget_line', v)}
-			placeholder={$_('budget_line')}
-			items={budgetLines.map((it) => it.name)}
-		/>
+		{#if includeBudget}
+			<ComboBox
+				name="cost-centre"
+				class="text-sm"
+				value={filterValue('cost_centre')}
+				bind:searchValue={budgetSearchValues.costCentre}
+				onchange={(v) => setFilter('cost_centre', v)}
+				placeholder={$_('cost_centre')}
+				items={costCentres.map((it) => it.name)}
+			/>
+			<ComboBox
+				name="secondary-cost-centre"
+				class="text-sm"
+				value={filterValue('secondary_cost_centre')}
+				bind:searchValue={budgetSearchValues.secondaryCostCentre}
+				onchange={(v) => setFilter('secondary_cost_centre', v)}
+				placeholder={$_('secondary_cost_centre')}
+				items={secondaryCostCentres.map((it) => it.name)}
+			/>
+			<ComboBox
+				name="budget-line"
+				class="text-sm"
+				value={filterValue('budget_line')}
+				bind:searchValue={budgetSearchValues.budgetLine}
+				onchange={(v) => setFilter('budget_line', v)}
+				placeholder={$_('budget_line')}
+				items={budgetLines.map((it) => it.name)}
+			/>
+		{/if}
+
 		{#if !exclude.includes('voucher_series')}
 			<AdvancedCombobox
 				name="voucher-series"
@@ -356,16 +369,20 @@
 				placeholder={$_('voucher_series')}
 			/>
 		{/if}
-		{#snippet searchIcon()}
-			<Search class="size-4" />
-		{/snippet}
-		<TextInput
-			class="text-sm"
-			value={filterValue('q')}
-			onchange={setQuery}
-			placeholder={$_('search_description')}
-			icon={searchIcon}
-		/>
+
+		{#if !exclude.includes('description')}
+			{#snippet searchIcon()}
+				<Search class="size-4" />
+			{/snippet}
+			<TextInput
+				class="text-sm"
+				value={filterValue('q')}
+				onchange={setQuery}
+				placeholder={$_('search_description')}
+				icon={searchIcon}
+			/>
+		{/if}
+
 		{#snippet voucherIcon()}
 			<Hash class="size-4" />
 		{/snippet}
@@ -376,6 +393,18 @@
 				onchange={(v) => setFilter('voucher_number', v ?? '')}
 				placeholder={$_('search_voucher_number')}
 				icon={voucherIcon}
+			/>
+		{/if}
+		{#snippet reimbursementIcon()}
+			<HandCoins />
+		{/snippet}
+		{#if !exclude.includes('reimbursement')}
+			<TextInput
+				class="text-sm"
+				value={filterValue('reimbursement')}
+				onchange={(v) => setFilter('reimbursement', (v ?? '').replace(/^data/i, ''))}
+				placeholder={$_('search_reimbursement')}
+				icon={reimbursementIcon}
 			/>
 		{/if}
 	{/key}

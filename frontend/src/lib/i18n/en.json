@@ -90,7 +90,10 @@
 			"cost_centres": "Cost centres",
 			"expense_date": "Expense date",
 			"total": "Total",
-			"status": "Status"
+			"status": "Status",
+			"tag": "Tag",
+			"payer": "Payer",
+			"receiver": "Receiver"
 		},
 		"pagination": {
 			"showing": "Showing {start} to {end} of {total}",
@@ -219,6 +222,11 @@
 	"admin_vouchers": {
 		"title": "Vouchers",
 		"nav_title": "All vouchers"
+	},
+
+	"admin_payments": {
+		"title": "Payments",
+		"nav_title": "Payments"
 	},
 
 	"new_expense": {
@@ -360,6 +368,7 @@
 	"reset": "Reset",
 	"search_description": "Search by description",
 	"search_voucher_number": "Search by voucher number",
+	"search_reimbursement": "Search by reimbursement",
 	"show_all_filters": "Show all filters",
 	"attested": "Attested",
 	"not_attested": "Not attested",

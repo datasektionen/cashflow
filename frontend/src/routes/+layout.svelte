@@ -20,6 +20,7 @@
 		Banknote,
 		BookCheck,
 		BookText,
+		HandCoins,
 		Settings2,
 		Menu,
 		X,
@@ -97,6 +98,9 @@
 			<SideNavLink to="/admin/expenses" text={$_('admin_expenses.nav_title')} icon={Receipt} />
 			<SideNavLink to="/admin/invoices" text={$_('admin_invoices.nav_title')} icon={Files} />
 			<SideNavLink to="/admin/vouchers" text={$_('admin_vouchers.nav_title')} icon={BookCheck} />
+			{#if viewAll || data.user?.permissions?.['view-all-payments']}
+				<SideNavLink to="/admin/payments" text={$_('admin_payments.nav_title')} icon={HandCoins} />
+			{/if}
 		{/if}
 
 		{#if data.user?.permissions}

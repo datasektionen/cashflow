@@ -103,6 +103,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		}
 		onSortChange?.(sorting ?? '');
 	};
+
+	let expanded: number | null = $state(null);
 </script>
 
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
@@ -143,7 +145,12 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
 								resolveRowClass(row)
 							]}
-							onclick={(e) => handleRowClick(e, row)}
+							onclick={(e) => {
+								if (rowProps?.expandedSnippet) {
+									expanded = expanded === i ? null : i;
+								}
+								handleRowClick(e, row);
+							}}
 							onauxclick={(e) => handleRowAuxClick(e, row)}
 						>
 							{#each columns as column, ci}
@@ -163,7 +170,25 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 									{/if}
 								</td>
 							{/each}
+							{#if rowProps?.expandedSnippet}
+								<td>
+									{#if expanded === i}
+										<ChevronUp />
+									{:else}
+										<ChevronDown />
+									{/if}
+								</td>
+							{/if}
 						</tr>
+						{#if rowProps?.expandedSnippet && expanded === i}
+							<tr
+								class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
+							>
+								<td colspan={columns.length} class="px-4 py-2">
+									{@render rowProps.expandedSnippet(row)}
+								</td>
+							</tr>
+						{/if}
 					{/each}
 					{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
 						<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">

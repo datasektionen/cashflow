@@ -184,6 +184,9 @@
 			"owner": "Ägare",
 			"cost_centres": "Resultatställen",
 			"expense_date": "Inköpsdatum",
+			"tag": "Tagg",
+			"payer": "Betalare",
+			"receiver": "Mottagare",
 			"total": "Summa",
 			"status": "Status"
 		},
@@ -219,6 +222,11 @@
 	"admin_vouchers": {
 		"title": "Verifikat",
 		"nav_title": "Alla verifikat"
+	},
+
+	"admin_payments": {
+		"title": "Betalningar",
+		"nav_title": "Betalningar"
 	},
 
 	"new_expense": {
@@ -359,6 +367,7 @@
 	"reset": "Återställ",
 	"search_description": "Sök på beskrivning",
 	"search_voucher_number": "Sök på verifikationsnummer",
+	"search_reimbursement": "Sök på utbetalning",
 	"show_all_filters": "Visa alla filter",
 	"attested": "Attesterad",
 	"not_attested": "Ej attesterad",

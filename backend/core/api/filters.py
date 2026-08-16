@@ -86,6 +86,9 @@ class ClaimQuerySerializer(serializers.Serializer):
     voucher_number = serializers.CharField(
         required=False, help_text="Filter by partial voucher number"
     )
+    reimbursement = serializers.IntegerField(
+        required=False, help_text="Filter by reimbursement ID"
+    )
     sorting = serializers.ChoiceField(
         choices=[
             Sorting.ID_DESC,
@@ -120,6 +123,7 @@ class Filter(str, Enum):
     PAID = "paid"
     VOUCHER_SERIES = "voucher_series"
     VOUCHER_NUMBER = "voucher_number"
+    REIMBURSEMENT = "reimbursement"
 
 
 EXPENSE_SORT_FIELDS: dict[Sorting, str] = {
@@ -244,6 +248,9 @@ def apply_expense_filters(
         queryset = queryset.filter(verification__startswith=voucher_series)
     if voucher := validated.get(Filter.VOUCHER_NUMBER):
         queryset = queryset.filter(verification__icontains=voucher)
+    if reimbursement := validated.get(Filter.REIMBURSEMENT):
+        queryset = queryset.filter(reimbursement_id=reimbursement)
+
 
     return _order_by_sorting(
         queryset, Sorting(validated["sorting"]), EXPENSE_SORT_FIELDS

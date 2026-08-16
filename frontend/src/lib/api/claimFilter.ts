@@ -15,7 +15,10 @@ export function claimFilterFromUrl(url: URL): ClaimFilter {
 		secondary_cost_centre: url.searchParams.get('secondary_cost_centre') || undefined,
 		budget_line: url.searchParams.get('budget_line') || undefined,
 		voucher_series: url.searchParams.get('voucher_series') || undefined,
-		voucher_number: url.searchParams.get('voucher_number') || undefined
+		voucher_number: url.searchParams.get('voucher_number') || undefined,
+		reimbursement: url.searchParams.get('reimbursement')
+			? Number(url.searchParams.get('reimbursement'))
+			: undefined
 	};
 	for (const key of TRISTATE_KEYS) {
 		filter[key] = tristateParam(url, key);
