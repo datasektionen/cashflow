@@ -141,7 +141,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         "owner": expense.owner,
                         "parts": expense.parts.all(),
                     },
-                    expense.expense_date if date_sort else expense.created_date,
+                    (expense.expense_date or date.min) if date_sort else expense.created_date,
                 )
                 for expense in expenses
             ]
@@ -178,14 +178,14 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         "parts": invoice.parts.all(),
                     },
 
-                    (invoice.invoice_date or date.max) if date_sort else invoice.created_date,
+                    (invoice.invoice_date or date.min) if date_sort else invoice.created_date,
                 )
                 for invoice in invoices
             ]
 
-        # The merge key must match the querysets' ordering so the per-source
-        # windows and the merged window select the same rows.
-        rows.sort(key=lambda row: (row[1], row[0]["id"]), reverse=reverse)
+        rows.sort(key=lambda row: row[0]["id"], reverse=True)
+        if sorting != Sorting.ID_DESC:
+            rows.sort(key=lambda row: row[1], reverse=reverse)
         data: list[ClaimData] = [claim for claim, _ in rows]
         if window is not None:
             data = data[:window]
