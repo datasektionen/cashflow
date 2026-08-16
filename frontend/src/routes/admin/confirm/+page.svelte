@@ -29,6 +29,13 @@
 			header: $_('admin_confirmable.columns.owner'),
 			renderSnippet: ownerCell,
 			width: 'w-40'
+		},
+		{
+			id: 'expense_date',
+			header: $_('expense_date'),
+			render: (c) => c.created_date,
+			width: 'w-28',
+			sorting: ['-date', 'date']
 		}
 	]);
 
@@ -46,6 +53,19 @@
 		const url = new URL(page.url);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
 			() => (loading = false)
 		);
@@ -102,11 +122,12 @@
 					width: 'w-28'
 				}
 			].filter((col) => {
-				if (isSmallLayout.current) return !['id', 'is_confirmed'].includes(col.id);
+				if (isSmallLayout.current) return !['id', 'expense_date', 'is_confirmed'].includes(col.id);
 				return true;
 			})}
 			onPageChange={handlePageChange}
 			onPerPageChange={handlePerPageChange}
+			onSortChange={handleSortChange}
 			{loading}
 			scrollable
 			rowProps={{

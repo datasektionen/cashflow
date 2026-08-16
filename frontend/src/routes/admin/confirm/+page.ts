@@ -1,7 +1,7 @@
 import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import type { ClaimFilter } from '$lib/api/types';
+import type { ClaimFilter, ClaimSorting } from '$lib/api/types';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url }) => {
@@ -11,10 +11,13 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
+	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
+
 	const filter: ClaimFilter = {
 		...claimFilterFromUrl(url),
 		type: 'expense',
-		confirmable: true
+		confirmable: true,
+		sorting
 	};
 
 	const claims = await api.claims.list(page, perPage, filter);

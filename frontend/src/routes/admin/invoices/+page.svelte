@@ -38,7 +38,8 @@
 			id: 'invoice_date',
 			header: $_('admin_invoices.columns.invoice_date'),
 			render: (r) => r.invoice_date,
-			width: 'w-28'
+			width: 'w-28',
+			sorting: ['-date', 'date']
 		},
 		{
 			id: 'due_date',
@@ -62,6 +63,19 @@
 		const url = new URL(page.url);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
 			() => (loading = false)
 		);
@@ -113,6 +127,7 @@
 	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
+	onSortChange={handleSortChange}
 	{loading}
 	scrollable
 	rowProps={{

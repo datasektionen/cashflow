@@ -38,7 +38,8 @@
 			id: 'expense_date',
 			header: $_('expense_date'),
 			render: (e) => e.expense_date,
-			width: 'w-28'
+			width: 'w-28',
+			sorting: ['-date', 'date']
 		}
 	]);
 
@@ -56,6 +57,19 @@
 		const url = new URL(page.url);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
 		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
 			() => (loading = false)
 		);
@@ -107,6 +121,7 @@
 	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
+	onSortChange={handleSortChange}
 	{loading}
 	scrollable
 	rowProps={{

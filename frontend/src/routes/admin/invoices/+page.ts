@@ -2,7 +2,7 @@ import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
 import { alerts, error } from '$lib/stores/alerts';
-import type { Invoice, PaginatedResponse } from '$lib/api/types';
+import type { ClaimSorting, Invoice, PaginatedResponse } from '$lib/api/types';
 import { isErrorResponse } from '$lib/api/errors';
 import { logger } from '$lib/logger';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
@@ -18,6 +18,9 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	// Search queries
 	const query = url.searchParams.get('q') || undefined;
 
+	// Sorting
+	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
+
 	let invoices: PaginatedResponse<Invoice> = {
 		data: [],
 		pagination: { total: 0, page, perPage, totalPages: 0 }
@@ -26,8 +29,13 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		const filter = claimFilterFromUrl(url);
 
 		invoices = query
-			? await api.invoices.search(page, perPage, filter, { description_fuzzy: query })
-			: await api.invoices.list(page, perPage, filter);
+			? await api.invoices.search(
+					page,
+					perPage,
+					{ ...filter, sorting },
+					{ description_fuzzy: query }
+				)
+			: await api.invoices.list(page, perPage, { ...filter, sorting });
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			logger.error(e);

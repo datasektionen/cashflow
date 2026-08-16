@@ -1,9 +1,12 @@
 """Defines functions for filtering expenses and invoices in list views."""
 
+from datetime import date
 from enum import Enum
 from typing import Any
 
 from django.contrib.auth.models import User
+from django.db.models import Value
+from django.db.models.functions import Coalesce
 from django.http import QueryDict
 from rest_framework import serializers
 
@@ -23,6 +26,7 @@ class TristateField(serializers.ChoiceField):
 
 
 class Sorting(str, Enum):
+    ID_DESC = "-id"
     CREATED_AT_ASC = "created_at"
     CREATED_AT_DESC = "-created_at"
     DATE_ASC = "date"
@@ -82,13 +86,14 @@ class ClaimQuerySerializer(serializers.Serializer):
     )
     sorting = serializers.ChoiceField(
         choices=[
+            Sorting.ID_DESC,
             Sorting.CREATED_AT_ASC,
             Sorting.CREATED_AT_DESC,
             Sorting.DATE_ASC,
             Sorting.DATE_DESC,
         ],
         required=False,
-        default=Sorting.CREATED_AT_DESC.value,
+        default=Sorting.ID_DESC.value,
         help_text="Sort order for the results.",
     )
 
@@ -117,12 +122,14 @@ class Filter(str, Enum):
 # concept on each model, since "date" means `expense_date` on Expense but
 # `invoice_date` on Invoice.
 EXPENSE_SORT_FIELDS: dict[Sorting, str] = {
+    Sorting.ID_DESC: "-id",
     Sorting.CREATED_AT_ASC: "created_date",
     Sorting.CREATED_AT_DESC: "-created_date",
     Sorting.DATE_ASC: "expense_date",
     Sorting.DATE_DESC: "-expense_date",
 }
 INVOICE_SORT_FIELDS: dict[Sorting, str] = {
+    Sorting.ID_DESC: "-id",
     Sorting.CREATED_AT_ASC: "created_date",
     Sorting.CREATED_AT_DESC: "-created_date",
     Sorting.DATE_ASC: "invoice_date",
@@ -131,10 +138,15 @@ INVOICE_SORT_FIELDS: dict[Sorting, str] = {
 
 
 def _order_by_sorting(queryset, sorting: Sorting, sort_fields: dict[Sorting, str]):
-    """Orders by the requested field plus an id tiebreaker for stable pagination."""
+    """Orders by the requested field, then descending id so newer rows come
+    first among ties and pagination stays stable."""
     field = sort_fields[sorting]
-    tiebreaker = "-id" if field.startswith("-") else "id"
-    return queryset.order_by(field, tiebreaker)
+    if sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC):
+        name = field.lstrip("-")
+        expr = Coalesce(name, Value(date.min))
+        ordering = expr.desc() if field.startswith("-") else expr.asc()
+        return queryset.order_by(ordering, "-id")
+    return queryset.order_by(field, "-id")
 
 
 def apply_expense_filters(

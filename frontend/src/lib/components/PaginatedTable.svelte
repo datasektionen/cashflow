@@ -6,7 +6,13 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	import type { PaginatedResponse } from '$lib/api/types';
 	import type { TableColumn, TableRowProps } from './types';
 	import { Pagination } from 'bits-ui';
-	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import {
+		ChevronDown,
+		ChevronLeft,
+		ChevronRight,
+		ChevronsUpDown,
+		ChevronUp
+	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
@@ -21,6 +27,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		loading?: boolean;
 		rowProps?: TableRowProps<T>;
 		scrollable?: boolean;
+		sorting?: string | null;
+		onSortChange?: (sort: string) => void;
 	}
 
 	let {
@@ -31,7 +39,9 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		onPerPageChange,
 		loading,
 		rowProps,
-		scrollable = false
+		scrollable = false,
+		sorting = $bindable(null),
+		onSortChange
 	}: Props = $props();
 
 	const resolved = $derived<PaginatedResponse<T>>(
@@ -78,6 +88,21 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	const rangeEnd = $derived(
 		Math.min(resolved.pagination.page * resolved.pagination.perPage, resolved.pagination.total)
 	);
+
+	const handleSortChange = (column: TableColumn<T>) => {
+		if (!column.sorting) return;
+		// Cycle through the column's sort options (desc first, then asc), then
+		// back to unsorted.
+		const idx = sorting ? column.sorting.indexOf(sorting) : -1;
+		if (idx === -1) {
+			sorting = column.sorting[0];
+		} else if (idx === column.sorting.length - 1) {
+			sorting = null;
+		} else {
+			sorting = column.sorting[idx + 1];
+		}
+		onSortChange?.(sorting ?? '');
+	};
 </script>
 
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
@@ -88,9 +113,25 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 					<tr>
 						{#each columns as column}
 							<th
-								class="{column.width} px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+								class={[
+									column.width,
+									'px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle',
+									column.sorting && 'cursor-pointer'
+								]}
+								onclick={column.sorting ? () => handleSortChange(column) : null}
 							>
-								{column.header}
+								<span class="flex min-w-0 flex-row items-center gap-2">
+									<span class="truncate">{column.header}</span>
+									{#if column.sorting}
+										{#if !sorting || !column.sorting.includes(sorting)}
+											<ChevronsUpDown class="size-4 shrink-0" />
+										{:else if column.sorting.indexOf(sorting) === 0}
+											<ChevronDown class="size-4 shrink-0" />
+										{:else}
+											<ChevronUp class="size-4 shrink-0" />
+										{/if}
+									{/if}
+								</span>
 							</th>
 						{/each}
 					</tr>
