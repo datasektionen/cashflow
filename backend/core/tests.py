@@ -184,26 +184,38 @@ class TestClaimsList:
     @pytest.mark.django_db
     def test_exposes_flagged_status(self, user, api_client, confirm_and_view_all):
         flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
-        unflagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=False)
+        unflagged = ExpenseFactory(
+            owner=user.profile, confirmed_by=None, is_flagged=False
+        )
         invoice = InvoiceFactory(owner=user.profile, confirmed_by=None)
 
         response = api_client.get("/api/claims/?confirmable=true&per_page=100")
 
         assert response.status_code == 200
-        by_id = {c["id"]: c["is_flagged"] for c in response.data["data"] if c["type"] == "expense"}
+        by_id = {
+            c["id"]: c["is_flagged"]
+            for c in response.data["data"]
+            if c["type"] == "expense"
+        }
         assert by_id[flagged.id] is True
         assert by_id[unflagged.id] is False
         invoice_row = next(
-            c for c in response.data["data"] if c["type"] == "invoice" and c["id"] == invoice.id
+            c
+            for c in response.data["data"]
+            if c["type"] == "invoice" and c["id"] == invoice.id
         )
         assert invoice_row["is_flagged"] is False
 
     @pytest.mark.django_db
-    def test_flagged_true_excludes_invoices(self, user, api_client, confirm_and_view_all):
+    def test_flagged_true_excludes_invoices(
+        self, user, api_client, confirm_and_view_all
+    ):
         flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
         InvoiceFactory(owner=user.profile, confirmed_by=None)
 
-        response = api_client.get("/api/claims/?confirmable=true&flagged=true&per_page=100")
+        response = api_client.get(
+            "/api/claims/?confirmable=true&flagged=true&per_page=100"
+        )
 
         assert response.status_code == 200
         types = {c["type"] for c in response.data["data"]}
@@ -256,6 +268,31 @@ class TestClaimsList:
 
         assert len(seen) == len(set(seen)) == 14
         assert set(seen) == expected
+
+    @pytest.mark.django_db
+    def test_cost_centre_filter_does_not_duplicate_multi_part_claims(
+        self, user, api_client, confirm_and_view_all
+    ):
+        # Filtering on cost centre joins the parts table, so a claim with
+        # several parts in that cost centre must still appear only once (#399).
+        expense = ExpenseFactory(owner=user.profile)
+        expense.parts.all().delete()
+        for _ in range(3):
+            ExpensePartFactory(expense=expense, cost_centre="DKM")
+
+        invoice = InvoiceFactory(owner=user.profile)
+        invoice.parts.all().delete()
+        for _ in range(3):
+            InvoicePartFactory(invoice=invoice, cost_centre="DKM")
+
+        response = api_client.get("/api/claims/?cost_centre=DKM&per_page=100")
+
+        assert response.status_code == 200
+        seen = [(c["type"], c["id"]) for c in response.data["data"]]
+        assert sorted(seen) == sorted(
+            [("expense", expense.id), ("invoice", invoice.id)]
+        )
+        assert response.data["pagination"]["total"] == 2
 
     @pytest.mark.django_db
     def test_sorting_by_date_merges_expenses_and_invoices(

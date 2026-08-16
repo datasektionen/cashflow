@@ -137,7 +137,9 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 )
                 .annotate(total=Sum("expensepart__amount"))
             )
-            expenses = apply_expense_filters(expenses, request.GET, self.current_user)
+            expenses = apply_expense_filters(
+                expenses, request.GET, self.current_user
+            ).distinct()
             total += expenses.count()
             if window is not None:
                 expenses = expenses[:window]
@@ -178,7 +180,11 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 )
                 .annotate(total=Sum("invoicepart__amount"))
             )
-            invoices = apply_invoice_filters(invoices, request.GET, self.current_user)
+            # See the expense branch: cost-centre and similar filters join
+            # `invoicepart`, so `.distinct()` collapses the per-part duplicates.
+            invoices = apply_invoice_filters(
+                invoices, request.GET, self.current_user
+            ).distinct()
             total += invoices.count()
             if window is not None:
                 invoices = invoices[:window]
