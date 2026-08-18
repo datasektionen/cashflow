@@ -4,21 +4,19 @@ from django.conf import settings
 from rest_framework import serializers
 
 from cashflow.api.serializers import PartRecommendationsMixin
+from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 from core.api.serializers import (
     ProfileSerializer,
     UploadField,
     CommentSerializer,
-    PaymentSerializer,
     FileSerializer,
     VoucherRowSerializer,
 )
 from invoices.models import Invoice, InvoicePart
 from .problems import (
     InvalidInvoiceDateError,
-    InvalidDueDateError,
     VerificationRequiredError,
 )
-from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 
 
 class InvoiceDateField(serializers.DateField):
@@ -159,10 +157,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
         invoice_date = data.get("invoice_date")
         if invoice_date and invoice_date > datetime.date.today():
             raise InvalidInvoiceDateError()
-
-        due_date = data.get("due_date")
-        if due_date and due_date < datetime.date.today():
-            raise InvalidDueDateError()
 
         parts = data.get("parts")
         if parts and len(parts) <= 0:

@@ -10,13 +10,6 @@ class InvalidInvoiceDateError(APIException):
     title = "Invalid invoice date"
 
 
-class InvalidDueDateError(APIException):
-    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-    default_detail = "The provided due date is invalid. It must be in the future."
-    default_code = "invalid_due_date"
-    title = "Invalid due date"
-
-
 class VerificationRequiredError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
@@ -34,6 +27,5 @@ class AttestationPermissionDenied(APIException):
 
 
 register_exception(InvalidInvoiceDateError)
-register_exception(InvalidDueDateError)
 register_exception(VerificationRequiredError)
 register_exception(AttestationPermissionDenied)

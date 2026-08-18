@@ -5,26 +5,18 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Sum
 from django.http import QueryDict
-from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 from structlog import get_logger
 
 from core.api.filters import ClaimQuerySerializer, Filter, apply_invoice_filters
 from core.api.openapi import problem, problems
-from core.api.serializers import CommentCreateSerializer, CommentSerializer
-from core.api.utils import AuthenticatedUserMixin
-from core.files import normalize_upload
-from expenses.models import File, Comment
-from .problems import (
-    InvalidInvoiceDateError,
-    InvalidDueDateError,
-    VerificationRequiredError,
-)
 from core.api.problems import (
     PartInvalidJSONProblem,
     FileRequiredProblem,
@@ -46,21 +38,8 @@ from core.api.problems import (
     UpdatePermissionDeniedProblem,
     AlreadyAttestedProblem,
 )
-from fortnox import VoucherRow
-from fortnox.api.problems import (
-    AlreadyAccountedProblem,
-    CashflowVerificationMissingProblem,
-    FortnoxRecordMissingProblem,
-    FortnoxServiceNotAvailableProblem,
-)
-from core.permissions import get_permission_provider
-from .serializers import (
-    InvoiceCreateRequestSerializer,
-    InvoiceSerializer,
-    InvoicePartSerializer,
-    InvoiceAccountSerializer,
-)
-from ..models import Invoice, InvoicePart
+from core.api.serializers import CommentCreateSerializer, CommentSerializer
+from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
@@ -74,7 +53,26 @@ from core.exceptions import (
     MismatchedTotalAmountError,
     NoAccountingMethodError,
 )
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
+from core.files import normalize_upload
+from core.permissions import get_permission_provider
+from expenses.models import File, Comment
+from fortnox import VoucherRow
+from fortnox.api.problems import (
+    AlreadyAccountedProblem,
+    CashflowVerificationMissingProblem,
+    FortnoxRecordMissingProblem,
+    FortnoxServiceNotAvailableProblem,
+)
+from .problems import (
+    VerificationRequiredError,
+)
+from .serializers import (
+    InvoiceCreateRequestSerializer,
+    InvoiceSerializer,
+    InvoicePartSerializer,
+    InvoiceAccountSerializer,
+)
+from ..models import Invoice, InvoicePart
 
 logger = get_logger(__name__)
 
@@ -100,9 +98,6 @@ logger = get_logger(__name__)
                 PartInvalidJSONProblem,
                 PartRequiredProblem,
                 VerificationRequiredError,
-            ),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
-                InvalidInvoiceDateError, InvalidDueDateError
             ),
         },
     ),
