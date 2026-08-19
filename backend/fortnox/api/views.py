@@ -35,6 +35,17 @@ class AccountingPermission(permissions.BasePermission):
         )
 
 
+class ViewFortnoxStatusPermission(permissions.BasePermission):
+    """Users who manage Fortnox or have `view_all` may read the connection status."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(
+            user.is_authenticated
+            and (user.profile.may_manage_fortnox() or user.profile.may_view_all())
+        )
+
+
 def _status_payload() -> dict:
     service_account = ServiceAccount.objects.first()
     is_connected = (
@@ -62,7 +73,7 @@ def _status_payload() -> dict:
     )
 )
 class FortnoxStatusView(APIView):
-    permission_classes = [ManageFortnoxPermission]
+    permission_classes = [ViewFortnoxStatusPermission]
 
     def get(self, request):
         return Response(FortnoxStatusSerializer(_status_payload()).data)
