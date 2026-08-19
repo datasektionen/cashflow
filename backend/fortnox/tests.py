@@ -378,10 +378,16 @@ def _with_manage_fortnox():
     )
 
 
-def test_status_requires_manage_fortnox(api_client, profile):
+def test_status_requires_manage_fortnox_or_view_all(api_client, profile):
     with patch("cashflow.dauth.get_permissions", return_value={}):
         response = api_client.get("/api/fortnox/status/")
     assert response.status_code == 403
+
+
+def test_status_readable_with_view_all(api_client, profile):
+    with patch("cashflow.dauth.get_permissions", return_value={"view-all": True}):
+        response = api_client.get("/api/fortnox/status/")
+    assert response.status_code == 200
 
 
 def test_status_reports_disconnected_when_no_account(api_client, profile):
