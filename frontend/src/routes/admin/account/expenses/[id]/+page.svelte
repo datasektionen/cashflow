@@ -15,6 +15,8 @@
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
 	import { sumAmounts } from '$lib/money';
+	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
+	import { formatAmount } from '$lib/money';
 
 	let { data }: { data: PageData } = $props();
 	const expense = $derived(data.expense);
@@ -147,34 +149,59 @@
 		</div>
 
 		<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">
-			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.existing_voucher')}</h2>
-			<p
-				class="hidden max-w-prose pb-4 text-xs leading-relaxed text-base-subtle md:flex dark:text-dark-base-subtle"
-			>
-				{$_('admin_account.existing_voucher_help')}
-			</p>
-			<div class="flex gap-2">
-				<input
-					type="text"
-					bind:value={voucherNumber}
-					placeholder={$_('admin_account.voucher_number_placeholder')}
-					class="border border-base-500 bg-base-200 p-2 text-sm placeholder:text-base-subtle dark:border-dark-base-200 dark:bg-dark-base-200 dark:placeholder:text-dark-base-subtle"
-				/>
-				<button
-					type="button"
-					onclick={submitVoucherNumber}
-					disabled={submitting != null ||
-						isAccounted ||
-						voucherNumber.trim() === '' ||
-						!mayAccount(data.user)}
-					class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{#if submitting === 'number'}
-						<CashSpinner class="size-5" />
-					{:else}
-						{$_('submit')}
-					{/if}
-				</button>
+			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.manual_accounting')}</h2>
+
+			<div class="flex flex-col justify-between md:flex-row">
+				<div class="my-2 flex flex-col gap-y-2">
+					<CopyableValue
+						class="h-12 md:h-8"
+						value="({expense.id}) {expense.description}"
+						display="({expense.id}) {expense.description}"
+					/>
+
+					<CopyableValue
+						class="h-12 md:h-8"
+						value={expense.expense_date}
+						display={expense.expense_date}
+					/>
+
+					<CopyableValue
+						class="h-12 md:h-8"
+						value={formatAmount(expense.total)}
+						display="{expense.total} kr"
+					/>
+				</div>
+
+				<div class="flex flex-col">
+					<p
+						class="hidden max-w-prose pb-4 text-xs leading-relaxed text-base-subtle md:flex dark:text-dark-base-subtle"
+					>
+						{$_('admin_account.existing_voucher_help')}
+					</p>
+					<div class="flex gap-2">
+						<input
+							type="text"
+							bind:value={voucherNumber}
+							placeholder={$_('admin_account.voucher_number_placeholder')}
+							class="border border-base-500 bg-base-200 p-2 text-sm placeholder:text-base-subtle dark:border-dark-base-200 dark:bg-dark-base-200 dark:placeholder:text-dark-base-subtle"
+						/>
+						<button
+							type="button"
+							onclick={submitVoucherNumber}
+							disabled={submitting != null ||
+								isAccounted ||
+								voucherNumber.trim() === '' ||
+								!mayAccount(data.user)}
+							class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if submitting === 'number'}
+								<CashSpinner class="size-5" />
+							{:else}
+								{$_('submit')}
+							{/if}
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
