@@ -3,12 +3,18 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from . import views
-from core.api.views import ActionSummary, ClaimsList, VoucherSeriesList
+from core.api.views import (
+    ActionOverview,
+    ActionSummary,
+    ClaimsList,
+    VoucherSeriesList,
+)
 
 urlpatterns = [
     path("features/", views.FeaturesList.as_view(), name="feature-flags"),
     path("claims/", ClaimsList.as_view(), name="claims-list"),
     path("actions/", ActionSummary.as_view(), name="action-summary"),
+    path("actions/overview/", ActionOverview.as_view(), name="action-overview"),
     path(
         "cost-centres/",
         views.CostCentreList.as_view(),

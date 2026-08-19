@@ -10,7 +10,8 @@
 		"confirm": "Bekräfta",
 		"attest": "Attestera",
 		"pay": "Betala",
-		"account": "Bokför"
+		"account": "Bokför",
+		"empty": "Inget kvar"
 	},
 	"login": "Logga in",
 	"login_with_sso": "Logga in med SSO",

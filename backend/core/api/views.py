@@ -1,6 +1,6 @@
+from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -417,6 +417,93 @@ class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
                     "accountable": invoices.accountable_for(user).count(),
                     "payable": invoices.payable_for(user).count(),
                 },
+            }
+        )
+
+
+def _counts_by_cost_centre(
+    expense_qs: "ExpenseQuerySet", invoice_qs: "InvoiceQuerySet"
+) -> list[dict[str, object]]:
+    """Merges expense and invoice counts grouped by their part's cost centre.
+
+    A claim is counted once per cost centre it has a (matching) part in, so the
+    same claim can contribute to several cost centres. Counts are summed across
+    expenses and invoices and returned sorted by descending count.
+    """
+    counts: dict[str, int] = defaultdict(int)
+    for row in (
+        expense_qs.order_by()
+        .values("expensepart__cost_centre")
+        .annotate(count=Count("id", distinct=True))
+    ):
+        counts[row["expensepart__cost_centre"]] += row["count"]
+    for row in (
+        invoice_qs.order_by()
+        .values("invoicepart__cost_centre")
+        .annotate(count=Count("id", distinct=True))
+    ):
+        counts[row["invoicepart__cost_centre"]] += row["count"]
+    return [
+        {"cost_centre": cost_centre, "count": count}
+        for cost_centre, count in sorted(
+            counts.items(), key=lambda item: item[1], reverse=True
+        )
+    ]
+
+
+def _counts_by_owner(
+    expense_qs: "ExpenseQuerySet", invoice_qs: "InvoiceQuerySet"
+) -> list[dict[str, object]]:
+    """Merges expense and invoice counts grouped by the owning user.
+
+    Each claim has a single owner, so counts sum to the overall total. Returned
+    sorted by descending count.
+    """
+    owners: dict[str, dict[str, object]] = {}
+    for qs in (expense_qs, invoice_qs):
+        for row in (
+            qs.order_by()
+            .values(
+                "owner__user__username",
+                "owner__user__first_name",
+                "owner__user__last_name",
+            )
+            .annotate(count=Count("id", distinct=True))
+        ):
+            username = row["owner__user__username"]
+            owner = owners.setdefault(
+                username,
+                {
+                    "username": username,
+                    "first_name": row["owner__user__first_name"],
+                    "last_name": row["owner__user__last_name"],
+                    "count": 0,
+                },
+            )
+            owner["count"] = int(owner["count"]) + row["count"]
+    return sorted(owners.values(), key=lambda owner: owner["count"], reverse=True)
+
+
+class ActionOverview(GenericAPIView, AuthenticatedUserMixin):
+
+    def get(self, request: Request):
+        user = self.current_user
+        expenses = Expense.objects.viewable_by(user)
+        invoices = Invoice.objects.viewable_by(user)
+        return Response(
+            {
+                "attest": _counts_by_cost_centre(
+                    expenses.attestable_for(user), invoices.attestable_for(user)
+                ),
+                "account": _counts_by_cost_centre(
+                    expenses.accountable_for(user), invoices.accountable_for(user)
+                ),
+                "confirm": _counts_by_cost_centre(
+                    expenses.confirmable_for(user), Invoice.objects.none()
+                ),
+                "pay": _counts_by_owner(
+                    expenses.payable_for(user), invoices.payable_for(user)
+                ),
             }
         )
 

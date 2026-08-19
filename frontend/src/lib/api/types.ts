@@ -257,6 +257,21 @@ export type ActionSummary = {
 	};
 };
 
+export type CostCentreCount = { cost_centre: string; count: number };
+export type OwnerCount = {
+	username: string;
+	first_name: string;
+	last_name: string;
+	count: number;
+};
+
+export type ActionOverview = {
+	attest: CostCentreCount[];
+	account: CostCentreCount[];
+	confirm: CostCentreCount[];
+	pay: OwnerCount[];
+};
+
 export type TristateFilter = 'true' | 'false' | 'none';
 
 export type ClaimSorting = 'created_at' | '-created_at' | 'date' | '-date' | 'total' | '-total';

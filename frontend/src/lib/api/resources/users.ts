@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { ActionSummary, BankInfo, User } from '$lib/api/types';
+import type { ActionOverview, ActionSummary, BankInfo, User } from '$lib/api/types';
 
 export class UsersAPI {
 	private readonly apiClient: ApiClient;
@@ -18,5 +18,9 @@ export class UsersAPI {
 
 	async actionSummary(): Promise<ActionSummary> {
 		return this.apiClient.get<ActionSummary>('/actions');
+	}
+
+	async actionOverview(): Promise<ActionOverview> {
+		return this.apiClient.get<ActionOverview>('/actions/overview');
 	}
 }
