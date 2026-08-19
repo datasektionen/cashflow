@@ -165,7 +165,7 @@
 		"title": "Accounting",
 		"create_voucher": "Create voucher",
 		"create_voucher_help": "Here you can create a new voucher that is uploaded to Fortnox. Cashflow will try to fill in the voucher rows automatically based on the expense's/invoice's parts, but you can also edit them before recording the voucher. The total sum must match the expense's/invoice's amount.",
-		"existing_voucher": "Existing voucher",
+		"manual_accounting": "Manual accounting",
 		"existing_voucher_help": "Here you can enter an existing voucher number that already exists in Fortnox. Do this if you have already recorded the expense/invoice, to mark it as recorded in Cashflow.",
 		"voucher_number_placeholder": "Voucher number",
 		"success": "Voucher {verification} was recorded",
