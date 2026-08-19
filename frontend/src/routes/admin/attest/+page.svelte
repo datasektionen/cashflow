@@ -155,7 +155,9 @@
 	</div>
 {/snippet}
 
-<ClaimFilterBar exclude={['attested', 'paid', 'accounted', 'voucher_series', 'voucher_number']} />
+<ClaimFilterBar
+	exclude={['attested', 'paid', 'accounted', 'voucher_series', 'voucher_number', 'reimbursement']}
+/>
 <PaginatedTable
 	paginatedResponse={data.claims}
 	columns={[

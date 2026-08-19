@@ -123,7 +123,9 @@
 	<span class="tabular-nums">{fmt.format(parseFloat(r.total))} kr</span>
 {/snippet}
 
-<ClaimFilterBar exclude={['confirmed', 'flagged', 'voucher_series', 'voucher_number']} />
+<ClaimFilterBar
+	exclude={['confirmed', 'flagged', 'voucher_series', 'voucher_number', 'reimbursement']}
+/>
 <PaginatedTable
 	paginatedResponse={data.invoices}
 	columns={[

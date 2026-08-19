@@ -116,7 +116,7 @@
 {#snippet totalCell(e: Expense)}
 	<span class="tabular-nums">{fmt.format(parseFloat(e.total))} kr</span>
 {/snippet}
-<ClaimFilterBar exclude={['voucher_series', 'voucher_number']} />
+<ClaimFilterBar exclude={['voucher_series', 'voucher_number', 'reimbursement']} />
 
 <PaginatedTable
 	paginatedResponse={data.expenses}
