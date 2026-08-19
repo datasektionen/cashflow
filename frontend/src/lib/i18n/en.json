@@ -9,7 +9,8 @@
 		"confirm": "Confirm",
 		"attest": "Attest",
 		"pay": "Pay",
-		"account": "Account"
+		"account": "Account",
+		"empty": "Nothing pending"
 	},
 	"login": "Login",
 	"login_with_sso": "Log in with SSO",
