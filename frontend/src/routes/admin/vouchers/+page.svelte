@@ -113,7 +113,7 @@
 	</span>
 {/snippet}
 
-<ClaimFilterBar includeChecks={false} />
+<ClaimFilterBar includeChecks={false} exclude={['reimbursement']} />
 
 <PaginatedTable
 	paginatedResponse={data.claims}
