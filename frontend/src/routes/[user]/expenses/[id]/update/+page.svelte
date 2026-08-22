@@ -13,6 +13,7 @@
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
 	import validation from './validation.ts';
+	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
@@ -47,20 +48,20 @@
 	let description = $derived(expense.description);
 	let newFiles: File[] = $state([]);
 	let expenseDate: DateValue | undefined = $derived(parseDate(expense.expense_date));
-	let parts: Part[] = $derived(
-		expense.parts.length > 0
-			? expense.parts.map((p) => {
-					const amountRaw = parseFloat(p.amount);
-					return {
-						amountRaw,
-						amountDisplay: fmt.format(amountRaw),
-						costcenter: p.cost_centre,
-						secondarycostcenter: p.secondary_cost_centre,
-						budgetline: p.budget_line
-					};
-				})
-			: [newPart()]
-	);
+	function initialParts(exp: Expense): Part[] {
+		if (exp.parts.length === 0) return [newPart()];
+		return exp.parts.map((p) => {
+			const amountRaw = parseFloat(p.amount);
+			return {
+				amountRaw,
+				amountDisplay: fmt.format(amountRaw),
+				costcenter: p.cost_centre,
+				secondarycostcenter: p.secondary_cost_centre,
+				budgetline: p.budget_line
+			};
+		});
+	}
+	let parts: Part[] = $state(untrack(() => initialParts(data.expense)));
 
 	function buildValidationData() {
 		return {

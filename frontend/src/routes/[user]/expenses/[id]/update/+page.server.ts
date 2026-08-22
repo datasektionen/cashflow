@@ -32,10 +32,8 @@ export const actions: Actions = {
 		}
 		const files = data.getAll('files').filter((f): f is File => f instanceof File);
 
-		// Parts are only present in the form when they're still editable (the
-		// parts editor is swapped for a read-only table once any part is
-		// attested), so an empty list here means "leave parts unchanged".
 		const parts: PartCreateUpdate[] = [];
+
 		let i = 0;
 		for (const field of data) {
 			if (field[0].startsWith(`part-${i}-`)) {
