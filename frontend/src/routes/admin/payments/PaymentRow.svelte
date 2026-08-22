@@ -13,7 +13,7 @@
 		n.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 </script>
 
-<div class="flex flex-col pb-2 pl-8">
+<div class="flex flex-col pb-2 md:pl-8">
 	{#await expensesPromise}
 		<div class="p-4">
 			<CashSpinner />
@@ -29,7 +29,7 @@
 						rel="noopener noreferrer"
 						class="group flex min-w-0 items-center gap-x-1.5 text-sm text-base-subtle dark:text-dark-base-subtle"
 					>
-						<span class="my-auto min-w-0 text-xs">#{expense.id}</span>
+						<span class="my-auto hidden min-w-0 text-xs md:block">#{expense.id}</span>
 						<span class="min-w-0 truncate">{expense.description}</span>
 						<ExternalLink
 							class="size-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
@@ -59,7 +59,7 @@
 				<span class="text-sm font-medium tabular-nums">{fmt(grandTotal)} kr</span>
 			</div>
 		{/if}
-	{:catch}
+	{:catch e}
 		<div class="p-4">
 			<span class="text-sm text-red-500">{$_('admin_pay.load_error')}</span>
 		</div>

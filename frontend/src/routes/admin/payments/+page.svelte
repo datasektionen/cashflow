@@ -51,8 +51,8 @@
 				}
 			] as TableColumn<Payment>[]
 		).filter((col) => {
-			if (isExtraSmallLayout.current) return ['voucher', 'description'].includes(col.id);
-			if (isSmallLayout.current) return ['voucher', 'description', 'cost_centres'].includes(col.id);
+			if (isExtraSmallLayout.current) return ['tag', 'receiver'].includes(col.id);
+			if (isSmallLayout.current) return ['tag', 'receiver', 'total'].includes(col.id);
 			return true;
 		})
 	);
