@@ -15,7 +15,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import { isSmallLayout } from '$lib/stores/state.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import { goto } from '$app/navigation';
 
 	interface Props {
@@ -170,7 +170,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 									{/if}
 								</td>
 							{/each}
-							{#if rowProps?.expandedSnippet}
+							{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
 								<td>
 									{#if expanded === i}
 										<ChevronUp />
