@@ -42,8 +42,11 @@
 	);
 
 	let sidebarOpen = $state(false);
+	let userDropdownOpen = $state(false);
+
+
+	// Close sidebar when navigating to a new page or user dropdown opens
 	$effect(() => {
-		// Close the drawer whenever the route changes (e.g. after clicking a sidebar link)
 		page.url.pathname;
 		sidebarOpen = false;
 	});
@@ -60,7 +63,7 @@
 	alerts.subscribe((val) => (currentAlerts = val));
 </script>
 
-<NavBar user={data.user} bind:sidebarOpen {canAccessAdmin} />
+<NavBar user={data.user} bind:sidebarOpen bind:userDropdownOpen {canAccessAdmin} />
 
 {#if data.user != null && sidebarOpen}
 	<button
@@ -74,7 +77,7 @@
 {#if data.user != null}
 	<aside
 		class={[
-			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100',
+			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100 overflow-y-scroll',
 			sidebarOpen ? 'translate-x-0' : '-translate-x-full',
 			adminView ? 'lg:translate-x-0' : 'lg:hidden'
 		]}
