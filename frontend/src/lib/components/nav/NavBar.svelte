@@ -13,25 +13,28 @@
 	let {
 		user,
 		canAccessAdmin = false,
-		sidebarOpen = $bindable(false)
+		sidebarOpen = $bindable(false),
+		userDropdownOpen = $bindable(false)
 	}: {
 		user: Profile | null;
 		canAccessAdmin?: boolean;
 		sidebarOpen?: boolean;
+		userDropdownOpen?: boolean;
 	} = $props();
 
-	let showUserDropdown = $state(false);
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 
 	$effect(() => {
 		page.url.pathname;
-		showUserDropdown = false;
+		userDropdownOpen = false;
 	});
+
+
 </script>
 
 <svelte:window
 	onkeydown={(e) => {
-		if (e.key === 'Escape') showUserDropdown = false;
+		if (e.key === 'Escape') userDropdownOpen = false;
 	}}
 />
 
@@ -48,7 +51,10 @@
 			{#if user != null}
 				<button
 					type="button"
-					onclick={() => (sidebarOpen = !sidebarOpen)}
+					onclick={() => {
+						sidebarOpen = !sidebarOpen;
+						userDropdownOpen = false;
+					}}
 					aria-label="Toggle sidebar"
 					aria-expanded={sidebarOpen}
 					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-dark-base-300"
@@ -79,9 +85,12 @@
 			{#if user != null}
 				<button
 					type="button"
-					onclick={() => (showUserDropdown = !showUserDropdown)}
+					onclick={() => {
+						userDropdownOpen = !userDropdownOpen;
+						sidebarOpen = false;
+					}}
 					aria-haspopup="menu"
-					aria-expanded={showUserDropdown}
+					aria-expanded={userDropdownOpen}
 					aria-controls="user-menu"
 					aria-label={`${user.first_name} ${user.last_name}`}
 					class="flex cursor-pointer items-center gap-2 p-1 transition-colors"
@@ -103,11 +112,11 @@
 </nav>
 
 {#if user != null}
-	{#if showUserDropdown}
+	{#if userDropdownOpen}
 		<button
 			type="button"
 			aria-label="Close menu"
-			onclick={() => (showUserDropdown = false)}
+			onclick={() => (userDropdownOpen = false)}
 			class="fixed inset-0 top-16 z-20"
 		></button>
 	{/if}
@@ -121,10 +130,10 @@
 		<div
 			id="user-menu"
 			role="menu"
-			inert={!showUserDropdown}
+			inert={!userDropdownOpen}
 			class={[
 				'pointer-events-auto flex w-48 flex-col border-r border-b border-l border-base-500 bg-base-100 py-1 text-sm transition-all dark:border-dark-base-300 dark:bg-dark-base-200',
-				showUserDropdown ? 'translate-y-0 shadow-lg' : '-translate-y-full'
+				userDropdownOpen ? 'translate-y-0 shadow-lg' : '-translate-y-full'
 			]}
 		>
 			<p class="px-3 py-2 md:hidden dark:text-dark-base-text">
