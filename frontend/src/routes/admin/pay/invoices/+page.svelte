@@ -12,6 +12,7 @@
 	import { Check } from '@lucide/svelte';
 	import { mayPay } from '$lib/auth';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
+	import { isSmallLayout } from '$lib/stores/state.svelte';
 
 	let { data }: PageProps = $props();
 	const canPay = $derived(mayPay(data.user));
@@ -70,27 +71,34 @@
 		}
 	}
 
-	const columns: TableColumn<Invoice>[] = [
-		{
-			id: 'invoice',
-			header: $_('admin_pay.columns.invoice'),
-			renderSnippet: invoiceCell,
-			width: ''
-		},
-		{
-			id: 'due_date',
-			header: $_('admin_pay.columns.due_date'),
-			renderSnippet: dueDateCell,
-			width: 'w-32'
-		},
-		{
-			id: 'total',
-			header: $_('admin_pay.columns.total'),
-			renderSnippet: totalCell,
-			width: 'w-32',
-			sorting: ['-total', 'total']
-		}
-	];
+	const columns: TableColumn<Invoice>[] = $derived(
+		(
+			[
+				{
+					id: 'invoice',
+					header: $_('admin_pay.columns.invoice'),
+					renderSnippet: invoiceCell,
+					width: ''
+				},
+				{
+					id: 'due_date',
+					header: $_('admin_pay.columns.due_date'),
+					renderSnippet: dueDateCell,
+					width: 'w-32'
+				},
+				{
+					id: 'total',
+					header: $_('admin_pay.columns.total'),
+					renderSnippet: totalCell,
+					width: 'w-32',
+					sorting: ['-total', 'total']
+				}
+			] as TableColumn<Invoice>[]
+		).filter((col) => {
+			if (isSmallLayout.current) return col.id !== 'due_date';
+			return true;
+		})
+	);
 </script>
 
 {#snippet invoiceCell(invoice: Invoice)}

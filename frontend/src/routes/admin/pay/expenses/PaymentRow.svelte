@@ -14,6 +14,7 @@
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { _ } from 'svelte-i18n';
 	import { completedPayments } from './completedPayments.svelte';
+	import { isExtraSmallLayout } from '$lib/stores/state.svelte';
 
 	let {
 		owner,
@@ -110,7 +111,7 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col pb-2 pl-8">
+<div class="flex flex-col pb-2 pl-2 md:pl-8">
 	{#if owner.has_bank_info}
 		<div
 			class="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 pr-4 text-sm text-base-subtle dark:text-dark-base-subtle"
@@ -139,14 +140,14 @@
 		{#each resolved.data as expense}
 			{@const total = expense.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0)}
 			{@const costCentres = [...new Set(expense.parts.map((p) => p.cost_centre))]}
-			<div class="flex flex-row items-stretch">
+			<div class={['flex items-stretch', isExtraSmallLayout.current ? 'flex-col' : 'flex-row']}>
 				<div
 					class={[
 						'w-0.5 shrink-0 transition-colors',
 						selected.has(expense.id) ? 'bg-money-green-600' : 'bg-transparent'
 					]}
 				></div>
-				<div class="flex min-w-0 flex-1 flex-col gap-y-1 py-2 pl-3">
+				<div class="flex min-w-0 flex-1 flex-col gap-y-1 py-2 md:pl-3">
 					<a
 						href="/admin/expenses/{expense.id}"
 						target="_blank"
@@ -167,20 +168,22 @@
 						</div>
 					{/if}
 				</div>
-				<div
-					class="flex w-36 shrink-0 items-start justify-end px-4 py-2 text-sm font-medium tabular-nums"
-				>
-					{total.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
-				</div>
-				<div class="flex w-20 shrink-0 items-start justify-center py-2 pr-4">
-					<Checkbox
-						class="mt-0.5"
-						checked={selected.has(expense.id)}
-						onCheckedChange={(v) => {
-							if (v) selected.add(expense.id);
-							else selected.delete(expense.id);
-						}}
-					/>
+				<div class="ml-auto flex flex-row">
+					<div
+						class="flex w-36 shrink-0 items-start justify-end px-4 py-2 text-sm font-medium tabular-nums"
+					>
+						{total.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
+					</div>
+					<div class="flex w-20 shrink-0 items-start justify-center py-2 pr-4">
+						<Checkbox
+							class="mt-0.5"
+							checked={selected.has(expense.id)}
+							onCheckedChange={(v) => {
+								if (v) selected.add(expense.id);
+								else selected.delete(expense.id);
+							}}
+						/>
+					</div>
 				</div>
 			</div>
 		{/each}
@@ -191,7 +194,7 @@
 		{@const allSelected =
 			resolved.data.length > 0 && resolved.data.every((e) => selected.has(e.id))}
 		<div
-			class="mt-2 flex items-center justify-end gap-x-4 border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
+			class="mt-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
 		>
 			<Checkbox
 				checked={allSelected}

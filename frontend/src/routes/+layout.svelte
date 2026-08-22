@@ -44,7 +44,6 @@
 	let sidebarOpen = $state(false);
 	let userDropdownOpen = $state(false);
 
-
 	// Close sidebar when navigating to a new page or user dropdown opens
 	$effect(() => {
 		page.url.pathname;
@@ -77,7 +76,7 @@
 {#if data.user != null}
 	<aside
 		class={[
-			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100 overflow-y-scroll',
+			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 overflow-y-scroll border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100',
 			sidebarOpen ? 'translate-x-0' : '-translate-x-full',
 			adminView ? 'lg:translate-x-0' : 'lg:hidden'
 		]}
@@ -209,7 +208,7 @@
 </div>
 
 <div
-	class="base-text-base-text flex min-h-screen flex-col bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
+	class="base-text-base-text flex min-h-screen flex-col overflow-x-clip bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
 	{#if pageTitle != null}
 		<header
@@ -241,8 +240,10 @@
 
 	{#if data.user == null}
 		<footer class="bg-money-green-700 text-white dark:bg-dark-base-200 dark:text-dark-base-text">
-			<div class="mx-auto flex h-64 max-w-7xl flex-row justify-between px-4 py-4 lg:px-8">
-				<div class="w-96">
+			<div
+				class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:h-64 lg:flex-row lg:justify-between lg:gap-0 lg:py-4"
+			>
+				<div class="w-full lg:w-96">
 					<h2 class="font-bold">{$_('footer.about.title')}</h2>
 					<p>
 						{@html $_('footer.about.body').replaceAll(
@@ -251,13 +252,13 @@
 						)}
 					</p>
 				</div>
-				<div class="w-96">
+				<div class="w-full lg:w-96">
 					<h2 class="font-bold">{$_('footer.help.title')}</h2>
 					<p>
 						{$_('footer.help.body')}
 					</p>
 				</div>
-				<div class="w-96">
+				<div class="w-full lg:w-96">
 					<h2 class="font-bold">{$_('footer.issues.title')}</h2>
 					<p>
 						{$_('footer.issues.body')}

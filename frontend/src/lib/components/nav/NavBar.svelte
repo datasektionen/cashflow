@@ -28,8 +28,6 @@
 		page.url.pathname;
 		userDropdownOpen = false;
 	});
-
-
 </script>
 
 <svelte:window
