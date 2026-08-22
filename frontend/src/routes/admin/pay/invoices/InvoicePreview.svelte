@@ -104,7 +104,7 @@
 			{/if}
 		</div>
 
-		<dl class="grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
+		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm break-words">
 			<dt class="text-base-subtle dark:text-dark-base-subtle">
 				{$_('admin_pay.columns.due_date')}
 			</dt>

@@ -83,7 +83,7 @@
 			{/if}
 		</div>
 
-		<dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
+		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-1 text-sm break-words">
 			<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
 			<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 

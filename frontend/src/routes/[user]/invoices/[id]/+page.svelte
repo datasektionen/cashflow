@@ -201,7 +201,7 @@
 			<h2 class="border-t border-base-500 pt-4 text-base font-semibold dark:border-dark-base-200">
 				Information
 			</h2>
-			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-12 gap-y-3 text-sm">
+			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm break-words">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
 				<dd>
 					{invoice.owner.first_name}

@@ -221,7 +221,7 @@
 	<div class="flex min-w-0 grow basis-80 flex-col gap-8 pt-1">
 		<div>
 			<h2 class="text-base font-semibold">Information</h2>
-			<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
+			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-2 text-sm break-words">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">
 					{$_('new_expense.form.description.label')}
 				</dt>
