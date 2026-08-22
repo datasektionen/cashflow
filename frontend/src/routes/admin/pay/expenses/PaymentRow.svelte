@@ -55,7 +55,7 @@
 				.filter((e) => selected.has(e.id))
 				.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0);
 			const payment = await api.payments.create([...selected]);
-			completedPayments.push({ ...payment, amount: amount.toFixed(2), bankInfo });
+			completedPayments.unshift({ ...payment, amount: amount.toFixed(2), bankInfo });
 			alerts.update((a) => [
 				...a,
 				success($_('admin_pay.payment_created', { values: { tag: payment.tag } }))
