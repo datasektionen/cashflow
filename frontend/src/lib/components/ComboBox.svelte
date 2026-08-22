@@ -31,13 +31,16 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		onblur?: (e: FocusEvent) => void;
 	} = $props();
 
-	// let searchValue = $state(value ?? '');
 	let open = $state(false);
 
 	const fuse = $derived(new Fuse(items));
 	let filtered = $derived(
 		searchValue ? fuse.search(searchValue) : items.map((item, i) => ({ item, refIndex: i }))
 	);
+
+	$effect(() => {
+		searchValue = value;
+	});
 </script>
 
 <Combobox.Root

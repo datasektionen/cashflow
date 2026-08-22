@@ -13,6 +13,7 @@
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
 	import validation from './validation.ts';
+	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
@@ -51,20 +52,20 @@
 	let dueDate: DateValue | undefined = $derived(
 		invoice.due_date ? parseDate(invoice.due_date) : undefined
 	);
-	let parts: Part[] = $derived(
-		invoice.parts.length > 0
-			? invoice.parts.map((p) => {
-					const amountRaw = parseFloat(p.amount);
-					return {
-						amountRaw,
-						amountDisplay: fmt.format(amountRaw),
-						costcenter: p.cost_centre,
-						secondarycostcenter: p.secondary_cost_centre,
-						budgetline: p.budget_line
-					};
-				})
-			: [newPart()]
-	);
+	function initialParts(inv: Invoice): Part[] {
+		if (inv.parts.length === 0) return [newPart()];
+		return inv.parts.map((p) => {
+			const amountRaw = parseFloat(p.amount);
+			return {
+				amountRaw,
+				amountDisplay: fmt.format(amountRaw),
+				costcenter: p.cost_centre,
+				secondarycostcenter: p.secondary_cost_centre,
+				budgetline: p.budget_line
+			};
+		});
+	}
+	let parts: Part[] = $state(untrack(() => initialParts(data.invoice)));
 
 	function buildValidationData() {
 		return {
