@@ -297,6 +297,7 @@
 		}
 	},
 	"file": "File",
+	"date": "Date",
 	"expense_date": "Purchase date",
 	"expense_created_at": "Registered",
 	"expense_no_files": "No files attached",

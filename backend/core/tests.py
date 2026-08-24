@@ -353,6 +353,8 @@ class TestClaimSerializer:
             "description": "Lunch",
             "amount": "123.45",
             "created_date": date(2024, 1, 1),
+            "expense_date": date(2024, 1, 1),
+            "invoice_date": None,
             "is_attested": False,
             "is_confirmed": False,
             "is_paid": False,
