@@ -297,6 +297,7 @@
 		}
 	},
 	"file": "Fil",
+	"date": "Datum",
 	"expense_date": "Inköpsdatum",
 	"expense_created_at": "Skapad",
 	"expense_no_files": "Inga filer bifogade",

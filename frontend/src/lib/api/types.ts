@@ -159,8 +159,12 @@ type ClaimBase = {
 };
 
 export type Claim =
-	| (ClaimBase & { type: 'expense'; parts: ExpensePart[] })
-	| (ClaimBase & { type: 'invoice'; parts: InvoicePart[] });
+	| (ClaimBase & { type: 'expense'; expense_date: string; parts: ExpensePart[] })
+	| (ClaimBase & { type: 'invoice'; invoice_date: string; parts: InvoicePart[] });
+
+export function getClaimDate(c: Claim) {
+	return c.type === 'expense' ? c.expense_date : c.invoice_date;
+}
 
 export type PaginatedResponse<T> = {
 	data: T[];

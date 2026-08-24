@@ -20,6 +20,8 @@ class ClaimData(TypedDict):
     description: str
     amount: str
     created_date: date
+    expense_date: date | None
+    invoice_date: date | None
     is_attested: bool
     is_confirmed: bool
     is_paid: bool
@@ -81,6 +83,8 @@ class ClaimSerializer(serializers.Serializer):
     description = serializers.CharField()
     amount = serializers.CharField()
     created_date = serializers.DateField()
+    expense_date = serializers.DateField(allow_null=True)
+    invoice_date = serializers.DateField(allow_null=True)
     is_attested = serializers.BooleanField(read_only=True)
     is_confirmed = serializers.BooleanField(read_only=True)
     is_paid = serializers.BooleanField(read_only=True)

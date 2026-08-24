@@ -2,7 +2,7 @@
 	import type { PageProps } from './$types';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import type { TableColumn } from '$lib/components/types';
-	import type { Claim } from '$lib/api/types';
+	import { type Claim, getClaimDate } from '$lib/api/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
@@ -38,8 +38,8 @@
 		},
 		{
 			id: 'expense_date',
-			header: $_('expense_date'),
-			render: (c) => c.created_date,
+			header: $_('date'),
+			render: (c) => getClaimDate(c),
 			width: 'w-28',
 			sorting: ['-date', 'date']
 		},
