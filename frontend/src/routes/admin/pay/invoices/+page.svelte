@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import type { Invoice } from '$lib/api/types';
+	import { DUE_WARNING_DAYS } from '$lib/config';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import { TriangleAlert } from '@lucide/svelte';
 	import type { TableColumn } from '$lib/components/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -121,13 +123,31 @@
 {/snippet}
 
 {#snippet dueDateCell(invoice: Invoice)}
+	{@const dueDate = invoice.due_date ? new Date(invoice.due_date) : null}
+	{@const dueSoon = dueDate ? dueDate.getTime() - DUE_WARNING_DAYS * 86400000 < Date.now() : false}
+	{@const pastDue = dueDate ? dueDate.getTime() < Date.now() : false}
 	<span
 		class={[
-			'text-base-subtle tabular-nums dark:text-dark-base-subtle',
+			'tabular-nums',
+			pastDue
+				? 'text-red-500 dark:text-red-400'
+				: dueSoon
+					? 'text-yellow-500 dark:text-yellow-400'
+					: 'text-base-text dark:text-dark-base-text',
 			paidInvoices.has(invoice.id) && 'opacity-50'
 		]}
 	>
-		{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString($locale ?? 'sv-SE') : '–'}
+		{#if pastDue}
+			<span class="flex flex-row items-center gap-1">
+				<TriangleAlert class="text-red size-4" />
+				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
+			</span>
+		{:else}
+			<span class="flex flex-row items-center gap-1">
+				<TriangleAlert class="size-4 text-yellow-500" />
+				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
+			</span>
+		{/if}
 	</span>
 {/snippet}
 
