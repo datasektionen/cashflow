@@ -12,9 +12,7 @@ class PartInvalidJSONProblem(APIException):
 
 class FileRequiredProblem(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = (
-        "At least one image or PDF file is required to create an expense or invoice."
-    )
+    default_detail = ("At least one image or PDF file is required to create an expense or invoice.")
     default_code = "file_required"
     title = "Missing file for expense or invoice"
 
@@ -44,23 +42,11 @@ register_exception(PartRequiredProblem)
 class AttestationPermissionDeniedProblem(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     title = "Attestation permission denied"
-    default_detail = (
-        "You do not have permission to attest this expense or invoice part."
-    )
+    default_detail = ("You do not have permission to attest this expense or invoice part.")
     default_code = "attestation_permission_denied"
 
 
 register_exception(AttestationPermissionDeniedProblem)
-
-
-class AlreadyAttestedProblem(APIException):
-    status_code = status.HTTP_409_CONFLICT
-    title = "Resource already attested"
-    default_detail = "This expense or invoice part is already attested"
-    default_code = "already_attested"
-
-
-register_exception(AlreadyAttestedProblem)
 
 
 class EmptyCommentProblem(APIException):
@@ -147,9 +133,7 @@ class AccountingPermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "accounting_permission_denied"
     title = "Permission denied for accounting expense/invoice"
-    default_detail = (
-        "The user lacks the proper permissions to account the given expense or invoice."
-    )
+    default_detail = ("The user lacks the proper permissions to account the given expense or invoice.")
 
 
 register_exception(AccountingPermissionDeniedProblem)
@@ -179,9 +163,7 @@ class PaymentPermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "payment_permission_denied"
     title = "Permission denied for payment expense/invoice"
-    default_detail = (
-        "The user lacks the proper permissions to pay this expense or invoice."
-    )
+    default_detail = ("The user lacks the proper permissions to pay this expense or invoice.")
 
 
 register_exception(PaymentPermissionDeniedProblem)
@@ -241,9 +223,7 @@ class DeletionPermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "deletion_permission_denied"
     title = "Permission denied for deleting expense/invoice"
-    default_detail = (
-        "The user lacks the proper permissions to delete this expense or invoice."
-    )
+    default_detail = ("The user lacks the proper permissions to delete this expense or invoice.")
 
 
 register_exception(DeletionPermissionDeniedProblem)
@@ -253,9 +233,7 @@ class UpdatePermissionDeniedProblem(APIException):
     status_code = 403
     default_code = "update_permission_denied"
     title = "Permission denied for updating expense/invoice"
-    default_detail = (
-        "The user lacks the proper permissions to update this expense or invoice."
-    )
+    default_detail = ("The user lacks the proper permissions to update this expense or invoice.")
 
 
 register_exception(UpdatePermissionDeniedProblem)

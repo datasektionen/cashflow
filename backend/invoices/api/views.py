@@ -36,7 +36,6 @@ from core.api.problems import (
     NoAccountingMethodProblem,
     DeletionPermissionDeniedProblem,
     UpdatePermissionDeniedProblem,
-    AlreadyAttestedProblem,
 )
 from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
@@ -120,7 +119,6 @@ logger = get_logger(__name__)
         ),
         responses={
             status.HTTP_403_FORBIDDEN: problem(UpdatePermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problem(AlreadyAttestedProblem),
         },
     ),
     destroy=extend_schema(
@@ -280,8 +278,6 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if parts_data is not None:
             if not parts_data:
                 raise PartRequiredProblem()
-            if invoice.parts.filter(attested_by__isnull=False).exists():
-                raise AlreadyAttestedProblem()
             parts_serializer = InvoicePartSerializer(data=parts_data, many=True)
             parts_serializer.is_valid(raise_exception=True)
             parts_data = parts_serializer.validated_data

@@ -44,9 +44,6 @@
 
 	let { parts = $bindable(), errors, showErrors, onValidate, addPartPrompt }: Props = $props();
 
-	// Cost centres are shared across all rows; secondary cost centres and
-	// budget lines cascade from each row's own selection, so they're kept as
-	// parallel arrays indexed the same as `parts`.
 	let costCentres: CostCentre[] = $state([]);
 	let secondaryCostCentresByPart: SecondaryCostCentre[][] = $state([]);
 	let budgetLinesByPart: BudgetLine[][] = $state([]);

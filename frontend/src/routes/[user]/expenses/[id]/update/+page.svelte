@@ -134,20 +134,14 @@
 >
 	<div class="flex w-full flex-col space-y-2">
 		<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-		{#if partsLocked}
-			<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
-				{$_('expense_parts_locked')}
-			</span>
-			<PartsTable parts={expense.parts} owner={expense.owner} {totalAmount} />
-		{:else}
-			<ExpenseParts
-				bind:parts
-				{errors}
-				{showErrors}
-				onValidate={validateField}
-				addPartPrompt={$_('new_expense.form.add_part')}
-			/>
-		{/if}
+
+		<ExpenseParts
+			bind:parts
+			{errors}
+			{showErrors}
+			onValidate={validateField}
+			addPartPrompt={$_('new_expense.form.add_part')}
+		/>
 	</div>
 
 	<div class="flex flex-col gap-4 lg:flex-row">
