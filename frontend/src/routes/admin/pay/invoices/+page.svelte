@@ -142,10 +142,12 @@
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
 		{:else if dueSoon}
-			<TriangleAlert class="size-4 text-yellow-500" />
-			{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
+			<span class="flex flex-row items-center justify-between">
+				<TriangleAlert class="size-4 text-yellow-500" />
+				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
+			</span>
 		{:else}
-			<span class="flex flex-row items-center gap-1">
+			<span class="flex flex-row items-center gap-1 justify-end">
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
 		{/if}
