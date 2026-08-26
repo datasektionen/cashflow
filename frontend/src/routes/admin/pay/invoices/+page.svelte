@@ -3,7 +3,7 @@
 	import type { Invoice } from '$lib/api/types';
 	import { DUE_WARNING_DAYS } from '$lib/config';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
-	import { TriangleAlert } from '@lucide/svelte';
+	import { Check, TriangleAlert } from '@lucide/svelte';
 	import type { TableColumn } from '$lib/components/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -11,7 +11,6 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import InvoicePreview from './InvoicePreview.svelte';
 	import { ScrollArea } from 'bits-ui';
-	import { Check } from '@lucide/svelte';
 	import { mayPay } from '$lib/auth';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
@@ -142,9 +141,11 @@
 				<TriangleAlert class="text-red size-4" />
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
+		{:else if dueSoon}
+			<TriangleAlert class="size-4 text-yellow-500" />
+			{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 		{:else}
 			<span class="flex flex-row items-center gap-1">
-				<TriangleAlert class="size-4 text-yellow-500" />
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
 		{/if}
