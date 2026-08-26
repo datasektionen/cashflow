@@ -5,7 +5,7 @@
 	import { _ } from 'svelte-i18n';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import type { TableColumn, TableRowProps } from '$lib/components/types';
-	import type { Claim } from '$lib/api/types';
+	import type { Claim, Expense } from '$lib/api/types';
 	import { alerts, success } from '$lib/stores/alerts';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
@@ -80,6 +80,12 @@
 					width: 'w-28'
 				},
 				{
+					id: 'total',
+					header: $_('admin_expenses.columns.total'),
+					renderSnippet: totalCell,
+					width: 'w-28'
+				},
+				{
 					id: 'status',
 					header: $_('admin_expenses.columns.status'),
 					renderSnippet: statusCell,
@@ -87,15 +93,24 @@
 				}
 			] as TableColumn<Claim>[]
 		).filter((col) => {
-			if (isExtraSmallLayout.current) return ['type', 'description'].includes(col.id);
-			if (isSmallLayout.current) return ['type', 'description', 'status'].includes(col.id);
+			if (isExtraSmallLayout.current) return ['description', 'total'].includes(col.id);
+			if (isSmallLayout.current) return ['type', 'description', 'total', 'status'].includes(col.id);
 			return true;
 		})
 	);
+
+	const fmt = new Intl.NumberFormat('sv-SE', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	});
 </script>
 
 {#snippet statusCell(c: Claim)}
 	<ClaimStatusPills claim={c} />
+{/snippet}
+
+{#snippet totalCell(c: Claim)}
+	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
 {/snippet}
 
 {#snippet costCentres(c: Claim)}
