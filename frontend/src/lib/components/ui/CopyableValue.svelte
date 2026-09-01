@@ -4,7 +4,7 @@
 
 	let {
 		display,
-		value = display,
+		value,
 		class: className
 	}: {
 		display: string | number;
@@ -12,10 +12,12 @@
 		class?: ClassValue;
 	} = $props();
 
+	let resolvedValue = $derived(value ?? display);
+
 	let copied = $state(false);
 
 	function copy() {
-		navigator.clipboard.writeText(String(value));
+		navigator.clipboard.writeText(String(resolvedValue));
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
 	}
