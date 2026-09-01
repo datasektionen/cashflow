@@ -118,6 +118,10 @@ export class InvoicesAPI {
 		return this.apiClient.post<void>(`invoice-parts/${partId}/attest/`, {});
 	}
 
+	unattestPart(partId: number) {
+		return this.apiClient.post<void>(`invoice-parts/${partId}/unattest/`, {});
+	}
+
 	pay(id: number): Promise<Invoice> {
 		return this.apiClient.post<Invoice>(`invoices/${id}/pay/`, {});
 	}

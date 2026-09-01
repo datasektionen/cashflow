@@ -8,6 +8,7 @@
 	"tasks": {
 		"confirm": "Confirm",
 		"attest": "Attest",
+		"unattest": "Remove attestation",
 		"pay": "Pay",
 		"account": "Account",
 		"empty": "Nothing pending"
@@ -322,6 +323,8 @@
 	"alerts": {
 		"expense_part_attested": "The receipt part has been attested",
 		"invoice_part_attested": "The invoice part has been attested",
+		"expense_part_unattested": "The receipt part attestation has been removed",
+		"invoice_part_unattested": "The invoice part attestation has been removed",
 		"expense_confirmed": "The expense has been confirmed",
 		"expense_unconfirmed": "The expense has been unconfirmed",
 		"invoice_confirmed": "The invoice has been confirmed",

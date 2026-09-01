@@ -568,3 +568,38 @@ class ExpensePartAttestView(
                 )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ExpensePartUnattestView(
+    generics.GenericAPIView[ExpensePart], AuthenticatedUserMixin
+):
+    serializer_class = ExpensePartSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ExpensePart.objects.filter(
+            expense__in=Expense.objects.viewable_by(self.current_user)
+        )
+
+    @extend_schema(
+        tags=["Expenses"],
+        summary="Unattest expense part",
+        description="Removes existing attestation from expense part. Submit as an empty POST request.",
+        operation_id="attest",
+        request=None,
+        responses={
+            HTTP_204_NO_CONTENT: None,
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
+        },
+    )
+    def post(self, request, pk: int):
+
+        with transaction.atomic():
+            expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
+            try:
+                expense_part.unattest(self.current_user)
+            except UnauthorizedAttestationError:
+                raise AttestationPermissionDeniedProblem(
+                    detail="You do not have permission to unattest this expense part"
+                )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

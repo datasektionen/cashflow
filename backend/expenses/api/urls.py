@@ -1,7 +1,11 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 
-from expenses.api.views import ExpenseViewSet, ExpensePartAttestView
+from expenses.api.views import (
+    ExpenseViewSet,
+    ExpensePartAttestView,
+    ExpensePartUnattestView,
+)
 
 # The router automatically generates URL patterns for a ViewSet (list, detail, and any @action methods).
 router = SimpleRouter()
@@ -11,5 +15,10 @@ urlpatterns = router.urls + [
         "expense-parts/<int:pk>/attest/",
         ExpensePartAttestView.as_view(),
         name="expense-part-attest",
+    ),
+    path(
+        "expense-parts/<int:pk>/unattest/",
+        ExpensePartUnattestView.as_view(),
+        name="expense-part-unattest",
     ),
 ]

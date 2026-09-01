@@ -133,7 +133,7 @@
 				{$_('completed_payments')}
 			</h2>
 			<ul class="flex flex-col">
-				{#each completedPayments as completed}
+				{#each completedPayments as completed (completed.id)}
 					{@const account = formatBankAccount(
 						completed.bankInfo.sorting_number,
 						completed.bankInfo.bank_account

@@ -9,6 +9,7 @@
 	"tasks": {
 		"confirm": "Bekräfta",
 		"attest": "Attestera",
+		"unattest": "Ta bort attestering",
 		"pay": "Betala",
 		"account": "Bokför",
 		"empty": "Inget kvar"
@@ -322,6 +323,8 @@
 	"alerts": {
 		"expense_part_attested": "Kvittodelen har attesterats",
 		"invoice_part_attested": "Fakturadelen har attesterats",
+		"expense_part_unattested": "Attesteringen av kvittodelen har tagits bort",
+		"invoice_part_unattested": "Attesteringen av fakturadelen har tagits bort",
 		"expense_confirmed": "Utlägget har bekräftats",
 		"expense_unconfirmed": "Utlägget har avbekräftats",
 		"invoice_confirmed": "Fakturan har bekräftats",

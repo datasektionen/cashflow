@@ -537,6 +537,9 @@ class ExpensePart(models.Model):
         self.attested_by = None
         self.attest_date = None
 
+        if self.cost_centre not in user.profile.attestable_cost_centres():
+            raise UnauthorizedAttestationError()
+
         self.save()
 
         comment = Comment(
