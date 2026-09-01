@@ -112,6 +112,10 @@ export class ExpensesAPI {
 		return this.apiClient.post<ExpensePart>(`/expense-parts/${partId}/attest/`, {});
 	}
 
+	unattestPart(partId: number) {
+		return this.apiClient.post<ExpensePart>(`/expense-parts/${partId}/unattest/`, {});
+	}
+
 	confirm(id: number) {
 		return this.apiClient.post<void>(`/expenses/${id}/confirm/`, {});
 	}

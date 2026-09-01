@@ -147,7 +147,7 @@
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
 		{:else}
-			<span class="flex flex-row items-center gap-1 justify-end">
+			<span class="flex flex-row items-center justify-end gap-1">
 				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
 			</span>
 		{/if}

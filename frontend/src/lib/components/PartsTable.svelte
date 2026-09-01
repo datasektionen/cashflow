@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check } from '@lucide/svelte';
+	import { Check, X } from '@lucide/svelte';
 	import type { ExpensePart, InvoicePart, Profile, User } from '$lib/api/types';
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
@@ -31,6 +31,8 @@
 
 	let currentlyAttesting: Set<number> = $state(new Set());
 	let attested: Set<number> = $state(new Set());
+	let currentlyUnattesting: Set<number> = $state(new Set());
+	let unattested: Set<number> = $state(new Set());
 	const attestCallback = async (part: ExpensePart) => {
 		currentlyAttesting = new Set([...currentlyAttesting, part.id]);
 		const attestFn =
@@ -41,10 +43,30 @@
 			.then(() => {
 				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
 				attested = new Set([...attested, part.id]);
+				unattested = new Set([...unattested].filter((id) => id !== part.id));
 				alerts.update((a) => [...a, success($_(`alerts.${partType}_part_attested`))]);
 			})
 			.catch((err) => {
 				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
+				alerts.update((a) => [...a, error(err)]);
+			});
+	};
+
+	const unattestCallback = async (part: ExpensePart) => {
+		currentlyUnattesting = new Set([...currentlyUnattesting, part.id]);
+		const unattestFn =
+			partType === 'invoice'
+				? (id: number) => api.invoices.unattestPart(id)
+				: (id: number) => api.expenses.unattestPart(id);
+		await unattestFn(part.id)
+			.then(() => {
+				currentlyUnattesting = new Set([...currentlyUnattesting].filter((id) => id !== part.id));
+				unattested = new Set([...unattested, part.id]);
+				attested = new Set([...attested].filter((id) => id !== part.id));
+				alerts.update((a) => [...a, success($_(`alerts.${partType}_part_unattested`))]);
+			})
+			.catch((err) => {
+				currentlyUnattesting = new Set([...currentlyUnattesting].filter((id) => id !== part.id));
 				alerts.update((a) => [...a, error(err)]);
 			});
 	};
@@ -77,16 +99,32 @@
 					>
 					{#if includeAttest}
 						<td class="w-40 py-3 pl-4 text-right">
-							{#if attested.has(part.id) || ('attested_by' in part && part.attested_by)}
+							{#if currentlyUnattesting.has(part.id)}
+								<CashSpinner />
+							{:else if (attested.has(part.id) || ('attested_by' in part && part.attested_by)) && !unattested.has(part.id)}
 								{@const attestedBy = attested.has(part.id)
 									? (currentUser ?? null)
 									: part.attested_by}
+								{@const mayUnattest =
+									!!currentUser &&
+									currentUser.permissions.attest.includes(part.cost_centre) &&
+									(partType === 'invoice' || owner.username !== currentUser.username)}
 								<div class="flex items-center justify-end gap-1.5">
 									<Check class="size-5 shrink-0 text-money-green-500" />
 									{#if attestedBy}
 										<span class="truncate text-xs text-base-subtle dark:text-dark-base-subtle"
 											>{attestedBy.first_name} {attestedBy.last_name}</span
 										>
+									{/if}
+									{#if mayUnattest}
+										<button
+											onclick={() => unattestCallback(part)}
+											title={$_('tasks.unattest')}
+											aria-label={$_('tasks.unattest')}
+											class="cursor-pointer rounded-full p-0.5 text-base-subtle transition-colors hover:scale-110 dark:text-dark-base-subtle"
+										>
+											<X class="size-3.5" />
+										</button>
 									{/if}
 								</div>
 							{:else if currentlyAttesting.has(part.id)}

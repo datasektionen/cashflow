@@ -503,3 +503,38 @@ class InvoicePartAttestView(
         return Response(
             InvoicePartSerializer(invoice_part).data, status=status.HTTP_204_NO_CONTENT
         )
+
+
+class InvoicePartUnattestView(
+    generics.GenericAPIView[InvoicePart], AuthenticatedUserMixin
+):
+    serializer_class = InvoicePartSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return InvoicePart.objects.filter(
+            invoice__in=Invoice.objects.viewable_by(self.current_user)
+        )
+
+    @extend_schema(
+        tags=["Invoices"],
+        summary="Unattest an invoice part",
+        description="Removes existing attestation from invoice part. Submit as an empty POST request.",
+        operation_id="unattest_invoice_part",
+        request=None,
+        responses={
+            HTTP_204_NO_CONTENT: None,
+            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
+        },
+    )
+    def post(self, request, pk: int):
+        with transaction.atomic():
+            invoice_part = InvoicePart.objects.select_for_update().get(pk=pk)
+            try:
+                invoice_part.unattest(self.current_user)
+            except UnauthorizedAttestationError:
+                raise AttestationPermissionDeniedProblem(
+                    detail=f"You do not have permission to unattest this invoice part, {invoice_part.cost_centre} is not a cost centre for which you can attest."
+                )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

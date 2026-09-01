@@ -317,3 +317,20 @@ class InvoicePart(models.Model):
             content="Attesterar fakturadelen ```" + str(self) + "```",
         )
         comment.save()
+
+    def unattest(self, user: User):
+        self.attested_by = None
+        self.attest_date = None
+
+        if self.cost_centre not in user.profile.attestable_cost_centres():
+            raise UnauthorizedAttestationError()
+
+        self.save()
+        from expenses.models import Comment
+
+        comment = Comment(
+            author=user.profile,
+            invoice=self.invoice,
+            content="Avattesterar fakturadelen ```" + str(self) + "```",
+        )
+        comment.save()
