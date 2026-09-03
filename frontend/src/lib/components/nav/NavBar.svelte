@@ -37,7 +37,7 @@
 />
 
 <nav
-	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-dark-base-200 dark:text-dark-base-text"
+	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-green-950 dark:text-dark-base-text"
 >
 	<div
 		class={[
