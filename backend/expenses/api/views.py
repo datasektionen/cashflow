@@ -353,6 +353,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             for f in files:
                 File.objects.create(expense=expense, file=normalize_upload(f))
 
+            expense.is_flagged = False
+            expense.save()
+
         expense.refresh_from_db()
         return Response(
             ExpenseSerializer(expense, context=self.get_serializer_context()).data
