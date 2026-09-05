@@ -42,10 +42,13 @@
 	{@const canConfirm = mayConfirm(currentUser) && !expense.confirmed_at && !expense.is_flagged}
 	<div class="flex flex-col gap-6">
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
-				<span>{$_('expense')} #{expense.id}</span>
-				<span>·</span>
-				<span><UserLink user={expense.owner} /></span>
+			<div class="flex flex-col gap-1">
+				<h2 class="text-base font-semibold break-words">{expense.description}</h2>
+				<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
+					<span>{$_('expense')} #{expense.id}</span>
+					<span>·</span>
+					<span><UserLink user={expense.owner} /></span>
+				</div>
 			</div>
 			<div class="flex items-center gap-2">
 				<a
