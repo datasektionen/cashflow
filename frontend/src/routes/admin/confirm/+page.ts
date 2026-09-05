@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
+	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? 'date';
 
 	const filter: ClaimFilter = {
 		...claimFilterFromUrl(url),
