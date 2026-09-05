@@ -1,10 +1,18 @@
 from typing import Any
 
 from rest_framework import serializers
-from rest_framework.fields import IntegerField, CharField, ListField, BooleanField
+from rest_framework.fields import (
+    IntegerField,
+    CharField,
+    BooleanField,
+    ListField,
+    DecimalField,
+    SerializerMethodField,
+)
 from structlog import get_logger
 
 from cashflow.gordian import retrieve_account_from_gordian
+from expenses.models import ExpensePart
 
 logger = get_logger(__name__)
 
@@ -73,20 +81,6 @@ class PartRecommendationsMixin(metaclass=serializers.SerializerMetaclass):
         return cost_centre.Code if cost_centre is not None else None
 
 
-class CostCentreSerializer(serializers.Serializer):
-    id = IntegerField(read_only=True)
-    name = CharField(read_only=True)
-    type = CharField(read_only=True)
-    active = BooleanField(read_only=True)
-
-
-class SecondaryCostCentreSerializer(serializers.Serializer):
-    id = IntegerField(read_only=True)
-    name = CharField(read_only=True)
-    cost_centre_id = IntegerField(source="cc_id", read_only=True)
-    active = BooleanField(read_only=True)
-
-
 class BudgetLineSerializer(serializers.Serializer):
     id = IntegerField(read_only=True)
     name = CharField(read_only=True)
@@ -96,3 +90,31 @@ class BudgetLineSerializer(serializers.Serializer):
     expense = IntegerField(read_only=True)
     comment = CharField(read_only=True)
     active = BooleanField(read_only=True)
+
+    amount_uploaded = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
+    amount_attested = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
+    amount_paid = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
+
+
+class SecondaryCostCentreSerializer(serializers.Serializer):
+    id = IntegerField(read_only=True)
+    name = CharField(read_only=True)
+    cost_centre_id = IntegerField(source="cc_id", read_only=True)
+    active = BooleanField(read_only=True)
+
+    budget_lines = BudgetLineSerializer(many=True, read_only=True, required=False)
+
+
+class SecondaryCostCentreDetailSerializer(SecondaryCostCentreSerializer):
+    budget_lines = BudgetLineSerializer(many=True, read_only=True)
+
+
+class CostCentreSerializer(serializers.Serializer):
+    id = IntegerField(read_only=True)
+    name = CharField(read_only=True)
+    type = CharField(read_only=True)
+    active = BooleanField(read_only=True)
+
+    secondary_cost_centres = SecondaryCostCentreSerializer(
+        many=True, read_only=True, required=False
+    )
