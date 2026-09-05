@@ -67,6 +67,7 @@
 					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
 					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
 					<NavLink to="/{user.username}/claims/" text={$_('user_claims')}></NavLink>
+					<NavLink to="/budget" text={$_('budget.title')}></NavLink>
 					<NavLink to="/stats" text={$_('statistics')}></NavLink>
 					{#if canAccessAdmin}
 						<NavLink to="/admin/" text={$_('admin')}></NavLink>

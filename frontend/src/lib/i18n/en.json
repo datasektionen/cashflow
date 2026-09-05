@@ -404,5 +404,14 @@
 	"stats": {
 		"title": "Statistics",
 		"yearly_title": "Yearly overview"
+	},
+	"budget": {
+		"title": "Budget",
+		"total": "Total",
+		"rest": "Rest",
+		"load_error": "Could not load budget details.",
+		"paid": "Paid",
+		"attested": "Attested",
+		"uploaded": "Registered"
 	}
 }

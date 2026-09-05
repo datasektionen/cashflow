@@ -212,6 +212,8 @@ export type CostCentre = {
 	name: string;
 	type: 'committee' | 'partition' | 'project' | 'other' | null;
 	active: boolean;
+
+	secondary_cost_centres?: SecondaryCostCentre[];
 };
 
 export type SecondaryCostCentre = {
@@ -219,6 +221,8 @@ export type SecondaryCostCentre = {
 	name: string;
 	cost_centre_id: number | null;
 	active: boolean;
+
+	budget_lines?: BudgetLine[];
 };
 
 export type BudgetLine = {
@@ -230,6 +234,10 @@ export type BudgetLine = {
 	expense: number | null;
 	comment: string | null;
 	active: boolean;
+
+	amount_uploaded?: string;
+	amount_attested?: string;
+	amount_paid?: string;
 };
 
 export type BankInfo = {
