@@ -70,4 +70,8 @@ export class BudgetAPI {
 
 		return toPaginatedResponse(res);
 	}
+
+	async retrieveCostCentre(id: number): Promise<CostCentre> {
+		return await this.apiClient.get<CostCentre>(`/cost-centres/${id}`);
+	}
 }

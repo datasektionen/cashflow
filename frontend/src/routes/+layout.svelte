@@ -25,7 +25,8 @@
 		Menu,
 		X,
 		Wallet,
-		Trophy
+		Trophy,
+		PiggyBank
 	} from '@lucide/svelte';
 	import { api } from '$lib/api';
 	import type { ActionSummary } from '$lib/api/types';
@@ -90,6 +91,7 @@
 			class="lg:hidden"
 		/>
 		<SideNavLink to="/stats" text={$_('statistics')} icon={Trophy} class="lg:hidden" />
+		<SideNavLink to="/budget" text={$_('budget.title')} icon={PiggyBank} />
 
 		{#if canAccessAdmin}
 			<p

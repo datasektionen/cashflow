@@ -403,5 +403,14 @@
 	"stats": {
 		"title": "Statistik",
 		"yearly_title": "Årsöversikt"
+	},
+	"budget": {
+		"title": "Budget",
+		"total": "Budget",
+		"rest": "Rest",
+		"load_error": "Kunde inte ladda budgetdetaljer.",
+		"paid": "Utbetalt",
+		"attested": "Attesterat",
+		"uploaded": "Upplagt"
 	}
 }
