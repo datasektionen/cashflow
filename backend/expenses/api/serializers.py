@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import DateField
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from cashflow.api.serializers import PartRecommendationsMixin
+from budget.api.serializers import PartRecommendationsMixin
 from core.api.serializers import (
     FileSerializer,
     ProfileSerializer,

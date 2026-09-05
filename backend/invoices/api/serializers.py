@@ -3,7 +3,7 @@ import datetime
 from django.conf import settings
 from rest_framework import serializers
 
-from cashflow.api.serializers import PartRecommendationsMixin
+from budget.api.serializers import PartRecommendationsMixin
 from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 from core.api.serializers import (
     ProfileSerializer,

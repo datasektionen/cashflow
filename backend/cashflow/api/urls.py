@@ -16,25 +16,11 @@ urlpatterns = [
     path("actions/", ActionSummary.as_view(), name="action-summary"),
     path("actions/overview/", ActionOverview.as_view(), name="action-overview"),
     path(
-        "cost-centres/",
-        views.CostCentreList.as_view(),
-        name="costcentre-list",
-    ),
-    path(
-        "secondary-cost-centres/",
-        views.SecondaryCostCentreList.as_view(),
-        name="secondarycostcentre-list",
-    ),
-    path(
-        "budget-lines/",
-        views.BudgetLineList.as_view(),
-        name="budgetline-list",
-    ),
-    path(
         "voucher-series/",
         VoucherSeriesList.as_view(),
         name="voucherseries-list",
     ),
+    path("", include("budget.api.urls")),
     path("", include("expenses.api.urls")),
     path("", include("invoices.api.urls")),
     path("users/", include("users.api.urls")),
