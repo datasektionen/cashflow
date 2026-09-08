@@ -7,15 +7,15 @@ from django.contrib.auth.models import User
 from django.db import models
 from structlog import get_logger
 
+from notifications import get_notification_provider
+
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
     from expenses.search import ExpenseSearchFields
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils.timezone import localdate
-from cashflow import email_util
 from core.permissions import get_permission_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
@@ -404,11 +404,14 @@ class Expense(models.Model):
             raise NoAccountingMethodError()
 
         self.save()
-        Comment.objects.create(
+        comment = Comment.objects.create(
             author=user.profile,
             expense=self,
             content=f"Bokförde med verifikationsnumret: {self.verification}",
         )
+
+        get_notification_provider().on_comment(self, comment)
+
         return self.verification
 
     def confirm(self, user: User):
@@ -421,11 +424,13 @@ class Expense(models.Model):
         self.confirmed_by = user
         self.confirmed_at = date.today()
         self.save()
-        Comment.objects.create(
+        comment = Comment.objects.create(
             author=user.profile,
             expense=self,
             content="Jag har bekräftat kvittots giltighet.",
         )
+
+        get_notification_provider().on_comment(self, comment)
 
     def unconfirm(self, user: User):
         if not user.profile.may_unconfirm():
@@ -533,6 +538,8 @@ class ExpensePart(models.Model):
         )
         comment.save()
 
+        get_notification_provider().on_comment(self.expense, comment)
+
     def unattest(self, user):
         self.attested_by = None
         self.attest_date = None
@@ -548,6 +555,8 @@ class ExpensePart(models.Model):
             content="Avattesterar kvittodelen ```" + str(self) + "```",
         )
         comment.save()
+
+        get_notification_provider().on_comment(self.expense, comment)
 
 
 class Comment(models.Model):
@@ -571,27 +580,3 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["date"]
-
-
-# Sends mail on comment
-# noinspection PyUnusedLocal
-@receiver(post_save, sender=Comment)
-def send_mail(sender, instance, created, *args, **kwargs):
-    from django.conf import settings
-
-    if instance.expense:
-        target, kind = instance.expense, "expenses"
-    else:
-        target, kind = instance.invoice, "invoices"
-    owner = target.owner
-    if sender == Comment:
-        if created and instance.author != owner:
-            recipient = owner.user.email
-            subject = (
-                str(instance.author) + " har lagt till en kommentar på ditt utlägg."
-            )
-            link = f"{settings.FRONTEND_URL}/{owner.user.username}/{kind}/{target.id}"
-            content = render_to_string(
-                "email.html", {"comment": instance, "receiver": owner, "link": link}
-            )
-            email_util.send_mail(recipient, subject, content)

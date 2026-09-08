@@ -1,6 +1,7 @@
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -55,6 +56,7 @@ from expenses.models import (
 )
 from fortnox import FortnoxRequest, FortnoxNotFound, FortnoxServiceNotAvailableProblem
 from invoices.models import Invoice, InvoicePart, InvoiceQuerySet
+from notifications import get_notification_provider
 
 UserModel = get_user_model()
 logger = get_logger(__name__)
@@ -254,15 +256,13 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
             return PendingPaymentsSerializer
         return PaymentSerializer
 
-
-
     @extend_schema(
-        tags=["Payments"],
-        summary="List payments",
-        operation_id="list_payments"
+        tags=["Payments"], summary="List payments", operation_id="list_payments"
     )
     def list(self, request: Request) -> Response:
-        if not get_permission_provider().may_pay(self.current_user) and not get_permission_provider().may_view_all(self.current_user):
+        if not get_permission_provider().may_pay(
+            self.current_user
+        ) and not get_permission_provider().may_view_all(self.current_user):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         payments = Payment.objects.all().order_by("-date")
@@ -323,11 +323,13 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
             for expense in expenses:
                 expense.reimbursement = payment
                 expense.save(update_fields=["reimbursement"])
-                Comment.objects.create(
+                comment = Comment.objects.create(
                     author=self.current_user.profile,
                     expense=expense,
                     content=f"Betalade ut i betalning {payment.id}",
                 )
+
+                get_notification_provider().on_comment(expense, comment)
 
         return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
 

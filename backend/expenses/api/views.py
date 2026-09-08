@@ -14,7 +14,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import OuterRef, Subquery, Sum
-from drf_spectacular.utils import extend_schema_view, extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
@@ -23,12 +23,12 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_400_BAD_REQUEST,
     HTTP_201_CREATED,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_403_FORBIDDEN,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
+    HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from structlog import get_logger
 
@@ -39,50 +39,50 @@ from core.api.problems import (
     AlreadyConfirmedProblem,
     AttestationPermissionDeniedProblem,
     ConfirmationPermissionDeniedProblem,
-    UnconfirmationPermissionDeniedProblem,
-    NotConfirmedProblem,
+    DeletionPermissionDeniedProblem,
     EmptyCommentProblem,
     FileRequiredProblem,
     FlagPermissionDeniedProblem,
     IsFlaggedProblem,
-    NotConfirmableProblem,
-    PartInvalidJSONProblem,
-    PartRequiredProblem,
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
-    DeletionPermissionDeniedProblem,
+    NotConfirmableProblem,
+    NotConfirmedProblem,
+    PartInvalidJSONProblem,
+    PartRequiredProblem,
+    UnconfirmationPermissionDeniedProblem,
     UpdatePermissionDeniedProblem,
 )
-from core.api.serializers import CommentSerializer, CommentCreateSerializer
+from core.api.serializers import CommentCreateSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
-    UnauthorizedAttestationError,
-    SelfAttestationError,
-    FlaggedAttestationError,
-    UnauthorizedConfirmationError,
-    UnauthorizedUnconfirmationError,
-    NotConfirmedError,
-    NotConfirmableError,
-    FlaggedConfirmationError,
-    DuplicateConfirmationError,
-    UnauthorizedAccountingError,
     AlreadyAccountedError,
-    FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    DuplicateConfirmationError,
+    FlaggedAttestationError,
+    FlaggedConfirmationError,
+    FortnoxRecordMissingError,
     MismatchedTotalAmountError,
     NoAccountingMethodError,
+    NotConfirmableError,
+    NotConfirmedError,
+    SelfAttestationError,
+    UnauthorizedAccountingError,
+    UnauthorizedAttestationError,
+    UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
 from core.permissions import get_permission_provider
 from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
-    ExpensePartSerializer,
-    ExpenseSerializer,
     ExpenseAdminSerializer,
     ExpenseCreateSerializer,
+    ExpensePartSerializer,
+    ExpenseSerializer,
 )
-from expenses.models import Expense, ExpensePart, File, Comment
+from expenses.models import Comment, Expense, ExpensePart, File
 from fortnox import VoucherRow
 from fortnox.api.problems import (
     AlreadyAccountedProblem,
@@ -90,6 +90,7 @@ from fortnox.api.problems import (
     FortnoxRecordMissingProblem,
     FortnoxServiceNotAvailableProblem,
 )
+from notifications import get_notification_provider
 
 UserModel = get_user_model()
 
@@ -386,6 +387,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                     .values("t")
                 )
             )
+            .annotate(total=Sum("expensepart__amount"))
         )
 
         if username := self.request.GET.get(Filter.USER):
@@ -426,6 +428,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             content=serializer.validated_data["content"],
             author=self.current_user.profile,
         )
+
+        get_notification_provider().on_comment(expense, comment)
+
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"])
@@ -579,6 +584,7 @@ class ExpensePartAttestView(
                 )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ExpensePartUnattestView(
     generics.GenericAPIView[ExpensePart], AuthenticatedUserMixin
