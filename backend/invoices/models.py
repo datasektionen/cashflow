@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models import Q
 
 from core.permissions import get_permission_provider
+from notifications import get_notification_provider
 from core.exceptions import (
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
@@ -50,7 +51,9 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
     def payable_for(self, user: User) -> "InvoiceQuerySet":
         if get_permission_provider().may_view_all(user):
             return (
-                self.filter(payed_at__isnull=True, invoicepart__attested_by__isnull=False)
+                self.filter(
+                    payed_at__isnull=True, invoicepart__attested_by__isnull=False
+                )
                 .distinct()
                 .order_by("due_date")
             )
@@ -138,6 +141,8 @@ class Invoice(models.Model):
             content="Betalade fakturan ```" + str(self) + "```",
         )
         comment.save()
+
+        get_notification_provider().on_comment(self, comment)
 
     # Return the total amount of the invoice parts
     def total_amount(self):
@@ -252,11 +257,14 @@ class Invoice(models.Model):
         self.save()
         from expenses.models import Comment
 
-        Comment.objects.create(
+        comment = Comment.objects.create(
             author=user.profile,
             invoice=self,
             content=f"Bokförde med verifikationsnumret: {self.verification}",
         )
+
+        get_notification_provider().on_comment(self, comment)
+
         return self.verification
 
     # # TODO
@@ -318,6 +326,8 @@ class InvoicePart(models.Model):
         )
         comment.save()
 
+        get_notification_provider().on_comment(self.invoice, comment)
+
     def unattest(self, user: User):
         self.attested_by = None
         self.attest_date = None
@@ -334,3 +344,5 @@ class InvoicePart(models.Model):
             content="Avattesterar fakturadelen ```" + str(self) + "```",
         )
         comment.save()
+
+        get_notification_provider().on_comment(self.invoice, comment)

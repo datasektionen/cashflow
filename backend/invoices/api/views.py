@@ -62,6 +62,7 @@ from fortnox.api.problems import (
     FortnoxRecordMissingProblem,
     FortnoxServiceNotAvailableProblem,
 )
+from notifications import get_notification_provider
 from .problems import (
     VerificationRequiredError,
 )
@@ -377,6 +378,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             invoice=invoice,
             author=self.current_user.profile,
         )
+
+        get_notification_provider().on_comment(invoice, comment)
+
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"])

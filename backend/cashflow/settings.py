@@ -313,6 +313,9 @@ GORDIAN_COST_CENTER_CACHE_TIMEOUT = 12
 # How long (hours) to cache profile pictures from rfinger
 PROFILE_PICTURE_CACHE_TIMEOUT = 12
 
+
+NOTIFICATION_PROVIDER = "cashflow.spam.SpamMail"
+
 SPAM_URL = os.getenv("SPAM_URL", "https://spam.datasektionen.se")
 SPAM_API_KEY = os.getenv("SPAM_API_KEY", "unset")
 
