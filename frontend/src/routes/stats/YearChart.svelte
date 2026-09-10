@@ -6,6 +6,10 @@
 	import { _, locale } from 'svelte-i18n';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+
+	// Static bar heights (%) for the loading placeholder, one per month
+	const skeletonBars = [45, 70, 30, 85, 55, 65, 40, 90, 50, 75, 35, 60];
 
 	const currentYear = new Date().getFullYear();
 	let { year = currentYear, mode = 'total' }: { year?: number; mode?: 'total' | 'count' } =
@@ -117,4 +121,15 @@
 			{/each}
 		</Layer>
 	</Chart>
+{:else}
+	<div
+		class="flex items-end pt-2 pr-2 pb-5 pl-6"
+		style="height: {isSmallLayout.current ? 240 : 400}px"
+	>
+		{#each skeletonBars as h (h)}
+			<div class="flex flex-1 justify-center" style="height: {h}%">
+				<Skeleton class="h-full w-[60%] rounded-t-sm" />
+			</div>
+		{/each}
+	</div>
 {/if}

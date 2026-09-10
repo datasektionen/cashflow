@@ -4,7 +4,7 @@
 	import { api } from '$lib/api';
 	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import LeaderboardSkeleton from './LeaderboardSkeleton.svelte';
 	import { formatAmount } from '$lib/money';
 
 	let range = $state(0);
@@ -80,9 +80,7 @@
 	</div>
 
 	{#await leaderboard}
-		<div class="flex justify-center py-16">
-			<CashSpinner class="size-8 text-money-green-500" />
-		</div>
+		<LeaderboardSkeleton />
 	{:then res}
 		{@const avatarUrls = api.profilePictures.getMany(res.data.map((entry) => entry.owner.username))}
 
