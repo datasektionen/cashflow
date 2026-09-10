@@ -15,6 +15,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import { goto } from '$app/navigation';
 
@@ -139,6 +140,17 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 					</tr>
 				</thead>
 				<tbody>
+				{#if loading}
+					{#each { length: resolved.pagination.perPage || perPageOptions[0] } as _, i (i)}
+						<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+							{#each columns as column}
+								<td class="px-4">
+									<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
+								</td>
+							{/each}
+						</tr>
+					{/each}
+				{:else}
 					{#each resolved.data as row, i}
 						<tr
 							class={[
@@ -197,18 +209,20 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 							{/each}
 						</tr>
 					{/each}
+
+					{/if}
 				</tbody>
 			</table>
 		</div>
 		<!-- Loading overlay -->
-		<div
+<!--		<div
 			class={[
 				'absolute top-0 left-0 z-20 flex size-full items-center justify-center bg-white/30 text-money-green-500 backdrop-blur-sm transition-opacity duration-200 dark:bg-black/30',
 				loading ? 'opacity-100' : 'pointer-events-none opacity-0'
 			]}
 		>
 			<CashSpinner />
-		</div>
+		</div>-->
 	</div>
 
 	<div
