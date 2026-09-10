@@ -3,7 +3,7 @@ from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import OuterRef, Subquery, Sum
 from django.http import QueryDict
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics, viewsets, status
@@ -318,7 +318,18 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
-            .annotate(total=Sum("invoicepart__amount"))
+            .annotate(
+
+                # Subquery to avoid duplicate parts
+                # (would happen because we filter with invoice part in multiple places, which makes separate joins)
+                # https://docs.djangoproject.com/en/6.1/topics/db/aggregation/#combining-multiple-aggregations
+                total=Subquery(
+                    InvoicePart.objects.filter(invoice=OuterRef("pk"))
+                    .values("invoice")
+                    .annotate(t=Sum("amount"))
+                    .values("t")
+                )
+            )
         )
 
         if username := self.request.GET.get(Filter.USER):
