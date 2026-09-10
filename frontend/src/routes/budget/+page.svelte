@@ -76,7 +76,7 @@
 
 				{#if expanded === costCentre.id}
 					<tr class="border-b border-b-base-400 dark:border-dark-base-150">
-						<td colspan="2" class="bg-base-300 px-4 py-3 dark:bg-dark-base-100">
+						<td colspan="2" class="px-4 py-3">
 							<ExpandedCostCentre {costCentre} />
 						</td>
 					</tr>
