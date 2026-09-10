@@ -4,7 +4,7 @@
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { alerts, error, success } from '$lib/stores/alerts';
-	import { sumAmounts } from '$lib/money';
+	import { sumAmounts, formatAmountPlain } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 
 	export type ClaimPartsTableProps = {
@@ -94,7 +94,7 @@
 					<td class="px-4 py-3 text-left">{part.secondary_cost_centre}</td>
 					<td class="px-4 py-3 text-left">{part.budget_line}</td>
 					<td class="py-3 pl-4 text-right"
-						>{part.amount.toLocaleString()}
+						>{formatAmountPlain(part.amount)}
 						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
 					>
 					{#if includeAttest}
@@ -153,7 +153,7 @@
 			<tr class="border-t border-base-500 font-medium dark:border-dark-base-200">
 				<td class="py-3 pr-4 text-right" colspan="3">{$_('total')}</td>
 				<td class="py-3 pl-4 text-right"
-					>{resolvedTotalAmount}
+					>{formatAmountPlain(resolvedTotalAmount)}
 					<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
 				>
 				{#if includeAttest}<td></td>{/if}

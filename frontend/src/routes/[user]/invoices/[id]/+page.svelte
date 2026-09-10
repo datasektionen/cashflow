@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatAmount, sumAmounts } from '$lib/money';
 	import type { PageData } from './$types';
 	import type { Invoice, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -32,12 +32,7 @@
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(
-		invoice.parts.reduce(
-			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-			0
-		)
-	);
+	const totalAmount = $derived(sumAmounts(invoice.parts.map((part) => part.amount)));
 
 	let deleting = $state(false);
 

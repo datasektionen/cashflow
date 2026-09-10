@@ -14,6 +14,7 @@
 	import { mayPay } from '$lib/auth';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
+	import { sumAmounts } from '$lib/money';
 
 	let { data }: PageProps = $props();
 	const canPay = $derived(mayPay(data.user));
@@ -22,7 +23,7 @@
 	let sorting = $state(page.url.searchParams.get('sorting'));
 
 	function total(invoice: Invoice): number {
-		return invoice.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0);
+		return sumAmounts(invoice.parts.map((part) => part.amount));
 	}
 
 	const fmt = new Intl.NumberFormat('sv-SE', {

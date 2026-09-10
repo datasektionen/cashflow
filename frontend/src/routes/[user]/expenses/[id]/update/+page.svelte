@@ -12,6 +12,7 @@
 	import FileInput from '../../../../expenses/new/FileInput.svelte';
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
 	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
+	import { sumAmounts } from '$lib/money';
 	import validation from './validation.ts';
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -29,12 +30,7 @@
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	});
-	const totalAmount = $derived(
-		expense.parts.reduce(
-			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-			0
-		)
-	);
+	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
 
 	let copied = $state(false);
 

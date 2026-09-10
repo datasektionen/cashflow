@@ -4,6 +4,7 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { ExternalLink } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
+	import { sumAmounts } from '$lib/money';
 
 	let { payment }: { payment: Payment } = $props();
 
@@ -52,7 +53,7 @@
 		{/each}
 
 		{#if resolved.data.length > 0}
-			{@const grandTotal = resolved.data.reduce((sum, e) => sum + parseFloat(e.total), 0)}
+			{@const grandTotal = sumAmounts(resolved.data.map((e) => e.total))}
 			<div
 				class="mt-2 flex items-center justify-end border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
 			>
