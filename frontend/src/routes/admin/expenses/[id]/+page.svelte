@@ -5,7 +5,7 @@
 	import { formatAmount } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import type { PageData } from './$types';
-	import type { Expense } from '$lib/api/types';
+	import type { Expense, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -137,7 +137,10 @@
 
 	let submittingComment = $state(false);
 
-	let comments = $derived(expense.comments);
+	let comments = $state<Comment[]>(expense.comments);
+	$effect(() => {
+		comments = expense.comments;
+	});
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 	const commentSubmit = async () => {
