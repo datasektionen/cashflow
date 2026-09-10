@@ -13,7 +13,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import OuterRef, Subquery, Sum
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -376,7 +376,15 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             )
             .viewable_by(self.current_user)
             .annotate(
-                total=Sum("expensepart__amount")
+                # Subquery to avoid duplicate parts
+                # (would happen because we filter with invoice part in multiple places, which makes separate joins)
+                # https://docs.djangoproject.com/en/6.1/topics/db/aggregation/#combining-multiple-aggregations
+                total=Subquery(
+                    ExpensePart.objects.filter(expense=OuterRef("pk"))
+                    .values("expense")
+                    .annotate(t=Sum("amount"))
+                    .values("t")
+                )
             )
         )
 
