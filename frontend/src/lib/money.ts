@@ -31,3 +31,11 @@ const amountFmt = new Intl.NumberFormat('sv-SE', {
 export function formatAmount(amount: string | number): string {
 	return `${amountFmt.format(Number(amount))} kr`;
 }
+
+/**
+ * Formats a decimal amount string or number to two fraction digits without a
+ * currency suffix, e.g. "1 234,56". Rounds away binary floating-point drift.
+ */
+export function formatAmountPlain(amount: string | number): string {
+	return amountFmt.format(Number(amount));
+}

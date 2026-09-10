@@ -9,7 +9,7 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatAmount, sumAmounts } from '$lib/money';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { api } from '$lib/api';
 	import { logger } from '$lib/logger';
@@ -34,12 +34,7 @@
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(
-		expense.parts.reduce(
-			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-			0
-		)
-	);
+	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
 
 	let deleting = $state(false);
 

@@ -9,6 +9,7 @@
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { isErrorResponse } from '$lib/api/errors';
 	import { logger } from '$lib/logger';
+	import { sumAmounts } from '$lib/money';
 	import { formatBankAccount } from '$lib/bankAccount';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
@@ -52,9 +53,9 @@
 		paying = true;
 		try {
 			const resolved = await expenses;
-			const amount = resolved.data
-				.filter((e) => selected.has(e.id))
-				.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0);
+			const amount = sumAmounts(
+				resolved.data.filter((e) => selected.has(e.id)).flatMap((e) => e.parts.map((p) => p.amount))
+			);
 			const payment = await api.payments.create([...selected]);
 			completedPayments.unshift({ ...payment, amount: amount.toFixed(2), bankInfo });
 			alerts.update((a) => [
@@ -138,7 +139,7 @@
 		</div>
 	{:then resolved}
 		{#each resolved.data as expense}
-			{@const total = expense.parts.reduce((sum, part) => sum + parseFloat(part.amount), 0)}
+			{@const total = sumAmounts(expense.parts.map((part) => part.amount))}
 			{@const costCentres = [...new Set(expense.parts.map((p) => p.cost_centre))]}
 			<div class={['flex items-stretch', isExtraSmallLayout.current ? 'flex-col' : 'flex-row']}>
 				<div
@@ -188,9 +189,9 @@
 			</div>
 		{/each}
 
-		{@const selectedTotal = resolved.data
-			.filter((e) => selected.has(e.id))
-			.reduce((sum, e) => sum + e.parts.reduce((s, p) => s + parseFloat(p.amount), 0), 0)}
+		{@const selectedTotal = sumAmounts(
+			resolved.data.filter((e) => selected.has(e.id)).flatMap((e) => e.parts.map((p) => p.amount))
+		)}
 		{@const allSelected =
 			resolved.data.length > 0 && resolved.data.every((e) => selected.has(e.id))}
 		<div

@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, Flag, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatAmount, sumAmounts } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import type { PageData } from './$types';
 	import type { Expense, Comment } from '$lib/api/types';
@@ -25,12 +25,7 @@
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(
-		expense.parts.reduce(
-			(sum: number, part: { amount: string }) => sum + parseFloat(part.amount),
-			0
-		)
-	);
+	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
 
 	const canConfirm = $derived(!!data.user?.permissions.confirm && !expense.confirmed_at);
 	const confirmDisabled = $derived(!!expense.is_flagged);
