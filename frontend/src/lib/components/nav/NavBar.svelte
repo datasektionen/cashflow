@@ -37,15 +37,27 @@
 />
 
 <nav
-	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-green-950 dark:text-dark-base-text"
+	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-money-green-900 dark:text-dark-base-text"
 >
 	<div
 		class={[
 			'flex h-full w-full flex-row justify-between',
-			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'mx-auto max-w-7xl px-4 lg:px-8'
+			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'px-4 lg:px-8'
 		]}
 	>
-		<div class="flex h-full">
+		<a
+			href="/"
+			class="absolute inset-y-0 left-1/2 flex -translate-x-1/2 items-center lg:hidden"
+			aria-label={$_('chapter')}
+		>
+			<img src="/icon.png" alt="Cashflow" class="size-10" />
+		</a>
+
+		<div class="flex h-full items-center">
+			<a href="/" class="mr-4 hidden items-center gap-2 lg:flex" aria-label={$_('chapter')}>
+				<img src="/icon.png" alt="" class="size-7" />
+				<span class="text-lg font-semibold">Cashflow</span>
+			</a>
 			{#if user != null}
 				<button
 					type="button"
@@ -55,7 +67,7 @@
 					}}
 					aria-label="Toggle sidebar"
 					aria-expanded={sidebarOpen}
-					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-dark-base-300"
+					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-money-green-800"
 				>
 					{#if sidebarOpen}
 						<X class="size-5" />
@@ -77,9 +89,11 @@
 		</div>
 
 		<div class="flex h-full items-center space-x-2">
-			<LanguageToggle />
+			<div class={['h-full items-center space-x-2', user != null ? 'hidden lg:flex' : 'flex']}>
+				<LanguageToggle />
 
-			<ThemeToggle />
+				<ThemeToggle />
+			</div>
 
 			{#if user != null}
 				<button
@@ -123,7 +137,7 @@
 	<div
 		class={[
 			'pointer-events-none fixed inset-x-0 top-16 z-30 flex justify-end',
-			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'mx-auto max-w-7xl px-4 lg:px-8'
+			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'px-4 lg:px-8'
 		]}
 	>
 		<div
@@ -163,6 +177,17 @@
 					{$_('logout')}
 				</button>
 			</form>
+
+			<Separator.Root
+				orientation="horizontal"
+				class="my-1 h-px w-full bg-base-500 lg:hidden dark:bg-dark-base-300"
+			/>
+			<div
+				class="flex items-center justify-between px-3 py-1 text-base-subtle lg:hidden dark:text-dark-base-subtle"
+			>
+				<LanguageToggle />
+				<ThemeToggle />
+			</div>
 		</div>
 	</div>
 {/if}
