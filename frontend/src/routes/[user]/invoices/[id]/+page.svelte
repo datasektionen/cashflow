@@ -60,7 +60,10 @@
 			.finally(() => (deleting = false));
 	}
 
-	let comments: Comment[] = $derived(invoice.comments);
+	let comments = $state<Comment[]>(invoice.comments);
+	$effect(() => {
+		comments = invoice.comments;
+	});
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 

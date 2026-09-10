@@ -4,7 +4,7 @@
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
 	import { formatAmount } from '$lib/money';
 	import type { PageData } from './$types';
-	import type { Invoice } from '$lib/api/types';
+	import type { Invoice, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -97,7 +97,10 @@
 
 	let submittingComment = $state(false);
 
-	let comments = $derived(invoice.comments);
+	let comments = $state<Comment[]>(invoice.comments);
+	$effect(() => {
+		comments = invoice.comments;
+	});
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 	const commentSubmit = async () => {

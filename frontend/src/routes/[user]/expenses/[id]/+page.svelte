@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import type { PageData } from './$types';
-	import type { Expense } from '$lib/api/types';
+	import type { Expense, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
 	import PartsTable from '$lib/components/PartsTable.svelte';
@@ -62,7 +62,10 @@
 			.finally(() => (deleting = false));
 	}
 
-	let comments = $derived(expense.comments);
+	let comments = $state<Comment[]>(expense.comments);
+	$effect(() => {
+		comments = expense.comments;
+	});
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
 	const commentSubmit = async () => {
