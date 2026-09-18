@@ -7,12 +7,10 @@ from rest_framework.fields import (
     BooleanField,
     ListField,
     DecimalField,
-    SerializerMethodField,
 )
 from structlog import get_logger
 
 from cashflow.gordian import retrieve_account_from_gordian
-from expenses.models import ExpensePart
 
 logger = get_logger(__name__)
 
@@ -91,9 +89,16 @@ class BudgetLineSerializer(serializers.Serializer):
     comment = CharField(read_only=True)
     active = BooleanField(read_only=True)
 
-    amount_uploaded = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
-    amount_attested = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
-    amount_paid = DecimalField(read_only=True, required=False, max_digits=10, decimal_places=2)
+    amount_uploaded = DecimalField(
+        read_only=True, required=False, max_digits=10, decimal_places=2
+    )
+    amount_attested = DecimalField(
+        read_only=True, required=False, max_digits=10, decimal_places=2
+    )
+    amount_paid = DecimalField(
+        read_only=True, required=False, max_digits=10, decimal_places=2
+    )
+    blown = BooleanField(read_only=True, required=False)
 
 
 class SecondaryCostCentreSerializer(serializers.Serializer):
@@ -115,6 +120,25 @@ class CostCentreSerializer(serializers.Serializer):
     type = CharField(read_only=True)
     active = BooleanField(read_only=True)
 
+    # Whether the cost centre contains a blown budget line
+    contains_blown = BooleanField(read_only=True, required=False)
+
     secondary_cost_centres = SecondaryCostCentreSerializer(
         many=True, read_only=True, required=False
+    )
+
+
+class CostCentreListQuerySerializer(serializers.Serializer):
+    """Query parameters accepted by the cost centre list endpoint.
+
+    Also doubles as the OpenAPI schema for that endpoint's query parameters
+    (passed directly to `extend_schema(parameters=[...])`).
+    """
+
+    contains_blown = BooleanField(
+        required=False,
+        help_text=(
+            "Only return cost centres that do (`true`) or do not (`false`) "
+            "contain a budget line whose uploaded amount exceeds its budget."
+        ),
     )

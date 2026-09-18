@@ -4,11 +4,14 @@ from django.http import QueryDict
 from enum import Enum
 from pydantic import BaseModel
 
+from budget.api.serializers import CostCentreListQuerySerializer
+
 
 class BudgetFilter(Enum):
     ACTIVE = ("active", str)
     COST_CENTRE = ("cost_centre", int)
     SECONDARY_COST_CENTRE = ("secondary_cost_centre", int)
+    CONTAINS_BLOWN = ("contains_blown", bool)
 
 
 class _CostCentre(BaseModel):
@@ -34,6 +37,14 @@ def _apply_active_filter(items: list[dict], params: QueryDict) -> list[dict]:
 
 
 def apply_cost_centre_filter(ccs: list[dict], params: QueryDict) -> list[dict]:
+    query = CostCentreListQuerySerializer(data=params)
+    query.is_valid(raise_exception=True)
+    validated = query.validated_data
+
+    if (key := BudgetFilter.CONTAINS_BLOWN.value[0]) in params:
+        contains_blown = validated[key]
+        ccs = [cc for cc in ccs if bool(cc.get("contains_blown")) is contains_blown]
+
     return _apply_active_filter(ccs, params)
 
 
