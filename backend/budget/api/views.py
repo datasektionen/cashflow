@@ -4,7 +4,8 @@ from decimal import Decimal
 
 from django.db.models import Q
 from django.db.models.aggregates import Sum
-from django.db.models.functions import Coalesce, Upper
+from django.db.models.functions import Coalesce
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
@@ -18,6 +19,7 @@ from cashflow.api.filters import (
     apply_budget_line_filter,
 )
 from budget.api.serializers import (
+    CostCentreListQuerySerializer,
     CostCentreSerializer,
     SecondaryCostCentreSerializer,
     BudgetLineSerializer,
@@ -50,20 +52,35 @@ class CostCentreList(GenericAPIView):
         summary="List cost centres",
         operation_id="list_cost_centres",
         tags=["Budget"],
+        parameters=[CostCentreListQuerySerializer],
     )
     def get(self, request):
 
         name = request.query_params.get("name")
+
+        gordian_ccs = list_cost_centres_from_gordian()
+        blown_ccs = _blown_cost_centres()
+
         if name is not None:
             result = [
-                {**cc.model_dump(), "active": True}
-                for cc in list_cost_centres_from_gordian()
+                {
+                    **cc.model_dump(),
+                    "active": True,
+                    "contains_blown": _normalise(cc.name) in blown_ccs,
+                }
+                for cc in gordian_ccs
                 if cc.name == name
             ]
         else:
-            gordian_ccs = list_cost_centres_from_gordian()
             active_names = {cc.name for cc in gordian_ccs}
-            active = [{**cc.model_dump(), "active": True} for cc in gordian_ccs]
+            active = [
+                {
+                    **cc.model_dump(),
+                    "active": True,
+                    "contains_blown": _normalise(cc.name) in blown_ccs,
+                }
+                for cc in gordian_ccs
+            ]
 
             expense_ccs = ExpensePart.objects.values_list(
                 "cost_centre", flat=True
@@ -77,7 +94,12 @@ class CostCentreList(GenericAPIView):
                 if cc_name and cc_name not in active_names
             }
             inactive = [
-                {"id": None, "name": cc_name, "type": None, "active": False}
+                {
+                    "id": None,
+                    "name": cc_name,
+                    "type": None,
+                    "active": False,
+                }
                 for cc_name in sorted(inactive_names)
             ]
 
@@ -216,7 +238,21 @@ class BudgetLineList(GenericAPIView):
 _AMOUNT_FIELDS = ("uploaded", "attested", "paid")
 
 
+def _normalise(name: str) -> str:
+    return " ".join(name.split()).lower()
+
+
+def _is_blown(budget: int, uploaded: Decimal) -> bool:
+    """Whether a budget line has been overspent.
+
+    GOrdian stores expense budgets as negative numbers, and uses 0 for lines
+    without an expense budget (which can't be blown).
+    """
+    return bool(budget) and uploaded > abs(budget)
+
+
 def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]]:
+    """Returns a (cc, scc, bl) -> Decimal map with the total amounts uploaded/attested/paid for each budget line"""
     year_start = date(year, 1, 1)
     year_end = date(year + 1, 1, 1)
 
@@ -225,11 +261,7 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
             expense__expense_date__gte=year_start,
             expense__expense_date__lt=year_end,
         )
-        .values(
-            cc=Upper("cost_centre"),
-            scc=Upper("secondary_cost_centre"),
-            bl=Upper("budget_line"),
-        )
+        .values("cost_centre", "secondary_cost_centre", "budget_line")
         .annotate(
             uploaded=Sum("amount"),
             attested=Sum("amount", filter=Q(attested_by__isnull=False)),
@@ -241,11 +273,7 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
             effective_date=Coalesce("invoice__invoice_date", "invoice__payed_at")
         )
         .filter(effective_date__gte=year_start, effective_date__lt=year_end)
-        .values(
-            cc=Upper("cost_centre"),
-            scc=Upper("secondary_cost_centre"),
-            bl=Upper("budget_line"),
-        )
+        .values("cost_centre", "secondary_cost_centre", "budget_line")
         .annotate(
             uploaded=Sum("amount"),
             attested=Sum("amount", filter=Q(attested_by__isnull=False)),
@@ -257,11 +285,47 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
         lambda: {field: Decimal("0") for field in _AMOUNT_FIELDS}
     )
     for row in (*expense_rows, *invoice_rows):
-        entry = totals[(row["cc"], row["scc"], row["bl"])]
+        entry = totals[
+            (
+                _normalise(row["cost_centre"]),
+                _normalise(row["secondary_cost_centre"]),
+                _normalise(row["budget_line"]),
+            )
+        ]
         entry["uploaded"] += row["uploaded"] or Decimal("0")
         entry["attested"] += row["attested"] or Decimal("0")
         entry["paid"] += row["paid"] or Decimal("0")
+
     return totals
+
+
+def _blown_cost_centres(year: int | None = None) -> set[str]:
+    year = year or timezone.now().year
+    bl_totals = _amounts_by_line(year)
+
+    scc_by_id = {scc.id: scc for scc in list_secondary_cost_centres_from_gordian()}
+    cc_name_by_id = {cc.id: cc.name for cc in list_cost_centres_from_gordian()}
+
+    # We need to convert from GOrdian budget lines (using IDs), to Cashflow's
+    # <cc name>/<scc name>/<bl name>
+    budget_by_line: dict[tuple[str, str, str], int] = {}
+    for bl in list_budget_lines_from_gordian():
+        scc = scc_by_id.get(bl.scc_id)
+        if scc is None:
+            continue
+        cc_name = cc_name_by_id.get(scc.cc_id)
+        if cc_name is None:
+            continue
+        budget_by_line[
+            (_normalise(cc_name), _normalise(scc.name), _normalise(bl.name))
+        ] = bl.expense
+
+    blown: set[str] = set()
+    for key, amounts in bl_totals.items():
+        budget = budget_by_line.get(key)
+        if budget is not None and _is_blown(budget, amounts["uploaded"]):
+            blown.add(key[0])
+    return blown
 
 
 class CostCentreDetailView(APIView, AuthenticatedUserMixin):
@@ -288,7 +352,11 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
             budget_lines = []
             for bl in list_budget_lines_from_gordian(secondary_cost_center=scc.id):
                 line_amounts = amounts.get(
-                    (cost_centre.name.upper(), scc.name.upper(), bl.name.upper()),
+                    (
+                        _normalise(cost_centre.name),
+                        _normalise(scc.name),
+                        _normalise(bl.name),
+                    ),
                     zero,
                 )
                 budget_lines.append(
@@ -304,6 +372,7 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
                         "amount_uploaded": line_amounts["uploaded"],
                         "amount_attested": line_amounts["attested"],
                         "amount_paid": line_amounts["paid"],
+                        "blown": _is_blown(bl.expense, line_amounts["uploaded"]),
                     }
                 )
 
