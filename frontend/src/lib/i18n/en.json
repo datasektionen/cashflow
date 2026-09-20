@@ -185,6 +185,8 @@
 	"booking_add_row": "Add row",
 	"booking_debit_credit_mismatch": "Debit and credit totals must match",
 	"booking_total_mismatch": "Voucher total must match the {total} SEK total",
+	"confirm_account_dialog": "Confirm voucher",
+	"debit_total_mismatch_dialog": "The debit total differs from the amount on the expense/invoice. This can be correct, for example with rounding adjustments, but check that the voucher is correct before booking it.",
 
 	"fortnox": {
 		"title": "Fortnox",
@@ -350,6 +352,7 @@
 	"add_comment": "Add comment",
 	"add_comment_placeholder": "Write a comment...",
 	"cancel": "Cancel",
+	"confirm": "Confirm",
 	"save": "Save",
 	"profile": {
 		"bank_name": "Bank",

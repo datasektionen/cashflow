@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
-	import { ChevronDown } from '@lucide/svelte';
+	import { ChevronDown, TriangleAlert } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import { api } from '$lib/api';
 	import { mayAccount } from '$lib/auth';
@@ -12,17 +12,25 @@
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
-	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
-	import { sumAmounts } from '$lib/money';
+	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
+	import {
+		ValidationError,
+		VoucherRowField,
+		type VoucherRowErrors,
+		type VoucherRowWarnings
+	} from '../../voucherRowValidation';
+	import { formatAmount, sumAmounts } from '$lib/money';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount } from '$lib/money';
 
 	let { data }: { data: PageData } = $props();
 	const expense = $derived(data.expense);
 	const expectedTotal = $derived(sumAmounts(expense.parts.map((p) => p.amount)));
 	let voucherRowFields: VoucherRowFields | undefined = $state();
 	let showReceipt = $state(true);
+
+	let voucherRowErrors: VoucherRowErrors = $state({});
+	let voucherRowWarnings: VoucherRowWarnings = $state({});
 
 	// Prefill once; the form must not reset if data refreshes while editing.
 	// svelte-ignore state_referenced_locally
@@ -62,8 +70,25 @@
 		}
 	}
 
+	let showSubmitDialog = $state(false);
+
+	const hasVoucherRowWarnings = $derived(
+		Object.values(voucherRowWarnings).some((messages) => messages.length > 0)
+	);
+
 	function submitVoucherRows() {
 		if (!voucherRowFields?.validate()) return;
+
+		if (hasVoucherRowWarnings) {
+			showSubmitDialog = true;
+			return;
+		} else {
+			submitAccounting('rows', { voucher_rows: toVoucherRows(voucherRows) });
+		}
+	}
+
+	function confirmVoucherRows() {
+		showSubmitDialog = false;
 		submitAccounting('rows', { voucher_rows: toVoucherRows(voucherRows) });
 	}
 
@@ -78,6 +103,56 @@
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 </script>
+
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key === 'Escape') showSubmitDialog = false;
+	}}
+/>
+
+{#if showSubmitDialog}
+	<div
+		class="fixed top-0 left-0 z-40 size-full bg-black/50"
+		onclick={() => (showSubmitDialog = false)}
+		role="presentation"
+	></div>
+	<div
+		class="fixed top-1/2 left-1/2 z-50 flex w-100 max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 border border-base-400 bg-base-300 p-6 shadow-2xl dark:border-dark-base-200 dark:bg-dark-base-300"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="submit-dialog-title"
+	>
+		<div class="flex items-start gap-3">
+			<TriangleAlert class="mt-0.5 size-5 shrink-0 text-yellow-500" />
+			<h2 id="submit-dialog-title" class="text-base font-semibold">
+				{$_('confirm_account_dialog')}
+			</h2>
+		</div>
+
+		{#if voucherRowWarnings[VoucherRowField.ExpectedTotal]?.includes(ValidationError.DebitTotalMismatch)}
+			<p class="text-sm leading-relaxed text-base-subtle dark:text-dark-base-subtle">
+				{$_('debit_total_mismatch_dialog')}
+			</p>
+		{/if}
+
+		<div class="mt-2 flex justify-end gap-2">
+			<button
+				type="button"
+				onclick={() => (showSubmitDialog = false)}
+				class="cursor-pointer border border-base-500 px-4 py-2 text-sm font-medium transition-colors hover:bg-base-400 dark:border-dark-base-200 dark:hover:bg-dark-base-200"
+			>
+				{$_('cancel')}
+			</button>
+			<button
+				type="button"
+				onclick={confirmVoucherRows}
+				class="cursor-pointer bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500"
+			>
+				{$_('confirm')}
+			</button>
+		</div>
+	</div>
+{/if}
 
 <div class="mb-6 flex flex-wrap items-center gap-3">
 	<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
@@ -128,6 +203,8 @@
 				accounts={data.accounts}
 				costCentres={data.costCentres}
 				{expectedTotal}
+				bind:errors={voucherRowErrors}
+				bind:warnings={voucherRowWarnings}
 			/>
 			<div class="mt-4 flex justify-end">
 				<button

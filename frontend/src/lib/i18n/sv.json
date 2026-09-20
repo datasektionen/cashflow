@@ -22,6 +22,7 @@
 
 	"browse_files": "Välj filer",
 	"cancel": "Avbryt",
+	"confirm": "Bekräfta",
 	"no_results": "Inga resultat",
 	"description_required": "Beskrivning krävs",
 	"expense_date_required": "Inköpsdatum krävs",
@@ -162,7 +163,9 @@
 	"booking_credit": "Kredit",
 	"booking_add_row": "Lägg till rad",
 	"booking_debit_credit_mismatch": "Debet och kredit måste stämma överens",
-	"booking_total_mismatch": "Verifikationens debitsumma måste stämma överens med totalsumman {total} SEK",
+	"booking_total_mismatch": "Verifikationens debetsumma skiljer sig från utläggets/fakturans belopp",
+	"confirm_account_dialog": "Bekräfta verifikat",
+	"debit_total_mismatch_dialog": "Debetsumman skiljer sig från utläggets/fakturans belopp. Detta kan vara korrekt, exempelvis vid öresutjämning, men kontrollera att verifikatet är korrekt innan du bokför det.",
 
 	"fortnox": {
 		"title": "Fortnox",
