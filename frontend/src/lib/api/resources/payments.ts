@@ -20,8 +20,11 @@ export class PaymentsAPI {
 		});
 	}
 
-	listPending(): Promise<PaginatedResponse<PendingPayment>> {
-		return this.apiClient.get<PaginatedResponse<PendingPayment>>('/payments/pending/');
+	listPending(page?: number, perPage?: number): Promise<PaginatedResponse<PendingPayment>> {
+		return this.apiClient.get<PaginatedResponse<PendingPayment>>('/payments/pending/', {
+			page,
+			per_page: perPage
+		});
 	}
 
 	create(expenses: number[] | Expense[]): Promise<Payment> {
