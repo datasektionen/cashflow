@@ -14,10 +14,10 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		ChevronUp
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import { goto } from '$app/navigation';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		paginatedResponse?: PaginatedResponse<T>;
@@ -30,6 +30,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		scrollable?: boolean;
 		sorting?: string | null;
 		onSortChange?: (sort: string) => void;
+		// Allows customizable context menus
+		contextSnippet?: Snippet<[T]>;
 	}
 
 	let {
@@ -42,7 +44,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		rowProps,
 		scrollable = false,
 		sorting = $bindable(null),
-		onSortChange
+		onSortChange,
+		contextSnippet
 	}: Props = $props();
 
 	const resolved = $derived<PaginatedResponse<T>>(
@@ -53,6 +56,39 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	);
 
 	const perPageOptions = [15, 25, 50, 100];
+
+	// Row the context menu is open for, with the cursor position it opened at
+	let ctx: { row: T; x: number; y: number } | null = $state(null);
+	let ctxWidth = $state(0);
+	let ctxHeight = $state(0);
+	let innerWidth = $state(0);
+	let innerHeight = $state(0);
+
+	const ctxLeft = $derived.by(() => Math.max(8, Math.min(ctx?.x ?? 0, innerWidth - ctxWidth - 8)));
+	const ctxTop = $derived.by(() => Math.max(8, Math.min(ctx?.y ?? 0, innerHeight - ctxHeight - 8)));
+
+	function openContextMenu(e: MouseEvent, row: T) {
+		if (!contextSnippet) return;
+		e.preventDefault();
+		ctx = { row, x: e.clientX, y: e.clientY };
+	}
+
+	// Dismiss context table
+	$effect(() => {
+		if (!ctx) return;
+		const close = () => (ctx = null);
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') close();
+		};
+		window.addEventListener('click', close);
+		window.addEventListener('scroll', close, true);
+		window.addEventListener('keydown', onKeyDown);
+		return () => {
+			window.removeEventListener('click', close);
+			window.removeEventListener('scroll', close, true);
+			window.removeEventListener('keydown', onKeyDown);
+		};
+	});
 
 	function resolveRowClass(row: T): string | undefined {
 		const c = rowProps?.class;
@@ -108,6 +144,19 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	let expanded: number | null = $state(null);
 </script>
 
+<svelte:window bind:innerWidth bind:innerHeight />
+
+{#if contextSnippet && ctx}
+	<div
+		bind:clientWidth={ctxWidth}
+		bind:clientHeight={ctxHeight}
+		class={['fixed z-30', ctxWidth === 0 && 'invisible']}
+		style="left: {ctxLeft}px; top: {ctxTop}px"
+	>
+		{@render contextSnippet(ctx.row)}
+	</div>
+{/if}
+
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
 	<div class="relative">
 		<div class="overflow-hidden">
@@ -140,89 +189,80 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 					</tr>
 				</thead>
 				<tbody>
-				{#if loading}
-					{#each { length: resolved.pagination.perPage || perPageOptions[0] } as _, i (i)}
-						<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-							{#each columns as column}
-								<td class="px-4">
-									<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
-								</td>
-							{/each}
-						</tr>
-					{/each}
-				{:else}
-					{#each resolved.data as row, i}
-						<tr
-							class={[
-								'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-								resolveRowClass(row)
-							]}
-							onclick={(e) => {
-								if (rowProps?.expandedSnippet) {
-									expanded = expanded === i ? null : i;
-								}
-								handleRowClick(e, row);
-							}}
-							onauxclick={(e) => handleRowAuxClick(e, row)}
-						>
-							{#each columns as column, ci}
-								<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
-									{#if ci === 0 && rowProps?.href}
-										<a href={rowProps.href(row)}>
-											{#if column.renderSnippet}
-												{@render column.renderSnippet(row)}
-											{:else}
-												{column.render?.(row) ?? ''}
-											{/if}
-										</a>
-									{:else if column.renderSnippet}
-										{@render column.renderSnippet(row)}
-									{:else}
-										{column.render?.(row) ?? ''}
-									{/if}
-								</td>
-							{/each}
-							{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
-								<td>
-									{#if expanded === i}
-										<ChevronUp />
-									{:else}
-										<ChevronDown />
-									{/if}
-								</td>
-							{/if}
-						</tr>
-						{#if rowProps?.expandedSnippet && expanded === i}
-							<tr
-								class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-							>
-								<td colspan={columns.length} class="px-4 py-2">
-									{@render rowProps.expandedSnippet(row)}
-								</td>
+					{#if loading}
+						{#each { length: resolved.pagination.perPage || perPageOptions[0] } as _, i (i)}
+							<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+								{#each columns as column}
+									<td class="px-4">
+										<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
+									</td>
+								{/each}
 							</tr>
-						{/if}
-					{/each}
-					{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
-						<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-							{#each columns as column}
-								<td class="px-4">&nbsp;</td>
-							{/each}
-						</tr>
-					{/each}
-
+						{/each}
+					{:else}
+						{#each resolved.data as row, i}
+							<tr
+								class={[
+									'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+									resolveRowClass(row)
+								]}
+								onclick={(e) => {
+									if (rowProps?.expandedSnippet) {
+										expanded = expanded === i ? null : i;
+									}
+									handleRowClick(e, row);
+								}}
+								onauxclick={(e) => handleRowAuxClick(e, row)}
+								oncontextmenu={(e) => openContextMenu(e, row)}
+							>
+								{#each columns as column, ci}
+									<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
+										{#if ci === 0 && rowProps?.href}
+											<a href={rowProps.href(row)}>
+												{#if column.renderSnippet}
+													{@render column.renderSnippet(row)}
+												{:else}
+													{column.render?.(row) ?? ''}
+												{/if}
+											</a>
+										{:else if column.renderSnippet}
+											{@render column.renderSnippet(row)}
+										{:else}
+											{column.render?.(row) ?? ''}
+										{/if}
+									</td>
+								{/each}
+								{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
+									<td>
+										{#if expanded === i}
+											<ChevronUp />
+										{:else}
+											<ChevronDown />
+										{/if}
+									</td>
+								{/if}
+							</tr>
+							{#if rowProps?.expandedSnippet && expanded === i}
+								<tr
+									class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
+								>
+									<td colspan={columns.length} class="px-4 py-2">
+										{@render rowProps.expandedSnippet(row)}
+									</td>
+								</tr>
+							{/if}
+						{/each}
+						{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
+							<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+								{#each columns as column}
+									<td class="px-4">&nbsp;</td>
+								{/each}
+							</tr>
+						{/each}
 					{/if}
 				</tbody>
 			</table>
 		</div>
-		<!-- Loading overlay -->
-<!--		<div
-			class={[
-				'absolute top-0 left-0 z-20 flex size-full items-center justify-center bg-white/30 text-money-green-500 backdrop-blur-sm transition-opacity duration-200 dark:bg-black/30',
-				loading ? 'opacity-100' : 'pointer-events-none opacity-0'
-			]}
-		>
-			<CashSpinner />
-		</div>-->
 	</div>
 
 	<div

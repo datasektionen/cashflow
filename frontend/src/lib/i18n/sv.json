@@ -179,6 +179,15 @@
 		"auth_failed": "Det gick inte att ansluta Fortnox."
 	},
 
+	"claim_context_menu": {
+		"label": "Åtgärder för #{id}",
+		"open_new_tab": "Öppna i ny flik",
+		"view_owner": "Visa ägare",
+		"copy_link": "Kopiera länk",
+		"account": "Bokför",
+		"account_blocked": "Måste vara attesterat, bekräftat och utbetalt innan det kan bokföras"
+	},
+
 	"admin_expenses": {
 		"title": "Utlägg",
 		"nav_title": "Alla utlägg",

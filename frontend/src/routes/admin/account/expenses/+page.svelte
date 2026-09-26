@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
 	import type { TableColumn } from '$lib/components/types';
 	import type { Expense } from '$lib/api/types';
 	import { goto } from '$app/navigation';
@@ -61,6 +62,10 @@
 	}
 </script>
 
+{#snippet contextSnippet(e: Expense)}
+	<ClaimContextMenu claim={e} kind="expense" user={data.user} />
+{/snippet}
+
 {#snippet ownerCell(e: Expense)}
 	<UserLink user={e.owner} class="relative z-10" />
 {/snippet}
@@ -101,4 +106,5 @@
 		href: (e) => `/admin/account/expenses/${e.id}`,
 		class: 'cursor-pointer'
 	}}
+	{contextSnippet}
 />
