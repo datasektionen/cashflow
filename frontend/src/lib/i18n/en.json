@@ -81,6 +81,15 @@
 		}
 	},
 
+	"claim_context_menu": {
+		"label": "Actions for #{id}",
+		"open_new_tab": "Open in new tab",
+		"view_owner": "View owner",
+		"copy_link": "Copy link",
+		"account": "Account",
+		"account_blocked": "Must be attested, confirmed and paid before it can be recorded"
+	},
+
 	"admin_expenses": {
 		"title": "Expenses",
 		"nav_title": "All expenses",

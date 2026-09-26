@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { Invoice } from '$lib/api/types';
@@ -95,6 +96,10 @@
 	}
 </script>
 
+{#snippet contextSnippet(i: Invoice)}
+	<ClaimContextMenu claim={i} kind="invoice" user={data.user} />
+{/snippet}
+
 {#snippet costCentres(r: Invoice)}
 	{@const unique = [...new Set(r.parts.map((p) => p.cost_centre))]}
 	<div class="flex flex-wrap gap-1">
@@ -154,4 +159,5 @@
 		href: (r) => `/admin/invoices/${r.id}`,
 		class: 'cursor-pointer'
 	}}
+	{contextSnippet}
 />
