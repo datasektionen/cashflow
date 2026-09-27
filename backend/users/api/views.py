@@ -1,19 +1,20 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils.module_loading import import_string
-from drf_spectacular.utils import extend_schema_view, extend_schema, inline_serializer
-from rest_framework import generics, exceptions, status, serializers
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from rest_framework import exceptions, generics, serializers, status
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.request import Request
-from django.contrib.auth.models import User
-from core.api.pagination import DefaultPagination
 
-from .serializers import UserSerializer, ProfilePictureQuerySerializer
-from ..pictures import ProfilePictureProvider
-from core.permissions import get_permission_provider
+from core.api.pagination import DefaultPagination
 from core.api.utils import AuthenticatedUserMixin
+from core.permissions import get_permission_provider
+
+from ..pictures import ProfilePictureProvider
+from .serializers import ProfilePictureQuerySerializer, UserSerializer
 
 profile_picture_provider: ProfilePictureProvider = import_string(
     settings.PROFILE_PICTURE_PROVIDER
@@ -106,7 +107,6 @@ class ProfilePictureView(generics.ListAPIView):
     description="Lists all users.",
 )
 class UserListView(APIView, AuthenticatedUserMixin):
-
     def get(self, request: Request) -> Response:
         permissions = get_permission_provider()
 
@@ -122,3 +122,26 @@ class UserListView(APIView, AuthenticatedUserMixin):
         serializer = UserSerializer(page, many=True)
 
         return pagination.get_paginated_response(serializer.data)
+
+
+@extend_schema(
+    summary="Retrieve user",
+    tags=["Users"],
+    operation_id="retrieve_user",
+    description="Retrieve a user",
+)
+class UserDetailView(APIView, AuthenticatedUserMixin):
+    def get(self, request: Request, username: str) -> Response:
+        permissions = get_permission_provider()
+        if not (
+            permissions.may_pay(self.current_user)
+            or permissions.may_view_all(self.current_user)
+        ):
+            raise PermissionDenied()
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound()
+        serializer = UserSerializer(user)
+        return Response(serializer.data)

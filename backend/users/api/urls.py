@@ -8,4 +8,5 @@ urlpatterns = [
     path(
         "profile-pictures/", views.ProfilePictureView.as_view(), name="profile-pictures"
     ),
+    path("<str:username>/", views.UserDetailView.as_view(), name="user_detail"),
 ]
