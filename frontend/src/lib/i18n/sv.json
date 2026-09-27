@@ -423,6 +423,7 @@
 		"load_error": "Kunde inte ladda budgetdetaljer.",
 		"paid": "Utbetalt",
 		"attested": "Attesterat",
-		"uploaded": "Upplagt"
+		"uploaded": "Upplagt",
+		"exceeded_filter_help": "Visa endast överskridna budgetposter"
 	}
 }

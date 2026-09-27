@@ -312,6 +312,12 @@ export type ClaimFilter = {
 	sorting?: ClaimSorting;
 };
 
+export type CostCentreFilter = {
+	active?: boolean;
+	// Whether the cost centre contains a blown budget line
+	contains_blown?: boolean;
+};
+
 export type DescriptionSearch = {
 	description?: string;
 	description_fuzzy?: string;

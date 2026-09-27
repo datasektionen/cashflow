@@ -2,6 +2,7 @@ import { ApiClient } from '$lib/api';
 import type {
 	BudgetLine,
 	CostCentre,
+	CostCentreFilter,
 	PaginatedResponse,
 	SecondaryCostCentre
 } from '$lib/api/types';
@@ -29,7 +30,7 @@ export class BudgetAPI {
 	async listCostCentres(
 		page: number,
 		perPage: number,
-		filter?: { active: boolean }
+		filter?: CostCentreFilter
 	): Promise<PaginatedResponse<CostCentre>> {
 		const res = await this.apiClient.get<ListResponse<CostCentre>>('/cost-centres/', {
 			page,

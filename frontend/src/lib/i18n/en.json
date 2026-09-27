@@ -424,6 +424,7 @@
 		"load_error": "Could not load budget details.",
 		"paid": "Paid",
 		"attested": "Attested",
-		"uploaded": "Registered"
+		"uploaded": "Registered",
+		"exceeded_filter_help": "Only show exceeded budget lines"
 	}
 }
