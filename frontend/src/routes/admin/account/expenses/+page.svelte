@@ -15,6 +15,20 @@
 
 	let loading = $state(false);
 
+	let sorting = $state(page.url.searchParams.get('sorting'));
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
+
 	const columns: TableColumn<Expense>[] = $derived([
 		{
 			id: 'description',
@@ -38,7 +52,8 @@
 			id: 'expense_date',
 			header: $_('expense_date'),
 			render: (e) => (e.expense_date ? e.expense_date : ''),
-			width: 'w-28'
+			width: 'w-28',
+			sorting: ['date', '-date']
 		}
 	]);
 
@@ -90,6 +105,7 @@
 
 <PaginatedTable
 	paginatedResponse={data.expenses}
+	bind:sorting
 	columns={[
 		{ id: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
 		...columns
@@ -100,6 +116,7 @@
 	})}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
+	onSortChange={handleSortChange}
 	{loading}
 	scrollable
 	rowProps={{
