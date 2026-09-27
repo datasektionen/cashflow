@@ -6,7 +6,7 @@
 
 <!-- stopPropagation lets the link live inside clickable table rows without triggering the row's navigation -->
 <a
-	href="/{user.username}/claims"
+	href="/admin/users/{user.username}/"
 	onclick={(event) => event.stopPropagation()}
 	class={['hover:underline', className]}
 >

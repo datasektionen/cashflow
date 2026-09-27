@@ -14,16 +14,8 @@
 
 	let { data }: PageProps = $props();
 
-	const isOwnClaims = $derived(data.user != null && data.user.username === page.params.user);
-
-	// The API has no endpoint for other users' profiles, so take the viewed
-	// user's name from their claims and fall back to the username in the URL.
-	const viewedUser = $derived(
-		isOwnClaims ? data.user : (data.claims.data.find((c) => c.owner)?.owner ?? null)
-	);
-	const title = $derived(
-		viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : page.params.user
-	);
+	const viewedUser = $derived(data.user);
+	const title = $derived(viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : '');
 
 	$effect(() => {
 		if (page.url.searchParams.get('createSuccess')) {
@@ -122,13 +114,9 @@
 	</div>
 {/snippet}
 
-<svelte:head>
-	<title>Cashflow | {title}</title>
-</svelte:head>
-
 <h1 class="mb-4 text-xl font-bold dark:text-slate-100">{title}</h1>
 
-{#if isOwnClaims && data.user}
+{#if data.user}
 	<ProfileCard user={data.user} />
 {/if}
 

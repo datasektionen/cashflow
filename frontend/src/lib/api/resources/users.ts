@@ -12,6 +12,10 @@ export class UsersAPI {
 		return this.apiClient.get<User>('/users/me/');
 	}
 
+	async retrieve(username: string): Promise<User> {
+		return this.apiClient.get<User>(`/users/${username}`);
+	}
+
 	updateBankInfo(bankInfo: BankInfo): Promise<User> {
 		return this.apiClient.patch<User>('/users/me/', { bank_info: bankInfo });
 	}

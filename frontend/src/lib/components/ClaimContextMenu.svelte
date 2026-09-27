@@ -64,7 +64,7 @@ lists), which all carry the fields the menu needs under different names.
 		{$_('claim_context_menu.open_new_tab')}
 	</a>
 
-	<a href={`/${claim.owner.username}/claims/`} role="menuitem" class={itemClass}>
+	<a href={`/admin/users/${claim.owner.username}/`} role="menuitem" class={itemClass}>
 		<UserIcon class="size-4 shrink-0" />
 		<span class="truncate">{$_('claim_context_menu.view_owner')}</span>
 	</a>
