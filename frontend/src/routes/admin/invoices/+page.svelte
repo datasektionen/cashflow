@@ -110,7 +110,7 @@
 {/snippet}
 
 {#snippet ownerCell(r: Invoice)}
-	<UserLink user={r.owner} class="relative z-10" />
+	<UserLink user={r.owner} class="relative" />
 {/snippet}
 
 {#snippet idCell(r: Invoice)}
@@ -156,7 +156,9 @@
 	{loading}
 	scrollable
 	rowProps={{
-		href: (r) => `/admin/invoices/${r.id}`,
+		href: (r) => {
+			return `/admin/invoices/${r.id}`;
+		},
 		class: 'cursor-pointer'
 	}}
 	{contextSnippet}

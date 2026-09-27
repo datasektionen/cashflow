@@ -99,7 +99,7 @@
 {/snippet}
 
 {#snippet ownerCell(e: Expense)}
-	<UserLink user={e.owner} class="relative z-10 block truncate" />
+	<UserLink user={e.owner} class="relative block truncate" />
 {/snippet}
 
 {#snippet idCell(e: Expense)}
@@ -135,7 +135,7 @@
 			width: 'w-56'
 		}
 	].filter((col) => {
-		// Extra small is a subset of small, so check it first: show only the
+		// Extra small is a subset of small, so check it first: show only thex
 		// essentials, dropping cost centres on top of the small-screen hides.
 		if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id);
 		if (isSmallLayout.current)

@@ -8,8 +8,10 @@ import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
-export const load: PageLoad = async ({ fetch, url, params }) => {
+export const load: PageLoad = async ({ fetch, url, parent }) => {
 	const api = new API(API_URL, fetch);
+
+	const { user } = await parent();
 
 	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
 	const perPage = url.searchParams.get('per_page')
@@ -23,7 +25,7 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 	try {
 		claims = await api.claims.list(page, perPage, {
 			...claimFilterFromUrl(url),
-			user: params.user,
+			user: user!.username,
 			q: url.searchParams.get('q') || undefined
 		});
 	} catch (e) {

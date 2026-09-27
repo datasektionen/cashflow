@@ -9,7 +9,6 @@
 	import type { LayoutProps } from './$types';
 	import { type Alert, alerts } from '$lib/stores/alerts';
 	import AlertToast from '$lib/components/AlertToast.svelte';
-	import { getProfilePicture, clearProfilePicture } from '$lib/stores/state.svelte';
 	import {
 		ReceiptText,
 		FileText,
@@ -22,8 +21,6 @@
 		BookText,
 		HandCoins,
 		Settings2,
-		Menu,
-		X,
 		Wallet,
 		Trophy,
 		PiggyBank
@@ -84,12 +81,7 @@
 	>
 		<SideNavLink to="/expenses/new" text={$_('new_expense.title')} icon={ReceiptText} />
 		<SideNavLink to="/invoices/new" text={$_('new_invoice.title')} icon={FileText} />
-		<SideNavLink
-			to="/{data.user.username}/claims/"
-			text={$_('user_claims')}
-			icon={Wallet}
-			class="lg:hidden"
-		/>
+		<SideNavLink to="/claims/" text={$_('user_claims')} icon={Wallet} class="lg:hidden" />
 		<SideNavLink to="/stats" text={$_('statistics')} icon={Trophy} class="lg:hidden" />
 		<SideNavLink to="/budget" text={$_('budget.title')} icon={PiggyBank} />
 

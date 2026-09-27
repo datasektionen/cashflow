@@ -78,7 +78,7 @@
 				<div class="hidden h-full lg:flex">
 					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
 					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
-					<NavLink to="/{user.username}/claims/" text={$_('user_claims')}></NavLink>
+					<NavLink to="/claims/" text={$_('user_claims')}></NavLink>
 					<NavLink to="/budget" text={$_('budget.title')}></NavLink>
 					<NavLink to="/stats" text={$_('statistics')}></NavLink>
 					{#if canAccessAdmin}
@@ -159,7 +159,7 @@
 			/>
 
 			<a
-				href="/{user.username}/claims/"
+				href="/claims/"
 				role="menuitem"
 				class="flex w-full cursor-pointer flex-row items-center gap-x-1 px-3 py-2 text-left text-base-subtle transition-colors hover:bg-base-300 dark:text-dark-base-subtle dark:hover:bg-dark-base-300"
 			>
