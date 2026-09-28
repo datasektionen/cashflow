@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import { page } from '$app/state';
+	import type { CostCentre } from '$lib/api/types.js';
 	import ExpandedCostCentre from './ExpandedCostCentre.svelte';
-	import { ChevronDown, ChevronUp } from '@lucide/svelte';
+	import { ChevronDown, ChevronUp, Link, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -25,6 +26,25 @@
 		});
 		expanded = resolved ? resolved.id : null;
 		scrollToExpanded();
+	});
+
+	// Context menu
+	let ctx: { selected: CostCentre; x: number; y: number } | null = $state(null);
+	// Dismiss context table
+	$effect(() => {
+		if (!ctx) return;
+		const close = () => (ctx = null);
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') close();
+		};
+		window.addEventListener('click', close);
+		window.addEventListener('scroll', close, true);
+		window.addEventListener('keydown', onKeyDown);
+		return () => {
+			window.removeEventListener('click', close);
+			window.removeEventListener('scroll', close, true);
+			window.removeEventListener('keydown', onKeyDown);
+		};
 	});
 
 	$effect(() => {
@@ -82,6 +102,8 @@
 			scrollToExpanded();
 		}
 	}
+	const itemClass =
+		'flex w-full cursor-pointer flex-row items-center gap-x-2 px-3 py-2 text-left transition-colors hover:bg-base-300 focus-visible:bg-base-300 focus-visible:outline-none dark:hover:bg-dark-base-300 dark:focus-visible:bg-dark-base-300';
 </script>
 
 <div class={['flex flex-row py-4']}>
@@ -91,6 +113,41 @@
 		</Checkbox>
 	</span>
 </div>
+
+<!-- Context menu -->
+{#if ctx != null}
+	<div
+		role="menu"
+		class={[
+			'fixed flex w-52 flex-col border border-base-500 bg-base-100 py-1 shadow-lg',
+			'text-sm text-base-text dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-text'
+		]}
+		style="left: {ctx.x}px; top: {ctx.y}px"
+	>
+		<a
+			href="/admin/expenses/?cost_centre={ctx.selected.name}"
+			role="menuitem"
+			class={itemClass}
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			<Receipt class="size-4" />
+			{$_('Visa utlägg')}
+			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
+		</a>
+		<a
+			href="/admin/invoices/?cost_centre={ctx.selected.name}"
+			role="menuitem"
+			class={itemClass}
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			<Receipt class="size-4" />
+			{$_('Visa fakturor')}
+			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
+		</a>
+	</div>
+{/if}
 
 <div class="border border-base-500 p-2 dark:border-dark-base-200">
 	<table class="w-full table-fixed">
@@ -137,6 +194,10 @@
 							scrollToExpanded();
 						}
 						await goto(url, { noScroll: true });
+					}}
+					oncontextmenu={(e) => {
+						e.preventDefault();
+						ctx = { selected: costCentre, x: e.clientX, y: e.clientY };
 					}}
 				>
 					<td class="flex flex-row gap-2 px-4 py-3">
