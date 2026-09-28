@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import type { CostCentre } from '$lib/api/types.js';
 	import ExpandedCostCentre from './ExpandedCostCentre.svelte';
-	import { ChevronDown, ChevronUp, Link, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
+	import { ChevronDown, ChevronUp, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -26,6 +26,8 @@
 		});
 		expanded = resolved ? resolved.id : null;
 		scrollToExpanded();
+
+		// filterBlown = page.url.searchParams.get('filter_blown') == 'true';
 	});
 
 	// Context menu
@@ -82,7 +84,7 @@
 		});
 	}
 
-	let filterBlown = $state(false);
+	let filterBlown = $state(page.url.searchParams.get('contains_blown') == 'true');
 	let loading = $state(false);
 
 	async function handleFilterChange(checked: boolean) {
@@ -108,7 +110,7 @@
 
 <div class={['flex flex-row py-4']}>
 	<span>
-		<Checkbox name="Test" onCheckedChange={handleFilterChange}>
+		<Checkbox name="Test" onCheckedChange={handleFilterChange} checked={filterBlown}>
 			<p>{$_('budget.exceeded_filter_help')}</p>
 		</Checkbox>
 	</span>
