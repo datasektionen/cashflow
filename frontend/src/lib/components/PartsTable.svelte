@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { Check, X } from '@lucide/svelte';
-	import type { ExpensePart, InvoicePart, Profile, User } from '$lib/api/types';
+	import type { BudgetLine, ExpensePart, InvoicePart, Profile, User } from '$lib/api/types';
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { sumAmounts, formatAmountPlain } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
+	import { logger } from '$lib/logger';
 
 	export type ClaimPartsTableProps = {
 		parts: (ExpensePart | InvoicePart)[];
@@ -28,6 +30,69 @@
 		partType = 'expense',
 		dense = false
 	}: ClaimPartsTableProps = $props();
+
+	// Fetch information about included cost centres
+	// This is done to see if any included budget lines are exceeded
+
+	type BudgetEntry = {
+		name: string;
+		children: {
+			name: string;
+			children: BudgetLine[];
+		}[];
+	};
+
+	let blownBudgetLines: Promise<BudgetEntry[]> = $derived.by(() => {
+		logger.debug('fetching budget info');
+		let uniqueCostCentres: SvelteSet<string> = new SvelteSet<string>();
+		parts.forEach((part) => {
+			console.log(part.cost_centre);
+			uniqueCostCentres.add(part.cost_centre);
+		});
+		return (
+			api.budget
+				.listCostCentres(1, 100, { active: true, contains_blown: true })
+				.then((res) => {
+					logger.debug(res, 'got response');
+					return res.data.filter((cc) => uniqueCostCentres.has(cc.name));
+				})
+				// I regret writing this
+				.then((costCentres) => {
+					const ids: number[] = [];
+					for (const cc of costCentres) {
+						if (cc.id != null) {
+							ids.push(cc.id);
+						}
+					}
+					return Promise.all(ids.map((id) => api.budget.retrieveCostCentre(id)));
+				})
+				.then((costCentres) => {
+					return costCentres
+						.map((cc) => {
+							return { name: cc.name, children: cc.secondary_cost_centres ?? [] };
+						})
+						.map((obj) => {
+							return {
+								...obj,
+								children: obj.children.map((scc) => {
+									return {
+										name: scc.name,
+										children: scc.budget_lines ? scc.budget_lines.filter((bl) => bl.blown) : []
+									};
+								})
+							};
+						});
+				})
+		);
+	});
+
+	function partIsBlown(part: ExpensePart | InvoicePart, budget: BudgetEntry[]) {
+		return budget
+			.find((b) => b.name === part.cost_centre)
+			?.children.find((scc) => scc.name === part.secondary_cost_centre)
+			?.children.map((bl) => bl.name)
+			.includes(part.budget_line);
+	}
 
 	let currentlyAttesting: Set<number> = $state(new Set());
 	let attested: Set<number> = $state(new Set());
@@ -75,7 +140,7 @@
 </script>
 
 <div class="overflow-x-auto">
-	<table class={['w-full min-w-[34rem] table-fixed break-words', dense ? 'text-xs' : 'text-sm']}>
+	<table class={['w-full min-w-136 table-fixed wrap-break-word', dense ? 'text-xs' : 'text-sm']}>
 		<thead
 			class="text-xxs text-left font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
 		>
@@ -90,9 +155,28 @@
 		<tbody>
 			{#each parts as part}
 				<tr class="border-t border-base-500 dark:border-dark-base-200">
-					<td class="py-3 pr-4 text-left">{part.cost_centre}</td>
-					<td class="px-4 py-3 text-left">{part.secondary_cost_centre}</td>
-					<td class="px-4 py-3 text-left">{part.budget_line}</td>
+					<td class="py-3 pr-4 text-left">
+						<a href="/budget/#{part.cost_centre}" class="hover:underline">
+							{part.cost_centre}
+						</a>
+					</td>
+					<td class="px-4 py-3 text-left">
+						<a href="/budget/#{part.cost_centre}" class="hover:underline">
+							{part.secondary_cost_centre}
+						</a>
+					</td>
+					<td class="flex flex-row px-4 py-3 text-left">
+						<a href="/budget/#{part.cost_centre}" class="hover:underline">
+							{part.budget_line}
+						</a>
+						{#await blownBudgetLines then result}
+							{#if partIsBlown(part, result)}
+								<div
+									class="my-auto ml-auto size-2 animate-pulse rounded-full bg-amber-500 opacity-75"
+								></div>
+							{/if}
+						{/await}
+					</td>
 					<td class="py-3 pl-4 text-right"
 						>{formatAmountPlain(part.amount)}
 						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td

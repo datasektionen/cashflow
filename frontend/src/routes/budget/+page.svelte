@@ -5,8 +5,8 @@
 	import ExpandedCostCentre from './ExpandedCostCentre.svelte';
 	import { ChevronDown, ChevronUp, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { tick } from 'svelte';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 
 	let { data } = $props();
@@ -16,18 +16,19 @@
 	// True only when the expanded row has been scrolled out of view above the viewport
 	let showScrollButton = $state(false);
 
-	onMount(() => {
-		// "pre-expand" and scroll to the cost centre specified in the hash section of the url
-		// e.g. loading /budget/#Dive will expand that row and scroll to it
-		let costCentre: string | null =
+	// "pre-expand" and scroll to the cost centre specified in the hash section of the url
+	// e.g. loading /budget/#Dive will expand that row and scroll to it.
+	afterNavigate(async () => {
+		const costCentre: string | null =
 			page.url.hash != '' ? decodeURIComponent(page.url.hash.replace('#', '')) : null;
-		let resolved = data.costCentres.find((cc, _i, _arr) => {
-			return cc.name == costCentre;
-		});
-		expanded = resolved ? resolved.id : null;
+		const resolved = data.costCentres.find((cc) => cc.name == costCentre);
+		const target = resolved ? resolved.id : null;
+		if (target === expanded) {
+			return;
+		}
+		expanded = target;
+		await tick();
 		scrollToExpanded();
-
-		// filterBlown = page.url.searchParams.get('filter_blown') == 'true';
 	});
 
 	// Context menu
