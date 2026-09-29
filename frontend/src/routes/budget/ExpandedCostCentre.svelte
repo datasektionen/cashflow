@@ -48,6 +48,7 @@
 
 <!-- Context menu -->
 {#if ctx != null}
+	{@const url = encodeURIComponent}
 	<div
 		role="menu"
 		class={[
@@ -57,8 +58,8 @@
 		style="left: {ctx.x}px; top: {ctx.y}px"
 	>
 		<a
-			href="/admin/expenses/?cost_centre={costCentre.name}&secondary_cost_centre={ctx
-				.secondaryCostCentre.name}&budget_line={ctx.budgetLine.name}"
+			href="/admin/expenses/?cost_centre={url(costCentre.name)}&secondary_cost_centre={ctx
+				.secondaryCostCentre.name}&budget_line={url(ctx.budgetLine.name)}"
 			role="menuitem"
 			class={itemClass}
 			target="_blank"
@@ -69,8 +70,9 @@
 			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
 		</a>
 		<a
-			href="/admin/invoices/?cost_centre={costCentre.name}&secondary_cost_centre={ctx
-				.secondaryCostCentre.name}&budget_line={ctx.budgetLine.name}"
+			href="/admin/invoices/?cost_centre={url(costCentre.name)}&secondary_cost_centre={url(
+				ctx.secondaryCostCentre.name
+			)}&budget_line={url(ctx.budgetLine.name)}"
 			role="menuitem"
 			class={itemClass}
 			target="_blank"
@@ -118,9 +120,10 @@
 						}}
 					>
 						{#if hasAdminAccess(user)}
+							{@const url = encodeURIComponent}
 							<a
 								class="w-64 shrink-0 font-medium hover:underline"
-								href={`/admin/expenses/?cost_centre=${costCentre.name}&secondary_cost_centre=${scc.name}&budget_line=${bl.name}`}
+								href={`/admin/expenses/?cost_centre=${url(costCentre.name)}&secondary_cost_centre=${url(scc.name)}&budget_line=${url(bl.name)}`}
 								>{bl.name}</a
 							>
 						{:else}
