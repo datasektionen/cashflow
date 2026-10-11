@@ -19,7 +19,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		sorting
 	};
 
-	const claims = await api.claims.list(page, perPage, filter);
+	const claims = api.claims.list(page, perPage, filter);
 
 	return {
 		title_key: 'admin_attestable.title',

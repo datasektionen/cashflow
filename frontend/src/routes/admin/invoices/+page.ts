@@ -21,29 +21,18 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	// Sorting
 	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
 
-	let invoices: PaginatedResponse<Invoice> = {
-		data: [],
-		pagination: { total: 0, page, perPage, totalPages: 0 }
-	};
-	try {
-		const filter = claimFilterFromUrl(url);
+	const filter = claimFilterFromUrl(url);
 
-		invoices = query
-			? await api.invoices.search(
-					page,
-					perPage,
-					{ ...filter, sorting },
-					{ description_fuzzy: query }
-				)
-			: await api.invoices.list(page, perPage, { ...filter, sorting });
-	} catch (e) {
-		if (isErrorResponse(e)) {
-			logger.error(e);
-			alerts.update((a) => [...a, error(e.detail)]);
-		} else {
-			throw e;
-		}
-	}
+	const invoices = (
+		query
+			? api.invoices.search(page, perPage, { ...filter, sorting }, { description_fuzzy: query })
+			: api.invoices.list(page, perPage, { ...filter, sorting })
+	).catch((e): PaginatedResponse<Invoice> => {
+		if (!isErrorResponse(e)) throw e;
+		logger.error(e);
+		alerts.update((a) => [...a, error(e.detail)]);
+		return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
+	});
 
 	return {
 		title_key: 'admin_invoices.title',

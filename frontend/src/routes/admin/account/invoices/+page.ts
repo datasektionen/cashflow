@@ -15,24 +15,18 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	let invoices: PaginatedResponse<Invoice> = {
-		data: [],
-		pagination: { total: 0, page, perPage, totalPages: 0 }
-	};
-	try {
-		invoices = await api.invoices.list(page, perPage, {
+	const invoices = api.invoices
+		.list(page, perPage, {
 			sorting: '-date',
 			...claimFilterFromUrl(url),
 			accountable: true
-		});
-	} catch (e) {
-		if (isErrorResponse(e)) {
+		})
+		.catch((e): PaginatedResponse<Invoice> => {
+			if (!isErrorResponse(e)) throw e;
 			logger.error(e);
 			alerts.update((a) => [...a, error(e.detail)]);
-		} else {
-			throw e;
-		}
-	}
+			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
+		});
 
 	return {
 		title_key: 'admin_account.title',

@@ -18,24 +18,18 @@ export const load: PageLoad = async ({ fetch, url }) => {
 	// Sorting
 	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
 
-	let expenses: PaginatedResponse<Expense> = {
-		data: [],
-		pagination: { total: 0, page, perPage, totalPages: 0 }
-	};
-	try {
-		expenses = await api.expenses.list(page, perPage, {
+	const expenses = api.expenses
+		.list(page, perPage, {
 			sorting: sorting ? sorting : 'date',
 			...claimFilterFromUrl(url),
 			accountable: true
-		});
-	} catch (e) {
-		if (isErrorResponse(e)) {
+		})
+		.catch((e): PaginatedResponse<Expense> => {
+			if (!isErrorResponse(e)) throw e;
 			logger.error(e);
 			alerts.update((a) => [...a, error(e.detail)]);
-		} else {
-			throw e;
-		}
-	}
+			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
+		});
 
 	return {
 		title_key: 'admin_account.title',

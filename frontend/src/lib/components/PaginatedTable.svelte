@@ -20,7 +20,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		paginatedResponse?: PaginatedResponse<T>;
+		paginatedResponse?: Promise<PaginatedResponse<T>>;
 		data?: T[];
 		columns: TableColumn<T>[];
 		onPageChange?: (page: number) => void;
@@ -48,12 +48,32 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		contextSnippet
 	}: Props = $props();
 
-	const resolved = $derived<PaginatedResponse<T>>(
-		paginatedResponse ?? {
-			data: data ?? [],
-			pagination: { total: data?.length ?? 0, page: 1, perPage: data?.length ?? 0, totalPages: 1 }
-		}
+	const resolved = $derived<Promise<PaginatedResponse<T>>>(
+		paginatedResponse ??
+			Promise.resolve({
+				data: data ?? [],
+				pagination: { total: data?.length ?? 0, page: 1, perPage: data?.length ?? 0, totalPages: 1 }
+			})
 	);
+
+	let paginationData: { total: number; page: number; perPage: number } = $state({
+		total: 0,
+		page: 1,
+		perPage: 15
+	});
+
+	$effect(() => {
+		const current = resolved;
+		let stale = false;
+		current.then((res) => {
+			if (stale) return;
+			const { total, page, perPage } = res.pagination;
+			paginationData = { total, page, perPage };
+		});
+		return () => {
+			stale = true;
+		};
+	});
 
 	const perPageOptions = [15, 25, 50, 100];
 
@@ -118,12 +138,10 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	}
 
 	const rangeStart = $derived(
-		resolved.pagination.total === 0
-			? 0
-			: (resolved.pagination.page - 1) * resolved.pagination.perPage + 1
+		paginationData.total === 0 ? 0 : (paginationData.page - 1) * paginationData.perPage + 1
 	);
 	const rangeEnd = $derived(
-		Math.min(resolved.pagination.page * resolved.pagination.perPage, resolved.pagination.total)
+		Math.min(paginationData.page * paginationData.perPage, paginationData.total)
 	);
 
 	const handleSortChange = (column: TableColumn<T>) => {
@@ -190,7 +208,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 				</thead>
 				<tbody>
 					{#if loading}
-						{#each { length: resolved.pagination.perPage || perPageOptions[0] } as _, i (i)}
+						{#each { length: perPageOptions[0] } as _, i (i)}
 							<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
 								{#each columns as column}
 									<td class="px-4">
@@ -200,65 +218,77 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 							</tr>
 						{/each}
 					{:else}
-						{#each resolved.data as row, i}
-							<tr
-								class={[
-									'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-									resolveRowClass(row)
-								]}
-								onclick={(e) => {
-									if (rowProps?.expandedSnippet) {
-										expanded = expanded === i ? null : i;
-									}
-									handleRowClick(e, row);
-								}}
-								onauxclick={(e) => handleRowAuxClick(e, row)}
-								oncontextmenu={(e) => openContextMenu(e, row)}
-							>
-								{#each columns as column, ci}
-									<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
-										{#if ci === 0 && rowProps?.href}
-											<a href={rowProps.href(row)}>
-												{#if column.renderSnippet}
-													{@render column.renderSnippet(row)}
-												{:else}
-													{column.render?.(row) ?? ''}
-												{/if}
-											</a>
-										{:else if column.renderSnippet}
-											{@render column.renderSnippet(row)}
-										{:else}
-											{column.render?.(row) ?? ''}
-										{/if}
-									</td>
-								{/each}
-								{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
-									<td>
-										{#if expanded === i}
-											<ChevronUp />
-										{:else}
-											<ChevronDown />
-										{/if}
-									</td>
-								{/if}
-							</tr>
-							{#if rowProps?.expandedSnippet && expanded === i}
-								<tr
-									class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-								>
-									<td colspan={columns.length} class="px-4 py-2">
-										{@render rowProps.expandedSnippet(row)}
-									</td>
+						{#await resolved}
+							{#each { length: perPageOptions[0] } as _, i (i)}
+								<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+									{#each columns as column}
+										<td class="px-4">
+											<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
+										</td>
+									{/each}
 								</tr>
-							{/if}
-						{/each}
-						{#each { length: Math.max(0, resolved.pagination.perPage - resolved.data.length) } as _}
-							<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-								{#each columns as column}
-									<td class="px-4">&nbsp;</td>
-								{/each}
-							</tr>
-						{/each}
+							{/each}
+						{:then response}
+							{#each response.data as row, i}
+								<tr
+									class={[
+										'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
+										resolveRowClass(row)
+									]}
+									onclick={(e) => {
+										if (rowProps?.expandedSnippet) {
+											expanded = expanded === i ? null : i;
+										}
+										handleRowClick(e, row);
+									}}
+									onauxclick={(e) => handleRowAuxClick(e, row)}
+									oncontextmenu={(e) => openContextMenu(e, row)}
+								>
+									{#each columns as column, ci}
+										<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
+											{#if ci === 0 && rowProps?.href}
+												<a href={rowProps.href(row)}>
+													{#if column.renderSnippet}
+														{@render column.renderSnippet(row)}
+													{:else}
+														{column.render?.(row) ?? ''}
+													{/if}
+												</a>
+											{:else if column.renderSnippet}
+												{@render column.renderSnippet(row)}
+											{:else}
+												{column.render?.(row) ?? ''}
+											{/if}
+										</td>
+									{/each}
+									{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
+										<td>
+											{#if expanded === i}
+												<ChevronUp />
+											{:else}
+												<ChevronDown />
+											{/if}
+										</td>
+									{/if}
+								</tr>
+								{#if rowProps?.expandedSnippet && expanded === i}
+									<tr
+										class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
+									>
+										<td colspan={columns.length} class="px-4 py-2">
+											{@render rowProps.expandedSnippet(row)}
+										</td>
+									</tr>
+								{/if}
+							{/each}
+							{#each { length: Math.max(0, response.pagination.perPage - response.data.length) } as _}
+								<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
+									{#each columns as column}
+										<td class="px-4">&nbsp;</td>
+									{/each}
+								</tr>
+							{/each}
+						{/await}
 					{/if}
 				</tbody>
 			</table>
@@ -276,16 +306,16 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 				values: {
 					start: rangeStart,
 					end: rangeEnd,
-					total: resolved.pagination.total.toLocaleString()
+					total: paginationData.total.toLocaleString()
 				}
 			})}
 		</div>
 
 		<Pagination.Root
 			class="flex max-w-full flex-row items-center space-x-1 md:space-x-2"
-			count={resolved.pagination.total}
-			perPage={resolved.pagination.perPage}
-			page={resolved.pagination.page}
+			count={paginationData.total}
+			perPage={paginationData.perPage}
+			page={paginationData.page}
 			siblingCount={isSmallLayout.current ? 0 : 1}
 			onPageChange={onPageChange ?? (() => {})}
 		>
@@ -322,7 +352,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 			</label>
 			<select
 				id="per-page"
-				value={resolved.pagination.perPage}
+				value={paginationData.perPage}
 				onchange={(e) => onPerPageChange?.(Number((e.target as HTMLSelectElement).value))}
 				class="bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] cursor-pointer appearance-none rounded border border-base-500 bg-transparent bg-position-[right_0.5rem_center] bg-no-repeat py-1 pr-7 pl-2 dark:border-dark-base-200"
 			>

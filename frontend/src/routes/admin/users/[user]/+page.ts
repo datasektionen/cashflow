@@ -18,24 +18,18 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 10;
 
-	let claims: PaginatedResponse<Claim> = {
-		data: [],
-		pagination: { total: 0, page, perPage, totalPages: 0 }
-	};
-	try {
-		claims = await api.claims.list(page, perPage, {
+	const claims = api.claims
+		.list(page, perPage, {
 			...claimFilterFromUrl(url),
 			user: params.user,
 			q: url.searchParams.get('q') || undefined
-		});
-	} catch (e) {
-		if (isErrorResponse(e)) {
+		})
+		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
+			if (!isErrorResponse(e)) throw e;
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
 			alerts.update((a) => [...a, error(msg)]);
-		} else {
-			throw e;
-		}
-	}
+			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
+		});
 
 	return { claims, viewedUser };
 };
