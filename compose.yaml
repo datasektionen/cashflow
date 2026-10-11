@@ -43,7 +43,13 @@ services:
       watch:
         - path: backend
           target: /app
-          action: sync+restart
+          action: sync
+          initial_sync: true
+          ignore:
+            - "**/__pycache__/"
+            - .mypy_cache/
+            - .pytest_cache/
+            - .hypothesis/
         - path: backend/pyproject.toml
           action: rebuild
         - path: frontend/package.json
@@ -60,7 +66,7 @@ services:
       POSTGRES_PASSWORD: cashflow
       POSTGRES_DB: cashflow
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "cashflow" ]
+      test: ["CMD", "pg_isready", "-U", "cashflow"]
       interval: 2s
       timeout: 2s
       retries: 3
@@ -171,8 +177,7 @@ configs:
           marmed:
             regular: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
             small: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
-  
-  
+
   nyckeln.yaml:
     content: |
       clients:
