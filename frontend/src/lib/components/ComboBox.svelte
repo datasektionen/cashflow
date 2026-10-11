@@ -8,6 +8,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 	import { ChevronDown, ChevronsUpDown, ChevronUp, Lock } from '@lucide/svelte';
 	import { Combobox } from 'bits-ui';
 	import Fuse from 'fuse.js';
+	import Skeleton from './ui/Skeleton.svelte';
 
 	let {
 		name,
@@ -18,7 +19,8 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		class: className = '',
 		locked = false,
 		onchange,
-		onblur
+		onblur,
+		loading = false
 	}: {
 		name: string;
 		items: string[];
@@ -29,6 +31,7 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		locked?: boolean;
 		onchange?: (value: string) => void;
 		onblur?: (e: FocusEvent) => void;
+		loading?: boolean;
 	} = $props();
 
 	let open = $state(false);
@@ -96,27 +99,36 @@ Wraps bits-ui's Combobox component. Supports fuzzy text search using fuse.js.
 		<Combobox.Portal>
 			<Combobox.Content
 				sideOffset={10}
-				class="focus-override border-muted max-h-[min(24rem,var(--bits-floating-available-height))] w-[var(--bits-floating-anchor-width)] border-2 border-base-300 bg-base-200 dark:border-dark-base-300 dark:bg-dark-base-200"
+				class="focus-override border-muted max-h-[min(24rem,var(--bits-floating-available-height))] w-(--bits-floating-anchor-width) border-2 border-base-300 bg-base-200 dark:border-dark-base-300 dark:bg-dark-base-200"
 			>
-				<Combobox.ScrollUpButton class="p-2 text-base dark:text-dark-base-text">
-					<ChevronUp class="m-auto" />
-				</Combobox.ScrollUpButton>
-				<Combobox.Viewport class="w-full p-2">
-					{#each filtered.map((it) => it.item) as item}
-						<Combobox.Item
-							class="cursor-pointer p-2 text-base-text data-highlighted:bg-base-300 dark:text-dark-base-text dark:data-highlighted:bg-dark-base-300"
-							value={item}
-							label={item}>{item}</Combobox.Item
-						>
-					{:else}
-						<span class="block px-5 py-2 text-sm text-base-subtle dark:text-dark-base-subtle">
-							{$_('no_results')}
-						</span>
-					{/each}
-				</Combobox.Viewport>
-				<Combobox.ScrollDownButton class="p-2 text-base-text dark:text-dark-base-text">
-					<ChevronDown class="m-auto" />
-				</Combobox.ScrollDownButton>
+				{#if loading}
+					{@const widths = ['w-2/5', 'w-3/5', 'w-4/5']}
+					<div class="flex flex-col space-y-2 p-4">
+						{#each { length: 7 } as _, i}
+							<Skeleton class="h-4 {widths[i % widths.length]}" />
+						{/each}
+					</div>
+				{:else}
+					<Combobox.ScrollUpButton class="p-2 text-base dark:text-dark-base-text">
+						<ChevronUp class="m-auto" />
+					</Combobox.ScrollUpButton>
+					<Combobox.Viewport class="w-full p-2">
+						{#each filtered.map((it) => it.item) as item}
+							<Combobox.Item
+								class="cursor-pointer p-2 text-base-text data-highlighted:bg-base-300 dark:text-dark-base-text dark:data-highlighted:bg-dark-base-300"
+								value={item}
+								label={item}>{item}</Combobox.Item
+							>
+						{:else}
+							<span class="block px-5 py-2 text-sm text-base-subtle dark:text-dark-base-subtle">
+								{$_('no_results')}
+							</span>
+						{/each}
+					</Combobox.Viewport>
+					<Combobox.ScrollDownButton class="p-2 text-base-text dark:text-dark-base-text">
+						<ChevronDown class="m-auto" />
+					</Combobox.ScrollDownButton>
+				{/if}
 			</Combobox.Content>
 		</Combobox.Portal>
 	</div>

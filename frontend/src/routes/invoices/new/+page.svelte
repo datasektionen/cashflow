@@ -16,8 +16,6 @@
 	let invoiceFiles: File[] = $state([]);
 	let invoiceParts: Part[] = $state([newPart()]);
 	let invoiceDate: DateValue | undefined = $state();
-	let isAccounted: boolean = $state(false);
-	let voucherNumber: string = $state('');
 	let dueDate: DateValue | undefined = $state();
 
 	function buildValidationData() {

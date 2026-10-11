@@ -27,12 +27,10 @@
 	import ComboBox from '$lib/components/ComboBox.svelte';
 	import { api } from '$lib/api';
 	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
-	import {
-		cachedCostCentres,
-		cachedSecondaryCostCentres,
-		cachedBudgetLines
-	} from '$lib/stores/state.svelte';
+	import { budget } from '$lib/stores/budget.svelte';
+
 	import { logger } from '$lib/logger';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	type Props = {
 		parts: Part[];
@@ -49,15 +47,9 @@
 	let budgetLinesByPart: BudgetLine[][] = $state([]);
 
 	onMount(async () => {
-		if (cachedCostCentres.length === 0) {
-			logger.debug('cost centres: cache miss, fetching');
-			const allCostCentres = await api.budget.listCostCentres(1, 100).then((res) => res.data);
-			cachedCostCentres.push(...allCostCentres);
-			costCentres = allCostCentres.filter((cc) => cc.active);
-		} else {
-			logger.debug('cost centres: cache hit');
-			costCentres = cachedCostCentres.filter((cc) => cc.active);
-		}
+		loading.add(-1);
+		costCentres = await budget.costCentres.list().then((res) => res.filter((cc) => cc.active));
+		loading.delete(-1);
 
 		secondaryCostCentresByPart = parts.map(() => []);
 		budgetLinesByPart = parts.map(() => []);
@@ -67,23 +59,9 @@
 	async function loadSecondaryCostCentres(i: number) {
 		const costCentre = costCentres.find((cc) => cc.name === parts[i].costcenter);
 		if (costCentre?.id != null) {
-			let cached = cachedSecondaryCostCentres.get(costCentre);
-			if (cached == null) {
-				logger.debug(
-					{ costCentre: costCentre.name },
-					'secondary cost centres: cache miss, fetching'
-				);
-				// Cache the full list (incl. inactive) so it can be shared with other
-				// consumers; filter to active ones for display here.
-				const fetched = await api.budget
-					.listSecondaryCostCentres(1, 100, { cost_centre: costCentre.id })
-					.then((res) => res.data);
-				cachedSecondaryCostCentres.set(costCentre, fetched);
-				cached = fetched;
-			} else {
-				logger.debug({ costCentre: costCentre.name }, 'secondary cost centres: cache hit');
-			}
-			secondaryCostCentresByPart[i] = cached.filter((scc) => scc.active);
+			secondaryCostCentresByPart[i] = (
+				(await budget.secondaryCostCentres.get(costCentre)) ?? []
+			).filter((scc) => scc.cost_centre_id === costCentre.id && scc.active);
 		} else {
 			secondaryCostCentresByPart[i] = [];
 		}
@@ -96,41 +74,31 @@
 			(scc) => scc.name === parts[i].secondarycostcenter
 		);
 		if (secondaryCostCentre?.id != null) {
-			let cached = cachedBudgetLines.get(secondaryCostCentre);
-			if (cached == null) {
-				logger.debug(
-					{ secondaryCostCentre: secondaryCostCentre.name },
-					'budget lines: cache miss, fetching'
-				);
-				const fetched = await api.budget
-					.listBudgetLines(1, 100, { secondary_cost_centre: secondaryCostCentre.id })
-					.then((res) => res.data);
-				cachedBudgetLines.set(secondaryCostCentre, fetched);
-				cached = fetched;
-			} else {
-				logger.debug({ secondaryCostCentre: secondaryCostCentre.name }, 'budget lines: cache hit');
-			}
-			budgetLinesByPart[i] = cached.filter((bl) => bl.active);
+			const budgetLines = (await budget.budgetLines.get(secondaryCostCentre)) ?? [];
+			budgetLinesByPart[i] = budgetLines.filter((bl) => bl.active);
 		} else {
-			// No secondary cost centre selected: fall back to the full active list,
-			// which has no stable key in the per-secondary cache.
-			budgetLinesByPart[i] = await api.budget
-				.listBudgetLines(1, 100, { active: true })
-				.then((res) => res.data);
+			// Fetch all
+			budgetLinesByPart[i] = await api.util.fetchAllPages((page, perPage) =>
+				api.budget.listBudgetLines(page, perPage, { active: true })
+			);
 		}
 	}
 
 	function onCostCentreChange(i: number, value: string) {
+		loading.add(i);
 		parts[i].costcenter = value;
 		parts[i].secondarycostcenter = '';
 		parts[i].budgetline = '';
 		loadSecondaryCostCentres(i);
+		loading.delete(i);
 	}
 
 	function onSecondaryCostCentreChange(i: number, value: string) {
+		loading.add(i);
 		parts[i].secondarycostcenter = value;
 		parts[i].budgetline = '';
 		loadBudgetLines(i);
+		loading.delete(i);
 	}
 
 	function addPart() {
@@ -165,6 +133,9 @@
 			parts[i].amountDisplay = '';
 		}
 	}
+
+	// A set of currently loading parts
+	let loading: SvelteSet<number> = $state(new SvelteSet<number>());
 </script>
 
 {#snippet fieldError(field: string, extra = '')}
@@ -195,6 +166,7 @@
 						bind:value={part.costcenter}
 						onchange={(v) => onCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-costcenter`)}
+						loading={loading.has(i) || loading.has(-1)}
 					/>
 					{@render fieldError(`part-${i}-costcenter`)}
 				</div>
@@ -209,6 +181,7 @@
 						bind:value={part.secondarycostcenter}
 						onchange={(v) => onSecondaryCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-secondarycostcenter`)}
+						loading={loading.has(i) || loading.has(-1)}
 					/>
 					{@render fieldError(`part-${i}-secondarycostcenter`)}
 				</div>
@@ -222,6 +195,7 @@
 						items={(budgetLinesByPart[i] ?? []).map((bl) => bl.name)}
 						bind:value={part.budgetline}
 						onblur={() => onValidate(`part-${i}-budgetline`)}
+						loading={loading.has(i) || loading.has(-1)}
 					/>
 					{@render fieldError(`part-${i}-budgetline`)}
 				</div>
