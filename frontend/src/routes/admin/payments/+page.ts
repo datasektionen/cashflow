@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 
 	const filter = claimFilterFromUrl(url);
 
-	const payments = await api.payments.list(page, perPage, {
+	const payments = api.payments.list(page, perPage, {
 		tag: filter.reimbursement !== undefined ? String(filter.reimbursement) : undefined
 	});
 

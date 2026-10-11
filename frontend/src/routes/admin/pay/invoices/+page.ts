@@ -12,7 +12,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 
 	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
 
-	const invoices = await api.invoices.list(page, perPage, { payable: true, sorting });
+	const invoices = api.invoices.list(page, perPage, { payable: true, sorting });
 
 	return { title_key: 'admin_pay.title', invoices };
 };

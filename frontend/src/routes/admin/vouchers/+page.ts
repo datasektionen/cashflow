@@ -16,23 +16,17 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	let claims: PaginatedResponse<Claim> = {
-		data: [],
-		pagination: { total: 0, page, perPage, totalPages: 0 }
-	};
-	try {
-		claims = await api.claims.list(page, perPage, {
+	const claims = api.claims
+		.list(page, perPage, {
 			...claimFilterFromUrl(url),
 			accounted: 'true'
-		});
-	} catch (e) {
-		if (isErrorResponse(e)) {
+		})
+		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
+			if (!isErrorResponse(e)) throw e;
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
 			alerts.update((a) => [...a, error(msg)]);
-		} else {
-			throw e;
-		}
-	}
+			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
+		});
 
 	return { claims, title_key: 'admin_vouchers.title' };
 };

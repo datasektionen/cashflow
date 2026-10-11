@@ -180,11 +180,13 @@
 						: 'cursor-pointer'
 			}}
 		/>
-		{#if data.invoices.data.length === 0}
-			<p class="p-8 text-center text-sm text-base-subtle dark:text-dark-base-subtle">
-				{$_('admin_pay.empty')}
-			</p>
-		{/if}
+		{#await data.invoices then invoices}
+			{#if invoices.data.length === 0}
+				<p class="p-8 text-center text-sm text-base-subtle dark:text-dark-base-subtle">
+					{$_('admin_pay.empty')}
+				</p>
+			{/if}
+		{/await}
 	</div>
 
 	<div class="hidden min-h-0 flex-1 lg:block lg:max-w-2xl">

@@ -3,7 +3,7 @@
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
 	import type { TableColumn } from '$lib/components/types';
-	import type { Expense } from '$lib/api/types';
+	import type { Expense, PaginatedResponse } from '$lib/api/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
@@ -11,6 +11,7 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ExpenseStatusPills from '$lib/components/ExpenseStatusPills.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import { onMount } from 'svelte';
 
 	let { data }: PageProps = $props();
 
@@ -123,8 +124,40 @@
 {/snippet}
 <ClaimFilterBar exclude={['voucher_series', 'voucher_number', 'reimbursement']} />
 
+<!-- {#await data.expenses} -->
+<!-- 	<PaginatedTable -->
+<!-- 		columns={[ -->
+<!-- 			{ id: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' }, -->
+<!-- 			...columns, -->
+<!-- 			{ -->
+<!-- 				id: 'confirmed_at', -->
+<!-- 				header: $_('admin_expenses.columns.status'), -->
+<!-- 				renderSnippet: statusCell, -->
+<!-- 				width: 'w-56' -->
+<!-- 			} -->
+<!-- 		].filter((col) => { -->
+<!-- 			// Extra small is a subset of small, so check it first: show only thex -->
+<!-- 			// essentials, dropping cost centres on top of the small-screen hides. -->
+<!-- 			if (isExtraSmallLayout.current) return ['description', 'owner'].includes(col.id); -->
+<!-- 			if (isSmallLayout.current) -->
+<!-- 				return !['id', 'expense_date', 'total', 'confirmed_at'].includes(col.id); -->
+<!-- 			return true; -->
+<!-- 		})} -->
+<!-- 		bind:sorting -->
+<!-- 		onPageChange={handlePageChange} -->
+<!-- 		onPerPageChange={handlePerPageChange} -->
+<!-- 		onSortChange={handleSortChange} -->
+<!-- 		loading={true} -->
+<!-- 		scrollable -->
+<!-- 		rowProps={{ -->
+<!-- 			href: (e) => `/admin/expenses/${e.id}`, -->
+<!-- 			class: 'cursor-pointer' -->
+<!-- 		}} -->
+<!-- 		{contextSnippet} -->
+<!-- 	/> -->
+<!-- {:then expenses} -->
 <PaginatedTable
-	paginatedResponse={data.expenses}
+	paginatedResponse={data.expenses ?? undefined}
 	columns={[
 		{ id: 'id', header: $_('admin_expenses.columns.id'), renderSnippet: idCell, width: 'w-16' },
 		...columns,
@@ -154,3 +187,4 @@
 	}}
 	{contextSnippet}
 />
+<!-- {/await} -->
