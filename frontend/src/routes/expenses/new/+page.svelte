@@ -2,54 +2,63 @@
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
-	import { type DateValue, getLocalTimeZone, today } from '@internationalized/date';
+	import { getLocalTimeZone, today } from '@internationalized/date';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
-	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
-	import validation from './validation.ts';
+	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
+	import validation, { validateFormData } from './validation.ts';
+	import type { NewExpenseFormData } from './validation.ts';
+	import { api } from '$lib/api/index';
+	import { alerts, success } from '$lib/stores/alerts';
+	import { goto } from '$app/navigation';
+	import { logger } from '$lib/logger';
+	import { ZERO } from '$lib/money';
 
 	let submitting: Boolean = $state(false);
-	let description = $state('');
-	let receiptFiles: File[] = $state([]);
-	let parts: Part[] = $state([newPart()]);
-	let expenseDate: DateValue | undefined = $state();
 
-	function buildValidationData() {
-		return {
-			description,
-			'expense-date': expenseDate?.toString(),
-			files: receiptFiles,
-			parts: parts.map((p) => ({
-				costcenter: p.costcenter,
-				secondarycostcenter: p.secondarycostcenter,
-				budgetline: p.budgetline,
-				amount: p.amountRaw
-			}))
-		};
-	}
+	let formData: NewExpenseFormData = $state({
+		description: '',
+		files: [],
+		parts: [
+			{
+				cost_centre: '',
+				secondary_cost_centre: '',
+				budget_line: '',
+				amount: ZERO
+			}
+		],
+		date: undefined
+	});
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		submitting = true;
-		validationResult = validation.run(buildValidationData());
+		validationResult = validation.run(formData);
 		if (!validationResult.isValid()) {
-			e.preventDefault();
 			submitting = false;
+			return;
 		}
+
+		const created = await api.expenses.create(validateFormData(formData));
+		logger.debug(created, 'new expense created');
+
+		alerts.update((alerts) => [...alerts, success($_('expense_created'))]);
+		await goto(`/claims/`);
 	}
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
+		validationResult = validation.run(formData, e.currentTarget.name);
 	}
 
 	function onDateBlur() {
-		validationResult = validation.run(buildValidationData(), 'expense-date');
+		validationResult = validation.run(formData, 'expense-date');
 	}
 
 	function validateField(field: string) {
-		validationResult = validation.run(buildValidationData(), field);
+		validationResult = validation.run(formData, field);
 	}
 
 	function showErrors(field: string) {
@@ -91,7 +100,7 @@
 					type="text"
 					name="description"
 					onblur={onBlur}
-					bind:value={description}
+					bind:value={formData.description}
 				/>
 				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
 					{$_('new_expense.form.description.help')}
@@ -113,9 +122,9 @@
 					{/if}
 				</span>
 
-				<input type="hidden" name="expense-date" value={expenseDate?.toString() ?? ''} />
+				<input type="hidden" name="expense-date" value={formData.date?.toString() ?? ''} />
 				<DatePicker
-					bind:value={expenseDate}
+					bind:value={formData.date}
 					maxValue={today(getLocalTimeZone())}
 					invalid={showErrors('expense-date')}
 					errors={errors['expense-date']}
@@ -144,7 +153,7 @@
 				{/if}
 			</span>
 			<div class={['flex flex-1', showErrors('files') && 'border-2 border-red-500']}>
-				<FileInput bind:files={receiptFiles} />
+				<FileInput bind:files={formData.files} />
 			</div>
 		</fieldset>
 	</div>
@@ -163,7 +172,7 @@
 
 		<!--   Expense parts     -->
 		<ExpenseParts
-			bind:parts
+			bind:parts={formData.parts}
 			{errors}
 			{showErrors}
 			onValidate={validateField}

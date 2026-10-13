@@ -2,55 +2,62 @@
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
-	import { type DateValue } from '@internationalized/date';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { Label, RadioGroup } from 'bits-ui';
-	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
+	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
-	import validation from './validation.ts';
+	import validation, { validateFormData } from './validation.ts';
+	import type { NewInvoiceFormData } from './validation.ts';
+	import { api } from '$lib/api/index';
+	import { alerts, success } from '$lib/stores/alerts';
+	import { goto } from '$app/navigation';
+	import { logger } from '$lib/logger';
+	import { ZERO } from '$lib/money';
 
 	let disclaimerParts = $derived($_('new_invoice.disclaimer').split('{new_expense_link}'));
 
 	let submitting: Boolean = $state(false);
-	let description = $state('');
-	let invoiceFiles: File[] = $state([]);
-	let invoiceParts: Part[] = $state([newPart()]);
-	let invoiceDate: DateValue | undefined = $state();
-	let dueDate: DateValue | undefined = $state();
 
-	function buildValidationData() {
-		return {
-			description,
-			'invoice-date': invoiceDate?.toString(),
-			'due-date': dueDate?.toString(),
-			files: invoiceFiles,
-			parts: invoiceParts.map((p) => ({
-				costcenter: p.costcenter,
-				secondarycostcenter: p.secondarycostcenter,
-				budgetline: p.budgetline,
-				amount: p.amountRaw
-			}))
-		};
-	}
+	let formData: NewInvoiceFormData = $state({
+		description: '',
+		files: [],
+		parts: [
+			{
+				cost_centre: '',
+				secondary_cost_centre: '',
+				budget_line: '',
+				amount: ZERO
+			}
+		],
+		invoiceDate: undefined,
+		dueDate: undefined
+	});
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		submitting = true;
-		validationResult = validation.run(buildValidationData());
+		validationResult = validation.run(formData);
 		if (!validationResult.isValid()) {
-			e.preventDefault();
 			submitting = false;
+			return;
 		}
+
+		const created = await api.invoices.create(validateFormData(formData));
+		logger.debug(created, 'new invoice created');
+
+		alerts.update((alerts) => [...alerts, success($_('invoice_created'))]);
+		await goto(`/claims/`);
 	}
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
+		validationResult = validation.run(formData, e.currentTarget.name);
 	}
 
 	function validateField(field: string) {
-		validationResult = validation.run(buildValidationData(), field);
+		validationResult = validation.run(formData, field);
 	}
 
 	function showErrors(field: string) {
@@ -133,7 +140,7 @@
 					type="text"
 					name="description"
 					onblur={onBlur}
-					bind:value={description}
+					bind:value={formData.description}
 				/>
 				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
 					{$_('new_invoice.form.description.help')}
@@ -142,9 +149,9 @@
 
 			<div class="flex flex-col space-y-2">
 				<label for="invoice-date" class="text-s mb-1 font-medium"> Fakturadatum </label>
-				<input type="hidden" name="invoice-date" value={invoiceDate?.toString() ?? ''} />
+				<input type="hidden" name="invoice-date" value={formData.invoiceDate?.toString() ?? ''} />
 				<DatePicker
-					bind:value={invoiceDate}
+					bind:value={formData.invoiceDate}
 					invalid={showErrors('invoice-date')}
 					errors={errors['invoice-date']}
 					onBlur={() => validateField('invoice-date')}
@@ -152,9 +159,9 @@
 			</div>
 			<div class="flex flex-col space-y-2">
 				<label for="due-date" class="text-s mb-1 font-medium"> Förfallodatum </label>
-				<input type="hidden" name="due-date" value={dueDate?.toString() ?? ''} />
+				<input type="hidden" name="due-date" value={formData.dueDate?.toString() ?? ''} />
 				<DatePicker
-					bind:value={dueDate}
+					bind:value={formData.dueDate}
 					invalid={showErrors('due-date')}
 					errors={errors['due-date']}
 					onBlur={() => validateField('due-date')}
@@ -178,7 +185,7 @@
 				{/if}
 			</span>
 			<div class={['flex flex-1', showErrors('files') && 'border-2 border-red-500']}>
-				<FileInput bind:files={invoiceFiles} />
+				<FileInput bind:files={formData.files} />
 			</div>
 		</fieldset>
 	</div>
@@ -196,7 +203,7 @@
 		</span>
 
 		<ExpenseParts
-			bind:parts={invoiceParts}
+			bind:parts={formData.parts}
 			{errors}
 			{showErrors}
 			onValidate={validateField}

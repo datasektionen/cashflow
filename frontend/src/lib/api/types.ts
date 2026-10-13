@@ -1,3 +1,5 @@
+import type { Dinero } from 'dinero.js';
+
 export type ExpenseFile = {
 	id: number;
 	file: string;
@@ -22,7 +24,7 @@ export type Payment = {
 	payer: Profile;
 	receiver: Profile;
 	tag: string;
-	total: string;
+	total: Dinero<number, 'SEK'>;
 };
 
 export type Comment = {
@@ -39,7 +41,6 @@ export type Expense = {
 	confirmed_at: string | null;
 	confirmed_by: Profile | null;
 	owner: Profile;
-	total: string;
 	reimbursement: number | null;
 	payment: Payment | null;
 	// Fortnox voucher (verification) number; null if not yet accounted.
@@ -59,7 +60,7 @@ export type InvoicePart = {
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
-	amount: string;
+	amount: Dinero<number, 'SEK'>;
 	attested_by: Profile | null;
 	attest_date: string | null;
 	// Voucher suggestions derived from GOrdian + Fortnox.
@@ -77,7 +78,6 @@ export type Invoice = {
 	confirmed_at: string | null;
 	owner: Profile;
 	description: string;
-	total: string;
 	voucher: string | null;
 	paid_by: Profile | null;
 	paid_at: string | null;
@@ -110,7 +110,7 @@ export type PartCreateUpdate = {
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
-	amount: string;
+	amount: Dinero<number, 'SEK'>;
 };
 
 export interface ExpenseUpdate {
@@ -135,7 +135,7 @@ export type ExpensePart = {
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
-	amount: string;
+	amount: Dinero<number, 'SEK'>;
 	attested_by: Profile | null;
 	attest_date: string | null;
 	// Voucher suggestions derived from GOrdian + Fortnox.
@@ -147,7 +147,7 @@ export type ExpensePart = {
 type ClaimBase = {
 	id: number;
 	description: string;
-	amount: string;
+	amount: Dinero<number, 'SEK'>;
 	created_date: string;
 	is_attested: boolean;
 	is_confirmed: boolean;
@@ -327,15 +327,15 @@ export type PendingPayment = {
 	owner: Profile;
 	// Full details are only exposed on the pay-gated pending endpoint.
 	bank_info: BankInfo;
-	total: string;
+	total: Dinero<number, 'SEK'>;
 	count: number;
 };
 
 export type VoucherRow = {
 	account: number;
 	cost_centre?: string;
-	credit?: number;
-	debit?: number;
+	credit?: Dinero<number, 'SEK'>;
+	debit?: Dinero<number, 'SEK'>;
 	description?: string;
 	project?: string;
 	quantity?: number;
@@ -357,6 +357,6 @@ export type VoucherSeries = {
 
 export type LeaderboardEntry = {
 	owner: Profile;
-	expense_total: string;
+	expense_total: Dinero<number, 'SEK'>;
 	expense_count: number;
 };

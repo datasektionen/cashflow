@@ -5,6 +5,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from budget.api.serializers import PartRecommendationsMixin
 from core.api.serializers import (
+    ClaimTotalField,
     FileSerializer,
     ProfileSerializer,
     UploadField,
@@ -57,7 +58,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "responses."
         )
     )
-    total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, read_only=True)
+    total = ClaimTotalField()
 
     class Meta:
         model = Expense

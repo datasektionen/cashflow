@@ -1,21 +1,25 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, Check, CircleAlert, Copy, Undo2, X } from '@lucide/svelte';
-	import { type DateValue, getLocalTimeZone, parseDate, today } from '@internationalized/date';
+	import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
 	import type { PageData } from './$types';
 	import type { Expense } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FileInput from '../../../../expenses/new/FileInput.svelte';
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
-	import ExpenseParts, { newPart, type Part } from '$lib/components/ExpenseParts.svelte';
-	import { sumAmounts } from '$lib/money';
-	import validation from './validation.ts';
+	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
+	import validation, { validateFormData } from './validation.ts';
+	import type { UpdateExpenseFormData } from './validation.ts';
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { ZERO } from '$lib/money';
+	import { api } from '$lib/api/index';
+	import { alerts, success } from '$lib/stores/alerts';
+	import { goto } from '$app/navigation';
+	import { logger } from '$lib/logger';
 
 	let { data }: { data: PageData } = $props();
 	let { expense }: { expense: Expense } = $derived(data);
@@ -23,14 +27,6 @@
 	const pdfium = usePdfiumEngine();
 
 	const partsLocked = $derived(expense.parts.some((p) => p.attested_by != null));
-
-	let deletedFiles: SvelteSet<number> = new SvelteSet<number>();
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
-	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
 
 	let copied = $state(false);
 
@@ -41,62 +37,63 @@
 	}
 
 	let submitting = $state(false);
-	let description = $derived(expense.description);
-	let newFiles: File[] = $state([]);
-	let expenseDate: DateValue | undefined = $derived(parseDate(expense.expense_date));
-	function initialParts(exp: Expense): Part[] {
-		if (exp.parts.length === 0) return [newPart()];
-		return exp.parts.map((p) => {
-			const amountRaw = parseFloat(p.amount);
-			return {
-				amountRaw,
-				amountDisplay: fmt.format(amountRaw),
-				costcenter: p.cost_centre,
-				secondarycostcenter: p.secondary_cost_centre,
-				budgetline: p.budget_line
-			};
-		});
-	}
-	let parts: Part[] = $state(untrack(() => initialParts(data.expense)));
 
-	function buildValidationData() {
+	function initialFormData(exp: Expense): UpdateExpenseFormData {
 		return {
-			description,
-			'expense-date': expenseDate?.toString(),
-			deletedFiles,
-			parts: partsLocked
-				? []
-				: parts.map((p) => ({
-						costcenter: p.costcenter,
-						secondarycostcenter: p.secondarycostcenter,
-						budgetline: p.budgetline,
-						amount: p.amountRaw
-					}))
+			description: exp.description,
+			files: [],
+			deletedFiles: new SvelteSet<number>(),
+			parts:
+				exp.parts.length > 0
+					? exp.parts.map((p) => ({
+							cost_centre: p.cost_centre,
+							secondary_cost_centre: p.secondary_cost_centre,
+							budget_line: p.budget_line,
+							amount: p.amount
+						}))
+					: [
+							{
+								cost_centre: '',
+								secondary_cost_centre: '',
+								budget_line: '',
+								amount: ZERO
+							}
+						],
+			date: parseDate(exp.expense_date)
 		};
 	}
 
-	function handleSubmit(e: SubmitEvent) {
+	let formData: UpdateExpenseFormData = $state(untrack(() => initialFormData(data.expense)));
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		submitting = true;
-		validationResult = validation.run(buildValidationData());
+		validationResult = validation.run(formData);
 		if (!validationResult.isValid()) {
-			e.preventDefault();
 			submitting = false;
+			return;
 		}
+
+		const updated = await api.expenses.update(expense.id, validateFormData(formData, !partsLocked));
+		logger.debug(updated, 'expense updated');
+
+		alerts.update((alerts) => [...alerts, success($_('expense_updated'))]);
+		await goto(`/${expense.owner.username}/expenses/${expense.id}`);
 	}
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
+		validationResult = validation.run(formData, e.currentTarget.name);
 	}
 
 	function onDateBlur() {
-		validationResult = validation.run(buildValidationData(), 'expense-date');
+		validationResult = validation.run(formData, 'expense-date');
 	}
 
 	function validateField(field: string) {
-		validationResult = validation.run(buildValidationData(), field);
+		validationResult = validation.run(formData, field);
 	}
 
 	function showErrors(field: string) {
@@ -132,7 +129,7 @@
 		<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
 
 		<ExpenseParts
-			bind:parts
+			bind:parts={formData.parts}
 			{errors}
 			{showErrors}
 			onValidate={validateField}
@@ -180,7 +177,7 @@
 						type="text"
 						name="description"
 						onblur={onBlur}
-						bind:value={description}
+						bind:value={formData.description}
 					/>
 				</div>
 
@@ -200,9 +197,9 @@
 						{/if}
 					</span>
 
-					<input type="hidden" name="expense-date" value={expenseDate?.toString() ?? ''} />
+					<input type="hidden" name="expense-date" value={formData.date?.toString() ?? ''} />
 					<DatePicker
-						bind:value={expenseDate}
+						bind:value={formData.date}
 						maxValue={today(getLocalTimeZone())}
 						invalid={showErrors('expense-date')}
 						errors={errors['expense-date']}
@@ -214,10 +211,14 @@
 					<span class="text-s mb-1 font-medium">
 						{$_('new_expense.form.receipts.label')}
 					</span>
-					<input type="hidden" name="deleteFiles" value={JSON.stringify([...deletedFiles])} />
+					<input
+						type="hidden"
+						name="deleteFiles"
+						value={JSON.stringify([...formData.deletedFiles])}
+					/>
 					<div class="flex flex-wrap justify-between gap-2 bg-base-300 p-2 dark:bg-dark-base-300">
 						{#each expense.files as file}
-							{@const isDeleted = deletedFiles.has(file.id)}
+							{@const isDeleted = formData.deletedFiles.has(file.id)}
 							<div
 								class="mx-4 flex w-full flex-row space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
 							>
@@ -235,8 +236,8 @@
 									type="button"
 									class="ml-auto text-base-subtle transition-all hover:scale-115 hover:cursor-pointer dark:text-dark-base-subtle"
 									onclick={isDeleted
-										? () => deletedFiles.delete(file.id)
-										: () => deletedFiles.add(file.id)}
+										? () => formData.deletedFiles.delete(file.id)
+										: () => formData.deletedFiles.add(file.id)}
 								>
 									{#if isDeleted}
 										<Undo2 />
@@ -248,7 +249,7 @@
 						{/each}
 					</div>
 					<div class="flex h-56">
-						<FileInput bind:files={newFiles} engine={pdfium.engine} />
+						<FileInput bind:files={formData.files} engine={pdfium.engine} />
 					</div>
 				</div>
 			</div>

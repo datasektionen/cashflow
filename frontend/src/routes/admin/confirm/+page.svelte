@@ -13,16 +13,12 @@
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import { ScrollArea } from 'bits-ui';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
+	import { formatDineroAmount } from '$lib/money';
 
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
 	let sorting = $state(page.url.searchParams.get('sorting'));
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
 
 	const columns: TableColumn<Claim>[] = $derived([
 		{
@@ -106,7 +102,7 @@
 {/snippet}
 
 {#snippet amountCell(c: Claim)}
-	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
+	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
 {/snippet}
 
 {#snippet idCell(c: Claim)}

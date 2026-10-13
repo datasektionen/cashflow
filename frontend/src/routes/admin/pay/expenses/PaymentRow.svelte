@@ -9,7 +9,7 @@
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { isErrorResponse } from '$lib/api/errors';
 	import { logger } from '$lib/logger';
-	import { sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
 	import { formatBankAccount } from '$lib/bankAccount';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
@@ -53,11 +53,11 @@
 		paying = true;
 		try {
 			const resolved = await expenses;
-			const amount = sumAmounts(
+			const amount = sumDinero(
 				resolved.data.filter((e) => selected.has(e.id)).flatMap((e) => e.parts.map((p) => p.amount))
 			);
 			const payment = await api.payments.create([...selected]);
-			completedPayments.unshift({ ...payment, amount: amount.toFixed(2), bankInfo });
+			completedPayments.unshift({ ...payment, amount, bankInfo });
 			alerts.update((a) => [
 				...a,
 				success($_('admin_pay.payment_created', { values: { tag: payment.tag } }))
@@ -139,7 +139,7 @@
 		</div>
 	{:then resolved}
 		{#each resolved.data as expense}
-			{@const total = sumAmounts(expense.parts.map((part) => part.amount))}
+			{@const total = sumDinero(expense.parts.map((part) => part.amount))}
 			{@const costCentres = [...new Set(expense.parts.map((p) => p.cost_centre))]}
 			<div class={['flex items-stretch', isExtraSmallLayout.current ? 'flex-col' : 'flex-row']}>
 				<div
@@ -173,7 +173,7 @@
 					<div
 						class="flex w-36 shrink-0 items-start justify-end px-4 py-2 text-sm font-medium tabular-nums"
 					>
-						{total.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
+						{formatDineroAmount(total)} kr
 					</div>
 					<div class="flex w-20 shrink-0 items-start justify-center py-2 pr-4">
 						<Checkbox
@@ -189,7 +189,7 @@
 			</div>
 		{/each}
 
-		{@const selectedTotal = sumAmounts(
+		{@const selectedTotal = sumDinero(
 			resolved.data.filter((e) => selected.has(e.id)).flatMap((e) => e.parts.map((p) => p.amount))
 		)}
 		{@const allSelected =
@@ -208,10 +208,7 @@
 				{$_('admin_pay.select_all')}
 			</Checkbox>
 			<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
-				{selectedTotal.toLocaleString('sv-SE', {
-					minimumFractionDigits: 2,
-					maximumFractionDigits: 2
-				})} kr
+				{formatDineroAmount(selectedTotal)} kr
 			</span>
 			<Dialog
 				bind:open={payDialogOpen}

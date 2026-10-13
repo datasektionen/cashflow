@@ -14,7 +14,8 @@
 	import { mayPay } from '$lib/auth';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
-	import { sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
+	import type { Dinero } from 'dinero.js';
 
 	let { data }: PageProps = $props();
 	const canPay = $derived(mayPay(data.user));
@@ -22,8 +23,8 @@
 	let loading = $state(false);
 	let sorting = $state(page.url.searchParams.get('sorting'));
 
-	function total(invoice: Invoice): number {
-		return sumAmounts(invoice.parts.map((part) => part.amount));
+	function total(invoice: Invoice): Dinero<number, 'SEK'> {
+		return sumDinero(invoice.parts.map((part) => part.amount));
 	}
 
 	const fmt = new Intl.NumberFormat('sv-SE', {
@@ -157,7 +158,7 @@
 
 {#snippet totalCell(invoice: Invoice)}
 	<span class={['font-semibold tabular-nums', paidInvoices.has(invoice.id) && 'opacity-50']}
-		>{fmt.format(total(invoice))} kr</span
+		>{formatDineroAmount(total(invoice))} kr</span
 	>
 {/snippet}
 

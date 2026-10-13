@@ -8,9 +8,17 @@ import type {
 	ExpenseCreate,
 	ExpensePart,
 	ExpenseUpdate,
-	PaginatedResponse
+	PaginatedResponse,
+	PartCreateUpdate
 } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
+import { toDecimal } from 'dinero.js';
+import {
+	type APIExpense,
+	type APIExpensePart,
+	parseExpense,
+	parseExpensePart
+} from '$lib/api/parse';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -20,7 +28,9 @@ export class ExpensesAPI {
 	}
 
 	async get(id: number): Promise<Expense> {
-		return await this.apiClient.get<Expense>(`/expenses/${id}`);
+		const expense = await this.apiClient.get<APIExpense>(`/expenses/${id}`);
+
+		return parseExpense(expense);
 	}
 
 	async list(
@@ -28,14 +38,14 @@ export class ExpensesAPI {
 		perPage: number,
 		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.get<ListResponse<Expense>>('expenses/', {
+		const res = await this.apiClient.get<ListResponse<APIExpense>>('expenses/', {
 			page: page,
 			per_page: perPage,
 			...filter
 		});
 
 		return {
-			data: res.data,
+			data: res.data.map(parseExpense),
 			pagination: {
 				total: res.pagination.total,
 				page: res.pagination.page,
@@ -51,7 +61,7 @@ export class ExpensesAPI {
 		filter?: ClaimFilter,
 		searchFields?: DescriptionSearch
 	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.query<ListResponse<Expense>>(
+		const res = await this.apiClient.query<ListResponse<APIExpense>>(
 			'expenses/search/',
 			{
 				query: { ...filter, ...searchFields }
@@ -64,7 +74,7 @@ export class ExpensesAPI {
 		);
 
 		return {
-			data: res.data,
+			data: res.data.map(parseExpense),
 			pagination: {
 				page: res.pagination.page,
 				perPage: res.pagination.per_page,
@@ -74,46 +84,67 @@ export class ExpensesAPI {
 		};
 	}
 
-	create(data: ExpenseCreate): Promise<Expense> {
+	async create(data: ExpenseCreate): Promise<Expense> {
 		const body = new FormData();
 		body.append('description', data.description);
 		body.append('expense_date', data.expense_date);
-		body.append('parts', JSON.stringify(data.parts));
+
+		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
+
+		const parts: PartData[] = data.parts.map((part) => ({
+			...part,
+			amount: toDecimal(part.amount)
+		}));
+
+		body.append('parts', JSON.stringify(parts));
 		for (const file of data.files) {
 			body.append('files', file, file.name);
 		}
 
-		return this.apiClient.post('expenses/', body);
+		return parseExpense(await this.apiClient.post<APIExpense>('expenses/', body));
 	}
 
-	update(id: number, data: ExpenseUpdate): Promise<Expense> {
+	async update(id: number, data: ExpenseUpdate): Promise<Expense> {
 		const body = new FormData();
 		if (data.description !== undefined) body.append('description', data.description);
 		if (data.expense_date !== undefined) body.append('expense_date', data.expense_date);
-		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+
+		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
+		if (data.parts !== undefined) {
+			const parts: PartData[] = data.parts.map((part) => ({
+				...part,
+				amount: toDecimal(part.amount)
+			}));
+			body.append('parts', JSON.stringify(parts));
+		}
+
 		if (data.delete_files !== undefined)
 			body.append('delete_files', JSON.stringify(data.delete_files));
 		for (const file of data.files ?? []) {
 			body.append('files', file, file.name);
 		}
 
-		return this.apiClient.patch(`/expenses/${id}/`, body);
+		return parseExpense(await this.apiClient.patch<APIExpense>(`/expenses/${id}/`, body));
 	}
 
 	delete(id: number) {
-		return this.apiClient.delete<Expense>(`/expenses/${id}/`, {});
+		return this.apiClient.delete<APIExpense>(`/expenses/${id}/`, {});
 	}
 
 	comment(id: number, content: string) {
 		return this.apiClient.post<Comment>(`/expenses/${id}/comments/`, { content: content });
 	}
 
-	attestPart(partId: number) {
-		return this.apiClient.post<ExpensePart>(`/expense-parts/${partId}/attest/`, {});
+	async attestPart(partId: number): Promise<ExpensePart> {
+		return parseExpensePart(
+			await this.apiClient.post<APIExpensePart>(`/expense-parts/${partId}/attest/`, {})
+		);
 	}
 
-	unattestPart(partId: number) {
-		return this.apiClient.post<ExpensePart>(`/expense-parts/${partId}/unattest/`, {});
+	async unattestPart(partId: number): Promise<ExpensePart> {
+		return parseExpensePart(
+			await this.apiClient.post<APIExpensePart>(`/expense-parts/${partId}/unattest/`, {})
+		);
 	}
 
 	confirm(id: number) {
@@ -132,7 +163,7 @@ export class ExpensesAPI {
 		return this.apiClient.post<void>(`/expenses/${id}/unflag/`, {});
 	}
 
-	account(id: number, payload: AccountPayload): Promise<Expense> {
-		return this.apiClient.post<Expense>(`/expenses/${id}/account/`, payload);
+	async account(id: number, payload: AccountPayload): Promise<Expense> {
+		return parseExpense(await this.apiClient.post<APIExpense>(`/expenses/${id}/account/`, payload));
 	}
 }

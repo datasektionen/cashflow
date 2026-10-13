@@ -8,9 +8,8 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
 	import { api } from '$lib/api';
-	import { invalidateAll } from '$app/navigation';
 	import { logger } from '$lib/logger';
 	import { alerts, error, success } from '$lib/stores/alerts';
 	import { isErrorResponse } from '$lib/api/errors';
@@ -32,7 +31,6 @@
 			await api.invoices.pay(invoice.id);
 			alerts.update((a) => [...a, success($_('alerts.invoice_paid'))]);
 			paidInvoices.add(invoice.id);
-			// await invalidateAll();
 			onPaid?.();
 		} catch (e) {
 			logger.error(e);
@@ -64,10 +62,11 @@
 				</a>
 
 				{#if !paidInvoices.has(invoice.id)}
+					{@const total = sumDinero(invoice.parts.map((p) => p.amount))}
 					<CopyableValue display="CF {invoice.id}" class="self-stretch" />
 					<CopyableValue
-						display={formatAmount(sumAmounts(invoice.parts.map((p) => p.amount)))}
-						value={sumAmounts(invoice.parts.map((p) => p.amount))}
+						display={formatDineroAmount(total) + ' kr'}
+						value={formatDineroAmount(total)}
 						class="self-stretch"
 					/>
 					<button
@@ -82,10 +81,11 @@
 						{/if}
 					</button>
 				{:else}
+					{@const total = sumDinero(invoice.parts.map((p) => p.amount))}
 					<CopyableValue display="CF {invoice.id}" class="self-stretch" />
 					<CopyableValue
-						display={formatAmount(sumAmounts(invoice.parts.map((p) => p.amount)))}
-						value={sumAmounts(invoice.parts.map((p) => p.amount))}
+						display={formatDineroAmount(total) + ' kr'}
+						value={formatDineroAmount(total)}
 						class="self-stretch"
 					/>
 				{/if}
@@ -104,7 +104,7 @@
 			{/if}
 		</div>
 
-		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm break-words">
+		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm wrap-break-word">
 			<dt class="text-base-subtle dark:text-dark-base-subtle">
 				{$_('admin_pay.columns.due_date')}
 			</dt>

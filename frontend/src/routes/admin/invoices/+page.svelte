@@ -11,16 +11,12 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import InvoiceStatusPills from '$lib/components/InvoiceStatusPills.svelte';
 	import { isExtraSmallLayout, isSmallLayout, isMediumLayout } from '$lib/stores/state.svelte';
+	import { formatDineroAmount, claimTotal } from '$lib/money';
 
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
 	let sorting = $state(page.url.searchParams.get('sorting'));
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
 
 	const columns: TableColumn<Invoice>[] = $derived([
 		{
@@ -125,7 +121,7 @@
 {/snippet}
 
 {#snippet totalCell(r: Invoice)}
-	<span class="tabular-nums">{fmt.format(parseFloat(r.total))} kr</span>
+	<span class="tabular-nums">{formatDineroAmount(claimTotal(r))} kr</span>
 {/snippet}
 
 <ClaimFilterBar

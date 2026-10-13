@@ -1,5 +1,6 @@
 import { ApiClient } from '$lib/api';
 import type { Claim, ClaimFilter, PaginatedResponse } from '$lib/api/types';
+import { type APIClaim, parseClaim } from '$lib/api/parse';
 
 export class ClaimsAPI {
 	private apiClient: ApiClient;
@@ -14,7 +15,7 @@ export class ClaimsAPI {
 		filter?: ClaimFilter
 	): Promise<PaginatedResponse<Claim>> {
 		type RawResponse = {
-			data: Claim[];
+			data: APIClaim[];
 			pagination: {
 				total: number;
 				page: number;
@@ -30,7 +31,7 @@ export class ClaimsAPI {
 		});
 
 		return {
-			data: res.data,
+			data: res.data.map(parseClaim),
 			pagination: {
 				total: res.pagination.total,
 				page: res.pagination.page,

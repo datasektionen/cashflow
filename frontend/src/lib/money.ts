@@ -1,41 +1,79 @@
-/**
- * Converts a decimal amount string (e.g. from a Django DecimalField) to
- * integer cents via BigInt, so summing many amounts can't drift the way
- * repeated `parseFloat` + binary floating-point addition does.
- */
-export function toCents(amount: string): bigint {
-	const trimmed = amount.trim();
-	const negative = trimmed.startsWith('-');
-	const unsigned = negative ? trimmed.slice(1) : trimmed;
-	const [whole, frac = ''] = unsigned.split('.');
-	const cents = BigInt(whole || '0') * 100n + BigInt((frac + '00').slice(0, 2) || '0');
-	return negative ? -cents : cents;
-}
+import { SEK, type Dinero, dinero, toDecimal, add } from 'dinero.js';
 
-/** Sums decimal amount strings, returning the total in integer cents. */
-export function sumCents(amounts: string[]): bigint {
-	return amounts.reduce((sum, amount) => sum + toCents(amount), 0n);
-}
+export const ZERO = dinero({ amount: 0, currency: SEK });
 
-/** Sums decimal amount strings, returning the total as a plain number. */
-export function sumAmounts(amounts: string[]): number {
-	return Number(sumCents(amounts)) / 100;
-}
-
-const amountFmt = new Intl.NumberFormat('sv-SE', {
+const FORMAT = new Intl.NumberFormat('sv-SE', {
 	minimumFractionDigits: 2,
 	maximumFractionDigits: 2
 });
 
-/** Formats a decimal amount string or number as e.g. "1 234,56 kr". */
+/** Formats a decimal amount string or number as e.g. "1 234,56". */
 export function formatAmount(amount: string | number): string {
-	return `${amountFmt.format(Number(amount))} kr`;
+	return `${FORMAT.format(Number(amount))}`;
 }
 
 /**
- * Formats a decimal amount string or number to two fraction digits without a
- * currency suffix, e.g. "1 234,56". Rounds away binary floating-point drift.
+ * Formats a Dinero amount for display, e.g. "1 234,56".
+ *
+ * @example
+ * formatDineroAmount(dinero({ amount: 123456, currency: SEK })); // "1 234,56"
  */
-export function formatAmountPlain(amount: string | number): string {
-	return amountFmt.format(Number(amount));
+export function formatDineroAmount(dineroAmount: Dinero<number, 'SEK'>): string {
+	return toDecimal(dineroAmount, ({ value }) => formatAmount(value));
+}
+
+/*
+ * Creates a dinero object from a float value
+ */
+export function dineroFromFloat(value: number, currency: typeof SEK): Dinero<number, 'SEK'> {
+	const factor = currency.base ** currency.exponent;
+	const amount = Math.round(factor * value);
+	return dinero({ amount, currency });
+}
+
+/**
+ * Creates a dinero object from a decimal string (e.g. from a Django DecimalField)
+ * without going through floating point.
+ *
+ * @example
+ * dineroFromDecimal('1234.56', SEK); // dinero({ amount: 123456, currency: SEK })
+ */
+export function dineroFromDecimal(value: string, currency: typeof SEK): Dinero<number, 'SEK'> {
+	const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value.trim());
+	if (!match) {
+		throw new Error(`Invalid decimal amount: "${value}"`);
+	}
+	const [, sign, whole, fraction = ''] = match;
+	if (fraction.length > currency.exponent) {
+		throw new Error(`Too many fraction digits for ${currency.code}: "${value}"`);
+	}
+
+	const minorUnits = Number(whole + fraction.padEnd(currency.exponent, '0'));
+	// Avoid -0 for e.g. "-0.00"
+	const amount = sign && minorUnits !== 0 ? -minorUnits : minorUnits;
+	return dinero({ amount, currency });
+}
+
+/**
+ * Sums the amount of several dinero objects. Uses the `add` function from `dinero.js` to avoid floating point errors.
+ *
+ * @example
+ * sumDinero([dinero({ amount: 100, currency: SEK }), dinero({ amount: 200, currency: SEK })]); // dinero({ amount: 300, currency: SEK })
+ */
+export function sumDinero(amounts: Dinero<number, 'SEK'>[]): Dinero<number, 'SEK'> {
+	return amounts.reduce((sum, amount) => {
+		return add(sum, amount);
+	}, ZERO);
+}
+
+/**
+ * The total amount of a claim, i.e. the sum of its parts.
+ *
+ * @example
+ * claimTotal(expense); // dinero({ amount: 30000, currency: SEK })
+ */
+export function claimTotal(claim: {
+	parts: { amount: Dinero<number, 'SEK'> }[];
+}): Dinero<number, 'SEK'> {
+	return sumDinero(claim.parts.map((part) => part.amount));
 }

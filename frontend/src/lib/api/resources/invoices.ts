@@ -7,12 +7,15 @@ import type {
 	Invoice,
 	InvoiceCreate,
 	InvoiceUpdate,
-	PaginatedResponse
+	PaginatedResponse,
+	PartCreateUpdate
 } from '$lib/api/types';
+import { toDecimal } from 'dinero.js';
+import { type APIInvoice, parseInvoice } from '$lib/api/parse';
 
 // The response format from DRF
 type RawResponse = {
-	data: Invoice[];
+	data: APIInvoice[];
 	pagination: {
 		total: number;
 		page: number;
@@ -29,7 +32,7 @@ export class InvoicesAPI {
 	}
 
 	async get(id: number): Promise<Invoice> {
-		return await this.apiClient.get<Invoice>(`invoices/${id}`);
+		return parseInvoice(await this.apiClient.get<APIInvoice>(`invoices/${id}`));
 	}
 
 	async list(
@@ -44,7 +47,7 @@ export class InvoicesAPI {
 		});
 
 		return {
-			data: res.data,
+			data: res.data.map(parseInvoice),
 			pagination: {
 				total: res.pagination.total,
 				page: res.pagination.page,
@@ -73,7 +76,7 @@ export class InvoicesAPI {
 		);
 
 		return {
-			data: res.data,
+			data: res.data.map(parseInvoice),
 			pagination: {
 				page: res.pagination.page,
 				perPage: res.pagination.per_page,
@@ -83,23 +86,32 @@ export class InvoicesAPI {
 		};
 	}
 
-	update(id: number, data: InvoiceUpdate): Promise<Invoice> {
+	async update(id: number, data: InvoiceUpdate): Promise<Invoice> {
 		const body = new FormData();
 		if (data.description !== undefined) body.append('description', data.description);
 		if (data.invoice_date !== undefined) body.append('invoice_date', data.invoice_date);
 		if (data.due_date !== undefined) body.append('due_date', data.due_date);
-		if (data.parts !== undefined) body.append('parts', JSON.stringify(data.parts));
+
+		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
+		if (data.parts !== undefined) {
+			const parts: PartData[] = data.parts.map((part) => ({
+				...part,
+				amount: toDecimal(part.amount)
+			}));
+			body.append('parts', JSON.stringify(parts));
+		}
+
 		if (data.delete_files !== undefined)
 			body.append('delete_files', JSON.stringify(data.delete_files));
 		for (const file of data.files ?? []) {
 			body.append('files', file, file.name);
 		}
 
-		return this.apiClient.patch(`/invoices/${id}/`, body);
+		return parseInvoice(await this.apiClient.patch<APIInvoice>(`/invoices/${id}/`, body));
 	}
 
 	delete(id: number) {
-		return this.apiClient.delete<Invoice>(`/invoices/${id}/`, {});
+		return this.apiClient.delete<APIInvoice>(`/invoices/${id}/`, {});
 	}
 
 	comment(id: number, content: string) {
@@ -122,12 +134,12 @@ export class InvoicesAPI {
 		return this.apiClient.post<void>(`invoice-parts/${partId}/unattest/`, {});
 	}
 
-	pay(id: number): Promise<Invoice> {
-		return this.apiClient.post<Invoice>(`invoices/${id}/pay/`, {});
+	async pay(id: number): Promise<Invoice> {
+		return parseInvoice(await this.apiClient.post<APIInvoice>(`invoices/${id}/pay/`, {}));
 	}
 
-	account(id: number, payload: AccountPayload): Promise<Invoice> {
-		return this.apiClient.post<Invoice>(`invoices/${id}/account/`, payload);
+	async account(id: number, payload: AccountPayload): Promise<Invoice> {
+		return parseInvoice(await this.apiClient.post<APIInvoice>(`invoices/${id}/account/`, payload));
 	}
 
 	async create(data: InvoiceCreate): Promise<Invoice> {
@@ -135,12 +147,20 @@ export class InvoicesAPI {
 		body.append('description', data.description);
 		body.append('invoice_date', data.invoice_date);
 		body.append('due_date', data.due_date);
-		body.append('parts', JSON.stringify(data.parts));
+
+		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
+
+		const parts: PartData[] = data.parts.map((part) => ({
+			...part,
+			amount: toDecimal(part.amount)
+		}));
+
+		body.append('parts', JSON.stringify(parts));
 		if (data.accounted !== undefined) body.append('accounted', String(data.accounted));
 		if (data.verification) body.append('verification', data.verification);
 		for (const file of data.files) {
 			body.append('files', file, file.name);
 		}
-		return await this.apiClient.post<Invoice>('invoices/', body);
+		return parseInvoice(await this.apiClient.post<APIInvoice>('invoices/', body));
 	}
 }

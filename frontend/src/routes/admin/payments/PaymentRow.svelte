@@ -4,14 +4,11 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { ExternalLink } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import { sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero, claimTotal } from '$lib/money';
 
 	let { payment }: { payment: Payment } = $props();
 
 	let expensesPromise = $derived(api.expenses.list(1, 100, { reimbursement: payment.id }));
-
-	const fmt = (n: number) =>
-		n.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 </script>
 
 <div class="flex flex-col pb-2 md:pl-8">
@@ -47,17 +44,17 @@
 				<div
 					class="flex w-36 shrink-0 items-start justify-end px-4 py-2 text-sm font-medium tabular-nums"
 				>
-					{fmt(parseFloat(expense.total))} kr
+					{formatDineroAmount(claimTotal(expense))} kr
 				</div>
 			</div>
 		{/each}
 
 		{#if resolved.data.length > 0}
-			{@const grandTotal = sumAmounts(resolved.data.map((e) => e.total))}
+			{@const grandTotal = sumDinero(resolved.data.map((e) => claimTotal(e)))}
 			<div
 				class="mt-2 flex items-center justify-end border-t border-base-400 pt-3 pr-4 dark:border-dark-base-150"
 			>
-				<span class="text-sm font-medium tabular-nums">{fmt(grandTotal)} kr</span>
+				<span class="text-sm font-medium tabular-nums">{formatDineroAmount(grandTotal)} kr</span>
 			</div>
 		{/if}
 	{:catch e}

@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, Flag, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatAmount, formatDineroAmount, sumDinero } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import type { PageData } from './$types';
 	import type { Expense, Comment } from '$lib/api/types';
@@ -25,7 +25,7 @@
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
+	const totalAmount = $derived(sumDinero(expense.parts.map((part) => part.amount)));
 
 	const canConfirm = $derived(!!data.user?.permissions.confirm && !expense.confirmed_at);
 	const confirmDisabled = $derived(!!expense.is_flagged);
@@ -132,7 +132,7 @@
 
 	let submittingComment = $state(false);
 
-	let comments = $state<Comment[]>(expense.comments);
+	let comments = $derived<Comment[]>(expense.comments);
 	$effect(() => {
 		comments = expense.comments;
 	});
@@ -163,7 +163,10 @@
 			<CopyableValue display={`${$_('expense')} #${expense.id}`} value={expense.id} />
 			<CopyableValue display={`${expense.owner.first_name} ${expense.owner.last_name}`} />
 			<CopyableValue display={expense.description} />
-			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
+			<CopyableValue
+				display={formatDineroAmount(totalAmount)}
+				value={formatDineroAmount(totalAmount)}
+			/>
 			<CopyableValue display={expense.expense_date} />
 		</div>
 		<div class="flex items-center gap-2">
@@ -324,7 +327,6 @@
 			<PartsTable
 				parts={expense.parts}
 				owner={expense.owner}
-				{totalAmount}
 				includeAttest={true}
 				attestDisabled={!!expense.is_flagged}
 				currentUser={data.user ? data.user : undefined}

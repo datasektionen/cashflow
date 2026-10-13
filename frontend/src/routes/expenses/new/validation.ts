@@ -1,20 +1,42 @@
 import { create, test, only, enforce } from 'vest';
+import { type DateValue } from '@internationalized/date';
+import type { ExpenseCreate, PartCreateUpdate } from '$lib/api/types';
+import { dinero, greaterThan, isZero, lessThan } from 'dinero.js';
+import { SEK } from 'dinero.js/currencies';
+import { logger } from '$lib/logger';
 
-type Part = {
-	costcenter?: string;
-	secondarycostcenter?: string;
-	budgetline?: string;
-	amount?: number | null;
+export type NewExpenseFormData = {
+	description: string;
+	files: File[];
+	// parts: {
+	// 	cost_centre: string;
+	// 	secondary_cost_centre: string;
+	// 	budget_line: string;
+	// 	amount: string;
+	// }[];
+	parts: PartCreateUpdate[];
+	date: DateValue | undefined;
 };
 
-type ExpenseFormData = {
-	description?: string;
-	'expense-date'?: string;
-	files?: File[];
-	parts?: Part[];
-};
+//*
+// Takes the form data and converts it into the format expected by the API.
+//*
+export function validateFormData(formData: NewExpenseFormData): ExpenseCreate {
+	if (!formData.date) {
+		logger.error(formData, 'Expected valid date in form data');
+		throw new Error('Date is required');
+	}
+	const expense_date = formData.date.toString();
 
-const validation = create((data: ExpenseFormData, currentField?: string) => {
+	return {
+		description: formData.description,
+		expense_date,
+		files: formData.files,
+		parts: formData.parts
+	};
+}
+
+const validation = create((data: NewExpenseFormData, currentField?: string) => {
 	only(currentField);
 
 	test('description', 'description_required', () => {
@@ -22,11 +44,11 @@ const validation = create((data: ExpenseFormData, currentField?: string) => {
 	});
 
 	test('expense-date', 'expense_date_required', () => {
-		enforce(data['expense-date']).isNotBlank();
+		enforce(data.date).isNotEmpty();
 	});
 
 	test('expense-date', 'expense_date_future', () => {
-		const dateStr = data['expense-date'];
+		const dateStr = data.date?.toString();
 		if (!dateStr) return;
 		const today = new Date().toISOString().slice(0, 10);
 		enforce(dateStr <= today).isTruthy();
@@ -38,22 +60,24 @@ const validation = create((data: ExpenseFormData, currentField?: string) => {
 
 	data.parts?.forEach((part, i) => {
 		test(`part-${i}-costcenter`, 'cost_center_required', () => {
-			enforce(part.costcenter).isNotBlank();
+			enforce(part.cost_centre).isNotBlank();
 		});
 		test(`part-${i}-secondarycostcenter`, 'secondary_cost_center_required', () => {
-			enforce(part.secondarycostcenter).isNotBlank();
+			enforce(part.secondary_cost_centre).isNotBlank();
 		});
 		test(`part-${i}-budgetline`, 'budget_line_required', () => {
-			enforce(part.budgetline).isNotBlank();
+			enforce(part.budget_line).isNotBlank();
 		});
 		test(`part-${i}-amount`, 'amount_required', () => {
-			enforce(part.amount).isNotNull();
+			enforce(isZero(part.amount)).isFalsy();
 		});
 		test(`part-${i}-amount`, 'amount_negative', () => {
-			enforce(part.amount).isNumber().greaterThan(0);
+			const zero = dinero({ amount: 0, currency: SEK });
+			enforce(greaterThan(part.amount, zero)).isTruthy();
 		});
 		test(`part-${i}-amount`, 'amount_too_large', () => {
-			enforce(part.amount).isNumber().lessThanOrEquals(9999999.99);
+			const maxAmount = dinero({ amount: 999999999, currency: SEK });
+			enforce(lessThan(part.amount, maxAmount)).isTruthy();
 		});
 	});
 });

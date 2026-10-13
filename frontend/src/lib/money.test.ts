@@ -1,26 +1,63 @@
 import { test, assert } from 'vitest';
-import { toCents, sumCents, sumAmounts } from './money';
+import {
+	formatAmount,
+	formatDineroAmount,
+	dineroFromFloat,
+	dineroFromDecimal,
+	ZERO,
+	sumDinero
+} from './money';
+import { dinero, equal as dineroEqual, SEK } from 'dinero.js';
 
-test('converts a plain decimal string to cents', () => {
-	assert.equal(toCents('123.45'), 12345n);
+const sek = (amount: number) => dinero({ amount, currency: SEK });
+
+test('formatAmount: correct formatting', () => {
+	assert.equal(formatAmount('0'), '0,00');
+	assert.equal(formatAmount(0), '0,00');
+
+	assert.equal(formatAmount(0.001), '0,00');
+
+	// \u00a0 is a non-breaking space
+	assert.equal(formatAmount('1234.56'), '1\u00a0234,56');
+	assert.equal(formatAmount(1234.56), '1\u00a0234,56');
 });
 
-test('pads a single decimal digit', () => {
-	assert.equal(toCents('12.5'), 1250n);
+test('formatDineroAmount: correct formatting', () => {
+	assert.equal(formatDineroAmount(sek(123456)), '1\u00a0234,56');
 });
 
-test('handles a whole number with no decimal point', () => {
-	assert.equal(toCents('42'), 4200n);
+test('dineroFromFloat: correct rounding', () => {
+	assert.isTrue(dineroEqual(dineroFromFloat(1234.567, SEK), sek(123457))); // Should round up to closest öre
+	assert.isTrue(dineroEqual(dineroFromFloat(0.005, SEK), sek(1))); // Should round to one öre
 });
 
-test('handles negative amounts', () => {
-	assert.equal(toCents('-5.50'), -550n);
+test('dineroFromDecimal: parses decimal strings', () => {
+	assert.isTrue(dineroEqual(dineroFromDecimal('1234.56', SEK), sek(123456)));
+	assert.isTrue(dineroEqual(dineroFromDecimal('0.10', SEK), sek(10)));
+	assert.isTrue(dineroEqual(dineroFromDecimal('12.5', SEK), sek(1250)));
+	assert.isTrue(dineroEqual(dineroFromDecimal('100', SEK), sek(10000)));
+	assert.isTrue(dineroEqual(dineroFromDecimal('-12.34', SEK), sek(-1234)));
+	assert.isTrue(dineroEqual(dineroFromDecimal('-0.00', SEK), ZERO));
 });
 
-test('sums cents without floating-point drift', () => {
-	assert.equal(sumCents(['16.90', '2433.84']), 245074n);
+test('dineroFromDecimal: rejects invalid input', () => {
+	assert.throws(() => dineroFromDecimal('', SEK));
+	assert.throws(() => dineroFromDecimal('12,50', SEK));
+	assert.throws(() => dineroFromDecimal('abc', SEK));
+	assert.throws(() => dineroFromDecimal('1.234', SEK));
 });
 
-test('sums amounts back to a number that avoids float drift', () => {
-	assert.equal(sumAmounts(['16.90', '2433.84']), 2450.74);
+test('sumDinero: correct sum', () => {
+	assert.isTrue(dineroEqual(sumDinero([]), ZERO));
+
+	const intAmounts = [1234, 54233, 123, 1, 14421];
+	let intSum = intAmounts.reduce((sum, amount) => sum + amount);
+	let dineroAmounts = intAmounts.map(sek);
+
+	assert.isTrue(dineroEqual(sumDinero(dineroAmounts), sek(intSum)));
+
+	const intAmountsWithNegatives = [1234, -54233, 123, 1, 14421, -1234];
+	intSum = intAmountsWithNegatives.reduce((sum, amount) => sum + amount);
+	dineroAmounts = intAmountsWithNegatives.map(sek);
+	assert.isTrue(dineroEqual(sumDinero(dineroAmounts), sek(intSum)));
 });

@@ -12,7 +12,7 @@
 	import PartsTable from '$lib/components/PartsTable.svelte';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
-	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
+	import type { VoucherRowDraft } from '../../voucherRowValidation';
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import {
 		ValidationError,
@@ -20,12 +20,13 @@
 		type VoucherRowErrors,
 		type VoucherRowWarnings
 	} from '../../voucherRowValidation';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero, claimTotal } from '$lib/money';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
+	import { toDecimal } from 'dinero.js';
 
 	let { data }: { data: PageData } = $props();
 	const expense = $derived(data.expense);
-	const expectedTotal = $derived(sumAmounts(expense.parts.map((p) => p.amount)));
+	const expectedTotal = $derived(sumDinero(expense.parts.map((p) => p.amount)));
 	let voucherRowFields: VoucherRowFields | undefined = $state();
 	let showReceipt = $state(true);
 
@@ -189,7 +190,7 @@
 </div>
 
 <div class="flex flex-wrap gap-8">
-	<div class="flex min-w-0 grow basis-[51rem] flex-col gap-8 pt-1">
+	<div class="flex min-w-0 grow basis-204 flex-col gap-8 pt-1">
 		<div>
 			<h2 class="mb-2 text-base font-semibold">{$_('admin_account.create_voucher')}</h2>
 			<p
@@ -244,8 +245,8 @@
 
 					<CopyableValue
 						class="h-12 md:h-8"
-						value={formatAmount(expense.total)}
-						display="{expense.total} kr"
+						value={formatDineroAmount(claimTotal(expense))}
+						display="{toDecimal(claimTotal(expense))} kr"
 					/>
 				</div>
 
@@ -295,7 +296,7 @@
 	<div class="flex min-w-0 grow basis-80 flex-col gap-8 pt-1">
 		<div>
 			<h2 class="text-base font-semibold">Information</h2>
-			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-2 text-sm break-words">
+			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-2 text-sm wrap-break-word">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">
 					{$_('new_expense.form.description.label')}
 				</dt>

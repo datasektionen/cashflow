@@ -7,6 +7,7 @@
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import { toDecimal } from 'dinero.js';
 
 	// Static bar heights (%) for the loading placeholder, one per month
 	const skeletonBars = [45, 70, 30, 85, 55, 65, 40, 90, 50, 75, 35, 60];
@@ -28,7 +29,7 @@
 			data = value.months.map((month) => ({
 				month: fmt.format(new Date(y, month.month - 1)),
 				expense_count: Number(month.expense_count),
-				expense_total: Number(month.expense_total)
+				expense_total: Number(toDecimal(month.expense_total))
 			}));
 		});
 		return () => {

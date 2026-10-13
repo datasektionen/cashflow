@@ -1,12 +1,11 @@
 <!--
 @component
-A monetary amount input. Edits a raw numeric `value` (bindable) while showing a
-nicely formatted display string (sv-SE, 2 decimals) when not focused. On focus it
-reveals the plain number for editing; on blur it parses (accepting `,` or `.` and
-spaces) and reformats. Renders an optional hidden input for native form submission.
+The bindable value is a dinero object.
 -->
 <script lang="ts">
+	import { dineroFromDecimal, formatDineroAmount } from '$lib/money';
 	import { Lock } from '@lucide/svelte';
+	import { isZero, SEK, toDecimal, type Dinero } from 'dinero.js';
 
 	let {
 		value = $bindable(null),
@@ -16,7 +15,7 @@ spaces) and reformats. Renders an optional hidden input for native form submissi
 		class: className = '',
 		locked = false
 	}: {
-		value?: number | null;
+		value?: Dinero<number, 'SEK'> | null;
 		name?: string;
 		placeholder?: string;
 		suffix?: string;
@@ -24,42 +23,46 @@ spaces) and reformats. Renders an optional hidden input for native form submissi
 		locked?: boolean;
 	} = $props();
 
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
+	// Zero is shown as an empty field (with the placeholder) so that
+	// untouched amounts don't have to be cleared before typing.
+	const isEmpty = (v: Dinero<number, 'SEK'> | null): v is null => v == null || isZero(v);
 
 	let focused = $state(false);
-	let display = $state(value != null ? fmt.format(value) : '');
+	let display = $state(isEmpty(value) ? '' : formatDineroAmount(value));
+
+	function parse(input: string): Dinero<number, 'SEK'> | null {
+		const normalized = input.replace(/\s/g, '').replace(',', '.');
+		if (normalized === '' || normalized.startsWith('-')) return null;
+		try {
+			return dineroFromDecimal(normalized, SEK);
+		} catch {
+			return null;
+		}
+	}
 
 	// Keep the display in sync when `value` is changed from the outside
 	// (e.g. a reset), but never fight the user while they are typing.
 	$effect(() => {
 		if (!focused) {
-			display = value != null ? fmt.format(value) : '';
+			display = isEmpty(value) ? '' : formatDineroAmount(value);
 		}
 	});
 
 	function onFocus() {
 		focused = true;
-		display = value?.toString() ?? '';
+		display = isEmpty(value) ? '' : toDecimal(value);
 	}
 
 	function onBlur() {
 		focused = false;
-		const num = parseFloat(display.replace(/\s/g, '').replace(',', '.'));
-		if (!isNaN(num) && num >= 0) {
-			value = num;
-			display = fmt.format(num);
-		} else {
-			value = null;
-			display = '';
-		}
+
+		value = parse(display);
+		display = isEmpty(value) ? '' : formatDineroAmount(value);
 	}
 </script>
 
 <div class="relative flex w-full items-center">
-	{#if name}<input type="hidden" {name} value={value ?? ''} />{/if}
+	{#if name}<input type="hidden" {name} value={value != null ? toDecimal(value) : ''} />{/if}
 	<input
 		type="text"
 		inputmode="decimal"

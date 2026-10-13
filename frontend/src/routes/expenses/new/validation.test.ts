@@ -1,13 +1,17 @@
 import { test, assert, afterEach, beforeEach, vi } from 'vitest';
 import { freezeTime } from '$lib/test/helpers';
 import validation from './validation';
+import type { NewExpenseFormData } from './validation';
+import type { PartCreateUpdate } from '$lib/api/types';
+import { dinero, SEK } from 'dinero.js';
+import { parseDate } from '@internationalized/date';
 
-export const TODAY = '2026-05-29';
-export const YESTERDAY = '2026-05-28';
-export const TOMORROW = '2026-05-30';
+const TODAY = parseDate('2026-05-29');
+const YESTERDAY = parseDate('2026-05-28');
+const TOMORROW = parseDate('2026-05-30');
 
 beforeEach(() => {
-	freezeTime(TODAY);
+	freezeTime(TODAY.toString());
 });
 
 afterEach(() => {
@@ -15,34 +19,20 @@ afterEach(() => {
 	validation.reset();
 });
 
-type Part = {
-	costcenter?: string;
-	secondarycostcenter?: string;
-	budgetline?: string;
-	amount?: number | null;
-};
-
-type ExpenseFormData = {
-	description?: string;
-	'expense-date'?: string;
-	files?: File[];
-	parts?: Part[];
-};
-
 /** Example expense part **/
-export const makePart = (overrides: Partial<Part> = {}): Part => ({
+export const makePart = (overrides: Partial<PartCreateUpdate> = {}): PartCreateUpdate => ({
 	// Shoutout MISTY (jag älskar kaffe)
-	costcenter: 'Sektionslokalsgruppen',
-	secondarycostcenter: 'Allmänt',
-	budgetline: 'Metadryck',
-	amount: 100,
+	cost_centre: 'Sektionslokalsgruppen',
+	secondary_cost_centre: 'Allmänt',
+	budget_line: 'Metadryck',
+	amount: dinero({ amount: 10000, currency: SEK }),
 	...overrides
 });
 
 /** Example valid form */
-export const makeFormData = (overrides: Partial<ExpenseFormData> = {}): ExpenseFormData => ({
+export const makeFormData = (overrides: Partial<NewExpenseFormData> = {}): NewExpenseFormData => ({
 	description: 'Det sista fikat någon i manusgruppen någonsin kommer äta i sina liv',
-	'expense-date': YESTERDAY,
+	date: YESTERDAY,
 	files: [new File(['receipt'], 'receipt.png', { type: 'image/png' })],
 	parts: [makePart()],
 	...overrides
@@ -71,19 +61,19 @@ test('description: surrounding whitespace is valid', () => {
 });
 
 test('expense-date: yesterday is valid', () => {
-	const data = makeFormData({ 'expense-date': YESTERDAY });
+	const data = makeFormData({ date: YESTERDAY });
 	const result = validation.run(data);
 	assert(!result.hasErrors('expense-date'));
 });
 
 test('expense-date: today is valid', () => {
-	const data = makeFormData({ 'expense-date': TODAY });
+	const data = makeFormData({ date: TODAY });
 	const result = validation.run(data);
 	assert(!result.hasErrors('expense-date'));
 });
 
 test('expense-date: tomorrow is invalid', () => {
-	const data = makeFormData({ 'expense-date': TOMORROW });
+	const data = makeFormData({ date: TOMORROW });
 	const result = validation.run(data);
 	assert(result.hasErrors('expense-date'));
 	const errors = result.getErrors('expense-date');
