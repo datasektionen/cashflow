@@ -1,14 +1,21 @@
 import { ApiClient } from '$lib/api';
 import type { LeaderboardEntry, PaginatedResponse } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
+import type { Dinero } from 'dinero.js';
+import {
+	type APILeaderboardEntry,
+	type APIYearlyStatistics,
+	parseLeaderboardEntry,
+	parseYearlyStatistics
+} from '$lib/api/parse';
 
 export type MonthlyStatistics = {
 	year: number;
 	month: number;
 	expense_count: number;
 	invoice_count: number;
-	expense_total: string;
-	invoice_total: string;
+	expense_total: Dinero<number, 'SEK'>;
+	invoice_total: Dinero<number, 'SEK'>;
 };
 
 export type YearlyStatistics = {
@@ -37,13 +44,13 @@ export class StatsAPI {
 			end_date: endDate,
 			ordering: orderBy ? orderBy : '-expense_total'
 		};
-		const res = await this.apiClient.get<ListResponse<LeaderboardEntry>>(
+		const res = await this.apiClient.get<ListResponse<APILeaderboardEntry>>(
 			'/stats/leaderboard/',
 			params
 		);
 
 		return {
-			data: res.data,
+			data: res.data.map(parseLeaderboardEntry),
 			pagination: {
 				total: res.pagination.total,
 				page: res.pagination.page,
@@ -54,6 +61,8 @@ export class StatsAPI {
 	}
 
 	async yearly(year: number): Promise<YearlyStatistics> {
-		return await this.apiClient.get<YearlyStatistics>(`/stats/yearly/${year}/`);
+		return parseYearlyStatistics(
+			await this.apiClient.get<APIYearlyStatistics>(`/stats/yearly/${year}/`)
+		);
 	}
 }

@@ -13,20 +13,21 @@
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
-	import type { VoucherRowDraft } from '../../VoucherRowFields.svelte';
+	import type { VoucherRowDraft } from '../../voucherRowValidation';
 	import {
 		ValidationError,
 		VoucherRowField,
 		type VoucherRowErrors,
 		type VoucherRowWarnings
 	} from '../../voucherRowValidation';
-	import { sumAmounts } from '$lib/money';
+	import { sumDinero, claimTotal } from '$lib/money';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatDineroAmount } from '$lib/money';
+	import { toDecimal } from 'dinero.js';
 
 	let { data }: { data: PageData } = $props();
 	const invoice = $derived(data.invoice);
-	const expectedTotal = $derived(sumAmounts(invoice.parts.map((p) => p.amount)));
+	const expectedTotal = $derived(sumDinero(invoice.parts.map((p) => p.amount)));
 	let voucherRowFields: VoucherRowFields | undefined = $state();
 
 	let voucherRowErrors: VoucherRowErrors = $state({});
@@ -250,8 +251,8 @@
 
 					<CopyableValue
 						class="h-12 md:h-8"
-						value={formatAmount(invoice.total)}
-						display="{invoice.total} kr"
+						value={formatDineroAmount(claimTotal(invoice))}
+						display="{toDecimal(claimTotal(invoice))} kr"
 					/>
 				</div>
 

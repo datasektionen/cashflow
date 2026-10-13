@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, MessageSquarePlus, Trash } from '@lucide/svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
 	import type { PageData } from './$types';
 	import type { Invoice, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -30,44 +30,7 @@
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(sumAmounts(invoice.parts.map((part) => part.amount)));
-
-	const canConfirm = $derived(!!data.user?.permissions.confirm && !invoice.confirmed_at);
-	const canUnconfirm = $derived(!!data.user?.permissions.unconfirm && !!invoice.confirmed_at);
-
-	let confirming = $state(false);
-
-	async function handleConfirm() {
-		confirming = true;
-		await api.invoices
-			.confirm(invoice.id)
-			.then(() => {
-				invoice = { ...invoice, confirmed_at: new Date().toISOString(), confirmed_by: data.user };
-				alerts.update((a) => [...a, success($_('alerts.invoice_confirmed'))]);
-			})
-			.catch((e) => {
-				logger.error(e);
-				const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
-				alerts.update((a) => [...a, error(msg)]);
-			})
-			.finally(() => (confirming = false));
-	}
-
-	async function handleUnconfirm() {
-		confirming = true;
-		await api.invoices
-			.unconfirm(invoice.id)
-			.then(() => {
-				invoice = { ...invoice, confirmed_at: null, confirmed_by: null };
-				alerts.update((a) => [...a, success($_('alerts.invoice_unconfirmed'))]);
-			})
-			.catch((e) => {
-				logger.error(e);
-				const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
-				alerts.update((a) => [...a, error(msg)]);
-			})
-			.finally(() => (confirming = false));
-	}
+	const totalAmount = $derived(sumDinero(invoice.parts.map((part) => part.amount)));
 
 	let deleting = $state(false);
 
@@ -92,7 +55,7 @@
 
 	let submittingComment = $state(false);
 
-	let comments = $state<Comment[]>(invoice.comments);
+	let comments = $derived<Comment[]>(invoice.comments);
 	$effect(() => {
 		comments = invoice.comments;
 	});
@@ -162,7 +125,10 @@
 			<CopyableValue display={`CF ${invoice.id}`} />
 			<CopyableValue display={`${invoice.owner.first_name} ${invoice.owner.last_name}`} />
 			<CopyableValue display={invoice.description} />
-			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
+			<CopyableValue
+				display={formatDineroAmount(totalAmount)}
+				value={formatDineroAmount(totalAmount)}
+			/>
 			<CopyableValue display={invoice.invoice_date} />
 			<CopyableValue display={invoice.due_date} />
 		</div>
@@ -224,7 +190,6 @@
 			<PartsTable
 				parts={invoice.parts}
 				owner={invoice.owner}
-				{totalAmount}
 				includeAttest={true}
 				partType="invoice"
 				currentUser={data.user ?? undefined}

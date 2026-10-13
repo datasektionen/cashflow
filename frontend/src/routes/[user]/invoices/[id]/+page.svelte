@@ -2,7 +2,7 @@
 	import { _, locale } from 'svelte-i18n';
 	import { Check, MessageSquarePlus, Pencil, Trash } from '@lucide/svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatAmount, formatDineroAmount, sumDinero } from '$lib/money';
 	import type { PageData } from './$types';
 	import type { Invoice, Comment } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
@@ -32,7 +32,7 @@
 		invoice.parts.length > 0 && invoice.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(sumAmounts(invoice.parts.map((part) => part.amount)));
+	const totalAmount = $derived(sumDinero(invoice.parts.map((part) => part.amount)));
 
 	let deleting = $state(false);
 
@@ -55,7 +55,7 @@
 			.finally(() => (deleting = false));
 	}
 
-	let comments = $state<Comment[]>(invoice.comments);
+	let comments = $derived<Comment[]>(invoice.comments);
 	$effect(() => {
 		comments = invoice.comments;
 	});
@@ -123,7 +123,10 @@
 			<CopyableValue display={`${$_('invoice')} #${invoice.id}`} value={invoice.id} />
 			<CopyableValue display={`${invoice.owner.first_name} ${invoice.owner.last_name}`} />
 			<CopyableValue display={invoice.description} />
-			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
+			<CopyableValue
+				display={formatDineroAmount(totalAmount)}
+				value={formatDineroAmount(totalAmount)}
+			/>
 			<CopyableValue display={invoice.invoice_date} />
 			<CopyableValue display={invoice.due_date} />
 		</div>
@@ -192,14 +195,14 @@
 	<div class="flex flex-col gap-12 lg:w-3/5 lg:pt-1 xl:pr-16">
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-			<PartsTable parts={invoice.parts} owner={invoice.owner} {totalAmount} />
+			<PartsTable parts={invoice.parts} owner={invoice.owner} />
 		</div>
 
 		<div>
 			<h2 class="border-t border-base-500 pt-4 text-base font-semibold dark:border-dark-base-200">
 				Information
 			</h2>
-			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm break-words">
+			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm wrap-break-word">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
 				<dd>
 					{invoice.owner.first_name}

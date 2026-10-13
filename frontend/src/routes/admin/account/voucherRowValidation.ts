@@ -1,14 +1,23 @@
 import { create, each, enforce, only, test, warn } from 'vest';
-import type { VoucherRowDraft } from './VoucherRowFields.svelte';
+import { equal, greaterThan, isZero, type Dinero } from 'dinero.js';
+import { sumDinero, ZERO } from '$lib/money';
 
-type AccountFormData = {
-	voucherRowDrafts: VoucherRowDraft[];
-	expectedTotal?: number;
+export type VoucherRowDraft = {
+	// Account number as a string (the AdvancedCombobox value), e.g. "1234".
+	account: string;
+	// Fortnox cost centre code, e.g. "123".
+	cost_centre: string;
+	description: string;
+	debit: Dinero<number, 'SEK'>;
+	credit: Dinero<number, 'SEK'>;
+	lockedFields?: ('account' | 'cost_centre' | 'debit' | 'credit')[];
+	deletable?: boolean;
 };
 
-const toCents = (n: number | null | undefined) => Math.round((n ?? 0) * 100);
-const sumCents = (drafts: VoucherRowDraft[], pick: (draft: VoucherRowDraft) => number | null) =>
-	drafts.reduce((sum, draft) => sum + toCents(pick(draft)), 0);
+export type AccountFormData = {
+	voucherRowDrafts: VoucherRowDraft[];
+	expectedTotal?: Dinero<number, 'SEK'>;
+};
 
 export enum VoucherRowField {
 	Rows = 'voucher-rows',
@@ -38,20 +47,20 @@ export const voucherRowValidation = create((data: AccountFormData, currentField?
 	// Assert positive amounts
 	test(VoucherRowField.Amounts, ValidationError.NonPositiveAmount, () => {
 		each(data.voucherRowDrafts, (draft) => {
-			if (!draft.debit || draft.debit === 0) {
-				enforce(draft.credit).greaterThan(0);
+			if (isZero(draft.debit)) {
+				enforce(greaterThan(draft.credit, ZERO)).isTrue();
 			} else {
-				enforce(draft.debit).greaterThan(0);
+				enforce(greaterThan(draft.debit, ZERO)).isTrue();
 			}
 		});
 	});
 
 	// The total debit and credit amounts must be equal
 	test(VoucherRowField.DebitCredit, ValidationError.DebitCreditMismatch, () => {
-		const debitCents = sumCents(data.voucherRowDrafts, (r) => r.debit);
-		const creditCents = sumCents(data.voucherRowDrafts, (r) => r.credit);
+		const debitSum = sumDinero(data.voucherRowDrafts.map((r) => r.debit));
+		const creditSum = sumDinero(data.voucherRowDrafts.map((r) => r.credit));
 
-		enforce(debitCents).equals(creditCents);
+		enforce(equal(debitSum, creditSum)).isTrue();
 	});
 
 	// Check total debit amount against uploaded amount.
@@ -60,8 +69,8 @@ export const voucherRowValidation = create((data: AccountFormData, currentField?
 
 		if (data.expectedTotal == null) return;
 
-		const debitCents = sumCents(data.voucherRowDrafts, (r) => r.debit);
+		const totalDebit = sumDinero(data.voucherRowDrafts.map((r) => r.debit));
 
-		enforce(debitCents).equals(toCents(data.expectedTotal));
+		enforce(equal(totalDebit, data.expectedTotal)).isTrue();
 	});
 });

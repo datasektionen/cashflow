@@ -14,6 +14,21 @@ from expenses.models import File, Profile, Comment, Payment, ExpensePart, Expens
 from invoices.models import InvoicePart
 
 
+class ClaimTotalField(serializers.DecimalField):
+    """
+    Read-only claim total. Uses the `total` annotation from the viewset
+    queryset when present, and falls back to summing the parts for instances
+    that did not come from it (e.g. a claim that was just created).
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(max_digits=10, decimal_places=2, read_only=True, **kwargs)
+
+    def get_attribute(self, instance):
+        total = getattr(instance, "total", None)
+        return total if total is not None else instance.total_amount()
+
+
 class ClaimData(TypedDict):
     id: int
     type: str
@@ -108,10 +123,9 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only=True,
         help_text="Bank-facing payment reference, e.g. 'Data1234'.",
     )
-    total = serializers.SerializerMethodField()
-
-    def get_total(self, obj):
-        return obj.amount()
+    total = serializers.DecimalField(
+        max_digits=11, decimal_places=2, source="amount", read_only=True
+    )
 
     class Meta:
         model = Payment

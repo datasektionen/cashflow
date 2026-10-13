@@ -6,6 +6,7 @@ from rest_framework import serializers
 from budget.api.serializers import PartRecommendationsMixin
 from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 from core.api.serializers import (
+    ClaimTotalField,
     ProfileSerializer,
     UploadField,
     CommentSerializer,
@@ -117,9 +118,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "invoice (the accounts payable account). Null in list responses."
         )
     )
-    total = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=False, read_only=True
-    )
+    total = ClaimTotalField()
 
     class Meta:
         model = Invoice

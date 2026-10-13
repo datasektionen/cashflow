@@ -9,6 +9,7 @@
 	import UserLink from '$lib/components/UserLink.svelte';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import { formatDineroAmount } from '$lib/money';
 
 	let { data }: PageProps = $props();
 
@@ -106,10 +107,7 @@
 
 {#snippet amountCell(c: Claim)}
 	<span class="tabular-nums">
-		{Number(c.amount).toLocaleString('sv-SE', {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		})} kr
+		{formatDineroAmount(c.amount)} kr
 	</span>
 {/snippet}
 

@@ -9,7 +9,7 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, sumAmounts } from '$lib/money';
+	import { formatAmount, formatDineroAmount, sumDinero } from '$lib/money';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { api } from '$lib/api';
 	import { logger } from '$lib/logger';
@@ -34,7 +34,7 @@
 		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
 	);
 
-	const totalAmount = $derived(sumAmounts(expense.parts.map((part) => part.amount)));
+	const totalAmount = $derived(sumDinero(expense.parts.map((part) => part.amount)));
 
 	let deleting = $state(false);
 
@@ -57,7 +57,7 @@
 			.finally(() => (deleting = false));
 	}
 
-	let comments = $state<Comment[]>(expense.comments);
+	let comments = $derived<Comment[]>(expense.comments);
 	$effect(() => {
 		comments = expense.comments;
 	});
@@ -124,7 +124,10 @@
 			<CopyableValue display={`${$_('expense')} #${expense.id}`} value={expense.id} />
 			<CopyableValue display={`${expense.owner.first_name} ${expense.owner.last_name}`} />
 			<CopyableValue display={expense.description} />
-			<CopyableValue display={formatAmount(totalAmount)} value={totalAmount.toFixed(2)} />
+			<CopyableValue
+				display={formatDineroAmount(totalAmount)}
+				value={formatDineroAmount(totalAmount)}
+			/>
 			<CopyableValue display={expense.expense_date} />
 		</div>
 		<div class="flex items-center gap-2">
@@ -192,7 +195,7 @@
 	<div class="flex flex-col gap-12 lg:w-3/5 lg:pt-1 xl:pr-16">
 		<div>
 			<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
-			<PartsTable parts={expense.parts} owner={expense.owner} {totalAmount} />
+			<PartsTable parts={expense.parts} owner={expense.owner} />
 		</div>
 
 		<div>
@@ -201,7 +204,7 @@
 			</h2>
 			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
-				<dd class="break-words">
+				<dd class="wrap-break-word">
 					{expense.owner.first_name}
 					{expense.owner.last_name}
 					<span class="text-base-subtle dark:text-dark-base-subtle">({expense.owner.email})</span>

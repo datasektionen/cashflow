@@ -7,7 +7,7 @@
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import UserLink from '$lib/components/UserLink.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatDineroAmount } from '$lib/money';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import PaymentRow from './PaymentRow.svelte';
@@ -40,7 +40,7 @@
 				{
 					id: 'total',
 					header: $_('admin_expenses.columns.total'),
-					render: (p) => formatAmount(p.total),
+					render: (p) => formatDineroAmount(p.total),
 					width: 'w-48'
 				},
 				{

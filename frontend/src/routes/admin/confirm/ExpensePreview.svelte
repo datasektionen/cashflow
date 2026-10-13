@@ -43,7 +43,7 @@
 	<div class="flex flex-col gap-6">
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<div class="flex flex-col gap-1">
-				<h2 class="text-base font-semibold break-words">{expense.description}</h2>
+				<h2 class="text-base font-semibold wrap-break-word">{expense.description}</h2>
 				<div class="flex items-center gap-2 text-sm text-base-subtle dark:text-dark-base-subtle">
 					<span>{$_('expense')} #{expense.id}</span>
 					<span>·</span>
@@ -86,7 +86,7 @@
 			{/if}
 		</div>
 
-		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-1 text-sm break-words">
+		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-1 text-sm wrap-break-word">
 			<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_date')}</dt>
 			<dd>{new Date(expense.expense_date).toLocaleDateString($locale ?? 'sv-SE')}</dd>
 

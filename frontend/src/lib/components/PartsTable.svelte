@@ -4,16 +4,15 @@
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { alerts, error, success } from '$lib/stores/alerts';
-	import { sumAmounts, formatAmountPlain } from '$lib/money';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { logger } from '$lib/logger';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
 
 	export type ClaimPartsTableProps = {
 		parts: (ExpensePart | InvoicePart)[];
 		owner: Profile;
 		currentUser?: User;
-		totalAmount?: number;
 		includeAttest?: boolean;
 		attestDisabled?: boolean;
 		partType?: 'expense' | 'invoice';
@@ -24,7 +23,6 @@
 		parts,
 		owner,
 		currentUser,
-		totalAmount,
 		includeAttest = false,
 		attestDisabled = false,
 		partType = 'expense',
@@ -46,7 +44,6 @@
 		logger.debug('fetching budget info');
 		let uniqueCostCentres: SvelteSet<string> = new SvelteSet<string>();
 		parts.forEach((part) => {
-			console.log(part.cost_centre);
 			uniqueCostCentres.add(part.cost_centre);
 		});
 		return (
@@ -136,7 +133,7 @@
 			});
 	};
 
-	const resolvedTotalAmount = $derived(totalAmount ?? sumAmounts(parts.map((part) => part.amount)));
+	const totalAmount = $derived(sumDinero(parts.map((part) => part.amount)));
 </script>
 
 <div class="overflow-x-auto">
@@ -178,7 +175,7 @@
 						{/await}
 					</td>
 					<td class="py-3 pl-4 text-right"
-						>{formatAmountPlain(part.amount)}
+						>{formatDineroAmount(part.amount)}
 						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
 					>
 					{#if includeAttest}
@@ -237,7 +234,7 @@
 			<tr class="border-t border-base-500 font-medium dark:border-dark-base-200">
 				<td class="py-3 pr-4 text-right" colspan="3">{$_('total')}</td>
 				<td class="py-3 pl-4 text-right"
-					>{formatAmountPlain(resolvedTotalAmount)}
+					>{formatDineroAmount(totalAmount)}
 					<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
 				>
 				{#if includeAttest}<td></td>{/if}

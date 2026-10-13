@@ -1,39 +1,28 @@
-<script lang="ts" module>
-	export type Part = {
-		amountRaw: number | null;
-		// We do some pretty formatting for the monetary amount
-		// hence the split between the actual (raw) value and the display value
-		amountDisplay: string;
-		costcenter: string;
-		secondarycostcenter: string;
-		budgetline: string;
-	};
-
-	export function newPart(): Part {
-		return {
-			amountRaw: null,
-			amountDisplay: '',
-			costcenter: '',
-			secondarycostcenter: '',
-			budgetline: ''
-		};
-	}
-</script>
-
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { CircleAlert, Plus, X } from '@lucide/svelte';
 	import ComboBox from '$lib/components/ComboBox.svelte';
+	import AmountInput from '$lib/components/AmountInput.svelte';
 	import { api } from '$lib/api';
 	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
 	import { budget } from '$lib/stores/budget.svelte';
+	import type { PartCreateUpdate } from '$lib/api/types';
+	import { ZERO } from '$lib/money';
 
-	import { logger } from '$lib/logger';
 	import { SvelteSet } from 'svelte/reactivity';
 
+	function newPart(): PartCreateUpdate {
+		return {
+			cost_centre: '',
+			secondary_cost_centre: '',
+			budget_line: '',
+			amount: ZERO
+		};
+	}
+
 	type Props = {
-		parts: Part[];
+		parts: PartCreateUpdate[];
 		errors: Record<string, string[]>;
 		showErrors: (field: string) => boolean;
 		onValidate: (field: string) => void;
@@ -57,7 +46,7 @@
 	});
 
 	async function loadSecondaryCostCentres(i: number) {
-		const costCentre = costCentres.find((cc) => cc.name === parts[i].costcenter);
+		const costCentre = costCentres.find((cc) => cc.name === parts[i].cost_centre);
 		if (costCentre?.id != null) {
 			secondaryCostCentresByPart[i] = (
 				(await budget.secondaryCostCentres.get(costCentre)) ?? []
@@ -71,7 +60,7 @@
 
 	async function loadBudgetLines(i: number) {
 		const secondaryCostCentre = secondaryCostCentresByPart[i]?.find(
-			(scc) => scc.name === parts[i].secondarycostcenter
+			(scc) => scc.name === parts[i].secondary_cost_centre
 		);
 		if (secondaryCostCentre?.id != null) {
 			const budgetLines = (await budget.budgetLines.get(secondaryCostCentre)) ?? [];
@@ -86,17 +75,17 @@
 
 	function onCostCentreChange(i: number, value: string) {
 		loading.add(i);
-		parts[i].costcenter = value;
-		parts[i].secondarycostcenter = '';
-		parts[i].budgetline = '';
+		parts[i].cost_centre = value;
+		parts[i].secondary_cost_centre = '';
+		parts[i].budget_line = '';
 		loadSecondaryCostCentres(i);
 		loading.delete(i);
 	}
 
 	function onSecondaryCostCentreChange(i: number, value: string) {
 		loading.add(i);
-		parts[i].secondarycostcenter = value;
-		parts[i].budgetline = '';
+		parts[i].secondary_cost_centre = value;
+		parts[i].budget_line = '';
 		loadBudgetLines(i);
 		loading.delete(i);
 	}
@@ -112,26 +101,6 @@
 		parts = parts.filter((_, j) => j !== i);
 		secondaryCostCentresByPart = secondaryCostCentresByPart.filter((_, j) => j !== i);
 		budgetLinesByPart = budgetLinesByPart.filter((_, j) => j !== i);
-	}
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
-
-	function onAmountFocus(i: number) {
-		parts[i].amountDisplay = parts[i].amountRaw?.toString() ?? '';
-	}
-
-	function onAmountBlur(i: number, value: string) {
-		const num = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-		if (!isNaN(num) && num >= 0) {
-			parts[i].amountRaw = num;
-			parts[i].amountDisplay = fmt.format(num);
-		} else {
-			parts[i].amountRaw = null;
-			parts[i].amountDisplay = '';
-		}
 	}
 
 	// A set of currently loading parts
@@ -163,7 +132,7 @@
 						name="part-{i}-costcenter"
 						placeholder={$_('new_expense.form.expense_parts.cost_center_placeholder')}
 						items={costCentres.map((cc) => cc.name)}
-						bind:value={part.costcenter}
+						bind:value={part.cost_centre}
 						onchange={(v) => onCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-costcenter`)}
 						loading={loading.has(i) || loading.has(-1)}
@@ -178,7 +147,7 @@
 						name="part-{i}-secondarycostcenter"
 						placeholder={$_('new_expense.form.expense_parts.secondary_cost_center_placeholder')}
 						items={(secondaryCostCentresByPart[i] ?? []).map((scc) => scc.name)}
-						bind:value={part.secondarycostcenter}
+						bind:value={part.secondary_cost_centre}
 						onchange={(v) => onSecondaryCostCentreChange(i, v)}
 						onblur={() => onValidate(`part-${i}-secondarycostcenter`)}
 						loading={loading.has(i) || loading.has(-1)}
@@ -193,7 +162,7 @@
 						name="part-{i}-budgetline"
 						placeholder={$_('new_expense.form.expense_parts.budget_line_placeholder')}
 						items={(budgetLinesByPart[i] ?? []).map((bl) => bl.name)}
-						bind:value={part.budgetline}
+						bind:value={part.budget_line}
 						onblur={() => onValidate(`part-${i}-budgetline`)}
 						loading={loading.has(i) || loading.has(-1)}
 					/>
@@ -203,21 +172,12 @@
 					{#if i === 0}<span class="mb-1 text-right text-sm font-medium"
 							>{$_('new_expense.form.expense_parts.amount_label')}</span
 						>{/if}
-					<div class="relative flex items-center">
-						<input type="hidden" name="part-{i}-amount" value={part.amountRaw ?? ''} />
-						<input
-							type="text"
-							id="part-{i}-amount"
-							bind:value={part.amountDisplay}
-							onfocus={() => onAmountFocus(i)}
-							onblur={(e) => onAmountBlur(i, (e.currentTarget as HTMLInputElement).value)}
-							placeholder="0,00"
-							class="border-0 bg-base-300 pr-12 text-right placeholder:text-base-subtle dark:bg-dark-base-300 dark:placeholder:text-dark-base-subtle"
+					<div class="flex bg-base-300 dark:bg-dark-base-300">
+						<AmountInput
+							name="part-{i}-amount"
+							bind:value={() => part.amount, (v) => (part.amount = v ?? ZERO)}
+							suffix="SEK"
 						/>
-						<span
-							class="pointer-events-none absolute right-3 text-sm text-base-subtle dark:text-dark-base-subtle"
-							>SEK</span
-						>
 					</div>
 					{@render fieldError(`part-${i}-amount`, 'justify-end')}
 				</div>

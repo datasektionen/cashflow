@@ -1,21 +1,25 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, Check, CircleAlert, Copy, Undo2, X } from '@lucide/svelte';
-	import { parseDate, type DateValue } from '@internationalized/date';
+	import { parseDate } from '@internationalized/date';
 	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
 	import type { PageData } from './$types';
 	import type { Invoice } from '$lib/api/types';
 	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import FileInput from '../../../../invoices/new/FileInput.svelte';
 	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
-	import ExpenseParts, { type Part, newPart } from '$lib/components/ExpenseParts.svelte';
-	import { sumAmounts } from '$lib/money';
-	import validation from './validation.ts';
+	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
+	import validation, { validateFormData } from './validation.ts';
+	import type { UpdateInvoiceFormData } from './validation.ts';
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { ZERO } from '$lib/money';
+	import { api } from '$lib/api/index';
+	import { alerts, success } from '$lib/stores/alerts';
+	import { goto } from '$app/navigation';
+	import { logger } from '$lib/logger';
 
 	let { data }: { data: PageData } = $props();
 	let { invoice }: { invoice: Invoice } = $derived(data);
@@ -23,14 +27,6 @@
 	const pdfium = usePdfiumEngine();
 
 	const partsLocked = $derived(invoice.parts.some((p) => p.attested_by != null));
-
-	let deletedFiles: SvelteSet<number> = new SvelteSet<number>();
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
-	const totalAmount = $derived(sumAmounts(invoice.parts.map((part) => part.amount)));
 
 	let copied = $state(false);
 	function copyId() {
@@ -40,71 +36,68 @@
 	}
 
 	let submitting = $state(false);
-	let description = $derived(invoice.description);
-	let newFiles: File[] = $state([]);
-	let invoiceDate: DateValue | undefined = $derived(
-		invoice.invoice_date ? parseDate(invoice.invoice_date) : undefined
-	);
-	let dueDate: DateValue | undefined = $derived(
-		invoice.due_date ? parseDate(invoice.due_date) : undefined
-	);
-	function initialParts(inv: Invoice): Part[] {
-		if (inv.parts.length === 0) return [newPart()];
-		return inv.parts.map((p) => {
-			const amountRaw = parseFloat(p.amount);
-			return {
-				amountRaw,
-				amountDisplay: fmt.format(amountRaw),
-				costcenter: p.cost_centre,
-				secondarycostcenter: p.secondary_cost_centre,
-				budgetline: p.budget_line
-			};
-		});
-	}
-	let parts: Part[] = $state(untrack(() => initialParts(data.invoice)));
 
-	function buildValidationData() {
+	function initialFormData(inv: Invoice): UpdateInvoiceFormData {
 		return {
-			description,
-			'invoice-date': invoiceDate?.toString(),
-			'due-date': dueDate?.toString(),
-			parts: partsLocked
-				? []
-				: parts.map((p) => ({
-						costcenter: p.costcenter,
-						secondarycostcenter: p.secondarycostcenter,
-						budgetline: p.budgetline,
-						amount: p.amountRaw
-					}))
+			description: inv.description,
+			files: [],
+			deletedFiles: new SvelteSet<number>(),
+			parts:
+				inv.parts.length > 0
+					? inv.parts.map((p) => ({
+							cost_centre: p.cost_centre,
+							secondary_cost_centre: p.secondary_cost_centre,
+							budget_line: p.budget_line,
+							amount: p.amount
+						}))
+					: [
+							{
+								cost_centre: '',
+								secondary_cost_centre: '',
+								budget_line: '',
+								amount: ZERO
+							}
+						],
+			invoiceDate: inv.invoice_date ? parseDate(inv.invoice_date) : undefined,
+			dueDate: inv.due_date ? parseDate(inv.due_date) : undefined
 		};
 	}
 
-	function handleSubmit(e: SubmitEvent) {
+	let formData: UpdateInvoiceFormData = $state(untrack(() => initialFormData(data.invoice)));
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		submitting = true;
-		validationResult = validation.run(buildValidationData());
+		validationResult = validation.run(formData);
 		if (!validationResult.isValid()) {
-			e.preventDefault();
 			submitting = false;
+			return;
 		}
+
+		const updated = await api.invoices.update(invoice.id, validateFormData(formData, !partsLocked));
+		logger.debug(updated, 'invoice updated');
+
+		alerts.update((alerts) => [...alerts, success($_('invoice_updated'))]);
+		await goto(`/${invoice.owner.username}/invoices/${invoice.id}`);
 	}
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		validationResult = validation.run(buildValidationData(), e.currentTarget.name);
+		validationResult = validation.run(formData, e.currentTarget.name);
 	}
 
 	function onInvoiceDateBlur() {
-		validationResult = validation.run(buildValidationData(), 'invoice-date');
+		validationResult = validation.run(formData, 'invoice-date');
 	}
 
 	function onDueDateBlur() {
-		validationResult = validation.run(buildValidationData(), 'due-date');
+		validationResult = validation.run(formData, 'due-date');
 	}
 
 	function validateField(field: string) {
-		validationResult = validation.run(buildValidationData(), field);
+		validationResult = validation.run(formData, field);
 	}
 
 	function showErrors(field: string) {
@@ -139,7 +132,7 @@
 	<div class="flex w-full flex-col space-y-2">
 		<h2 class="text-base font-semibold">{$_('expense_parts')}</h2>
 		<ExpenseParts
-			bind:parts
+			bind:parts={formData.parts}
 			{errors}
 			{showErrors}
 			onValidate={validateField}
@@ -187,7 +180,7 @@
 						type="text"
 						name="description"
 						onblur={onBlur}
-						bind:value={description}
+						bind:value={formData.description}
 					/>
 				</div>
 
@@ -207,9 +200,9 @@
 						{/if}
 					</span>
 
-					<input type="hidden" name="invoice-date" value={invoiceDate?.toString() ?? ''} />
+					<input type="hidden" name="invoice-date" value={formData.invoiceDate?.toString() ?? ''} />
 					<DatePicker
-						bind:value={invoiceDate}
+						bind:value={formData.invoiceDate}
 						invalid={showErrors('invoice-date')}
 						errors={errors['invoice-date']}
 						onBlur={onInvoiceDateBlur}
@@ -232,9 +225,9 @@
 						{/if}
 					</span>
 
-					<input type="hidden" name="due-date" value={dueDate?.toString() ?? ''} />
+					<input type="hidden" name="due-date" value={formData.dueDate?.toString() ?? ''} />
 					<DatePicker
-						bind:value={dueDate}
+						bind:value={formData.dueDate}
 						invalid={showErrors('due-date')}
 						errors={errors['due-date']}
 						onBlur={onDueDateBlur}
@@ -246,9 +239,13 @@
 						{$_('new_invoice.form.files.label')}
 					</span>
 					<div class="flex flex-wrap justify-between gap-2 bg-base-300 p-2 dark:bg-dark-base-300">
-						<input type="hidden" name="deleteFiles" value={JSON.stringify([...deletedFiles])} />
+						<input
+							type="hidden"
+							name="deleteFiles"
+							value={JSON.stringify([...formData.deletedFiles])}
+						/>
 						{#each invoice.files as file}
-							{@const isDeleted = deletedFiles.has(file.id)}
+							{@const isDeleted = formData.deletedFiles.has(file.id)}
 							<div
 								class="mx-4 flex w-full flex-row space-x-4 border-b border-base-600 dark:border-b-dark-base-200"
 							>
@@ -266,8 +263,8 @@
 									type="button"
 									class="ml-auto text-base-subtle transition-all hover:scale-115 hover:cursor-pointer dark:text-dark-base-subtle"
 									onclick={isDeleted
-										? () => deletedFiles.delete(file.id)
-										: () => deletedFiles.add(file.id)}
+										? () => formData.deletedFiles.delete(file.id)
+										: () => formData.deletedFiles.add(file.id)}
 								>
 									{#if isDeleted}
 										<Undo2 />
@@ -279,7 +276,7 @@
 						{/each}
 					</div>
 					<div class="flex h-56">
-						<FileInput bind:files={newFiles} engine={pdfium.engine} />
+						<FileInput bind:files={formData.files} engine={pdfium.engine} />
 					</div>
 				</div>
 			</div>

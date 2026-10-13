@@ -6,22 +6,16 @@
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import type { TableColumn, TableRowProps } from '$lib/components/types';
 	import type { Claim, Expense } from '$lib/api/types';
-	import { alerts, success } from '$lib/stores/alerts';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import { formatDineroAmount } from '$lib/money';
 
 	let { data }: PageProps = $props();
 
 	const viewedUser = $derived(data.user);
 	const title = $derived(viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : '');
-
-	$effect(() => {
-		if (page.url.searchParams.get('createSuccess')) {
-			alerts.update((a) => [...a, success($_('expense_created'))]);
-		}
-	});
 
 	function handlePageChange(p: number) {
 		const url = new URL(page.url);
@@ -90,11 +84,6 @@
 			return true;
 		})
 	);
-
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
 </script>
 
 {#snippet statusCell(c: Claim)}
@@ -102,7 +91,7 @@
 {/snippet}
 
 {#snippet totalCell(c: Claim)}
-	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
+	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
 {/snippet}
 
 {#snippet costCentres(c: Claim)}

@@ -1,22 +1,42 @@
 import { create, enforce, only, test } from 'vest';
 import 'vest/date';
+import { type DateValue } from '@internationalized/date';
+import type { InvoiceCreate, PartCreateUpdate } from '$lib/api/types';
+import { dinero, greaterThan, isZero, lessThan } from 'dinero.js';
+import { SEK } from 'dinero.js/currencies';
+import { logger } from '$lib/logger';
 
-export type Part = {
-	costcenter?: string;
-	secondarycostcenter?: string;
-	budgetline?: string;
-	amount?: number | null;
+export type NewInvoiceFormData = {
+	description: string;
+	files: File[];
+	parts: PartCreateUpdate[];
+	invoiceDate: DateValue | undefined;
+	dueDate: DateValue | undefined;
 };
 
-export type InvoiceFormData = {
-	description?: string;
-	'invoice-date'?: string;
-	'due-date'?: string;
-	files?: File[];
-	parts?: Part[];
-};
+//*
+// Takes the form data and converts it into the format expected by the API.
+//*
+export function validateFormData(formData: NewInvoiceFormData): InvoiceCreate {
+	if (!formData.invoiceDate) {
+		logger.error(formData, 'Expected valid invoice date in form data');
+		throw new Error('Invoice date is required');
+	}
+	if (!formData.dueDate) {
+		logger.error(formData, 'Expected valid due date in form data');
+		throw new Error('Due date is required');
+	}
 
-const validation = create((data: InvoiceFormData, currentField?: string) => {
+	return {
+		description: formData.description,
+		invoice_date: formData.invoiceDate.toString(),
+		due_date: formData.dueDate.toString(),
+		files: formData.files,
+		parts: formData.parts
+	};
+}
+
+const validation = create((data: NewInvoiceFormData, currentField?: string) => {
 	only(currentField);
 
 	test('description', 'description_required', () => {
@@ -24,11 +44,11 @@ const validation = create((data: InvoiceFormData, currentField?: string) => {
 	});
 
 	test('invoice-date', 'invoice_date_required', () => {
-		enforce(data['invoice-date']).isNotBlank();
+		enforce(data.invoiceDate).isNotEmpty();
 	});
 
 	test('due-date', 'due_date_required', () => {
-		enforce(data['due-date']).isNotBlank();
+		enforce(data.dueDate).isNotEmpty();
 	});
 	test('files', 'files_required', () => {
 		enforce(data.files).isArray().longerThan(0);
@@ -37,22 +57,24 @@ const validation = create((data: InvoiceFormData, currentField?: string) => {
 	test('parts', 'parts_required', () => {
 		data.parts?.forEach((part, i) => {
 			test(`part-${i}-costcenter`, 'cost_center_required', () => {
-				enforce(part.costcenter).isNotBlank();
+				enforce(part.cost_centre).isNotBlank();
 			});
 			test(`part-${i}-secondarycostcenter`, 'secondary_cost_center_required', () => {
-				enforce(part.secondarycostcenter).isNotBlank();
+				enforce(part.secondary_cost_centre).isNotBlank();
 			});
 			test(`part-${i}-budgetline`, 'budget_line_required', () => {
-				enforce(part.budgetline).isNotBlank();
+				enforce(part.budget_line).isNotBlank();
 			});
 			test(`part-${i}-amount`, 'amount_required', () => {
-				enforce(part.amount).isNotNull();
+				enforce(isZero(part.amount)).isFalsy();
 			});
 			test(`part-${i}-amount`, 'amount_negative', () => {
-				enforce(part.amount).isNumber().greaterThan(0);
+				const zero = dinero({ amount: 0, currency: SEK });
+				enforce(greaterThan(part.amount, zero)).isTruthy();
 			});
 			test(`part-${i}-amount`, 'amount_too_large', () => {
-				enforce(part.amount).isNumber().lessThanOrEquals(9999999.99);
+				const maxAmount = dinero({ amount: 999999999, currency: SEK });
+				enforce(lessThan(part.amount, maxAmount)).isTruthy();
 			});
 		});
 	});

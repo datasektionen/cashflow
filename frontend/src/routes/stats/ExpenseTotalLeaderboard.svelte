@@ -5,7 +5,7 @@
 	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import LeaderboardSkeleton from './LeaderboardSkeleton.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatDineroAmount } from '$lib/money';
 
 	let range = $state(0);
 
@@ -134,7 +134,7 @@
 							>
 
 							<td class="px-4 py-3 text-right align-middle whitespace-nowrap tabular-nums"
-								>{formatAmount(entry.expense_total)}</td
+								>{formatDineroAmount(entry.expense_total)}</td
 							>
 						</tr>
 					{/each}

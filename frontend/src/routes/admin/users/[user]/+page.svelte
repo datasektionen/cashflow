@@ -14,6 +14,7 @@
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
 	import { mayPay } from '$lib/auth';
 	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
+	import { formatDineroAmount } from '$lib/money';
 
 	let { data }: PageProps = $props();
 
@@ -85,11 +86,6 @@
 		})
 	);
 
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
-
 	const formattedAccount = $derived(
 		data.viewedUser.bank_info
 			? formatBankAccount(
@@ -109,7 +105,7 @@
 {/snippet}
 
 {#snippet totalCell(c: Claim)}
-	<span class="tabular-nums">{fmt.format(parseFloat(c.amount))} kr</span>
+	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
 {/snippet}
 
 {#snippet costCentres(c: Claim)}

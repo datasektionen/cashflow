@@ -12,6 +12,7 @@
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
 	import { formatBankAccount } from '$lib/bankAccount';
 	import { completedPayments } from './completedPayments.svelte';
+	import { formatDineroAmount } from '$lib/money';
 
 	type pageData = {
 		pendingPayments: PaginatedResponse<PendingPayment>;
@@ -89,10 +90,7 @@
 									</span>
 								</td>
 								<td class="w-36 px-4 py-2 text-right font-semibold tabular-nums">
-									{Number(pending.total).toLocaleString('sv-SE', {
-										minimumFractionDigits: 2,
-										maximumFractionDigits: 2
-									})} kr
+									{formatDineroAmount(pending.total)} kr
 								</td>
 								<td class="flex h-full w-20 flex-row items-center gap-x-2 py-2 pr-4 text-right">
 									<span
@@ -146,20 +144,14 @@
 								<UserLink user={completed.receiver} />
 							</span>
 							<span class="shrink-0 text-sm font-semibold tabular-nums">
-								{Number(completed.amount).toLocaleString('sv-SE', {
-									minimumFractionDigits: 2,
-									maximumFractionDigits: 2
-								})} kr
+								{formatDineroAmount(completed.amount)} kr
 							</span>
 						</div>
 						<div class="flex flex-wrap items-center gap-2">
 							<CopyableValue display={completed.tag} />
 							<CopyableValue
-								display={`${Number(completed.amount).toLocaleString('sv-SE', {
-									minimumFractionDigits: 2,
-									maximumFractionDigits: 2
-								})} kr`}
-								value={completed.amount}
+								display={`${formatDineroAmount(completed.amount)} kr`}
+								value={formatDineroAmount(completed.amount)}
 							/>
 							<CopyableValue display={account} />
 						</div>
