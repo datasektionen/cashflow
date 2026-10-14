@@ -119,6 +119,7 @@
 
 <!-- Context menu -->
 {#if ctx != null}
+	{@const url = encodeURIComponent}
 	<div
 		role="menu"
 		class={[
@@ -128,7 +129,7 @@
 		style="left: {ctx.x}px; top: {ctx.y}px"
 	>
 		<a
-			href="/admin/expenses/?cost_centre={ctx.selected.name}"
+			href="/admin/expenses/?cost_centre={url(ctx.selected.name)}"
 			role="menuitem"
 			class={itemClass}
 			target="_blank"
@@ -139,7 +140,7 @@
 			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
 		</a>
 		<a
-			href="/admin/invoices/?cost_centre={ctx.selected.name}"
+			href="/admin/invoices/?cost_centre={url(ctx.selected.name)}"
 			role="menuitem"
 			class={itemClass}
 			target="_blank"
