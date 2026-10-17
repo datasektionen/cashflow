@@ -8,7 +8,10 @@ declare global {
 		interface Locals {
 			user: User | null;
 		}
-		// interface PageData {}
+		interface PageData {
+			title?: string | Promise<string>;
+			title_key?: string;
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}
