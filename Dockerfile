@@ -7,7 +7,7 @@ COPY frontend .
 RUN bun run build
 
 
-FROM python:3.14.6-alpine AS base
+FROM python:3.15.0-alpine AS base
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
@@ -15,7 +15,7 @@ ENV TZ=Europe/Stockholm
 
 # The poetry version on APK is outdated and does not work with our lockfile
 # => install using pip
-RUN apk --no-cache add build-base libpq libpq-dev py3-psycopg2 nginx supervisor && \
+RUN apk --no-cache add build-base libpq libpq-dev libheif libheif-dev py3-psycopg2 nginx supervisor && \
     pip install --no-cache-dir poetry==2.3.4 && \
     mkdir -p /var/log/supervisor
 
