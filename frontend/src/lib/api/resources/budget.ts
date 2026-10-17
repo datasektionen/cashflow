@@ -8,18 +8,6 @@ import type {
 } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
 
-function toPaginatedResponse<T>(res: ListResponse<T>): PaginatedResponse<T> {
-	return {
-		data: res.data,
-		pagination: {
-			page: res.pagination.page,
-			perPage: res.pagination.per_page,
-			totalPages: res.pagination.total_pages,
-			total: res.pagination.total
-		}
-	};
-}
-
 export class BudgetAPI {
 	private apiClient: ApiClient;
 
@@ -38,7 +26,15 @@ export class BudgetAPI {
 			...filter
 		});
 
-		return toPaginatedResponse(res);
+		return {
+			data: res.data,
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
 	}
 
 	async listSecondaryCostCentres(
@@ -55,7 +51,15 @@ export class BudgetAPI {
 			}
 		);
 
-		return toPaginatedResponse(res);
+		return {
+			data: res.data,
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
 	}
 
 	async listBudgetLines(
@@ -69,7 +73,15 @@ export class BudgetAPI {
 			...filter
 		});
 
-		return toPaginatedResponse(res);
+		return {
+			data: res.data,
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
 	}
 
 	async retrieveCostCentre(id: number): Promise<CostCentre> {
