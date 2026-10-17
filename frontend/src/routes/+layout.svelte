@@ -28,6 +28,7 @@
 	import { api } from '$lib/api';
 	import type { ActionSummary } from '$lib/api/types';
 	import { hasAdminAccess } from '$lib/auth';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 
 	let { children, data }: LayoutProps = $props();
 
@@ -35,9 +36,29 @@
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 	const canAccessAdmin = $derived(hasAdminAccess(data.user));
 	const viewAll = $derived(data.user?.permissions?.['view-all'] === true);
-	const pageTitle = $derived(
-		page.data.title ?? (page.data.title_key ? $_(page.data.title_key) : null)
-	);
+
+	// Pages may return `title` as a promise
+	let awaitedTitle: string | null = $state(null);
+	$effect(() => {
+		const title = page.data.title;
+		if (!(title instanceof Promise)) return;
+		awaitedTitle = null;
+		let stale = false;
+		title.then(
+			(v) => {
+				if (!stale) awaitedTitle = v;
+			},
+			() => {}
+		);
+		return () => {
+			stale = true;
+		};
+	});
+	const titlePending = $derived(page.data.title instanceof Promise && awaitedTitle == null);
+	const pageTitle = $derived.by(() => {
+		const title = page.data.title instanceof Promise ? awaitedTitle : page.data.title;
+		return title ?? (page.data.title_key ? $_(page.data.title_key) : null);
+	});
 
 	let sidebarOpen = $state(false);
 	let userDropdownOpen = $state(false);
@@ -204,7 +225,7 @@
 <div
 	class="base-text-base-text flex min-h-screen flex-col overflow-x-clip bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
 >
-	{#if pageTitle != null}
+	{#if pageTitle != null || titlePending}
 		<header
 			class={['w-full', adminView ? 'px-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8']}
 		>
@@ -214,7 +235,11 @@
 					'font-semibold tracking-tight'
 				]}
 			>
-				{pageTitle}
+				{#if titlePending}
+					<Skeleton class="h-[1lh] w-64 animate-delayed-fade-in rounded-sm" />
+				{:else}
+					{pageTitle}
+				{/if}
 			</h1>
 			<Separator.Root
 				orientation="horizontal"
