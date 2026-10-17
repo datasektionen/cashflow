@@ -6,6 +6,7 @@ import {
 	parsePayment,
 	parsePendingPayment
 } from '$lib/api/parse';
+import type { ListResponse } from '$lib/api/client';
 
 export class PaymentsAPI {
 	private apiClient: ApiClient;
@@ -19,23 +20,36 @@ export class PaymentsAPI {
 		perPage: number,
 		filter?: { tag?: string }
 	): Promise<PaginatedResponse<Payment>> {
-		const res = await this.apiClient.get<PaginatedResponse<APIPayment>>('/payments/', {
+		const res = await this.apiClient.get<ListResponse<APIPayment>>('/payments/', {
 			page,
 			per_page: perPage,
 			...filter
 		});
-		return { ...res, data: res.data.map(parsePayment) };
+		return {
+			data: res.data.map(parsePayment),
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
+			}
+		};
 	}
 
 	async listPending(page?: number, perPage?: number): Promise<PaginatedResponse<PendingPayment>> {
-		const res = await this.apiClient.get<PaginatedResponse<APIPendingPayment>>(
-			'/payments/pending/',
-			{
-				page,
-				per_page: perPage
+		const res = await this.apiClient.get<ListResponse<APIPendingPayment>>('/payments/pending/', {
+			page,
+			per_page: perPage
+		});
+		return {
+			data: res.data.map(parsePendingPayment),
+			pagination: {
+				total: res.pagination.total,
+				page: res.pagination.page,
+				perPage: res.pagination.per_page,
+				totalPages: res.pagination.total_pages
 			}
-		);
-		return { ...res, data: res.data.map(parsePendingPayment) };
+		};
 	}
 
 	async create(expenses: number[] | Expense[]): Promise<Payment> {
