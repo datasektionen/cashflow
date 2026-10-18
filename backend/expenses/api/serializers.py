@@ -8,7 +8,6 @@ from core.api.serializers import (
     ClaimTotalField,
     FileSerializer,
     ProfileSerializer,
-    UploadField,
     CommentSerializer,
     PaymentSerializer,
     VoucherRowSerializer,
@@ -100,27 +99,12 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
 
 class ExpenseAdminSerializer(ExpenseSerializer):
-    """Dedicated serializers for creating claims, provides proper annotations for OpenAPI."""
-
     is_flagged = serializers.BooleanField(
         help_text="Whether the expense is flagged. Only included for users with attesting permissions.",
     )
 
     class Meta(ExpenseSerializer.Meta):
         fields = [*ExpenseSerializer.Meta.fields, "is_flagged"]
-
-
-class ExpenseCreateSerializer(serializers.ModelSerializer):
-    """Dedicated serializer for creating claims, provides proper annotations for OpenAPI."""
-
-    files = serializers.ListField(child=UploadField())
-    parts = serializers.CharField(
-        help_text="JSON-encoded array of expense parts: [{cost_centre, secondary_cost_centre, budget_line, amount}]."
-    )
-
-    class Meta:
-        model = Expense
-        fields = ["expense_date", "description", "files", "parts"]
 
 
 class ExpenseAccountSerializer(serializers.Serializer):

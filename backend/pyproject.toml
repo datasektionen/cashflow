@@ -28,7 +28,6 @@ dependencies = [
     "rapidfuzz (>=3.14.6,<4.0.0)",
     "black (>=26.10.1,<27.0.0)",
     "factory-boy (>=3.3.3,<4.0.0)",
-    "drf-spectacular (>=0.30.0,<0.31.0)",
     "mozilla-django-oidc (>=5.0.2,<6.0.0)",
     "cryptography (>=50.0.2,<51.0.0)",
 ]

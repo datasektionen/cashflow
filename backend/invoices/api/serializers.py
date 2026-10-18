@@ -8,7 +8,6 @@ from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 from core.api.serializers import (
     ClaimTotalField,
     ProfileSerializer,
-    UploadField,
     CommentSerializer,
     FileSerializer,
     VoucherRowSerializer,
@@ -30,33 +29,6 @@ class InvoiceDateField(serializers.DateField):
             return super().to_internal_value(value)
         except serializers.ValidationError:
             raise InvalidDateFormatProblem()
-
-
-class InvoiceCreateRequestSerializer(serializers.Serializer):
-    """Schema-only serializer describing the multipart/form-data payload for invoice creation."""
-
-    files = serializers.ListField(
-        child=UploadField(),
-        help_text="One or more images or PDFs of the invoice.",
-    )
-    description = serializers.CharField()
-    invoice_date = serializers.DateField(
-        help_text="Date the invoice was issued (YYYY-MM-DD)."
-    )
-    due_date = serializers.DateField(help_text="Payment due date (YYYY-MM-DD).")
-    parts = serializers.CharField(
-        help_text="JSON-encoded array of invoice parts: [{cost_centre, secondary_cost_centre, budget_line, amount}]."
-    )
-    accounted = serializers.BooleanField(
-        required=False,
-        default=False,
-        help_text="Whether the invoice has already been booked.",
-    )
-    verification = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text="Verification number, required when accounted=true.",
-    )
 
 
 class InvoiceAccountSerializer(serializers.Serializer):

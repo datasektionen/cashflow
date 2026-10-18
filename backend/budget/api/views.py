@@ -6,7 +6,6 @@ from django.db.models import Q
 from django.db.models.aggregates import Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
@@ -15,7 +14,6 @@ from rest_framework.views import APIView
 
 from budget.api.serializers import (
     BudgetLineSerializer,
-    CostCentreListQuerySerializer,
     CostCentreSerializer,
     SecondaryCostCentreSerializer,
 )
@@ -47,13 +45,6 @@ class CostCentreList(GenericAPIView):
     def get_serializer_class(self):
         return CostCentreSerializer
 
-    # extend_schema allows us to annotate endpoints in Redoc better
-    @extend_schema(
-        summary="List cost centres",
-        operation_id="list_cost_centres",
-        tags=["Budget"],
-        parameters=[CostCentreListQuerySerializer],
-    )
     def get(self, request):
 
         name = request.query_params.get("name")
@@ -128,11 +119,6 @@ class SecondaryCostCentreList(GenericAPIView):
     def get_serializer_class(self):
         return SecondaryCostCentreSerializer
 
-    @extend_schema(
-        summary="List secondary cost centres",
-        operation_id="list_secondary_cost_centres",
-        tags=["Budget"],
-    )
     def get(self, request):
 
         costcentre_id = request.query_params.get("costcentre_id")
@@ -188,11 +174,6 @@ class BudgetLineList(GenericAPIView):
     def get_serializer_class(self):
         return BudgetLineSerializer
 
-    @extend_schema(
-        summary="List budget lines",
-        operation_id="list_budget_lines",
-        tags=["Budget"],
-    )
     def get(self, request):
 
         gordian_bls = list_budget_lines_from_gordian()

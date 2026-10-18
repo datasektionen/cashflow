@@ -36,11 +36,7 @@ class Sorting(str, Enum):
 
 
 class ClaimQuerySerializer(serializers.Serializer):
-    """Query parameters accepted by the expense/invoice/claim list endpoints.
-
-    Also doubles as the OpenAPI schema for those endpoints' query parameters
-    (passed directly to `extend_schema(parameters=[...])`).
-    """
+    """Query parameters accepted by the expense/invoice/claim list endpoints."""
 
     user = serializers.CharField(required=False)
     cost_centre = serializers.CharField(required=False)

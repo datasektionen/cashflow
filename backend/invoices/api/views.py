@@ -5,27 +5,21 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import OuterRef, Subquery, Sum
 from django.http import QueryDict
-from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 from structlog import get_logger
 
-from core.api.filters import ClaimQuerySerializer, Filter, apply_invoice_filters
-from core.api.openapi import problem, problems
+from core.api.filters import Filter, apply_invoice_filters
 from core.api.problems import (
     PartInvalidJSONProblem,
     FileRequiredProblem,
     PartRequiredProblem,
     AttestationPermissionDeniedProblem,
-    EmptyCommentProblem,
     ConfirmationPermissionDeniedProblem,
     UnconfirmationPermissionDeniedProblem,
-    NotConfirmableProblem,
     NotConfirmedProblem,
     AlreadyConfirmedProblem,
     PaymentPermissionDeniedProblem,
@@ -63,11 +57,7 @@ from fortnox.api.problems import (
     FortnoxServiceNotAvailableProblem,
 )
 from notifications import get_notification_provider
-from .problems import (
-    VerificationRequiredError,
-)
 from .serializers import (
-    InvoiceCreateRequestSerializer,
     InvoiceSerializer,
     InvoicePartSerializer,
     InvoiceAccountSerializer,
@@ -77,133 +67,6 @@ from ..models import Invoice, InvoicePart
 logger = get_logger(__name__)
 
 
-@extend_schema_view(
-    list=extend_schema(
-        tags=["Invoices"],
-        summary="List invoices",
-        parameters=[ClaimQuerySerializer],
-        responses={
-            status.HTTP_200_OK: InvoiceSerializer,
-            status.HTTP_401_UNAUTHORIZED: problems(NotAuthenticated),
-        },
-    ),
-    create=extend_schema(
-        tags=["Invoices"],
-        summary="Create an invoice",
-        request={"multipart/form-data": InvoiceCreateRequestSerializer},
-        responses={
-            status.HTTP_201_CREATED: InvoiceSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(
-                FileRequiredProblem,
-                PartInvalidJSONProblem,
-                PartRequiredProblem,
-                VerificationRequiredError,
-            ),
-        },
-    ),
-    retrieve=extend_schema(
-        tags=["Invoices"],
-        summary="Retrieve an invoice",
-        responses={
-            status.HTTP_200_OK: InvoiceSerializer,
-            status.HTTP_401_UNAUTHORIZED: problems(NotAuthenticated),
-        },
-    ),
-    partial_update=extend_schema(
-        tags=["Invoices"],
-        summary="Partially update an invoice",
-        description=(
-            "Updates a subset of fields on an existing invoice. Only the "
-            "fields included in the request body are changed. Submit as "
-            "`multipart/form-data`; `parts` (JSON-encoded array, full "
-            "replacement) is accepted alongside `files` for new uploads."
-        ),
-        responses={
-            status.HTTP_403_FORBIDDEN: problem(UpdatePermissionDeniedProblem),
-        },
-    ),
-    destroy=extend_schema(
-        tags=["Invoices"],
-        summary="Delete an invoice",
-    ),
-    comment=extend_schema(
-        tags=["Invoices"],
-        summary="Comment on an invoice",
-        description="Adds a comment to an invoice. The author and date will be set automatically.",
-        operation_id="comment_invoice",
-        request=CommentCreateSerializer,
-        responses={
-            status.HTTP_201_CREATED: CommentSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentProblem),
-        },
-    ),
-    confirm=extend_schema(
-        tags=["Invoices"],
-        summary="Confirm an invoice",
-        description="Confirms an invoice. Submit as an empty POST request.",
-        operation_id="confirm_invoice",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problems(ConfirmationPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(
-                NotConfirmableProblem, AlreadyConfirmedProblem
-            ),
-        },
-    ),
-    unconfirm=extend_schema(
-        tags=["Invoices"],
-        summary="Unconfirm an invoice",
-        description="Removes the confirmation from an invoice. Submit as an empty POST request.",
-        operation_id="unconfirm_invoice",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problems(UnconfirmationPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(NotConfirmedProblem),
-        },
-    ),
-    pay=extend_schema(
-        tags=["Invoices"],
-        summary="Pay an invoice",
-        description="Marks an invoice as paid. Unlike expense reimbursements, invoices are paid one at a time. Submit as an empty POST request. Requires the `pay` permission, and the invoice must be fully attested and not already paid.",
-        operation_id="pay_invoice",
-        request=None,
-        responses={
-            status.HTTP_200_OK: InvoiceSerializer,
-            status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(AlreadyPaidProblem, NotPayableProblem),
-        },
-    ),
-    account=extend_schema(
-        tags=["Invoices"],
-        summary="Account an invoice",
-        description=(
-            "Records accounting for an invoice. "
-            "Pass `voucher_number` to record an existing voucher manually (Fortnox not required). "
-            "Pass `voucher_rows` with account/cost-centre/debit/credit data to create a voucher via the Fortnox integration."
-        ),
-        request=InvoiceAccountSerializer,
-        responses={
-            status.HTTP_200_OK: InvoiceSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(
-                PartRequiredProblem,
-                NoAccountingMethodProblem,
-            ),
-            status.HTTP_403_FORBIDDEN: problem(AccountingPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(
-                AlreadyAccountedProblem,
-                FortnoxRecordMissingProblem,
-                CashflowVerificationMissingProblem,
-            ),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: problem(MismatchedTotalAmountProblem),
-            status.HTTP_503_SERVICE_UNAVAILABLE: problem(
-                FortnoxServiceNotAvailableProblem
-            ),
-        },
-        operation_id="account_invoice",
-    ),
-)
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
@@ -353,10 +216,6 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         context["include_recommendations"] = self.action == "retrieve"
         return context
 
-    # drf_spectacular's schema generator can't build a mock request for the
-    # QUERY method (DRF's APIRequestFactory has no `.query()`), so exclude it
-    # from schema generation; the POST variant still documents this action.
-    @extend_schema(methods=["QUERY"], exclude=True)
     @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
     def search(self, request: Request) -> Response:
         assert isinstance(request.data, dict)
@@ -492,17 +351,6 @@ class InvoicePartAttestView(
             invoice__in=Invoice.objects.viewable_by(self.current_user)
         )
 
-    @extend_schema(
-        tags=["Invoices"],
-        summary="Attest an invoice part",
-        description="Attests an invoice part. Submit as an empty POST request.",
-        operation_id="attest_invoice_part",
-        request=None,
-        responses={
-            HTTP_204_NO_CONTENT: InvoicePartSerializer,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
-        },
-    )
     def post(self, request, pk: int):
         invoice_part = self.get_object()
 
@@ -531,17 +379,6 @@ class InvoicePartUnattestView(
             invoice__in=Invoice.objects.viewable_by(self.current_user)
         )
 
-    @extend_schema(
-        tags=["Invoices"],
-        summary="Unattest an invoice part",
-        description="Removes existing attestation from invoice part. Submit as an empty POST request.",
-        operation_id="unattest_invoice_part",
-        request=None,
-        responses={
-            HTTP_204_NO_CONTENT: None,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
-        },
-    )
     def post(self, request, pk: int):
         with transaction.atomic():
             invoice_part = InvoicePart.objects.select_for_update().get(pk=pk)

@@ -5,7 +5,6 @@ from dateutil.relativedelta import relativedelta
 from django.db.models import Q, Subquery, Value
 from django.db.models.aggregates import Sum, Count
 from django.db.models.functions import Coalesce, TruncMonth
-from drf_spectacular.utils import extend_schema
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,14 +21,6 @@ from stats.api.serializers import (
 )
 
 
-@extend_schema(
-    tags=[
-        "Statistics",
-    ],
-    summary="List leaderboard",
-    parameters=[LeaderboardQuerySerializer],
-    description="Lists users and their expense count and total sum of expenses, ordered by expense total (descending, default) or expense count.",
-)
 class LeaderboardView(ListAPIView):
     serializer_class = LeaderboardSerializer
     pagination_class = DefaultPagination
@@ -76,14 +67,6 @@ class LeaderboardView(ListAPIView):
         return queryset
 
 
-@extend_schema(
-    tags=[
-        "Statistics",
-    ],
-    summary="Monthly statistics",
-    description="Retrieve statistics for one month.",
-    responses=MonthlyStatisticsSerializer,
-)
 class MonthlyStatisticsView(APIView):
 
     def get(
@@ -135,14 +118,6 @@ def _empty_month_stats(year: int, month: int) -> dict:
     }
 
 
-@extend_schema(
-    tags=[
-        "Statistics",
-    ],
-    summary="Yearly statistics",
-    description="Retrieve statistics for each month of one year.",
-    responses=YearlyStatisticsSerializer,
-)
 class YearlyStatisticsView(APIView):
 
     def get(self, request, year: int | None = None) -> Response:

@@ -2,8 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils.module_loading import import_string
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import exceptions, generics, serializers, status
+from rest_framework import exceptions, generics
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,23 +20,6 @@ profile_picture_provider: ProfilePictureProvider = import_string(
 )()
 
 
-@extend_schema_view(
-    get=extend_schema(
-        summary="Get current user",
-        operation_id="get_current_user",
-        tags=["Users"],
-    ),
-    patch=extend_schema(
-        summary="Update current user",
-        description=(
-            "Updates the current user's bank information. Identity fields "
-            "come from the SSO and are read-only."
-        ),
-        operation_id="update_current_user",
-        tags=["Users"],
-    ),
-    put=extend_schema(exclude=True),
-)
 class CurrentUserView(generics.RetrieveUpdateAPIView):
     """Retrieves the current user's information based on the authentication credentials."""
 
@@ -51,19 +33,6 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-@extend_schema(
-    tags=["Users"],
-    summary="Get profile pictures",
-    description="Retrieves profile pictures for one or more users. Does not paginate the response.",
-    parameters=[ProfilePictureQuerySerializer],
-    responses={
-        status.HTTP_200_OK: inline_serializer(
-            name="ProfilePictureResponse",
-            fields={"username": serializers.URLField()},
-        ),
-    },
-    operation_id="get_profile_pictures",
-)
 class ProfilePictureView(generics.ListAPIView):
     """Retrieves profile pictures for a list of usernames."""
 
@@ -100,12 +69,6 @@ class ProfilePictureView(generics.ListAPIView):
         return Response(result)
 
 
-@extend_schema(
-    summary="List users",
-    tags=["Users"],
-    operation_id="list_users",
-    description="Lists all users.",
-)
 class UserListView(APIView, AuthenticatedUserMixin):
     def get(self, request: Request) -> Response:
         permissions = get_permission_provider()
@@ -124,12 +87,6 @@ class UserListView(APIView, AuthenticatedUserMixin):
         return pagination.get_paginated_response(serializer.data)
 
 
-@extend_schema(
-    summary="Retrieve user",
-    tags=["Users"],
-    operation_id="retrieve_user",
-    description="Retrieve a user",
-)
 class UserDetailView(APIView, AuthenticatedUserMixin):
     def get(self, request: Request, username: str) -> Response:
         permissions = get_permission_provider()
