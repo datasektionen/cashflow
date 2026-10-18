@@ -129,11 +129,7 @@ class CostCentreSerializer(serializers.Serializer):
 
 
 class CostCentreListQuerySerializer(serializers.Serializer):
-    """Query parameters accepted by the cost centre list endpoint.
-
-    Also doubles as the OpenAPI schema for that endpoint's query parameters
-    (passed directly to `extend_schema(parameters=[...])`).
-    """
+    """Query parameters accepted by the cost centre list endpoint."""
 
     contains_blown = BooleanField(
         required=False,

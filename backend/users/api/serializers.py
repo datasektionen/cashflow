@@ -1,13 +1,8 @@
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from cashflow.dauth import Permission
 from core.api.serializers import BankInfoSerializer
-
-# Helper "types" for Redoc annotation
-_SCOPE_LIST = {"type": "array", "items": {"type": "string"}}
-_BOOL = {"type": "boolean"}
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,24 +32,6 @@ class UserSerializer(serializers.ModelSerializer):
             user.profile.save()
         return user
 
-    @extend_schema_field(
-        {
-            "type": "object",
-            "properties": {
-                Permission.ATTEST.value: _SCOPE_LIST,
-                Permission.ACCOUNTING.value: _SCOPE_LIST,
-                Permission.VIEW_EXPENSES.value: _SCOPE_LIST,
-                Permission.PAY.value: _BOOL,
-                Permission.CONFIRM.value: _BOOL,
-                Permission.UNCONFIRM.value: _BOOL,
-                Permission.UNATTEST.value: _BOOL,
-                Permission.EDIT_INVOICE.value: _BOOL,
-                Permission.VIEW_ALL_PAYMENTS.value: _BOOL,
-                Permission.MANAGE_FORTNOX.value: _BOOL,
-                Permission.VIEW_ALL.value: _BOOL,
-            },
-        }
-    )
     def get_permissions(self, user):
         p = user.profile
         return {

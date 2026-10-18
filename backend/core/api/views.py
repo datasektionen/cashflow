@@ -9,12 +9,7 @@ from django.db import transaction
 from django.db.models import CharField, Prefetch, Q, Value
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Cast, Concat
-from drf_spectacular.utils import (
-    extend_schema,
-    extend_schema_view,
-    inline_serializer,
-)
-from rest_framework import serializers, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import GenericAPIView
@@ -29,12 +24,10 @@ from core.api.filters import (
     apply_expense_filters,
     apply_invoice_filters,
 )
-from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
 from core.api.problems import (
     AlreadyReimbursedProblem,
     MultipleReceiversProblem,
-    NoExpensesProblem,
     PaymentPermissionDeniedProblem,
 )
 from core.api.serializers import (
@@ -79,15 +72,6 @@ class _WindowedClaims(list):
         return self._total
 
 
-@extend_schema_view(
-    get=extend_schema(
-        tags=["Users"],
-        summary="List claims",
-        description="List all claims (expenses and invoices). Defaults to the requesting user. Pass `?user=<username>` to view another user's claims (admins only).",
-        responses=ClaimSerializer(many=True),
-        parameters=[ClaimQuerySerializer],
-    )
-)
 class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
     pagination_class = DefaultPagination
 
@@ -259,9 +243,6 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
             return PendingPaymentsSerializer
         return PaymentSerializer
 
-    @extend_schema(
-        tags=["Payments"], summary="List payments", operation_id="list_payments"
-    )
     def list(self, request: Request) -> Response:
         if not get_permission_provider().may_pay(
             self.current_user
@@ -286,20 +267,6 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
         serializer = self.get_serializer(payments, many=True)
         return Response(serializer.data)
 
-    @extend_schema(
-        tags=["Payments"],
-        summary="Create a payment",
-        description="Reimburses a single member for the given expenses in one payment. All expenses must belong to the same user and be confirmed and fully attested.",
-        responses={
-            status.HTTP_201_CREATED: PaymentSerializer,
-            status.HTTP_403_FORBIDDEN: problems(PaymentPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(AlreadyReimbursedProblem),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: problems(
-                MultipleReceiversProblem, NoExpensesProblem
-            ),
-        },
-        operation_id="create_payment",
-    )
     def create(self, request: Request) -> Response:
         if not get_permission_provider().may_pay(self.current_user):
             raise PaymentPermissionDeniedProblem()
@@ -336,16 +303,6 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
 
         return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(
-        tags=["Payments"],
-        summary="List pending payments",
-        description="Lists all users with expenses that have not been reimbursed, together with the count and total sum of non-reimbursed expenses. Only allowed for users with the `pay` permission.",
-        responses={
-            status.HTTP_200_OK: PendingPaymentsSerializer,
-            status.HTTP_403_FORBIDDEN: problems(PermissionDenied),
-        },
-        operation_id="list_pending_payments",
-    )
     @action(detail=False, methods=["GET"])
     def pending(self, request: Request) -> Response:
         if not get_permission_provider().may_pay(
@@ -377,36 +334,6 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
         return Response(serializer.data)
 
 
-@extend_schema_view(
-    get=extend_schema(
-        tags=["Users"],
-        summary="Count available actions",
-        description="Returns the number of expenses and invoices that the user can act on.",
-        request=None,
-        responses=inline_serializer(
-            name="Summary",
-            fields={
-                "expenses": inline_serializer(
-                    name="ExpenseSummary",
-                    fields={
-                        "attestable": serializers.IntegerField(),
-                        "confirmable": serializers.IntegerField(),
-                        "accountable": serializers.IntegerField(),
-                        "payable": serializers.IntegerField(),
-                    },
-                ),
-                "invoices": inline_serializer(
-                    name="InvoiceSummary",
-                    fields={
-                        "attestable": serializers.IntegerField(),
-                        "accountable": serializers.IntegerField(),
-                        "payable": serializers.IntegerField(),
-                    },
-                ),
-            },
-        ),
-    )
-)
 class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
     def get(self, request: Request):
         user = self.current_user

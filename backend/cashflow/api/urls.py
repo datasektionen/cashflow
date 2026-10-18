@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.urls import include, path
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from . import views
 from core.api.views import (
@@ -26,8 +25,6 @@ urlpatterns = [
     path("users/", include("users.api.urls")),
     path("", include("core.api.urls")),
     path("stats/", include("stats.api.urls")),
-    path("schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("docs/", SpectacularRedocView.as_view(url_name="schema"), name="docs"),
 ]
 
 if settings.FORTNOX_ENABLED:

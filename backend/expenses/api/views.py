@@ -14,33 +14,20 @@ import json
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import OuterRef, Subquery, Sum
-from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_204_NO_CONTENT,
-    HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-)
 from structlog import get_logger
 
-from core.api.filters import ClaimQuerySerializer, Filter, apply_expense_filters
-from core.api.openapi import problem, problems
+from core.api.filters import Filter, apply_expense_filters
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
     AttestationPermissionDeniedProblem,
     ConfirmationPermissionDeniedProblem,
     DeletionPermissionDeniedProblem,
-    EmptyCommentProblem,
     FileRequiredProblem,
     FlagPermissionDeniedProblem,
     IsFlaggedProblem,
@@ -74,11 +61,9 @@ from core.exceptions import (
 )
 from core.files import normalize_upload
 from core.permissions import get_permission_provider
-from expenses.api.problems import InvalidExpenseDateError
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
     ExpenseAdminSerializer,
-    ExpenseCreateSerializer,
     ExpensePartSerializer,
     ExpenseSerializer,
 )
@@ -97,155 +82,6 @@ UserModel = get_user_model()
 logger = get_logger(__name__)
 
 
-@extend_schema_view(
-    list=extend_schema(
-        summary="List expenses",
-        operation_id="list_expenses",
-        tags=["Expenses"],
-        parameters=[ClaimQuerySerializer],
-        responses={
-            HTTP_200_OK: ExpenseAdminSerializer,
-            HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
-        },
-    ),
-    retrieve=extend_schema(
-        summary="Retrieve an expense",
-        description=(
-            "Returns a single expense by ID, including its parts, owner "
-            "profile, and attached files."
-        ),
-        operation_id="retrieve_expense",
-        tags=["Expenses"],
-    ),
-    create=extend_schema(
-        summary="Create a new expense",
-        request={"multipart/form-data": ExpenseCreateSerializer},
-        description=(
-            "Creates an expense together with its parts and one or more "
-            "attached receipt files. Submit as `multipart/form-data` with "
-            "the `parts` field as a JSON-encoded array; at least one file "
-            "is required."
-        ),
-        responses={
-            HTTP_201_CREATED: ExpenseSerializer,
-            HTTP_400_BAD_REQUEST: problems(
-                FileRequiredProblem, PartRequiredProblem, PartInvalidJSONProblem
-            ),
-            HTTP_401_UNAUTHORIZED: problem(NotAuthenticated),
-            HTTP_422_UNPROCESSABLE_ENTITY: problem(InvalidExpenseDateError),
-        },
-        operation_id="create_expense",
-        tags=["Expenses"],
-    ),
-    partial_update=extend_schema(
-        summary="Partially update an expense",
-        request={"multipart/form-data": ExpenseCreateSerializer},
-        description=(
-            "Updates a subset of fields on an existing expense. Only the "
-            "fields included in the request body are changed. Submit as "
-            "`multipart/form-data`; `parts` (JSON-encoded array, full "
-            "replacement) is accepted alongside `files` for new uploads."
-        ),
-        operation_id="partial_update_expense",
-        tags=["Expenses"],
-        responses={
-            status.HTTP_403_FORBIDDEN: problem(UpdatePermissionDeniedProblem),
-        },
-    ),
-    destroy=extend_schema(
-        summary="Delete an expense",
-        description="Permanently deletes an expense and its associated parts.",
-        operation_id="delete_expense",
-        tags=["Expenses"],
-    ),
-    comment=extend_schema(
-        tags=["Expenses"],
-        summary="Comment on an expense",
-        description="Adds a comment to an expense. The author and date will be set automatically.",
-        request=CommentCreateSerializer,
-        responses={
-            status.HTTP_201_CREATED: CommentSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(EmptyCommentProblem),
-        },
-        operation_id="add_expense_comment",
-    ),
-    confirm=extend_schema(
-        tags=["Expenses"],
-        summary="Confirm an expense",
-        description="Marks an expense as confirmed. Submit as an empty POST request.",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problem(ConfirmationPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(
-                AlreadyConfirmedProblem, IsFlaggedProblem, NotConfirmableProblem
-            ),
-        },
-        operation_id="confirm_expense",
-    ),
-    unconfirm=extend_schema(
-        tags=["Expenses"],
-        summary="Unconfirm an expense",
-        description="Removes the confirmation from an expense. Submit as an empty POST request.",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problem(UnconfirmationPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problem(NotConfirmedProblem),
-        },
-        operation_id="unconfirm_expense",
-    ),
-    flag=extend_schema(
-        tags=["Expenses"],
-        summary="Flag an expense",
-        description="Marks an expense as flagged. Submit as an empty POST request.",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problem(FlagPermissionDeniedProblem),
-        },
-        operation_id="flag_expense",
-    ),
-    unflag=extend_schema(
-        tags=["Expenses"],
-        summary="Unflag an expense",
-        description="Removes the flag from an expense. Submit as an empty POST request.",
-        request=None,
-        responses={
-            status.HTTP_204_NO_CONTENT: None,
-            status.HTTP_403_FORBIDDEN: problem(FlagPermissionDeniedProblem),
-        },
-        operation_id="unflag_expense",
-    ),
-    account=extend_schema(
-        tags=["Expenses"],
-        summary="Account an expense",
-        description=(
-            "Records accounting for an expense. "
-            "Pass `voucher_number` to record an existing voucher manually (Fortnox not required). "
-            "Pass `voucher_rows` with account/cost-centre/debit/credit data to create a voucher via the Fortnox integration."
-        ),
-        request=ExpenseAccountSerializer,
-        responses={
-            status.HTTP_200_OK: ExpenseSerializer,
-            status.HTTP_400_BAD_REQUEST: problems(
-                PartRequiredProblem,
-                NoAccountingMethodProblem,
-            ),
-            status.HTTP_403_FORBIDDEN: problem(AccountingPermissionDeniedProblem),
-            status.HTTP_409_CONFLICT: problems(
-                AlreadyAccountedProblem,
-                FortnoxRecordMissingProblem,
-                CashflowVerificationMissingProblem,
-            ),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: problem(MismatchedTotalAmountProblem),
-            status.HTTP_503_SERVICE_UNAVAILABLE: problem(
-                FortnoxServiceNotAvailableProblem
-            ),
-        },
-        operation_id="account_expense",
-    ),
-)
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
@@ -402,10 +238,6 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             queryset, self.request.GET, self.current_user
         ).distinct()
 
-    # drf_spectacular's schema generator can't build a mock request for the
-    # QUERY method (DRF's APIRequestFactory has no `.query()`), so exclude it
-    # from schema generation; the POST variant still documents this action.
-    @extend_schema(methods=["QUERY"], exclude=True)
     @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
     def search(self, request: Request) -> Response:
         assert isinstance(request.data, dict)
@@ -552,17 +384,6 @@ class ExpensePartAttestView(
             expense__in=Expense.objects.viewable_by(self.current_user)
         )
 
-    @extend_schema(
-        tags=["Expenses"],
-        summary="Attest an expense part",
-        description="Attests an expense part. Submit as an empty POST request.",
-        operation_id="attest",
-        request=None,
-        responses={
-            HTTP_204_NO_CONTENT: None,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
-        },
-    )
     def post(self, request, pk: int):
         expense_part = self.get_object()
 
@@ -597,17 +418,6 @@ class ExpensePartUnattestView(
             expense__in=Expense.objects.viewable_by(self.current_user)
         )
 
-    @extend_schema(
-        tags=["Expenses"],
-        summary="Unattest expense part",
-        description="Removes existing attestation from expense part. Submit as an empty POST request.",
-        operation_id="attest",
-        request=None,
-        responses={
-            HTTP_204_NO_CONTENT: None,
-            HTTP_403_FORBIDDEN: problems(AttestationPermissionDeniedProblem),
-        },
-    )
     def post(self, request, pk: int):
 
         with transaction.atomic():

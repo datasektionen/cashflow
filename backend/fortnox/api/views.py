@@ -1,5 +1,4 @@
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -65,13 +64,6 @@ def _status_payload() -> dict:
     }
 
 
-@extend_schema_view(
-    get=extend_schema(
-        tags=["Fortnox"],
-        summary="Get Fortnox connection status",
-        responses=FortnoxStatusSerializer,
-    )
-)
 class FortnoxStatusView(APIView):
     permission_classes = [ViewFortnoxStatusPermission]
 
@@ -79,14 +71,6 @@ class FortnoxStatusView(APIView):
         return Response(FortnoxStatusSerializer(_status_payload()).data)
 
 
-@extend_schema_view(
-    post=extend_schema(
-        tags=["Fortnox"],
-        summary="Disconnect the Fortnox service account",
-        request=None,
-        responses=FortnoxStatusSerializer,
-    )
-)
 class FortnoxDisconnectView(APIView):
     permission_classes = [ManageFortnoxPermission]
 
@@ -102,18 +86,6 @@ class FortnoxDisconnectView(APIView):
         )
 
 
-@extend_schema_view(
-    get=extend_schema(
-        tags=["Fortnox"],
-        summary="List active Fortnox accounts",
-        description=(
-            "Returns every active account from the Fortnox chart of accounts, "
-            "for use when composing voucher rows."
-        ),
-        responses=FortnoxAccountSerializer(many=True),
-        operation_id="list_fortnox_accounts",
-    )
-)
 class FortnoxAccountList(APIView):
     permission_classes = [AccountingPermission]
 
@@ -124,18 +96,6 @@ class FortnoxAccountList(APIView):
         return Response(FortnoxAccountSerializer(accounts, many=True).data)
 
 
-@extend_schema_view(
-    get=extend_schema(
-        tags=["Fortnox"],
-        summary="List active Fortnox cost centres",
-        description=(
-            "Returns every active cost centre on Fortnox, for use when "
-            "composing voucher rows."
-        ),
-        responses=FortnoxCostCentreSerializer(many=True),
-        operation_id="list_fortnox_cost_centres",
-    )
-)
 class FortnoxCostCentreList(APIView):
     permission_classes = [AccountingPermission]
 

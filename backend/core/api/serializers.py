@@ -2,11 +2,7 @@ from datetime import date
 from typing import TypedDict
 
 from django.db.models import QuerySet
-from django.db.models.aggregates import Sum
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.fields import CharField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from core.api.problems import EmptyCommentProblem, NoExpensesProblem
@@ -44,14 +40,6 @@ class ClaimData(TypedDict):
     voucher: str | None
     owner: Profile
     parts: QuerySet[InvoicePart | ExpensePart]
-
-
-class ProblemDetailSerializer(serializers.Serializer):
-    type = serializers.URLField()
-    title = serializers.CharField()
-    detail = serializers.CharField()
-    status = serializers.IntegerField()
-    code = serializers.CharField()
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -150,11 +138,6 @@ class CommentCreateSerializer(serializers.Serializer):
         if not value.strip():
             raise EmptyCommentProblem()
         return value
-
-
-@extend_schema_field(OpenApiTypes.BINARY)
-class UploadField(serializers.FileField):
-    pass
 
 
 class AccountSerializer(serializers.Serializer):

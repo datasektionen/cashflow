@@ -72,7 +72,6 @@ INSTALLED_APPS = (
     "invoices",
     "fortnox",
     "drf_problems",
-    "drf_spectacular",
 )
 
 FORTNOX_ENABLED = os.getenv("FORTNOX_ENABLED", "true").lower() == "true"
@@ -152,31 +151,6 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-}
-
-SPECTACULAR_SETTINGS = {
-    "TITLE": "Cashflow API",
-    "DESCRIPTION": """\
-HTTP API for **Cashflow**, Datasektionen's receipt, reimbursement, and invoice management system.
-
-## Authentication
-
-All endpoints require an authenticated session. Sign in via Datasektionen's SSO at `/login/`; the resulting `sessionid` cookie authenticates subsequent API calls.
-
-## Permissions
-
-Permissions are resolved against [Hive](https://github.com/datasektionen/hive) on each request and may be scoped to specific cost centres.
-
-## Errors
-
-Error responses follow [RFC 7807 (Problem Details)](https://datatracker.ietf.org/doc/html/rfc7807).
-""",
-    "SCHEMA_PATH_PREFIX": "/api/",
-    "SERVE_INCLUDE_SCHEMA": False,
-    "SERVE_URLCONF": "cashflow.api.urls",
-    "PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
-    "GET_MOCK_REQUEST": "cashflow.api.schema.get_mock_request",
 }
 
 
