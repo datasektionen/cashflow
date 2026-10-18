@@ -31,8 +31,8 @@
 
 {#if variant === 'compact'}
 	<div class="flex flex-col gap-3">
-		{#each comments as comment}
-			<div class="flex items-start gap-2">
+		{#each comments as comment, i}
+			<div class="flex items-start gap-2" id={`comment-${i}`}>
 				{#await avatarMap}
 					<UserAvatar placeholder class="size-6 shrink-0" />
 				{:then urls}
@@ -57,13 +57,14 @@
 	</div>
 {:else}
 	<div class="flex flex-col gap-4">
-		{#each comments as comment}
+		{#each comments as comment, i}
 			{@const isOwn = comment.author.email === currentUser?.email}
 			<div
 				class={[
 					'flex items-end gap-2',
 					isOwn ? 'flex-row-reverse self-end' : 'flex-row self-start'
 				]}
+				id={`comment-${i}`}
 			>
 				{#await avatarMap}
 					<UserAvatar placeholder class="shrink-0 ring-2 ring-white dark:ring-dark-base-100" />
