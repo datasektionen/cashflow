@@ -13,21 +13,21 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cashflow.api.filters import (
-    apply_cost_centre_filter,
-    apply_secondary_cost_centre_filter,
-    apply_budget_line_filter,
-)
 from budget.api.serializers import (
+    BudgetLineSerializer,
     CostCentreListQuerySerializer,
     CostCentreSerializer,
     SecondaryCostCentreSerializer,
-    BudgetLineSerializer,
+)
+from cashflow.api.filters import (
+    apply_budget_line_filter,
+    apply_cost_centre_filter,
+    apply_secondary_cost_centre_filter,
 )
 from cashflow.gordian import (
+    list_budget_lines_from_gordian,
     list_cost_centres_from_gordian,
     list_secondary_cost_centres_from_gordian,
-    list_budget_lines_from_gordian,
 )
 from core.api.utils import AuthenticatedUserMixin
 from expenses.models import ExpensePart
@@ -282,7 +282,7 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
     )
 
     totals: dict[tuple[str, str, str], dict[str, Decimal]] = defaultdict(
-        lambda: {field: Decimal("0") for field in _AMOUNT_FIELDS}
+        lambda: {field: Decimal(0) for field in _AMOUNT_FIELDS}
     )
     for row in (*expense_rows, *invoice_rows):
         entry = totals[
@@ -292,15 +292,15 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
                 _normalise(row["budget_line"]),
             )
         ]
-        entry["uploaded"] += row["uploaded"] or Decimal("0")
-        entry["attested"] += row["attested"] or Decimal("0")
-        entry["paid"] += row["paid"] or Decimal("0")
+        entry["uploaded"] += row["uploaded"] or Decimal(0)
+        entry["attested"] += row["attested"] or Decimal(0)
+        entry["paid"] += row["paid"] or Decimal(0)
 
     return totals
 
 
 def _blown_cost_centres(year: int | None = None) -> set[str]:
-    year = year or timezone.now().year
+    year = year or timezone.localdate().year
     bl_totals = _amounts_by_line(year)
 
     scc_by_id = {scc.id: scc for scc in list_secondary_cost_centres_from_gordian()}
@@ -329,7 +329,6 @@ def _blown_cost_centres(year: int | None = None) -> set[str]:
 
 
 class CostCentreDetailView(APIView, AuthenticatedUserMixin):
-
     def get(self, request: Request, cost_centre_id: int) -> Response:
         try:
             cost_centre = next(
@@ -342,10 +341,10 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
             cost_center=cost_centre.id
         )
 
-        year = int(request.query_params.get("year") or date.today().year)
+        year = int(request.query_params.get("year") or timezone.localdate().year)
 
         amounts = _amounts_by_line(year)
-        zero = {field: Decimal("0") for field in _AMOUNT_FIELDS}
+        zero = {field: Decimal(0) for field in _AMOUNT_FIELDS}
 
         scc_data = []
         for scc in secondary_cost_centres:
@@ -395,3 +394,49 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
         }
 
         return Response(CostCentreSerializer(data).data)
+
+
+class BudgetLineDetailView(APIView, AuthenticatedUserMixin):
+    def get(self, request: Request, budget_line_id: int) -> Response:
+        try:
+            budget_line = next(
+                bl for bl in list_budget_lines_from_gordian() if bl.id == budget_line_id
+            )
+        except StopIteration:
+            raise NotFound(f"No budget_line with id {budget_line_id} found")
+
+        scc = next(
+            scc
+            for scc in list_secondary_cost_centres_from_gordian()
+            if scc.id == budget_line.scc_id
+        )
+        cc = next(cc for cc in list_cost_centres_from_gordian() if cc.id == scc.cc_id)
+
+        year = int(request.query_params.get("year") or timezone.localdate().year)
+
+        amounts = _amounts_by_line(year)
+        line_amounts = amounts.get(
+            (
+                _normalise(cc.name),
+                _normalise(scc.name),
+                _normalise(budget_line.name),
+            ),
+            {field: Decimal(0) for field in _AMOUNT_FIELDS},
+        )
+
+        data = {
+            "id": budget_line.id,
+            "name": budget_line.name,
+            "secondary_cost_centre_id": scc.id,
+            "accounts": budget_line.account,
+            "income": budget_line.income,
+            "expense": budget_line.expense,
+            "comment": budget_line.comment,
+            "active": True,
+            "amount_uploaded": line_amounts["uploaded"],
+            "amount_attested": line_amounts["attested"],
+            "amount_paid": line_amounts["paid"],
+            "blown": _is_blown(budget_line.expense, line_amounts["uploaded"]),
+        }
+
+        return Response(BudgetLineSerializer(data).data)
