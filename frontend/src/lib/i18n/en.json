@@ -36,6 +36,7 @@
 	"amount_required": "Amount is required",
 	"amount_negative": "Amount must be greater than zero",
 	"amount_too_large": "Amount exceeds maximum allowed value",
+	"budget_line_exceeded": "The budget line will be exceeded",
 
 	"errors": {
 		"network": "Could not reach the server. Please try again later."

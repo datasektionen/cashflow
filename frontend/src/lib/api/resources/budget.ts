@@ -84,6 +84,10 @@ export class BudgetAPI {
 		};
 	}
 
+	async getBudgetLine(id: number): Promise<BudgetLine> {
+		return this.apiClient.get<BudgetLine>(`/budget-lines/${id}`);
+	}
+
 	async retrieveCostCentre(id: number): Promise<CostCentre> {
 		return await this.apiClient.get<CostCentre>(`/cost-centres/${id}`);
 	}

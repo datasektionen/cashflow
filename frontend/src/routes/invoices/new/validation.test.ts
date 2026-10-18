@@ -36,6 +36,7 @@ export const makeFormData = (overrides: Partial<NewInvoiceFormData> = {}): NewIn
 	dueDate: TOMORROW,
 	files: [new File(['receipt'], 'receipt.png', { type: 'image/png' })],
 	parts: [makePart()],
+	budgetUsage: [],
 	...overrides
 });
 
@@ -73,4 +74,19 @@ test('due-date: tomorrow is valid', () => {
 	const data = makeFormData({ dueDate: TOMORROW });
 	const result = validation.run(data);
 	assert(!result.hasErrors('due-date'));
+});
+
+test('budget line: exceeding budget warns but stays valid', () => {
+	const data = makeFormData({
+		parts: [makePart({ amount: dinero({ amount: 10100, currency: SEK }) })],
+		budgetUsage: [
+			{
+				budget: dinero({ amount: 100000, currency: SEK }),
+				uploaded: dinero({ amount: 90000, currency: SEK })
+			}
+		]
+	});
+	const result = validation.run(data);
+	assert(result.getWarnings('part-0-budgetline')[0] === 'budget_line_exceeded');
+	assert(result.isValid());
 });

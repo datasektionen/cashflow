@@ -4,12 +4,15 @@ import type { ExpenseUpdate, PartCreateUpdate } from '$lib/api/types';
 import { dinero, greaterThan, isZero, lessThan } from 'dinero.js';
 import { SEK } from 'dinero.js/currencies';
 import { logger } from '$lib/logger';
+import { testBudgetLineExceeded, type BudgetLineUsage } from '$lib/budgetUsage';
 
 export type UpdateExpenseFormData = {
 	description: string;
 	files: File[];
 	deletedFiles: Set<number>;
 	parts: PartCreateUpdate[];
+	// Set by ExpenseParts, used to warn about exceeded budget lines
+	budgetUsage: (BudgetLineUsage | null)[];
 	date: DateValue | undefined;
 };
 
@@ -55,6 +58,7 @@ const validation = create((data: UpdateExpenseFormData, currentField?: string) =
 	});
 
 	data.parts?.forEach((part, i) => {
+		testBudgetLineExceeded(data.parts, data.budgetUsage, i);
 		test(`part-${i}-costcenter`, 'cost_center_required', () => {
 			enforce(part.cost_centre).isNotBlank();
 		});
