@@ -239,8 +239,8 @@
 				<div class="my-2 flex flex-col gap-y-2">
 					<CopyableValue
 						class="h-12 md:h-8"
-						value="CF {invoice.id} {invoice.description}"
-						display="CF {invoice.id} {invoice.description}"
+						value="({invoice.id}) {invoice.description}"
+						display="({invoice.id}) {invoice.description}"
 					/>
 
 					<CopyableValue
