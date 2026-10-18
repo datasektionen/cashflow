@@ -1,9 +1,8 @@
 <script lang="ts">
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
-	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
+	import { BanknoteArrowUp, CircleAlert } from '@lucide/svelte';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import { Label, RadioGroup } from 'bits-ui';
 	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import validation, { validateFormData } from './validation.ts';
@@ -15,7 +14,6 @@
 	import { ZERO } from '$lib/money';
 
 	let disclaimerParts = $derived($_('new_invoice.disclaimer').split('{new_expense_link}'));
-
 	let submitting: Boolean = $state(false);
 
 	let formData: NewInvoiceFormData = $state({
@@ -31,6 +29,7 @@
 			}
 		],
 		invoiceDate: undefined,
+		invoiceNumber: '',
 		dueDate: undefined
 	});
 
@@ -82,37 +81,6 @@
 				>{$_('new_invoice.disclaimer_link_text')}</a
 			>{disclaimerParts[1]}
 		</p>
-
-		<RadioGroup.Root class="flex flex-col gap-4 text-sm">
-			<div class="flex flex-row items-center space-x-2">
-				<RadioGroup.Item
-					id="paid-no"
-					value="paid-no"
-					class={[
-						'border border-base-800 bg-base-500 inset-shadow-xs',
-						'data-[state=checked]:border-4 data-[state=checked]:border-money-green-500 data-[state=checked]:bg-white',
-						'size-4 cursor-pointer',
-						'dark:border-dark-base-50 dark:bg-dark-base-200',
-						'dark:data-[state=checked]:bg-dark-base-200'
-					]}
-				/>
-				<Label.Root for="paid-no">Nej, sektionen ska göra det</Label.Root>
-			</div>
-			<div class="flex flex-row items-center space-x-2">
-				<RadioGroup.Item
-					id="paid-yes"
-					value="paid-yes"
-					class={[
-						'border border-base-800 bg-base-500 inset-shadow-xs',
-						'data-[state=checked]:border-4 data-[state=checked]:border-money-green-500 data-[state=checked]:bg-white',
-						'size-4 cursor-pointer',
-						'dark:border-dark-base-50 dark:bg-dark-base-200',
-						'dark:data-[state=checked]:bg-dark-base-200'
-					]}
-				/>
-				<Label.Root for="paid-yes">Ja, från sektionens konto</Label.Root>
-			</div>
-		</RadioGroup.Root>
 	</div>
 
 	<div class="flex flex-col justify-between space-y-6 lg:max-h-128 lg:flex-row lg:space-x-6">
@@ -146,6 +114,38 @@
 				/>
 				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
 					{$_('new_invoice.form.description.help')}
+				</span>
+			</div>
+
+			<div class="flex flex-col space-y-2">
+				<span class="flex h-12 flex-row items-center justify-between">
+					<label for="invoice-number" class="text-s mb-1 font-medium">
+						{$_('new_invoice.form.invoice_number.label')}
+					</label>
+
+					{#if showErrors('invoice-number')}
+						<span
+							class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
+						>
+							<span>{$_(errors['invoice-number']![0])}</span>
+							<CircleAlert class="size-4" />
+						</span>
+					{/if}
+				</span>
+
+				<input
+					class={[
+						'h-[2.5em] border-0 bg-base-300 inset-shadow-sm dark:bg-dark-base-300',
+						showErrors('invoice-number') && 'border-2 border-red-500'
+					]}
+					id="invoice-number"
+					type="text"
+					name="invoice-number"
+					onblur={onBlur}
+					bind:value={formData.invoiceNumber}
+				/>
+				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
+					{$_('new_invoice.form.invoice_number.help')}
 				</span>
 			</div>
 

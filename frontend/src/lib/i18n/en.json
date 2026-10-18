@@ -23,6 +23,7 @@
 	"browse_files": "Browse files",
 	"no_results": "No results",
 	"description_required": "Description is required",
+	"invoice_number_required": "Invoice number is required",
 	"expense_date_required": "Expense date is required",
 	"expense_date_future": "Expense date cannot be in the future",
 	"files_required": "At least one receipt is required",
@@ -285,6 +286,10 @@
 			"description": {
 				"label": "Description",
 				"help": "A description of the invoice and why it should be paid"
+			},
+			"invoice_number": {
+				"label": "Invoice number",
+				"help": "The invoice number as stated on the invoice."
 			},
 			"invoice_date": {
 				"label": "Invoice date",

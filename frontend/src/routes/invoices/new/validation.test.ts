@@ -33,6 +33,7 @@ export const makePart = (overrides: Partial<PartCreateUpdate> = {}): PartCreateU
 export const makeFormData = (overrides: Partial<NewInvoiceFormData> = {}): NewInvoiceFormData => ({
 	description: 'Det sista fikat någon i manusgruppen någonsin kommer äta i sina liv',
 	invoiceDate: YESTERDAY,
+	invoiceNumber: '12345',
 	dueDate: TOMORROW,
 	files: [new File(['receipt'], 'receipt.png', { type: 'image/png' })],
 	parts: [makePart()],

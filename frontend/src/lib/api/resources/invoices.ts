@@ -146,6 +146,7 @@ export class InvoicesAPI {
 		const body = new FormData();
 		body.append('description', data.description);
 		body.append('invoice_date', data.invoice_date);
+		body.append('invoice_number', data.invoice_number);
 		body.append('due_date', data.due_date);
 
 		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };

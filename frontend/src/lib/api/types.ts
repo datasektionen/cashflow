@@ -73,6 +73,7 @@ export type Invoice = {
 	id: number;
 	created_date: string;
 	invoice_date: string;
+	invoice_number: string | null;
 	due_date: string;
 	confirmed_by: Profile | null;
 	confirmed_at: string | null;
@@ -92,6 +93,7 @@ export type Invoice = {
 export interface InvoiceCreate {
 	description: string;
 	invoice_date: string;
+	invoice_number: string;
 	due_date: string;
 	files: File[];
 	parts: PartCreateUpdate[];
