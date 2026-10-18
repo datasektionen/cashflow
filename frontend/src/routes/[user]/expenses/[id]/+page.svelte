@@ -9,7 +9,7 @@
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatAmount, formatDineroAmount, sumDinero } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { api } from '$lib/api';
 	import { logger } from '$lib/logger';
@@ -17,29 +17,30 @@
 	import { isErrorResponse } from '$lib/api/errors';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { tick } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 	let { expense }: { expense: Expense } = $derived(data);
 
-	const canDelete = $derived(
-		(!!data.user?.permissions.delete || expense.owner.username === data.user?.username) &&
-			!expense.reimbursement
-	);
+	const expenseStatus = $derived({
+		attested: expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null),
+		totalAmount: sumDinero(expense.parts.map((part) => part.amount))
+	});
 
-	const canUpdate = $derived(
-		expense.owner.username === data.user?.username && !expense.reimbursement
-	);
+	const availableActions = $derived({
+		delete:
+			(!!data.user?.permissions.delete || expense.owner.username === data.user?.username) &&
+			!expense.reimbursement,
+		update: expense.owner.username === data.user?.username && !expense.reimbursement
+	});
 
-	const isAttested = $derived(
-		expense.parts.length > 0 && expense.parts.every((p) => p.attested_by != null)
-	);
-
-	const totalAmount = $derived(sumDinero(expense.parts.map((part) => part.amount)));
-
-	let deleting = $state(false);
+	const pending = $state({
+		delete: false,
+		comment: false
+	});
 
 	async function handleDelete() {
-		deleting = true;
+		pending.delete = true;
 		await api.expenses
 			.delete(expense.id)
 			.then(() => {
@@ -54,27 +55,40 @@
 				const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
 				alerts.update((a) => [...a, error(msg)]);
 			})
-			.finally(() => (deleting = false));
+			.finally(() => (pending.delete = false));
 	}
 
-	let comments = $derived<Comment[]>(expense.comments);
-	$effect(() => {
-		comments = expense.comments;
-	});
+	// svelte-ignore state_referenced_locally
+	let comments = $state<Comment[]>(expense.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
+
 	const commentSubmit = async () => {
+		pending.comment = true;
 		await api.expenses
 			.comment(expense.id, commentContent)
-			.then((comment) => {
+			.then(async (comment) => {
 				comments.push(comment);
 				showCommentForm = false;
+				commentContent = '';
 				alerts.update((a) => [...a, success($_('comment_submitted'))]);
+				pending.comment = false;
+				await tick();
+
+				// Scroll to new comment
+				const element = document.getElementById(`comment-${comments.length - 1}`);
+				if (element) {
+					logger.debug(element, 'Scrolling to new comment');
+					element.scrollIntoView({ behavior: 'smooth' });
+				} else {
+					logger.warn('New comment element not found');
+				}
 			})
 			.catch((e) => {
 				logger.error(e);
 				const msg = isErrorResponse(e) ? e.detail : $_('comment_submission_failed');
 				alerts.update((a) => [...a, error(msg)]);
+				pending.comment = false;
 			});
 	};
 </script>
@@ -91,7 +105,7 @@
 {/snippet}
 {#snippet deleteTrigger()}
 	<button
-		disabled={!canDelete}
+		disabled={!availableActions.delete}
 		class="flex cursor-pointer items-center gap-1.5 border border-red-900 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
 	>
 		<Trash class="size-3.5" />
@@ -106,10 +120,10 @@
 		</DialogPrimitive.Close>
 		<button
 			onclick={handleDelete}
-			disabled={deleting}
+			disabled={pending.delete}
 			class="flex cursor-pointer items-center gap-1.5 bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
 		>
-			{#if deleting}
+			{#if pending.delete}
 				<CashSpinner />
 			{:else}
 				{$_('expense_delete_confirm_action')}
@@ -125,13 +139,13 @@
 			<CopyableValue display={`${expense.owner.first_name} ${expense.owner.last_name}`} />
 			<CopyableValue display={expense.description} />
 			<CopyableValue
-				display={formatDineroAmount(totalAmount)}
-				value={formatDineroAmount(totalAmount)}
+				display={formatDineroAmount(expenseStatus.totalAmount)}
+				value={formatDineroAmount(expenseStatus.totalAmount)}
 			/>
 			<CopyableValue display={expense.expense_date} />
 		</div>
 		<div class="flex items-center gap-2">
-			{#if isAttested}
+			{#if expenseStatus.attested}
 				<span
 					class="bg-money-green-200 px-2.5 py-0.5 text-xs font-semibold text-money-green-900 dark:bg-money-green-600 dark:text-white"
 					>{$_('expense_attested')}</span
@@ -155,7 +169,7 @@
 					>{expense.voucher}</span
 				>
 			{/if}
-			{#if !isAttested && !expense.confirmed_at && !expense.payment && !expense.voucher}
+			{#if !expenseStatus.attested && !expense.confirmed_at && !expense.payment && !expense.voucher}
 				<span
 					class="bg-base-300 px-2.5 py-0.5 text-xs font-semibold text-base-subtle dark:bg-dark-base-300 dark:text-dark-base-subtle"
 					>{$_('expense_status.unprocessed')}</span
@@ -165,7 +179,7 @@
 	</div>
 
 	<div class="flex items-center gap-2">
-		{#if canUpdate}
+		{#if availableActions.update}
 			<a
 				href="/{expense.owner.username}/expenses/{expense.id}/update"
 				class="flex cursor-pointer items-center gap-1.5 border border-base-500 px-3 py-1.5 text-xs font-medium text-base-subtle hover:border-money-green-500 hover:text-money-green-700 dark:border-dark-base-300 dark:text-dark-base-subtle dark:hover:border-money-green-600 dark:hover:text-money-green-400"
@@ -298,7 +312,8 @@
 						</button>
 						<button
 							onclick={commentSubmit}
-							class="bg-money-green-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-money-green-500"
+							class="bg-money-green-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+							disabled={pending.comment}
 						>
 							{$_('submit')}
 						</button>
