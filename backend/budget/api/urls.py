@@ -1,6 +1,7 @@
 from django.urls import path
 
 from budget.api.views import (
+    BudgetLineDetailView,
     BudgetLineList,
     CostCentreDetailView,
     CostCentreList,
@@ -20,4 +21,9 @@ urlpatterns = [
         name="secondarycostcentre-list",
     ),
     path("budget-lines/", BudgetLineList.as_view(), name="budgetline-list"),
+    path(
+        "budget-lines/<int:budget_line_id>/",
+        BudgetLineDetailView.as_view(),
+        name="budgetline-detail",
+    ),
 ]
