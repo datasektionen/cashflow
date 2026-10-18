@@ -16,6 +16,7 @@
 	import { isErrorResponse } from '$lib/api/errors';
 	import UserLink from '$lib/components/UserLink.svelte';
 	import { goto } from '$app/navigation';
+	import { tick } from 'svelte';
 
 	let { invoice: initialInvoice, user }: { invoice: Invoice; user: User | null } = $props();
 	// Writable so handlers can apply local updates; resets if the prop changes
@@ -57,21 +58,31 @@
 			.finally(() => (pending.delete = false));
 	}
 
-	let comments = $derived<Comment[]>(invoice.comments);
-	$effect(() => {
-		comments = invoice.comments;
-	});
+	// svelte-ignore state_referenced_locally
+	let comments = $state<Comment[]>(invoice.comments);
 	let showCommentForm = $state(false);
 	let commentContent: string = $state('');
+
 	const commentSubmit = async () => {
 		pending.comment = true;
 		await api.invoices
 			.comment(invoice.id, commentContent)
-			.then((comment) => {
+			.then(async (comment) => {
 				comments.push(comment);
 				showCommentForm = false;
+				commentContent = '';
 				alerts.update((a) => [...a, success($_('comment_submitted'))]);
 				pending.comment = false;
+				await tick();
+
+				// Scroll to new comment
+				const element = document.getElementById(`comment-${comments.length - 1}`);
+				if (element) {
+					logger.debug(element, 'Scrolling to new comment');
+					element.scrollIntoView({ behavior: 'smooth' });
+				} else {
+					logger.warn('New comment element not found');
+				}
 			})
 			.catch((e) => {
 				logger.error(e);
@@ -202,7 +213,7 @@
 			<h2 class="border-t border-base-500 pt-4 text-base font-semibold dark:border-dark-base-200">
 				Information
 			</h2>
-			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm break-words">
+			<dl class="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-12 gap-y-3 text-sm wrap-break-word">
 				<dt class="text-base-subtle dark:text-dark-base-subtle">{$_('expense_owner')}</dt>
 				<dd>
 					<UserLink user={invoice.owner} />
