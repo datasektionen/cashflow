@@ -81,6 +81,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [],
@@ -94,6 +95,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
         }
@@ -106,6 +108,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [
@@ -124,6 +127,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [make_file()],
@@ -136,6 +140,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": "20260530",
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [
@@ -153,6 +158,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": TOMORROW.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [make_file()],
@@ -167,6 +173,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": YESTERDAY.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": False,
             "files": [make_file()],
@@ -181,6 +188,7 @@ class TestInvoiceCreate:
         data = {
             "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": "12345",
             "description": "Test description",
             "accounted": True,
             "files": [make_file()],
@@ -189,6 +197,36 @@ class TestInvoiceCreate:
         response = api_client.post("/api/invoices/", data=data, format="multipart")
         assert response.status_code == 400
         assert response.data["detail"].code == "invoice_verification_required"
+
+    @pytest.mark.parametrize("invoice_number", [None, "", "   "])
+    def test_rejects_missing_invoice_number(self, api_client, invoice_number):
+        data = {
+            "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
+            "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "description": "Test description",
+            "accounted": False,
+            "files": [make_file()],
+            "parts": json.dumps([PART]),
+        }
+        if invoice_number is not None:
+            data["invoice_number"] = invoice_number
+        response = api_client.post("/api/invoices/", data=data, format="multipart")
+        assert response.status_code == 400
+        assert response.data["invoice_number"][0].code in ("required", "blank")
+
+    def test_stores_invoice_number(self, api_client):
+        data = {
+            "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
+            "due_date": TOMORROW.strftime("%Y-%m-%d"),
+            "invoice_number": " 12345 ",
+            "description": "Test description",
+            "accounted": False,
+            "files": [make_file()],
+            "parts": json.dumps([PART]),
+        }
+        response = api_client.post("/api/invoices/", data=data, format="multipart")
+        assert response.status_code == 201
+        assert response.data["invoice_number"] == "12345"
 
 
 class TestInvoicePartAttestation:

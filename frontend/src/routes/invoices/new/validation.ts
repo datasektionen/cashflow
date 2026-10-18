@@ -14,6 +14,7 @@ export type NewInvoiceFormData = {
 	// Set by ExpenseParts, used to warn about exceeded budget lines
 	budgetUsage: (BudgetLineUsage | null)[];
 	invoiceDate: DateValue | undefined;
+	invoiceNumber: string;
 	dueDate: DateValue | undefined;
 };
 
@@ -33,6 +34,7 @@ export function validateFormData(formData: NewInvoiceFormData): InvoiceCreate {
 	return {
 		description: formData.description,
 		invoice_date: formData.invoiceDate.toString(),
+		invoice_number: formData.invoiceNumber,
 		due_date: formData.dueDate.toString(),
 		files: formData.files,
 		parts: formData.parts
@@ -81,6 +83,10 @@ const validation = create((data: NewInvoiceFormData, currentField?: string) => {
 				enforce(lessThan(part.amount, maxAmount)).isTruthy();
 			});
 		});
+	});
+
+	test('invoice-number', 'invoice_number_required', () => {
+		enforce(data.invoiceNumber.trim()).isNotBlank();
 	});
 });
 

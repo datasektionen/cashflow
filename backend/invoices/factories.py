@@ -14,6 +14,7 @@ class InvoiceFactory(DjangoModelFactory):
     owner = factory.SubFactory(ProfileFactory)
     description = factory.Faker("text")
     invoice_date = factory.Faker("date")
+    invoice_number = factory.Faker("numerify", text="#######")
     due_date = factory.Faker("date")
     file_is_original = True
     file = factory.RelatedFactory(

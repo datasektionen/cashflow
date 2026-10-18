@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
-	import { BanknoteArrowUp, CircleAlert, CircleQuestionMark } from '@lucide/svelte';
+	import { BanknoteArrowUp, CircleAlert } from '@lucide/svelte';
 	import { getLocalTimeZone, today } from '@internationalized/date';
 	import CashSpinner from '$lib/components/CashSpinner.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';

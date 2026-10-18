@@ -105,6 +105,7 @@ class Invoice(models.Model):
 
     created_date = models.DateField(auto_now_add=True)
     invoice_date = models.DateField(blank=True, null=True)
+    invoice_number = models.TextField(null=True)
     due_date = models.DateField(blank=True, null=True)
     # TODO: Is there a better choice for on_delete?
     confirmed_by = models.ForeignKey(

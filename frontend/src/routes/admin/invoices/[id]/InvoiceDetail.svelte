@@ -138,6 +138,12 @@
 			<CopyableValue display={`CF ${invoice.id}`} />
 			<CopyableValue display={`${invoice.owner.first_name} ${invoice.owner.last_name}`} />
 			<CopyableValue display={invoice.description} />
+			{#if invoice.invoice_number}
+				<CopyableValue
+					display={`${$_('new_invoice.form.invoice_number.label')} ${invoice.invoice_number}`}
+					value={invoice.invoice_number}
+				/>
+			{/if}
 			<CopyableValue
 				display={formatDineroAmount(totalAmount)}
 				value={formatDineroAmount(totalAmount)}

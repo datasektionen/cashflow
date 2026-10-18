@@ -1,4 +1,5 @@
 import datetime
+from typing import ClassVar
 
 from django.conf import settings
 from rest_framework import serializers
@@ -7,12 +8,13 @@ from budget.api.serializers import PartRecommendationsMixin
 from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
 from core.api.serializers import (
     ClaimTotalField,
-    ProfileSerializer,
     CommentSerializer,
     FileSerializer,
+    ProfileSerializer,
     VoucherRowSerializer,
 )
 from invoices.models import Invoice, InvoicePart
+
 from .problems import (
     InvalidInvoiceDateError,
     VerificationRequiredError,
@@ -44,7 +46,7 @@ class InvoicePartSerializer(PartRecommendationsMixin, serializers.ModelSerialize
 
     class Meta:
         model = InvoicePart
-        fields = [
+        fields: ClassVar = [
             "id",
             "invoice",
             "cost_centre",
@@ -59,7 +61,6 @@ class InvoicePartSerializer(PartRecommendationsMixin, serializers.ModelSerialize
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
-
     files = FileSerializer(many=True, source="file_set", read_only=True)
     owner = ProfileSerializer(read_only=True)
     confirmed_by = ProfileSerializer(
@@ -68,6 +69,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     parts = InvoicePartSerializer(many=True, read_only=True)
     invoice_date = InvoiceDateField(allow_null=True)
     due_date = InvoiceDateField(allow_null=True)
+    invoice_number = serializers.CharField()
 
     # There is a typo in the Invoice model
     # https://github.com/datasektionen/cashflow/issues/311#issue-4554872870
@@ -94,10 +96,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invoice
-        fields = [
+        fields: ClassVar = [
             "id",
             "created_date",
             "invoice_date",
+            "invoice_number",
             "due_date",
             "confirmed_by",
             "confirmed_at",

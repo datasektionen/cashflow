@@ -25,6 +25,7 @@
 	"confirm": "Bekräfta",
 	"no_results": "Inga resultat",
 	"description_required": "Beskrivning krävs",
+	"invoice_number_required": "Fakturanummer krävs",
 	"expense_date_required": "Inköpsdatum krävs",
 	"expense_date_future": "Inköpsdatum får inte vara i framtiden",
 	"files_required": "Minst ett kvitto krävs",
@@ -286,6 +287,10 @@
 			"description": {
 				"label": "Beskrivning",
 				"help": "En beskrivning av fakturan och varför den ska betalas"
+			},
+			"invoice_number": {
+				"label": "Fakturanummer",
+				"help": "Fakturanumret som det står på fakturan. (Ej ordernummer.)"
 			},
 			"invoice_date": {
 				"label": "Fakturadatum",
