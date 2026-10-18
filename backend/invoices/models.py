@@ -1,26 +1,31 @@
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Unpack
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
-from core.permissions import get_permission_provider
-from notifications import get_notification_provider
 from core.exceptions import (
+    AlreadyAccountedError,
+    CashflowVerificationMissingError,
+    DuplicateConfirmationError,
+    FortnoxRecordMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
+    NotConfirmedError,
+    UnauthorizedAccountingError,
     UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
     UnauthorizedUnconfirmationError,
-    NotConfirmedError,
-    DuplicateConfirmationError,
-    UnauthorizedAccountingError,
-    AlreadyAccountedError,
-    FortnoxRecordMissingError,
-    CashflowVerificationMissingError,
-    MismatchedTotalAmountError,
-    NoAccountingMethodError,
 )
+from core.permissions import get_permission_provider
+from notifications import get_notification_provider
+lazy from expenses.models import Comment
+lazy from fortnox import FortnoxNotFound
+lazy from fortnox.api_client.models import VoucherCreate
+lazy from invoices.search import invoice_search
 
 if TYPE_CHECKING:
     from fortnox.api_client import FortnoxAPIClient, VoucherRow
@@ -28,7 +33,7 @@ if TYPE_CHECKING:
 
 
 class InvoiceQuerySet(models.QuerySet["Invoice"]):
-    def attestable_for(self, user: User) -> "InvoiceQuerySet":
+    def attestable_for(self, user: User) -> InvoiceQuerySet:
         # Note that you are allowed to attest your own invoices
         qs = self.filter(invoicepart__attested_by__isnull=True)
         cost_centres = user.profile.attestable_cost_centres()
@@ -36,19 +41,19 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
         return qs.order_by("due_date").distinct()
 
-    def accountable_for(self, user: User) -> "InvoiceQuerySet":
+    def accountable_for(self, user: User) -> InvoiceQuerySet:
         qs = self.exclude(payed_at__isnull=True).filter(verification="")
         cost_centres = user.profile.accountable_cost_centres()
         if cost_centres is not True:
             qs = qs.filter(invoicepart__cost_centre__in=cost_centres)
         return qs.order_by("invoice_date").distinct()
 
-    def confirmable_for(self, user: User) -> "InvoiceQuerySet":
+    def confirmable_for(self, user: User) -> InvoiceQuerySet:
         if not get_permission_provider().may_confirm(user):
             return self.none()
         return self.filter(confirmed_by__isnull=True).distinct()
 
-    def payable_for(self, user: User) -> "InvoiceQuerySet":
+    def payable_for(self, user: User) -> InvoiceQuerySet:
         if get_permission_provider().may_view_all(user):
             return (
                 self.filter(
@@ -65,7 +70,7 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
             .order_by("due_date")
         )
 
-    def viewable_by(self, user: User) -> "InvoiceQuerySet":
+    def viewable_by(self, user: User) -> InvoiceQuerySet:
         # Mirror Profile.may_view_invoice at the queryset level: a user may see an
         # invoice if they can act on it. pay/confirm are unscoped (any invoice);
         # view/account/attest are cost-centre scoped; owners always see their own.
@@ -85,11 +90,7 @@ class InvoiceQuerySet(models.QuerySet["Invoice"]):
             Q(invoicepart__cost_centre__in=cost_centres) | Q(owner__user=user)
         ).distinct()
 
-    def search(
-        self, **search_fields: Unpack["InvoiceSearchFields"]
-    ) -> "InvoiceQuerySet":
-        from invoices.search import invoice_search
-
+    def search(self, **search_fields: Unpack[InvoiceSearchFields]) -> InvoiceQuerySet:
         queryset = invoice_search(self, **search_fields)
         assert isinstance(queryset, InvoiceQuerySet)
         return queryset
@@ -130,10 +131,8 @@ class Invoice(models.Model):
 
     def pay(self, user):
         self.payed_by = user
-        self.payed_at = date.today()
+        self.payed_at = timezone.localdate()
         self.save()
-
-        from expenses.models import Comment
 
         comment = Comment(
             author=user.profile,
@@ -145,8 +144,8 @@ class Invoice(models.Model):
         get_notification_provider().on_comment(self, comment)
 
     # Return the total amount of the invoice parts
-    def total_amount(self):
-        return sum([part.amount for part in self.parts.all()])  # return total
+    def total_amount(self) -> Decimal:
+        return sum((part.amount for part in self.parts.all()), Decimal(0))
 
     def is_attested(self):
         # Iterates instead of querying so prefetched parts are reused.
@@ -169,7 +168,7 @@ class Invoice(models.Model):
         if self.confirmed_by:
             raise DuplicateConfirmationError()
         self.confirmed_by = user
-        self.confirmed_at = date.today()
+        self.confirmed_at = timezone.localdate()
         self.save()
 
     def unconfirm(self, user: User):
@@ -184,18 +183,14 @@ class Invoice(models.Model):
     def account(
         self,
         user: User,
-        fortnox_client: "FortnoxAPIClient | None" = None,
-        voucher_rows: "list[VoucherRow] | None" = None,
+        fortnox_client: FortnoxAPIClient | None = None,
+        voucher_rows: list[VoucherRow] | None = None,
         voucher_number: str | None = None,
     ) -> str:
         if not get_permission_provider().may_account(user, self):
             raise UnauthorizedAccountingError()
 
         if fortnox_client is not None:
-            from django.conf import settings
-            from fortnox import FortnoxNotFound
-            from fortnox.api_client.models import VoucherCreate
-
             description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
                 description=self.description, kind="invoice", id=self.id
             )
@@ -223,7 +218,7 @@ class Invoice(models.Model):
                         for r in voucher_rows
                         if r.Debit is not None
                     ),
-                    Decimal("0"),
+                    Decimal(0),
                 )
 
                 if voucher_total != self.total_amount():
@@ -255,7 +250,6 @@ class Invoice(models.Model):
             raise NoAccountingMethodError()
 
         self.save()
-        from expenses.models import Comment
 
         comment = Comment.objects.create(
             author=user.profile,
@@ -314,10 +308,9 @@ class InvoicePart(models.Model):
             raise UnauthorizedAttestationError()
 
         self.attested_by = user.profile
-        self.attest_date = date.today()
+        self.attest_date = timezone.localdate()
 
         self.save()
-        from expenses.models import Comment
 
         comment = Comment(
             author=user.profile,
@@ -336,7 +329,6 @@ class InvoicePart(models.Model):
             raise UnauthorizedAttestationError()
 
         self.save()
-        from expenses.models import Comment
 
         comment = Comment(
             author=user.profile,

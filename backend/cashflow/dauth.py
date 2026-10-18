@@ -10,6 +10,8 @@ from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from pydantic import BaseModel
 
 import core.permissions
+lazy from expenses.models import Expense, ExpensePart
+lazy from invoices.models import Invoice, InvoicePart
 
 
 class Permission(str, Enum):
@@ -34,7 +36,6 @@ class HivePermission(BaseModel):
 
 
 class Hive(core.permissions.PermissionProvider):
-
     def _scopes(
         self, user: AbstractBaseUser, perm: Permission | str
     ) -> list[str] | bool:
@@ -67,9 +68,6 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_unscoped(user, Permission.VIEW_ALL_PAYMENTS)
 
     def viewable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        from expenses.models import ExpensePart
-        from invoices.models import InvoicePart
-
         all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
             InvoicePart.objects.values_list("cost_centre", flat=True)
         )
@@ -86,9 +84,6 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_any_scope(user, Permission.ATTEST)
 
     def attestable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        from expenses.models import ExpensePart
-        from invoices.models import InvoicePart
-
         all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
             InvoicePart.objects.values_list("cost_centre", flat=True)
         )
@@ -120,9 +115,6 @@ class Hive(core.permissions.PermissionProvider):
         return [s.lower() for s in scopes] if isinstance(scopes, list) else []
 
     def may_account(self, user: AbstractBaseUser, target) -> bool:
-        from expenses.models import Expense
-        from invoices.models import Invoice
-
         if not isinstance(target, (Expense, Invoice)):
             raise TypeError(
                 f"Expected an expense or invoice, got {target.__class__.__name__}"
@@ -146,9 +138,6 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_scoped(user, Permission.ACCOUNTING, cost_centre)
 
     def accountable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        from expenses.models import ExpensePart
-        from invoices.models import InvoicePart
-
         all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
             InvoicePart.objects.values_list("cost_centre", flat=True)
         )
@@ -158,8 +147,6 @@ class Hive(core.permissions.PermissionProvider):
         return [cc for cc in all_ccs if self.may_account_cost_centre(user, cc)]
 
     def accountable_expenses(self, user: AbstractBaseUser) -> QuerySet:
-        from expenses.models import Expense
-
         scopes = self._accounting_scopes(user)
         if scopes is None:
             return Expense.objects.all()
@@ -170,8 +157,6 @@ class Hive(core.permissions.PermissionProvider):
         )
 
     def accountable_invoices(self, user: AbstractBaseUser) -> QuerySet:
-        from invoices.models import Invoice
-
         scopes = self._accounting_scopes(user)
         if scopes is None:
             return Invoice.objects.all()
@@ -201,7 +186,6 @@ class Hive(core.permissions.PermissionProvider):
 
 
 class SSO(OIDCAuthenticationBackend):
-
     def get_username(self, claims):
         return claims.get("sub")
 
@@ -252,11 +236,10 @@ def get_permissions(user) -> dict[Permission, bool | list[str]]:
                 mapping[perm_id] = True
             elif perm_id not in mapping:
                 mapping[perm_id] = [scope.lower()]
-            elif (scopes := mapping[perm_id]) is not True:
-                if isinstance(scopes, list):
-                    scopes.append(
-                        scope.lower()
-                    )  # else: don't overwrite an existing True (do nothing)
+            elif (scopes := mapping[perm_id]) is not True and isinstance(scopes, list):
+                scopes.append(
+                    scope.lower()
+                )  # else: don't overwrite an existing True (do nothing)
 
         user.__dict__["cached_permissions"] = mapping
 

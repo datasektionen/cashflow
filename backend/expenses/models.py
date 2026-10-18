@@ -1,38 +1,43 @@
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Unpack
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 from structlog import get_logger
 
 from notifications import get_notification_provider
+lazy from cashflow import dauth
+lazy from expenses.search import expense_search
+lazy from fortnox import FortnoxNotFound
+lazy from fortnox.api_client.models import VoucherCreate
 
 if TYPE_CHECKING:
-    from fortnox.api_client import FortnoxAPIClient, VoucherRow
     from expenses.search import ExpenseSearchFields
+    from fortnox.api_client import FortnoxAPIClient, VoucherRow
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import localdate
-from core.permissions import get_permission_provider
+
 from core.exceptions import (
-    UnauthorizedAttestationError,
-    SelfAttestationError,
-    FlaggedAttestationError,
-    UnauthorizedConfirmationError,
-    UnauthorizedUnconfirmationError,
-    NotConfirmedError,
-    DuplicateConfirmationError,
-    FlaggedConfirmationError,
-    UnauthorizedAccountingError,
     AlreadyAccountedError,
-    FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    DuplicateConfirmationError,
+    FlaggedAttestationError,
+    FlaggedConfirmationError,
+    FortnoxRecordMissingError,
     MismatchedTotalAmountError,
     NoAccountingMethodError,
+    NotConfirmedError,
+    SelfAttestationError,
+    UnauthorizedAccountingError,
+    UnauthorizedAttestationError,
+    UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
 )
+from core.permissions import get_permission_provider
 
 logger = get_logger()
 
@@ -71,8 +76,6 @@ class Profile(models.Model):
         return get_permission_provider().may_view_all_payments(self.user)
 
     def may_manage_fortnox(self):
-        from cashflow import dauth
-
         return dauth.has_unscoped_permission(dauth.Permission.MANAGE_FORTNOX, self.user)
 
     def may_attest(self, expense_part):
@@ -215,8 +218,7 @@ class Payment(models.Model):
 
 
 class ExpenseQuerySet(models.QuerySet["Expense"]):
-
-    def attestable_for(self, user: User) -> "ExpenseQuerySet":
+    def attestable_for(self, user: User) -> ExpenseQuerySet:
         qs = self.exclude(owner__user=user)
         if get_permission_provider().may_view_all(user):
             qs = qs.filter(expensepart__attested_by__isnull=True)
@@ -228,7 +230,7 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             )
         return qs.order_by("id", "expense_date").distinct()
 
-    def accountable_for(self, user: User) -> "ExpenseQuerySet":
+    def accountable_for(self, user: User) -> ExpenseQuerySet:
         qs = self.exclude(reimbursement=None).filter(verification="")
         cost_centres = user.profile.accountable_cost_centres()
         if get_permission_provider().may_view_all(user):
@@ -237,14 +239,14 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             qs = qs.filter(expensepart__cost_centre__in=cost_centres)
         return qs.order_by("expense_date").distinct()
 
-    def confirmable_for(self, user: User) -> "ExpenseQuerySet":
+    def confirmable_for(self, user: User) -> ExpenseQuerySet:
         if get_permission_provider().may_view_all(user):
             return self.filter(confirmed_by__isnull=True).distinct()
         if not get_permission_provider().may_confirm(user):
             return self.none()
         return self.filter(confirmed_by__isnull=True).distinct()
 
-    def payable_for(self, user: User) -> "ExpenseQuerySet":
+    def payable_for(self, user: User) -> ExpenseQuerySet:
         if get_permission_provider().may_view_all(user):
             return (
                 self.filter(reimbursement=None)
@@ -261,7 +263,7 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             .order_by("owner__user__username")
         )
 
-    def viewable_by(self, user: User) -> "ExpenseQuerySet":
+    def viewable_by(self, user: User) -> ExpenseQuerySet:
         provider = get_permission_provider()
         if (
             provider.may_view_all(user)
@@ -278,11 +280,7 @@ class ExpenseQuerySet(models.QuerySet["Expense"]):
             Q(expensepart__cost_centre__in=cost_centres) | Q(owner__user=user)
         ).distinct()
 
-    def search(
-        self, **search_fields: Unpack["ExpenseSearchFields"]
-    ) -> "ExpenseQuerySet":
-        from expenses.search import expense_search
-
+    def search(self, **search_fields: Unpack[ExpenseSearchFields]) -> ExpenseQuerySet:
         queryset = expense_search(self, **search_fields)
         assert isinstance(queryset, ExpenseQuerySet)
         return queryset
@@ -316,7 +314,7 @@ class Expense(models.Model):
 
     # Return the total amount of the expense parts
     def total_amount(self) -> Decimal:
-        total = Decimal("0")
+        total = Decimal(0)
         for part in self.parts.all():
             total += part.amount
         return total
@@ -331,18 +329,14 @@ class Expense(models.Model):
     def account(
         self,
         user: User,
-        fortnox_client: "FortnoxAPIClient | None" = None,
-        voucher_rows: "list[VoucherRow] | None" = None,
+        fortnox_client: FortnoxAPIClient | None = None,
+        voucher_rows: list[VoucherRow] | None = None,
         voucher_number: str | None = None,
     ) -> str:
         if not get_permission_provider().may_account(user, self):
             raise UnauthorizedAccountingError()
 
         if fortnox_client is not None:
-            from django.conf import settings
-            from fortnox import FortnoxNotFound
-            from fortnox.api_client.models import VoucherCreate
-
             description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
                 description=self.description, kind="expense", id=self.id
             )
@@ -370,7 +364,7 @@ class Expense(models.Model):
                         for r in voucher_rows
                         if r.Debit is not None
                     ),
-                    Decimal("0"),
+                    Decimal(0),
                 )
 
                 if voucher_total != self.total_amount():
@@ -422,7 +416,7 @@ class Expense(models.Model):
         if self.is_flagged:
             raise FlaggedConfirmationError()
         self.confirmed_by = user
-        self.confirmed_at = date.today()
+        self.confirmed_at = timezone.localdate()
         self.save()
         comment = Comment.objects.create(
             author=user.profile,

@@ -1,16 +1,17 @@
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
+from typing import TypedDict
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import CharField, Prefetch, Q, Value
-from django.db.models.aggregates import Sum, Count
+from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Cast, Concat
 from drf_spectacular.utils import (
-    extend_schema_view,
     extend_schema,
+    extend_schema_view,
     inline_serializer,
 )
 from rest_framework import serializers, status, viewsets
@@ -22,23 +23,23 @@ from rest_framework.response import Response
 from structlog import get_logger
 
 from core.api.filters import (
-    apply_expense_filters,
-    apply_invoice_filters,
     ClaimQuerySerializer,
     Filter,
     Sorting,
+    apply_expense_filters,
+    apply_invoice_filters,
 )
 from core.api.openapi import problems
 from core.api.pagination import DefaultPagination
 from core.api.problems import (
-    MultipleReceiversProblem,
-    PaymentPermissionDeniedProblem,
     AlreadyReimbursedProblem,
+    MultipleReceiversProblem,
     NoExpensesProblem,
+    PaymentPermissionDeniedProblem,
 )
 from core.api.serializers import (
-    ClaimSerializer,
     ClaimData,
+    ClaimSerializer,
     PaymentCreateSerializer,
     PaymentSerializer,
     PendingPaymentsSerializer,
@@ -50,11 +51,11 @@ from expenses.models import (
     Comment,
     Expense,
     ExpensePart,
+    ExpenseQuerySet,
     Payment,
     Profile,
-    ExpenseQuerySet,
 )
-from fortnox import FortnoxRequest, FortnoxNotFound, FortnoxServiceNotAvailableProblem
+from fortnox import FortnoxNotFound, FortnoxRequest, FortnoxServiceNotAvailableProblem
 from invoices.models import Invoice, InvoicePart, InvoiceQuerySet
 from notifications import get_notification_provider
 
@@ -108,7 +109,9 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
         date_sort = sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC)
         total_sort = sorting in (Sorting.TOTAL_ASC, Sorting.TOTAL_DESC)
 
-        def sort_value(total: Decimal, item_date: date | None, created: date):
+        def sort_value(
+            total: Decimal, item_date: date | None, created: date
+        ) -> Decimal | date:
             """The value each row is sorted on, matching the SQL ordering the
             source querysets were sliced by."""
             if total_sort:
@@ -128,7 +131,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                 window = int(raw_page) * page_size
 
         total = 0
-        rows: list[tuple[ClaimData, date]] = []
+        rows: list[tuple[ClaimData, Decimal | date]] = []
         if claim_type != "invoice":
             expenses: ExpenseQuerySet = (
                 Expense.objects.viewable_by(self.current_user)
@@ -147,7 +150,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
             total += expenses.count()
             if window is not None:
                 expenses = expenses[:window]
-            rows += [
+            rows.extend(
                 (
                     {
                         "id": expense.id,
@@ -172,7 +175,7 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                     ),
                 )
                 for expense in expenses
-            ]
+            )
 
         if claim_type != "expense":
             invoices: InvoiceQuerySet = (
@@ -194,13 +197,13 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
             total += invoices.count()
             if window is not None:
                 invoices = invoices[:window]
-            rows += [
+            rows.extend(
                 (
                     {
                         "id": invoice.id,
                         "type": "invoice",
                         "description": invoice.description,
-                        "amount": invoice.total_amount(),
+                        "amount": invoice.total_amount().to_eng_string(),
                         "created_date": invoice.created_date,
                         "expense_date": None,
                         "invoice_date": invoice.invoice_date,
@@ -213,13 +216,13 @@ class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
                         "parts": invoice.parts.all(),
                     },
                     sort_value(
-                        invoice.total_amount(),
+                        Decimal(invoice.total_amount()),
                         invoice.invoice_date,
                         invoice.created_date,
                     ),
                 )
                 for invoice in invoices
-            ]
+            )
 
         rows.sort(key=lambda row: row[0]["id"], reverse=True)
         if sorting != Sorting.ID_DESC:
@@ -269,11 +272,11 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
 
         if tag := request.query_params.get("tag"):
             payments = payments.annotate(
-                tag=Concat(
+                tag_text=Concat(
                     Value(settings.PAYMENT_TAG_PREFIX),
                     Cast("pk", CharField()),
                 )
-            ).filter(tag__icontains=tag)
+            ).filter(tag_text__icontains=tag)
 
         page = self.paginate_queryset(payments)
         if page is not None:
@@ -405,7 +408,6 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
     )
 )
 class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
-
     def get(self, request: Request):
         user = self.current_user
         expenses = Expense.objects.viewable_by(user)
@@ -428,7 +430,7 @@ class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
 
 
 def _counts_by_cost_centre(
-    expense_qs: "ExpenseQuerySet", invoice_qs: "InvoiceQuerySet"
+    expense_qs: ExpenseQuerySet, invoice_qs: InvoiceQuerySet
 ) -> list[dict[str, object]]:
     """Merges expense and invoice counts grouped by their part's cost centre.
 
@@ -443,12 +445,12 @@ def _counts_by_cost_centre(
         .annotate(count=Count("id", distinct=True))
     ):
         counts[row["expensepart__cost_centre"]] += row["count"]
-    for row in (
+    for invoice_row in (
         invoice_qs.order_by()
         .values("invoicepart__cost_centre")
         .annotate(count=Count("id", distinct=True))
     ):
-        counts[row["invoicepart__cost_centre"]] += row["count"]
+        counts[invoice_row["invoicepart__cost_centre"]] += invoice_row["count"]
     return [
         {"cost_centre": cost_centre, "count": count}
         for cost_centre, count in sorted(
@@ -457,15 +459,22 @@ def _counts_by_cost_centre(
     ]
 
 
+class _OwnerCount(TypedDict):
+    username: str
+    first_name: str
+    last_name: str
+    count: int
+
+
 def _counts_by_owner(
-    expense_qs: "ExpenseQuerySet", invoice_qs: "InvoiceQuerySet"
-) -> list[dict[str, object]]:
+    expense_qs: ExpenseQuerySet, invoice_qs: InvoiceQuerySet
+) -> list[_OwnerCount]:
     """Merges expense and invoice counts grouped by the owning user.
 
     Each claim has a single owner, so counts sum to the overall total. Returned
     sorted by descending count.
     """
-    owners: dict[str, dict[str, object]] = {}
+    owners: dict[str, _OwnerCount] = {}
     for qs in (expense_qs, invoice_qs):
         for row in (
             qs.order_by()
@@ -486,12 +495,11 @@ def _counts_by_owner(
                     "count": 0,
                 },
             )
-            owner["count"] = int(owner["count"]) + row["count"]
+            owner["count"] += row["count"]
     return sorted(owners.values(), key=lambda owner: owner["count"], reverse=True)
 
 
 class ActionOverview(GenericAPIView, AuthenticatedUserMixin):
-
     def get(self, request: Request):
         user = self.current_user
         expenses = Expense.objects.viewable_by(user)
@@ -505,7 +513,7 @@ class ActionOverview(GenericAPIView, AuthenticatedUserMixin):
                     expenses.accountable_for(user), invoices.accountable_for(user)
                 ),
                 "confirm": _counts_by_cost_centre(
-                    expenses.confirmable_for(user), Invoice.objects.none()
+                    expenses.confirmable_for(user), invoices.none()
                 ),
                 "pay": _counts_by_owner(
                     expenses.payable_for(user), invoices.payable_for(user)
@@ -515,7 +523,6 @@ class ActionOverview(GenericAPIView, AuthenticatedUserMixin):
 
 
 class VoucherSeriesList(GenericAPIView):
-
     def get_serializer_class(self):
         return VoucherSeriesSerializer
 

@@ -71,3 +71,7 @@ exclude = ["^.*/migrations/.*$"]
 
 [tool.django-stubs]
 django_settings_module = "cashflow.settings"
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+reportAttributeAccessIssue = false
