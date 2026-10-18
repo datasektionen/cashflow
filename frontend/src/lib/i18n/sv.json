@@ -38,6 +38,7 @@
 	"amount_required": "Belopp krävs",
 	"amount_negative": "Beloppet måste vara större än noll",
 	"amount_too_large": "Beloppet överstiger det maximalt tillåtna värdet",
+	"budget_line_exceeded": "Budgetposten kommer att överskridas",
 
 	"errors": {
 		"network": "Ett nätverksfel inträffade."

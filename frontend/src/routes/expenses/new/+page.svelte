@@ -19,6 +19,7 @@
 	let formData: NewExpenseFormData = $state({
 		description: '',
 		files: [],
+		budgetUsage: [],
 		parts: [
 			{
 				cost_centre: '',
@@ -48,6 +49,7 @@
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
+	let warnings = $derived(validationResult.getWarnings());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
 		validationResult = validation.run(formData, e.currentTarget.name);
@@ -161,9 +163,6 @@
 	<fieldset class="flex flex-col space-y-2 border-0 p-0">
 		<legend class="text-s mb-1 flex flex-row items-center font-medium">
 			{$_('new_expense.form.expense_parts.label')}
-			<a href="/help/expense-parts" class="group text-money-green-800 dark:text-money-green-600">
-				<CircleQuestionMark class="mx-2 size-4 transition-all group-hover:scale-125" />
-			</a>
 		</legend>
 
 		<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
@@ -173,7 +172,9 @@
 		<!--   Expense parts     -->
 		<ExpenseParts
 			bind:parts={formData.parts}
+			bind:budgetUsage={formData.budgetUsage}
 			{errors}
+			{warnings}
 			{showErrors}
 			onValidate={validateField}
 			addPartPrompt={$_('new_expense.form.add_part')}

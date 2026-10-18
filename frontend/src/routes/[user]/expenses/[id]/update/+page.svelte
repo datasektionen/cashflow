@@ -43,6 +43,7 @@
 			description: exp.description,
 			files: [],
 			deletedFiles: new SvelteSet<number>(),
+			budgetUsage: [],
 			parts:
 				exp.parts.length > 0
 					? exp.parts.map((p) => ({
@@ -83,6 +84,7 @@
 
 	let validationResult = $state(validation.get());
 	let errors = $derived(validationResult.getErrors());
+	let warnings = $derived(validationResult.getWarnings());
 
 	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
 		validationResult = validation.run(formData, e.currentTarget.name);
@@ -130,7 +132,9 @@
 
 		<ExpenseParts
 			bind:parts={formData.parts}
+			bind:budgetUsage={formData.budgetUsage}
 			{errors}
+			{warnings}
 			{showErrors}
 			onValidate={validateField}
 			addPartPrompt={$_('new_expense.form.add_part')}
