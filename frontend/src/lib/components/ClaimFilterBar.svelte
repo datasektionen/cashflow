@@ -85,13 +85,6 @@
 		const selectedCostCentre = costCentres.find((cc) => cc.name === filterValue('cost_centre'));
 		if (selectedCostCentre?.id != null) {
 			secondaryCostCentres = (await budget.secondaryCostCentres.get(selectedCostCentre)) ?? [];
-		} else {
-			let res = await api.budget.listSecondaryCostCentres(1, 100);
-			secondaryCostCentres = res.data;
-			while (res.pagination.page < res.pagination.totalPages) {
-				res = await api.budget.listSecondaryCostCentres(res.pagination.page + 1, 100);
-				secondaryCostCentres.push(...res.data);
-			}
 		}
 
 		const selectedSecondaryCostCentre = secondaryCostCentres.find(
@@ -99,13 +92,6 @@
 		);
 		if (selectedSecondaryCostCentre?.id != null) {
 			budgetLines = (await budget.budgetLines.get(selectedSecondaryCostCentre)) ?? [];
-		} else {
-			let res = await api.budget.listBudgetLines(1, 100);
-			budgetLines = res.data;
-			while (res.pagination.page < res.pagination.totalPages) {
-				res = await api.budget.listBudgetLines(res.pagination.page + 1, 100);
-				budgetLines.push(...res.data);
-			}
 		}
 	});
 
@@ -284,6 +270,7 @@
 				onchange={(v) => setFilter('secondary_cost_centre', v)}
 				placeholder={$_('secondary_cost_centre')}
 				items={secondaryCostCentres.map((it) => it.name)}
+				locked={filterValue('cost_centre') === ''}
 			/>
 			<ComboBox
 				name="budget-line"
@@ -293,6 +280,7 @@
 				onchange={(v) => setFilter('budget_line', v)}
 				placeholder={$_('budget_line')}
 				items={budgetLines.map((it) => it.name)}
+				locked={filterValue('secondary_cost_centre') === ''}
 			/>
 		{/if}
 
