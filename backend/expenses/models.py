@@ -444,6 +444,23 @@ class Expense(models.Model):
         )
 
 
+class ExpenseData(models.Model):
+    """
+    Represents an expense. An expense contains expense parts and information
+    about the expense.
+    """
+
+    expense_date = models.DateField()
+    confirmed_by = models.ForeignKey(
+        User, blank=True, null=True, on_delete=models.DO_NOTHING
+    )
+    confirmed_at = models.DateField(blank=True, null=True, default=None)
+    reimbursement = models.ForeignKey(
+        Payment, blank=True, null=True, on_delete=models.DO_NOTHING
+    )
+    is_flagged = models.BooleanField(null=True, blank=True)
+
+
 class File(models.Model):
     """
     Represents a file on, for example, S3.

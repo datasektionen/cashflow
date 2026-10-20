@@ -1,13 +1,13 @@
 import requests
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
-
-from cashflow import settings
-from expenses.models import Expense, Comment
-from invoices.models import Invoice
-
 from structlog import get_logger
 
+from cashflow import settings
+from core.models import Claim
+from core.models import Comment as CoreComment
+from expenses.models import Comment, Expense
+from invoices.models import Invoice
 from notifications import NotificationProvider
 
 logger = get_logger(__name__)
@@ -30,11 +30,12 @@ def send_mail(recipient, subject, content):
 
 
 class SpamMail(NotificationProvider):
-
     def on_invoice_update(self, invoice):
         raise NotImplementedError()
 
-    def on_comment(self, claim: Expense | Invoice, comment: Comment):
+    def on_comment(
+        self, claim: Expense | Invoice | Claim, comment: Comment | CoreComment
+    ):
 
         recipient = claim.owner.user.email
         subject = str(comment.author) + " har lagt till en kommentar på ditt utlägg."

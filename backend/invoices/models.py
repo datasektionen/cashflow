@@ -22,7 +22,8 @@ from core.exceptions import (
 )
 from core.permissions import get_permission_provider
 from notifications import get_notification_provider
-lazy from expenses.models import Comment
+lazy import core
+lazy from expenses.models import Comment, Profile
 lazy from fortnox import FortnoxNotFound
 lazy from fortnox.api_client.models import VoucherCreate
 lazy from invoices.search import invoice_search
@@ -339,3 +340,19 @@ class InvoicePart(models.Model):
         comment.save()
 
         get_notification_provider().on_comment(self.invoice, comment)
+
+
+class InvoiceData(models.Model):
+    invoice_date = models.DateField()
+    invoice_number = models.TextField()
+    due_date = models.DateField()
+    # TODO: Is there a better choice for on_delete?
+    paid_at = models.DateField(blank=True, null=True, default=None)
+    paid_by = models.ForeignKey(
+        core.models.Profile,
+        blank=True,
+        null=True,
+        default=None,
+        related_name="payed",
+        on_delete=models.DO_NOTHING,
+    )
