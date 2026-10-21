@@ -1,19 +1,20 @@
-import datetime
 from typing import ClassVar
 
 from django.conf import settings
+from django.utils import timezone
 from rest_framework import serializers
 
-from budget.api.serializers import PartRecommendationsMixin
-from core.api.problems import InvalidDateFormatProblem, PartRequiredProblem
+from core.api.problems import PartRequiredProblem
 from core.api.serializers import (
+    ClaimPartSerializer,
     ClaimTotalField,
     CommentSerializer,
     FileSerializer,
     ProfileSerializer,
     VoucherRowSerializer,
 )
-from invoices.models import Invoice, InvoicePart
+from core.models import Claim
+from invoices.models import InvoiceData
 
 from .problems import (
     InvalidInvoiceDateError,
@@ -21,62 +22,29 @@ from .problems import (
 )
 
 
-class InvoiceDateField(serializers.DateField):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("input_formats", ["%Y-%m-%d"])
-        super().__init__(**kwargs)
-
-    def to_internal_value(self, value):
-        try:
-            return super().to_internal_value(value)
-        except serializers.ValidationError:
-            raise InvalidDateFormatProblem()
-
-
 class InvoiceAccountSerializer(serializers.Serializer):
     voucher_number = serializers.RegexField(r"[A-Z]\d+", required=False)
     voucher_rows = VoucherRowSerializer(many=True, required=False)
 
 
-class InvoicePartSerializer(PartRecommendationsMixin, serializers.ModelSerializer):
-    invoice: serializers.PrimaryKeyRelatedField[Invoice] = (
-        serializers.PrimaryKeyRelatedField(read_only=True)
-    )
-    attested_by = ProfileSerializer(read_only=True)
-
-    class Meta:
-        model = InvoicePart
-        fields: ClassVar = [
-            "id",
-            "invoice",
-            "cost_centre",
-            "secondary_cost_centre",
-            "budget_line",
-            "amount",
-            "attested_by",
-            "attest_date",
-            "recommended_accounts",
-            "recommended_cost_centre",
-        ]
-
-
 class InvoiceSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="data_id", read_only=True)
     files = FileSerializer(many=True, source="file_set", read_only=True)
     owner = ProfileSerializer(read_only=True)
-    confirmed_by = ProfileSerializer(
-        source="confirmed_by.profile", allow_null=True, read_only=True
-    )
-    parts = InvoicePartSerializer(many=True, read_only=True)
-    invoice_date = InvoiceDateField(allow_null=True)
-    due_date = InvoiceDateField(allow_null=True)
-    invoice_number = serializers.CharField()
+    parts = ClaimPartSerializer(many=True, read_only=True)
 
-    # There is a typo in the Invoice model
-    # https://github.com/datasektionen/cashflow/issues/311#issue-4554872870
-    paid_by = ProfileSerializer(
-        source="payed_by.profile", allow_null=True, read_only=True
+    invoice_date = serializers.DateField(
+        source="invoice_data.invoice_date", allow_null=True
     )
-    paid_at = serializers.DateField(source="payed_at", allow_null=True, read_only=True)
+    due_date = serializers.DateField(source="invoice_data.due_date", allow_null=True)
+    invoice_number = serializers.CharField(source="invoice_data.invoice_number")
+
+    paid_by = ProfileSerializer(
+        source="invoice_data.paid_by", allow_null=True, read_only=True
+    )
+    paid_at = serializers.DateField(
+        source="invoice_data.paid_at", allow_null=True, read_only=True
+    )
 
     # Note that DRF serializers strip whitespace by default
     verification = serializers.RegexField(r"[A-Z]\d+", required=False)
@@ -85,6 +53,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     )
 
     comments = CommentSerializer(many=True, read_only=True, source="comment_set")
+    total = ClaimTotalField()
 
     recommended_credit_account = serializers.SerializerMethodField(
         help_text=(
@@ -92,18 +61,15 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "invoice (the accounts payable account). Null in list responses."
         )
     )
-    total = ClaimTotalField()
 
     class Meta:
-        model = Invoice
+        model = Claim
         fields: ClassVar = [
             "id",
             "created_date",
             "invoice_date",
             "invoice_number",
             "due_date",
-            "confirmed_by",
-            "confirmed_at",
             "owner",
             "description",
             "verification",
@@ -117,31 +83,40 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "total",
         ]
 
-    def get_voucher(self, invoice: Invoice) -> str | None:
+    def get_voucher(self, invoice: Claim) -> str | None:
         # Model stores "" for not-yet-accounted; API exposes null
         return invoice.verification or None
 
-    def get_recommended_credit_account(self, invoice: Invoice) -> int | None:
+    def get_recommended_credit_account(self, invoice: Claim) -> int | None:
         if not self.context.get("include_recommendations"):
             return None
         return settings.FORTNOX_INVOICE_CREDIT_ACCOUNT
 
-    def validate(self, data):
+    def validate(self, attrs):
 
-        invoice_date = data.get("invoice_date")
-        if invoice_date and invoice_date > datetime.date.today():
+        invoice_date = attrs.get("invoice_data", {}).get("invoice_date")
+        if invoice_date and invoice_date > timezone.localdate():
             raise InvalidInvoiceDateError()
 
-        parts = data.get("parts")
+        parts = attrs.get("parts")
         if parts and len(parts) <= 0:
             raise PartRequiredProblem()
 
         accounted = self.initial_data.get("accounted") in (True, "True", "true", "1")
-        verification = data.get("verification")
+        verification = attrs.get("verification")
         if accounted and not verification:
             raise VerificationRequiredError()
 
-        return data
+        return attrs
 
     def create(self, validated_data):
-        return Invoice.objects.create(file_is_original=True, **validated_data)
+        # Parts are created by the view, see InvoiceViewSet.create
+        invoice_data = InvoiceData.objects.create(**validated_data.pop("invoice_data"))
+        return Claim.objects.create(invoice_data=invoice_data, **validated_data)
+
+    def update(self, instance, validated_data):
+        if invoice_data := validated_data.pop("invoice_data", None):
+            for attr, value in invoice_data.items():
+                setattr(instance.invoice_data, attr, value)
+            instance.invoice_data.save()
+        return super().update(instance, validated_data)

@@ -1,26 +1,49 @@
-from typing import ClassVar
+from decimal import Decimal
+from typing import ClassVar, Unpack
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.functions import Coalesce
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.timezone import localdate
+from structlog import get_logger
 
 from cashflow import dauth
 from core.exceptions import (
+    AlreadyAccountedError,
+    CashflowVerificationMissingError,
+    DuplicateConfirmationError,
     FlaggedAttestationError,
+    FlaggedConfirmationError,
+    FortnoxRecordMissingError,
+    MismatchedTotalAmountError,
+    NoAccountingMethodError,
+    NotConfirmableError,
+    NotConfirmedError,
+    NotPayableError,
     SelfAttestationError,
+    UnauthorizedAccountingError,
     UnauthorizedAttestationError,
+    UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
 )
 from core.permissions import get_permission_provider
+from fortnox import FortnoxAPIClient, FortnoxNotFound, VoucherRow
 from notifications.notifications import get_notification_provider
+lazy from core.search import ClaimSearchFields, claim_search
 lazy from expenses.models import ExpenseData
+lazy from fortnox.api_client.models import VoucherCreate
 lazy from invoices.models import InvoiceData
+
+logger = get_logger()
 
 
 class Profile(models.Model):
     # The relation to the original django user
-    user = models.OneToOneField(
-        User, on_delete=models.PROTECT, related_name="core_profile"
-    )
+    user = models.OneToOneField(User, on_delete=models.PROTECT, related_name="profile")
 
     # Represents a bank account owned by the user
     bank_account = models.CharField(max_length=13, blank=True)
@@ -145,6 +168,122 @@ class Profile(models.Model):
         return get_permission_provider().may_view_account(self.user)
 
 
+# Based of https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+
+class ClaimQuerySet(models.QuerySet["Claim"]):
+    def expenses(self) -> ClaimQuerySet:
+        return self.filter(type="expense").select_related("expense_data")
+
+    def invoices(self) -> ClaimQuerySet:
+        return self.filter(type="invoice").select_related("invoice_data")
+
+    def attestable_for(self, user: User) -> ClaimQuerySet:
+
+        # A user cannot attest their own expenses
+        # (but they can attest their own invoices)
+        qs = self.exclude(models.Q(type="expense") & models.Q(owner__user=user))
+        if get_permission_provider().may_view_all(user):  # Sauron
+            qs = qs.filter(part__attested_by__isnull=True)
+        else:
+            cost_centres = user.profile.attestable_cost_centres()
+            qs = qs.filter(
+                part__attested_by__isnull=True,
+                part__cost_centre__in=cost_centres,
+            )
+        return qs.distinct()
+
+    def accountable_for(self, user: User) -> ClaimQuerySet:
+        qs = self.exclude(
+            models.Q(type="expense", expense_data__reimbursement=None)
+            | models.Q(type="invoice", invoice_data__paid_by=None)
+        ).filter(verification="")
+
+        if get_permission_provider().may_view_all(user):
+            return qs.distinct()
+        cost_centres = user.profile.accountable_cost_centres()
+        return qs.filter(part__cost_centre__in=cost_centres).distinct()
+
+    def confirmable_for(self, user: User) -> ClaimQuerySet:
+
+        permissions = get_permission_provider()
+
+        if not (permissions.may_confirm(user) or permissions.may_view_all(user)):
+            return self.none()
+
+        return self.filter(
+            type="expense", expense_data__confirmed_by__isnull=True
+        ).distinct()
+
+    def payable_for(self, user: User) -> ClaimQuerySet:
+
+        permissions = get_permission_provider()
+
+        if not (permissions.may_pay(user) or permissions.may_view_all(user)):
+            return self.none()
+
+        return (
+            self.filter(
+                models.Q(type="expense", expense_data__reimbursement=None)
+                | models.Q(type="invoice", invoice_data__paid_by=None)
+            )
+            .exclude(part__attested_by=None)
+            .exclude(type="expense", expense_data__confirmed_by=None)
+            .distinct()
+        )
+
+    def viewable_by(self, user: User) -> ClaimQuerySet:
+        permissions = get_permission_provider()
+        if (
+            permissions.may_view_all(user)
+            or permissions.may_pay(user)
+            or permissions.may_confirm(user)
+        ):
+            return self.all()
+
+        cost_centres = (
+            set(permissions.viewable_cost_centres(user))
+            | set(permissions.accountable_cost_centres(user))
+            | set(permissions.attestable_cost_centres(user))
+        )
+        return self.filter(
+            models.Q(part__cost_centre__in=cost_centres) | models.Q(owner__user=user)
+        )
+
+    def with_total(self) -> ClaimQuerySet:
+        """Annotates each claim with the sum of its parts as `total`.
+
+        Uses a subquery rather than Sum("part__amount") so that joins on parts
+        added by filters can't duplicate rows in the sum, see
+        https://docs.djangoproject.com/en/6.1/topics/db/aggregation/#combining-multiple-aggregations
+        """
+        return self.annotate(
+            total=Coalesce(
+                models.Subquery(
+                    ClaimPart.objects.filter(claim=models.OuterRef("pk"))
+                    .values("claim")
+                    .annotate(t=models.Sum("amount"))
+                    .values("t")
+                ),
+                models.Value(Decimal(0)),
+            )
+        )
+
+    def search(self, **search_fields: Unpack[ClaimSearchFields]) -> ClaimQuerySet:
+        return claim_search(self, **search_fields)
+
+
 class Claim(models.Model):
     """A claim represents either an expense or an invoice.
 
@@ -152,6 +291,8 @@ class Claim(models.Model):
     They are differentiated by the `invoice_data` and `expense_data`
     fields that are both nullable (a check ensures exactly one is not-null).
     """
+
+    objects = ClaimQuerySet.as_manager()
 
     owner = models.ForeignKey(Profile, on_delete=models.PROTECT)
     description = models.TextField()
@@ -172,6 +313,18 @@ class Claim(models.Model):
         db_persist=False,
     )
 
+    def __str__(self):
+        return self.description
+
+    @property
+    def data_id(self) -> int:
+        """The id of the claim's expense/invoice data, which is the id exposed
+        through the API. It matches the pre-claim expense/invoice ids, so old
+        links and Fortnox voucher descriptions remain valid."""
+        data_id = self.expense_data_id or self.invoice_data_id
+        assert data_id is not None
+        return data_id
+
     class Meta:
         constraints: ClassVar = [
             # Non-empty description
@@ -187,6 +340,169 @@ class Claim(models.Model):
                 name="either-expense-or-invoice",
             ),
         ]
+
+    # == Admin actions
+
+    def total_amount(self) -> Decimal:
+        return sum((part.amount for part in self.parts.all()), Decimal(0))
+
+    def account(
+        self,
+        user: User,
+        fortnox_client: FortnoxAPIClient | None = None,
+        voucher_rows: list[VoucherRow] | None = None,
+        voucher_number: str | None = None,
+    ) -> str:
+        """Accounts the claim (expense or invoice) either via Fortnox or by giving it an existing voucher number."""
+
+        if not get_permission_provider().may_account(user, self):
+            raise UnauthorizedAccountingError()
+
+        if fortnox_client is not None:
+            if self.expense_data is not None:
+                voucher_series = settings.FORTNOX_EXPENSE_VOUCHER_SERIES
+                transaction_date = self.expense_data.expense_date.strftime("%Y-%m-%d")
+            else:
+                assert self.invoice_data is not None
+                voucher_series = settings.FORTNOX_INVOICE_VOUCHER_SERIES
+                invoice_date = self.invoice_data.invoice_date
+                transaction_date = (
+                    invoice_date.strftime("%Y-%m-%d") if invoice_date else ""
+                )
+
+            description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
+                description=self.description, kind=self.type, id=self.data_id
+            )
+            if self.verification:
+                try:
+                    fortnox_client.retrieve_voucher(
+                        voucher_series,
+                        int(self.verification[1:]),
+                    )
+                    raise AlreadyAccountedError()
+                except FortnoxNotFound:
+                    raise FortnoxRecordMissingError()
+            else:
+                try:
+                    fortnox_client.find_voucher(Description=description)
+                    raise CashflowVerificationMissingError()
+                except FortnoxNotFound:
+                    pass
+
+            # Verify total amount of voucher rows matches the total amount of the claim
+            if voucher_rows is not None:
+                voucher_total = sum(
+                    (
+                        Decimal(str(r.Debit))
+                        for r in voucher_rows
+                        if r.Debit is not None
+                    ),
+                    Decimal(0),
+                )
+
+                if voucher_total != self.total_amount():
+                    logger.debug(
+                        "mismatched total",
+                        voucher_total=voucher_total,
+                        claim_total=self.total_amount(),
+                        voucher_rows=voucher_rows,
+                    )
+                    raise MismatchedTotalAmountError()
+
+            created = fortnox_client.create_voucher(
+                VoucherCreate(
+                    Description=description,
+                    TransactionDate=transaction_date,
+                    VoucherRows=voucher_rows or [],
+                    VoucherSeries=voucher_series,
+                )
+            )
+            self.verification = f"{voucher_series}{created.VoucherNumber}"
+        elif voucher_number is not None:
+            if self.verification:
+                raise AlreadyAccountedError()
+            self.verification = voucher_number
+        elif self.verification:
+            raise AlreadyAccountedError()
+        else:
+            # User didn't pass either an existing voucher number or voucher rows
+            raise NoAccountingMethodError()
+
+        self.save()
+        comment = Comment.objects.create(
+            author=user.profile,
+            claim=self,
+            content=f"Bokförde med verifikationsnumret: {self.verification}",
+        )
+
+        get_notification_provider().on_comment(self, comment)
+
+        return self.verification
+
+    def is_payable(self) -> bool:
+        """Whether this invoice is unpaid and all of its parts are attested."""
+        if self.invoice_data is None or self.invoice_data.paid_at:
+            return False
+        return not self.parts.filter(attested_by__isnull=True).exists()
+
+    def pay(self, user: User):
+        if self.invoice_data is None:
+            raise NotPayableError()
+
+        self.invoice_data.paid_by = user.profile
+        self.invoice_data.paid_at = timezone.localdate()
+        self.invoice_data.save()
+
+        comment = Comment.objects.create(
+            author=user.profile,
+            claim=self,
+            content=f"Betalade fakturan ```{self}```",
+        )
+
+        get_notification_provider().on_comment(self, comment)
+
+    def reset_confirmation(self):
+        """Voids an existing confirmation, e.g. after the parts or files a
+        confirmer signed off on have changed. A no-op for invoices."""
+        if self.expense_data is not None and self.expense_data.confirmed_by_id:
+            self.expense_data.confirmed_by = None
+            self.expense_data.confirmed_at = None
+            self.expense_data.save(update_fields=["confirmed_by", "confirmed_at"])
+
+    def confirm(self, user: User):
+        if not user.profile.may_confirm():
+            raise UnauthorizedConfirmationError()
+
+        # only expenses can be confirmed
+        if self.type != "expense" or self.expense_data is None:
+            raise NotConfirmableError()
+
+        if self.expense_data.confirmed_by:
+            raise DuplicateConfirmationError()
+
+        if self.expense_data.is_flagged:
+            raise FlaggedConfirmationError()
+
+        self.expense_data.confirmed_by = user
+        self.expense_data.confirmed_at = timezone.localdate()
+        self.expense_data.save()
+        comment = Comment.objects.create(
+            author=user.profile,
+            claim=self,
+            content="Jag har bekräftat kvittots giltighet.",
+        )
+        get_notification_provider().on_comment(self, comment)
+
+    def unconfirm(self, user: User):
+        if not user.profile.may_unconfirm():
+            raise UnauthorizedUnconfirmationError()
+        if self.type != "expense" or self.expense_data is None:
+            raise NotConfirmableError()
+        if not self.expense_data.confirmed_by:
+            raise NotConfirmedError()
+        self.expense_data.confirmed_by = None
+        self.expense_data.confirmed_at = None
+        self.expense_data.save()
 
 
 class ClaimPart(models.Model):
@@ -213,38 +529,39 @@ class ClaimPart(models.Model):
 
         if self.cost_centre not in user.profile.attestable_cost_centres():
             raise UnauthorizedAttestationError()
-        if self.claim.owner == user.profile:
+        # You are allowed to attest your own invoices, but not your own expenses
+        if self.claim.type == "expense" and self.claim.owner == user.profile:
             raise SelfAttestationError()
 
-        self.attested_by = user.core_profile
+        self.attested_by = user.profile
         self.attest_date = localdate()
         self.save()
-        comment = Comment(
-            author=user.core_profile,
+        comment = Comment.objects.create(
+            author=user.profile,
             claim=self.claim,
-            content="Attesterar kvittodelen ```" + str(self) + "```",
+            content=f"Attesterar kvittodelen ```{self}```",
         )
-        comment.save()
 
         get_notification_provider().on_comment(self.claim, comment)
 
-    def unattest(self, user):
-        self.attested_by = None
-        self.attest_date = None
-
+    def unattest(self, user: User):
         if self.cost_centre not in user.profile.attestable_cost_centres():
             raise UnauthorizedAttestationError()
 
+        self.attested_by = None
+        self.attest_date = None
         self.save()
 
-        comment = Comment(
+        comment = Comment.objects.create(
             author=user.profile,
-            expense=self.expense,
-            content="Avattesterar kvittodelen ```" + str(self) + "```",
+            claim=self.claim,
+            content=f"Avattesterar kvittodelen ```{self}```",
         )
-        comment.save()
 
-        get_notification_provider().on_comment(self.expense, comment)
+        get_notification_provider().on_comment(self.claim, comment)
+
+    def __str__(self):
+        return f"{self.claim} ({self.budget_line}: {self.amount} kr)"
 
 
 class Comment(models.Model):
@@ -264,11 +581,15 @@ class File(models.Model):
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)
     file = models.FileField()
 
+    # The attached files are part of what a confirmer signs off on, so changing
+    # them voids an existing confirmation. Note that bulk queryset operations
+    # bypass this, like all model-level behaviour.
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self._reset_confirmation()
+        self.claim.reset_confirmation()
 
     def delete(self, *args, **kwargs):
         result = super().delete(*args, **kwargs)
-        self._reset_confirmation()
+        self.claim.reset_confirmation()
         return result

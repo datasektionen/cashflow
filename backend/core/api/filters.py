@@ -5,17 +5,15 @@ from enum import Enum
 from typing import Any
 
 from django.contrib.auth.models import User
-from django.db.models import Value
+from django.db.models import Q, Value
 from django.db.models.functions import Coalesce
 from django.http import QueryDict
 from rest_framework import serializers
 
-from expenses.models import ExpenseQuerySet
-from invoices.models import InvoiceQuerySet
+from core.models import ClaimQuerySet
 
 
 class TristateField(serializers.ChoiceField):
-
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(choices=["true", "false", "none"], **kwargs)
 
@@ -122,53 +120,68 @@ class Filter(str, Enum):
     REIMBURSEMENT = "reimbursement"
 
 
-EXPENSE_SORT_FIELDS: dict[Sorting, str] = {
+SORT_FIELDS: dict[Sorting, str] = {
     Sorting.ID_DESC: "-id",
     Sorting.CREATED_AT_ASC: "created_date",
     Sorting.CREATED_AT_DESC: "-created_date",
-    Sorting.DATE_ASC: "expense_date",
-    Sorting.DATE_DESC: "-expense_date",
-    Sorting.TOTAL_DESC: "-total",
-    Sorting.TOTAL_ASC: "total",
-}
-INVOICE_SORT_FIELDS: dict[Sorting, str] = {
-    Sorting.ID_DESC: "-id",
-    Sorting.CREATED_AT_ASC: "created_date",
-    Sorting.CREATED_AT_DESC: "-created_date",
-    Sorting.DATE_ASC: "invoice_date",
-    Sorting.DATE_DESC: "-invoice_date",
     Sorting.TOTAL_DESC: "-total",
     Sorting.TOTAL_ASC: "total",
 }
 
 
-def _order_by_sorting(queryset, sorting: Sorting, sort_fields: dict[Sorting, str]):
+def _order_by_sorting(queryset: ClaimQuerySet, sorting: Sorting) -> ClaimQuerySet:
     """Orders by the requested field, then descending id so newer rows come
     first among ties and pagination stays stable."""
-    field = sort_fields[sorting]
-    if sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC):
-        name = field.lstrip("-")
-        expr = Coalesce(name, Value(date.min))
-        ordering = expr.desc() if field.startswith("-") else expr.asc()
-        return queryset.order_by(ordering, "-id")
-    elif sorting in (Sorting.TOTAL_ASC, Sorting.DATE_DESC):
-        name = field.lstrip("-")
-        expr = Coalesce(name, Value(0))
-        ordering = expr.desc() if field.startswith("-") else expr.asc()
-        return queryset.order_by(ordering, "-id")
-    return queryset.order_by(field, "-id")
+    match sorting:
+        case Sorting.DATE_ASC | Sorting.DATE_DESC:
+            expr = Coalesce(
+                "expense_data__expense_date",
+                "invoice_data__invoice_date",
+                Value(date.min),
+            )
+        case Sorting.TOTAL_ASC | Sorting.TOTAL_DESC:
+            expr = Coalesce("total", Value(0))
+        case _:
+            return queryset.order_by(SORT_FIELDS[sorting], "-id")
+    ordering = expr.desc() if sorting.value.startswith("-") else expr.asc()
+    return queryset.order_by(ordering, "-id")
 
 
-def apply_expense_filters(
-    queryset: ExpenseQuerySet,
+def _tristate(
+    queryset: ClaimQuerySet, value: Any, condition: Q, *, negate: Q | None = None
+) -> ClaimQuerySet:
+    """Applies a tristate filter: `condition` for true, `negate` (defaults to
+    ~condition) for false, nothing for an absent value."""
+    match value:
+        case None:
+            return queryset
+        case "none":
+            return queryset.none()
+        case False | "false" | "0":
+            return queryset.filter(negate if negate is not None else ~condition)
+        case _:
+            return queryset.filter(condition)
+
+
+def apply_claim_filters(
+    queryset: ClaimQuerySet,
     params: QueryDict | dict[str, Any],
     user: User | None = None,
-) -> ExpenseQuerySet:
-    """Applies filters to an expense queryset based on query parameters."""
+) -> ClaimQuerySet:
+    """Applies filters to a claim queryset based on query parameters.
+
+    Filters that only make sense for one claim type (e.g. confirmed, flagged,
+    reimbursement) are expressed per type so they work on mixed querysets.
+    """
     query = ClaimQuerySerializer(data=params)
     query.is_valid(raise_exception=True)
     validated = query.validated_data
 
+    is_expense = Q(type="expense")
+    is_invoice = Q(type="invoice")
+
+    if claim_type := validated.get(Filter.TYPE):
+        queryset = queryset.filter(type=claim_type)
     if username := validated.get(Filter.USER):
         queryset = queryset.filter(owner__user__username=username)
     if user and validated.get(Filter.ATTESTABLE):
@@ -182,164 +195,71 @@ def apply_expense_filters(
 
     budget_filter = {}
     if name := validated.get(Filter.COST_CENTRE):
-        budget_filter["expensepart__cost_centre"] = name
+        budget_filter["part__cost_centre"] = name
     if name := validated.get(Filter.SECONDARY_COST_CENTRE):
-        budget_filter["expensepart__secondary_cost_centre"] = name
+        budget_filter["part__secondary_cost_centre"] = name
     if name := validated.get(Filter.BUDGET_LINE):
-        budget_filter["expensepart__budget_line"] = name
+        budget_filter["part__budget_line"] = name
 
     # We need to put all conditions in the same filter to make sure they all apply
-    # to the same expense part
+    # to the same claim part
     # See https://github.com/datasektionen/cashflow/issues/399
     queryset = queryset.filter(**budget_filter)
 
     if description := validated.get(Filter.QUERY):
         queryset = queryset.filter(description__icontains=description)
-    match validated.get(Filter.ACCOUNTED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(verification="")
-        case _:
-            queryset = queryset.exclude(verification="")
-    match validated.get(Filter.ATTESTED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(expensepart__attested_by__isnull=True)
-        case _:
-            queryset = queryset.exclude(expensepart__attested_by__isnull=True)
-    match validated.get(Filter.CONFIRMED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(confirmed_by__isnull=True)
-        case _:
-            queryset = queryset.filter(confirmed_by__isnull=False)
-    match validated.get(Filter.PAID):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(reimbursement__isnull=True)
-        case _:
-            queryset = queryset.filter(reimbursement__isnull=False)
-    match validated.get(Filter.FLAGGED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.exclude(is_flagged=True)
-        case _:
-            queryset = queryset.filter(is_flagged=True)
+
+    queryset = _tristate(queryset, validated.get(Filter.ACCOUNTED), ~Q(verification=""))
+    queryset = _tristate(
+        queryset,
+        validated.get(Filter.ATTESTED),
+        ~Q(part__attested_by__isnull=True),
+        negate=Q(part__attested_by__isnull=True),
+    )
+    # Invoices are never confirmed, so this filter only narrows down expenses
+    queryset = _tristate(
+        queryset,
+        validated.get(Filter.CONFIRMED),
+        is_invoice | (is_expense & Q(expense_data__confirmed_by__isnull=False)),
+        negate=is_invoice | (is_expense & Q(expense_data__confirmed_by__isnull=True)),
+    )
+    queryset = _tristate(
+        queryset,
+        validated.get(Filter.PAID),
+        (is_expense & Q(expense_data__reimbursement__isnull=False))
+        | (is_invoice & Q(invoice_data__paid_at__isnull=False)),
+        negate=(is_expense & Q(expense_data__reimbursement__isnull=True))
+        | (is_invoice & Q(invoice_data__paid_at__isnull=True)),
+    )
+    # Invoices can never be flagged, so flagged=true excludes them entirely
+    queryset = _tristate(
+        queryset,
+        validated.get(Filter.FLAGGED),
+        Q(expense_data__is_flagged=True),
+        negate=is_invoice | ~Q(expense_data__is_flagged=True),
+    )
+
     if voucher_series := validated.get(Filter.VOUCHER_SERIES):
         queryset = queryset.filter(verification__startswith=voucher_series)
     if voucher := validated.get(Filter.VOUCHER_NUMBER):
         queryset = queryset.filter(verification__icontains=voucher)
     if reimbursement := validated.get(Filter.REIMBURSEMENT):
-        queryset = queryset.filter(reimbursement_id=reimbursement)
+        queryset = queryset.filter(expense_data__reimbursement_id=reimbursement)
+
+    return _order_by_sorting(queryset, Sorting(validated["sorting"]))
 
 
-    return _order_by_sorting(
-        queryset, Sorting(validated["sorting"]), EXPENSE_SORT_FIELDS
-    )
+def apply_expense_filters(
+    queryset: ClaimQuerySet,
+    params: QueryDict | dict[str, Any],
+    user: User | None = None,
+) -> ClaimQuerySet:
+    return apply_claim_filters(queryset.expenses(), params, user)
 
 
 def apply_invoice_filters(
-    queryset: InvoiceQuerySet,
+    queryset: ClaimQuerySet,
     params: QueryDict | dict[str, Any],
     user: User | None = None,
-) -> InvoiceQuerySet:
-    """Applies filters to an invoice queryset based on query parameters."""
-    query = ClaimQuerySerializer(data=params)
-    query.is_valid(raise_exception=True)
-    validated = query.validated_data
-
-    if username := validated.get(Filter.USER):
-        queryset = queryset.filter(owner__user__username=username)
-    if user and validated.get(Filter.ATTESTABLE):
-        queryset = queryset.attestable_for(user)
-    if user and validated.get(Filter.CONFIRMABLE):
-        queryset = queryset.confirmable_for(user)
-    if user and validated.get(Filter.ACCOUNTABLE):
-        queryset = queryset.accountable_for(user)
-    if user and validated.get(Filter.PAYABLE):
-        queryset = queryset.payable_for(user)
-    budget_filter = {}
-    if name := validated.get(Filter.COST_CENTRE):
-        budget_filter["invoicepart__cost_centre"] = name
-    if name := validated.get(Filter.SECONDARY_COST_CENTRE):
-        budget_filter["invoicepart__secondary_cost_centre"] = name
-    if name := validated.get(Filter.BUDGET_LINE):
-        budget_filter["invoicepart__budget_line"] = name
-
-    # We need to put all conditions in the same filter to make sure they all apply
-    # to the same invoice part
-    # See https://github.com/datasektionen/cashflow/issues/399
-    queryset = queryset.filter(**budget_filter)
-    if description := validated.get(Filter.QUERY):
-        queryset = queryset.filter(description__icontains=description)
-    match validated.get(Filter.ACCOUNTED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(verification="")
-        case _:
-            queryset = queryset.exclude(verification="")
-    match validated.get(Filter.ATTESTED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(invoicepart__attested_by__isnull=True)
-        case _:
-            queryset = queryset.exclude(invoicepart__attested_by__isnull=True)
-    match validated.get(Filter.CONFIRMED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(confirmed_by__isnull=True)
-        case _:
-            queryset = queryset.filter(confirmed_by__isnull=False)
-    match validated.get(Filter.PAID):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            queryset = queryset.filter(payed_at__isnull=True)
-        case _:
-            queryset = queryset.filter(payed_at__isnull=False)
-    # Invoices can never be flagged, so a request for flagged=true (or the
-    # nonsensical "none") should exclude them entirely rather than silently
-    # ignoring the filter and returning every invoice.
-    match validated.get(Filter.FLAGGED):
-        case None:
-            pass
-        case "none":
-            queryset = queryset.none()
-        case False | "false" | "0":
-            pass
-        case _:
-            queryset = queryset.none()
-    if voucher_series := validated.get(Filter.VOUCHER_SERIES):
-        queryset = queryset.filter(verification__startswith=voucher_series)
-    if voucher := validated.get(Filter.VOUCHER_NUMBER):
-        queryset = queryset.filter(verification__icontains=voucher)
-
-    return _order_by_sorting(
-        queryset, Sorting(validated["sorting"]), INVOICE_SORT_FIELDS
-    )
+) -> ClaimQuerySet:
+    return apply_claim_filters(queryset.invoices(), params, user)

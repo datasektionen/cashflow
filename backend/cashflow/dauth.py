@@ -10,8 +10,7 @@ from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from pydantic import BaseModel
 
 import core.permissions
-lazy from expenses.models import Expense, ExpensePart
-lazy from invoices.models import Invoice, InvoicePart
+lazy from core.models import Claim, ClaimPart
 
 
 class Permission(str, Enum):
@@ -68,9 +67,7 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_unscoped(user, Permission.VIEW_ALL_PAYMENTS)
 
     def viewable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
-            InvoicePart.objects.values_list("cost_centre", flat=True)
-        )
+        all_ccs = set(ClaimPart.objects.values_list("cost_centre", flat=True))
         if self.may_view_all(user):
             return list(all_ccs)
         return [
@@ -84,9 +81,7 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_any_scope(user, Permission.ATTEST)
 
     def attestable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
-            InvoicePart.objects.values_list("cost_centre", flat=True)
-        )
+        all_ccs = set(ClaimPart.objects.values_list("cost_centre", flat=True))
 
         if get_permissions(user).get(Permission.ATTEST) is True:
             return list(all_ccs)
@@ -114,11 +109,7 @@ class Hive(core.permissions.PermissionProvider):
             return None
         return [s.lower() for s in scopes] if isinstance(scopes, list) else []
 
-    def may_account(self, user: AbstractBaseUser, target) -> bool:
-        if not isinstance(target, (Expense, Invoice)):
-            raise TypeError(
-                f"Expected an expense or invoice, got {target.__class__.__name__}"
-            )
+    def may_account(self, user: AbstractBaseUser, target: Claim) -> bool:
 
         scopes = self._accounting_scopes(user)
         if scopes is None:
@@ -138,9 +129,7 @@ class Hive(core.permissions.PermissionProvider):
         return self._has_scoped(user, Permission.ACCOUNTING, cost_centre)
 
     def accountable_cost_centres(self, user: AbstractBaseUser) -> list[str]:
-        all_ccs = set(ExpensePart.objects.values_list("cost_centre", flat=True)) | set(
-            InvoicePart.objects.values_list("cost_centre", flat=True)
-        )
+        all_ccs = set(ClaimPart.objects.values_list("cost_centre", flat=True))
 
         if get_permissions(user).get(Permission.ACCOUNTING) is True:
             return list(all_ccs)
@@ -149,9 +138,10 @@ class Hive(core.permissions.PermissionProvider):
     def accountable_expenses(self, user: AbstractBaseUser) -> QuerySet:
         scopes = self._accounting_scopes(user)
         if scopes is None:
-            return Expense.objects.all()
+            return Claim.objects.expenses()
         return (
-            Expense.objects.annotate(_cc_lower=Lower("expensepart__cost_centre"))
+            Claim.objects.expenses()
+            .annotate(_cc_lower=Lower("part__cost_centre"))
             .filter(_cc_lower__in=scopes)
             .distinct()
         )
@@ -159,9 +149,10 @@ class Hive(core.permissions.PermissionProvider):
     def accountable_invoices(self, user: AbstractBaseUser) -> QuerySet:
         scopes = self._accounting_scopes(user)
         if scopes is None:
-            return Invoice.objects.all()
+            return Claim.objects.invoices()
         return (
-            Invoice.objects.annotate(_cc_lower=Lower("invoicepart__cost_centre"))
+            Claim.objects.invoices()
+            .annotate(_cc_lower=Lower("part__cost_centre"))
             .filter(_cc_lower__in=scopes)
             .distinct()
         )

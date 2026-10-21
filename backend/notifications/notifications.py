@@ -5,10 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.module_loading import import_string
 
-lazy from core.models import Claim
-lazy from core.models import Comment as CoreComment
-lazy from expenses.models import Comment, Expense
-lazy from invoices.models import Invoice
+lazy from core.models import Claim, Comment
 
 
 class NotificationProvider(ABC):
@@ -21,21 +18,19 @@ class NotificationProvider(ABC):
         pass
 
     @abstractmethod
-    def on_comment(
-        self, claim: Expense | Invoice | Claim, comment: Comment | CoreComment
-    ):
+    def on_comment(self, claim: Claim, comment: Comment):
         pass
 
     @abstractmethod
-    def on_attest(self, claim: Expense | Invoice, attester: User):
+    def on_attest(self, claim: Claim, attester: User):
         pass
 
     @abstractmethod
-    def on_confirm(self, expense: Expense, confirmer: User):
+    def on_confirm(self, claim: Claim, confirmer: User):
         pass
 
     @abstractmethod
-    def on_payment(self, claim: Expense | Invoice, payer: User):
+    def on_payment(self, claim: Claim, payer: User):
         pass
 
 

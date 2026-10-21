@@ -13,19 +13,17 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import OuterRef, Subquery, Sum
-from rest_framework import generics, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import Filter, apply_expense_filters
+from core.api.filters import apply_expense_filters
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
-    AttestationPermissionDeniedProblem,
     ConfirmationPermissionDeniedProblem,
     DeletionPermissionDeniedProblem,
     FileRequiredProblem,
@@ -40,34 +38,30 @@ from core.api.problems import (
     UnconfirmationPermissionDeniedProblem,
     UpdatePermissionDeniedProblem,
 )
-from core.api.serializers import CommentCreateSerializer, CommentSerializer
+from core.api.serializers import ClaimPartSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
     AlreadyAccountedError,
     CashflowVerificationMissingError,
     DuplicateConfirmationError,
-    FlaggedAttestationError,
     FlaggedConfirmationError,
     FortnoxRecordMissingError,
     MismatchedTotalAmountError,
     NoAccountingMethodError,
     NotConfirmableError,
     NotConfirmedError,
-    SelfAttestationError,
     UnauthorizedAccountingError,
-    UnauthorizedAttestationError,
     UnauthorizedConfirmationError,
     UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
+from core.models import Claim, ClaimPart, Comment, File
 from core.permissions import get_permission_provider
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
     ExpenseAdminSerializer,
-    ExpensePartSerializer,
     ExpenseSerializer,
 )
-from expenses.models import Comment, Expense, ExpensePart, File
 from fortnox import VoucherRow
 from fortnox.api.problems import (
     AlreadyAccountedProblem,
@@ -83,6 +77,9 @@ logger = get_logger(__name__)
 
 
 class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
+    # Expenses are addressed by their ExpenseData id, see Claim.data_id
+    lookup_field = "expense_data_id"
+    lookup_url_kwarg = "pk"
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = [
@@ -125,7 +122,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         with transaction.atomic():
             expense = serializer.save(owner=self.current_user.profile)
             for f in files:
-                File.objects.create(expense=expense, file=normalize_upload(f))
+                File.objects.create(claim=expense, file=normalize_upload(f))
 
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 
@@ -142,7 +139,8 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
     def partial_update(self, request: Request, *args, **kwargs) -> Response:
         expense = self.get_object()
-        if expense.reimbursement is not None:
+        assert expense.expense_data is not None
+        if expense.expense_data.reimbursement_id is not None:
             raise UpdatePermissionDeniedProblem()
         if not expense.owner == self.current_user.profile:
             raise UpdatePermissionDeniedProblem()
@@ -155,7 +153,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if deletes := data.pop("delete_files", None):
             try:
                 deletes_data: list[int] = json.loads(deletes)
-                File.objects.filter(id__in=deletes_data).delete()
+                expense.file_set.filter(id__in=deletes_data).delete()
             except json.JSONDecodeError:
                 raise PartInvalidJSONProblem()
 
@@ -168,7 +166,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if parts_data is not None:
             if not parts_data:
                 raise PartRequiredProblem()
-            parts_serializer = ExpensePartSerializer(data=parts_data, many=True)
+            parts_serializer = ClaimPartSerializer(data=parts_data, many=True)
             parts_serializer.is_valid(raise_exception=True)
             parts_data = parts_serializer.validated_data
 
@@ -182,16 +180,14 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             if parts_data is not None:
                 expense.parts.all().delete()
                 for part in parts_data:
-                    ExpensePart.objects.create(expense=expense, **part)
-                if expense.confirmed_by_id is not None:
-                    expense.confirmed_by = None
-                    expense.confirmed_at = None
-                    expense.save()
+                    ClaimPart.objects.create(claim=expense, **part)
+            if parts_data is not None or deletes:
+                expense.reset_confirmation()
             for f in files:
-                File.objects.create(expense=expense, file=normalize_upload(f))
+                File.objects.create(claim=expense, file=normalize_upload(f))
 
-            expense.is_flagged = False
-            expense.save()
+            expense.expense_data.is_flagged = False
+            expense.expense_data.save(update_fields=["is_flagged"])
 
         expense.refresh_from_db()
         return Response(
@@ -200,11 +196,12 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
     def get_queryset(self):
         queryset = (
-            Expense.objects.select_related(
+            Claim.objects.expenses()
+            .select_related(
                 "owner__user",
-                "confirmed_by__profile__user",
-                "reimbursement__payer__user",
-                "reimbursement__receiver__user",
+                "expense_data__confirmed_by__profile__user",
+                "expense_data__reimbursement__payer__user",
+                "expense_data__reimbursement__receiver__user",
             )
             .prefetch_related(
                 "file_set",
@@ -212,28 +209,8 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
-            .annotate(
-                # Subquery to avoid duplicate parts
-                # (would happen because we filter with invoice part in multiple places, which makes separate joins)
-                # https://docs.djangoproject.com/en/6.1/topics/db/aggregation/#combining-multiple-aggregations
-                total=Subquery(
-                    ExpensePart.objects.filter(expense=OuterRef("pk"))
-                    .values("expense")
-                    .annotate(t=Sum("amount"))
-                    .values("t")
-                )
-            )
-            .annotate(total=Sum("expensepart__amount"))
+            .with_total()
         )
-
-        if username := self.request.GET.get(Filter.USER):
-            try:
-                queryset = queryset.filter(
-                    owner__user=UserModel.objects.get(username=username)
-                )
-            except UserModel.DoesNotExist:
-                pass
-
         return apply_expense_filters(
             queryset, self.request.GET, self.current_user
         ).distinct()
@@ -253,10 +230,10 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     def comment(self, request: Request, pk=None) -> Response:
         expense = self.get_object()
 
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         comment = Comment.objects.create(
-            expense=expense,
+            claim=expense,
             content=serializer.validated_data["content"],
             author=self.current_user.profile,
         )
@@ -268,7 +245,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @action(detail=True, methods=["POST"])
     def confirm(self, request: Request, pk=None) -> Response:
         with transaction.atomic():
-            expense = Expense.objects.select_for_update().get(pk=pk)
+            expense = Claim.objects.select_for_update().get(expense_data_id=pk)
             try:
                 expense.confirm(self.current_user)
             except UnauthorizedConfirmationError as e:
@@ -291,7 +268,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @action(detail=True, methods=["POST"])
     def unconfirm(self, request: Request, pk=None) -> Response:
         with transaction.atomic():
-            expense = Expense.objects.select_for_update().get(pk=pk)
+            expense = Claim.objects.select_for_update().get(expense_data_id=pk)
             try:
                 expense.unconfirm(self.current_user)
             except UnauthorizedUnconfirmationError as e:
@@ -350,7 +327,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         ]
 
         with transaction.atomic():
-            expense = Expense.objects.select_for_update().get(pk=pk)
+            expense = Claim.objects.select_for_update().get(expense_data_id=pk)
             try:
                 expense.account(
                     self.current_user,
@@ -371,62 +348,3 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             except NoAccountingMethodError as e:
                 raise NoAccountingMethodProblem() from e
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_200_OK)
-
-
-class ExpensePartAttestView(
-    generics.GenericAPIView[ExpensePart], AuthenticatedUserMixin
-):
-    serializer_class = ExpensePartSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return ExpensePart.objects.filter(
-            expense__in=Expense.objects.viewable_by(self.current_user)
-        )
-
-    def post(self, request, pk: int):
-        expense_part = self.get_object()
-
-        with transaction.atomic():
-            expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
-            try:
-                expense_part.attest(self.current_user)
-            except FlaggedAttestationError:
-                raise IsFlaggedProblem(
-                    detail="This expense is flagged and cannot be attested."
-                )
-            except UnauthorizedAttestationError:
-                raise AttestationPermissionDeniedProblem(
-                    detail=f"You do not have permission to attest this expense part, {expense_part.cost_centre} is not a cost centre for which you can attest."
-                )
-            except SelfAttestationError:
-                raise AttestationPermissionDeniedProblem(
-                    detail="You do not have permission to attest this expense part, you cannot attest for your own expenses."
-                )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class ExpensePartUnattestView(
-    generics.GenericAPIView[ExpensePart], AuthenticatedUserMixin
-):
-    serializer_class = ExpensePartSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return ExpensePart.objects.filter(
-            expense__in=Expense.objects.viewable_by(self.current_user)
-        )
-
-    def post(self, request, pk: int):
-
-        with transaction.atomic():
-            expense_part = ExpensePart.objects.select_for_update().get(pk=pk)
-            try:
-                expense_part.unattest(self.current_user)
-            except UnauthorizedAttestationError:
-                raise AttestationPermissionDeniedProblem(
-                    detail="You do not have permission to unattest this expense part"
-                )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)

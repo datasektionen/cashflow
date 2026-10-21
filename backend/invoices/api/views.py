@@ -1,54 +1,51 @@
 import json
 from typing import Any, cast
 
-from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import OuterRef, Subquery, Sum
 from django.http import QueryDict
-from rest_framework import generics, viewsets, status
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import Filter, apply_invoice_filters
+from core.api.filters import apply_invoice_filters
 from core.api.problems import (
-    PartInvalidJSONProblem,
-    FileRequiredProblem,
-    PartRequiredProblem,
-    AttestationPermissionDeniedProblem,
-    ConfirmationPermissionDeniedProblem,
-    UnconfirmationPermissionDeniedProblem,
-    NotConfirmedProblem,
-    AlreadyConfirmedProblem,
-    PaymentPermissionDeniedProblem,
-    AlreadyPaidProblem,
-    NotPayableProblem,
     AccountingPermissionDeniedProblem,
+    AlreadyConfirmedProblem,
+    AlreadyPaidProblem,
+    ConfirmationPermissionDeniedProblem,
+    DeletionPermissionDeniedProblem,
+    FileRequiredProblem,
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
-    DeletionPermissionDeniedProblem,
+    NotConfirmedProblem,
+    NotPayableProblem,
+    PartInvalidJSONProblem,
+    PartRequiredProblem,
+    PaymentPermissionDeniedProblem,
+    UnconfirmationPermissionDeniedProblem,
     UpdatePermissionDeniedProblem,
 )
-from core.api.serializers import CommentCreateSerializer, CommentSerializer
+from core.api.serializers import ClaimPartSerializer, CommentSerializer
 from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
-    UnauthorizedAttestationError,
-    UnauthorizedConfirmationError,
-    UnauthorizedUnconfirmationError,
-    NotConfirmedError,
-    DuplicateConfirmationError,
-    UnauthorizedAccountingError,
     AlreadyAccountedError,
-    FortnoxRecordMissingError,
     CashflowVerificationMissingError,
+    DuplicateConfirmationError,
+    FortnoxRecordMissingError,
     MismatchedTotalAmountError,
     NoAccountingMethodError,
+    NotConfirmedError,
+    UnauthorizedAccountingError,
+    UnauthorizedConfirmationError,
+    UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
+from core.models import Claim, ClaimPart, Comment, File
 from core.permissions import get_permission_provider
-from expenses.models import File, Comment
 from fortnox import VoucherRow
 from fortnox.api.problems import (
     AlreadyAccountedProblem,
@@ -57,17 +54,19 @@ from fortnox.api.problems import (
     FortnoxServiceNotAvailableProblem,
 )
 from notifications import get_notification_provider
+
 from .serializers import (
-    InvoiceSerializer,
-    InvoicePartSerializer,
     InvoiceAccountSerializer,
+    InvoiceSerializer,
 )
-from ..models import Invoice, InvoicePart
 
 logger = get_logger(__name__)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
+    # Invoices are addressed by their InvoiceData id, see Claim.data_id
+    lookup_field = "invoice_data_id"
+    lookup_url_kwarg = "pk"
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = [
@@ -86,7 +85,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             if parts_raw is None:
                 raise PartRequiredProblem()
             data["parts"] = json.loads(parts_raw)
-        except (json.JSONDecodeError, TypeError):
+        except json.JSONDecodeError, TypeError:
             raise PartInvalidJSONProblem(
                 detail="There was a problem decoding the parts field. Invoice parts should be submitted as a JSON encoded array."
             )
@@ -97,9 +96,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         with transaction.atomic():
             invoice = serializer.save(owner=self.current_user.profile)
             for part in parts_data:
-                InvoicePart.objects.create(invoice=invoice, **part)
+                ClaimPart.objects.create(claim=invoice, **part)
             for f in files:
-                File.objects.create(invoice=invoice, file=normalize_upload(f))
+                File.objects.create(claim=invoice, file=normalize_upload(f))
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
@@ -116,7 +115,8 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
     def partial_update(self, request: Request, *args, **kwargs) -> Response:
         invoice = self.get_object()
-        if invoice.payed_at is not None:
+        assert invoice.invoice_data is not None
+        if invoice.invoice_data.paid_at is not None:
             raise UpdatePermissionDeniedProblem()
         if not invoice.owner == self.current_user.profile:
             raise UpdatePermissionDeniedProblem()
@@ -129,7 +129,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if deletes := data.pop("delete_files", None):
             try:
                 deletes_data: list[int] = json.loads(deletes)
-                File.objects.filter(id__in=deletes_data).delete()
+                invoice.file_set.filter(id__in=deletes_data).delete()
             except json.JSONDecodeError:
                 raise PartInvalidJSONProblem()
 
@@ -142,7 +142,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if parts_data is not None:
             if not parts_data:
                 raise PartRequiredProblem()
-            parts_serializer = InvoicePartSerializer(data=parts_data, many=True)
+            parts_serializer = ClaimPartSerializer(data=parts_data, many=True)
             parts_serializer.is_valid(raise_exception=True)
             parts_data = parts_serializer.validated_data
 
@@ -156,13 +156,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             if parts_data is not None:
                 invoice.parts.all().delete()
                 for part in parts_data:
-                    InvoicePart.objects.create(invoice=invoice, **part)
-                if invoice.confirmed_by_id is not None:
-                    invoice.confirmed_by = None
-                    invoice.confirmed_at = None
-                    invoice.save()
+                    ClaimPart.objects.create(claim=invoice, **part)
             for f in files:
-                File.objects.create(invoice=invoice, file=normalize_upload(f))
+                File.objects.create(claim=invoice, file=normalize_upload(f))
 
         invoice.refresh_from_db()
         return Response(
@@ -171,10 +167,10 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
     def get_queryset(self):
         queryset = (
-            Invoice.objects.select_related(
+            Claim.objects.invoices()
+            .select_related(
                 "owner__user",
-                "confirmed_by__profile__user",
-                "payed_by__profile__user",
+                "invoice_data__paid_by__user",
             )
             .prefetch_related(
                 "file_set",
@@ -182,28 +178,8 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
-            .annotate(
-
-                # Subquery to avoid duplicate parts
-                # (would happen because we filter with invoice part in multiple places, which makes separate joins)
-                # https://docs.djangoproject.com/en/6.1/topics/db/aggregation/#combining-multiple-aggregations
-                total=Subquery(
-                    InvoicePart.objects.filter(invoice=OuterRef("pk"))
-                    .values("invoice")
-                    .annotate(t=Sum("amount"))
-                    .values("t")
-                )
-            )
+            .with_total()
         )
-
-        if username := self.request.GET.get(Filter.USER):
-            try:
-                queryset = queryset.filter(
-                    owner__user=User.objects.get(username=username)
-                )
-            except User.DoesNotExist:
-                pass
-
         return apply_invoice_filters(
             queryset, self.request.GET, self.current_user
         ).distinct()
@@ -230,11 +206,11 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @action(detail=True, methods=["post"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:
         invoice = self.get_object()
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         comment = Comment.objects.create(
             content=serializer.validated_data["content"],
-            invoice=invoice,
+            claim=invoice,
             author=self.current_user.profile,
         )
 
@@ -245,7 +221,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @action(detail=True, methods=["POST"])
     def confirm(self, request: Request, pk=None) -> Response:
         with transaction.atomic():
-            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            invoice = Claim.objects.select_for_update().get(invoice_data_id=pk)
             try:
                 invoice.confirm(self.current_user)
             except UnauthorizedConfirmationError as e:
@@ -262,7 +238,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     @action(detail=True, methods=["POST"])
     def unconfirm(self, request: Request, pk=None) -> Response:
         with transaction.atomic():
-            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            invoice = Claim.objects.select_for_update().get(invoice_data_id=pk)
             try:
                 invoice.unconfirm(self.current_user)
             except UnauthorizedUnconfirmationError as e:
@@ -277,8 +253,11 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             raise PaymentPermissionDeniedProblem()
 
         with transaction.atomic():
-            invoice = Invoice.objects.select_for_update().get(pk=pk)
-            if invoice.is_paid():
+            invoice = get_object_or_404(
+                Claim.objects.select_for_update(), invoice_data_id=pk
+            )
+            assert invoice.invoice_data is not None
+            if invoice.invoice_data.paid_by is not None:
                 raise AlreadyPaidProblem()
             if not invoice.is_payable():
                 raise NotPayableProblem()
@@ -317,7 +296,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         ]
 
         with transaction.atomic():
-            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            invoice = Claim.objects.select_for_update().get(invoice_data_id=pk)
             try:
                 invoice.account(
                     self.current_user,
@@ -338,55 +317,3 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             except NoAccountingMethodError as e:
                 raise NoAccountingMethodProblem() from e
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_200_OK)
-
-
-class InvoicePartAttestView(
-    generics.GenericAPIView[InvoicePart], AuthenticatedUserMixin
-):
-    serializer_class = InvoicePartSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return InvoicePart.objects.filter(
-            invoice__in=Invoice.objects.viewable_by(self.current_user)
-        )
-
-    def post(self, request, pk: int):
-        invoice_part = self.get_object()
-
-        with transaction.atomic():
-            invoice_part = InvoicePart.objects.select_for_update().get(pk=pk)
-            try:
-                invoice_part.attest(self.current_user)
-            except UnauthorizedAttestationError:
-                raise AttestationPermissionDeniedProblem(
-                    detail=f"You do not have permission to attest this invoice part, {invoice_part.cost_centre} is not a cost centre for which you can attest."
-                )
-
-        return Response(
-            InvoicePartSerializer(invoice_part).data, status=status.HTTP_204_NO_CONTENT
-        )
-
-
-class InvoicePartUnattestView(
-    generics.GenericAPIView[InvoicePart], AuthenticatedUserMixin
-):
-    serializer_class = InvoicePartSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return InvoicePart.objects.filter(
-            invoice__in=Invoice.objects.viewable_by(self.current_user)
-        )
-
-    def post(self, request, pk: int):
-        with transaction.atomic():
-            invoice_part = InvoicePart.objects.select_for_update().get(pk=pk)
-            try:
-                invoice_part.unattest(self.current_user)
-            except UnauthorizedAttestationError:
-                raise AttestationPermissionDeniedProblem(
-                    detail=f"You do not have permission to unattest this invoice part, {invoice_part.cost_centre} is not a cost centre for which you can attest."
-                )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
