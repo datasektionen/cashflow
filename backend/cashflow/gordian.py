@@ -4,17 +4,17 @@ https://github.com/datasektionen/gordian
 """
 
 import re
+from typing import Annotated, Any, Literal
+
 import requests
 from django.conf import settings
 from django.core.cache import cache
-from pydantic import BaseModel, Field, TypeAdapter, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter
 from requests import Response
 from structlog import get_logger
 from structlog.contextvars import bind_contextvars
-from typing import Literal, Union, Any, Annotated
 
-from expenses.models import ExpensePart
-from invoices.models import InvoicePart
+from core.models import ClaimPart
 
 logger = get_logger(__name__)
 
@@ -53,7 +53,7 @@ def validate_account(value: Any) -> list[int]:
     if isinstance(value, list):
         return [int(x) for x in value]
     elif not isinstance(value, str):
-        raise ValueError(f"Expected a list of ints or a string, got {type(value)}")
+        raise TypeError(f"Expected a list of ints or a string, got {type(value)}")
     try:
         patterns = [r"^\d{4}(, \d{4})*$", r"^\d{4}-\d{4}$", r"^$"]
         try:
@@ -66,7 +66,7 @@ def validate_account(value: Any) -> list[int]:
                     return []
                 case _:
                     raise ValueError(
-                        f"Unknown error when pattern matching account format"
+                        "Unknown error when pattern matching account format"
                     )  # TODO: Temporary fix for erronous accounts on GOrdian
         except ValueError:
             return []
@@ -135,7 +135,7 @@ def list_cost_centres_from_gordian(force_refresh: bool = False) -> list[GCostCen
 
 
 def list_secondary_cost_centres_from_gordian(
-    cost_center: Union[int, GCostCenter, None] = None, force_refresh: bool = False
+    cost_center: int | GCostCenter | None = None, force_refresh: bool = False
 ) -> list[GSecondaryCostCenter]:
     cc_id = cost_center.id if isinstance(cost_center, GCostCenter) else cost_center
 
@@ -201,7 +201,7 @@ def list_secondary_cost_centres_from_gordian(
 
 
 def list_budget_lines_from_gordian(
-    secondary_cost_center: Union[int, GSecondaryCostCenter, None] = None,
+    secondary_cost_center: int | GSecondaryCostCenter | None = None,
     force_refresh: bool = False,
 ) -> list[GBudgetLine]:
     scc_id = (
@@ -210,7 +210,6 @@ def list_budget_lines_from_gordian(
         else secondary_cost_center
     )
     if not force_refresh:
-
         keys = cache.get(BUDGET_LINE_SEARCH_KEYS, None)
         if keys is None and secondary_cost_center is not None:
             keys = cache.get(f"{BUDGET_LINE_SEARCH_KEYS}:{scc_id}", None)
@@ -264,7 +263,7 @@ def list_budget_lines_from_gordian(
     return budget_lines
 
 
-def retrieve_account_from_gordian(part: Union[InvoicePart, ExpensePart]) -> list[int]:
+def retrieve_account_from_gordian(part: ClaimPart) -> list[int]:
     """Retrieves the account number for the budget line for this expense or invoice part"""
 
     try:

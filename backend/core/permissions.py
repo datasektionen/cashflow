@@ -1,21 +1,17 @@
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.utils.module_loading import import_string
 
-if TYPE_CHECKING:
-    from expenses.models import Expense
-    from invoices.models import Invoice
-    from django.contrib.auth.models import AbstractBaseUser as User
+lazy from core.models import Claim
 
 
 class PermissionProvider(ABC):
-
     @abstractmethod
     def may_view_all(self, user: User) -> bool:
         pass
@@ -27,7 +23,6 @@ class PermissionProvider(ABC):
     @abstractmethod
     def viewable_cost_centres(self, user: User) -> list[str]:
         """Cost centres the user has scoped view-expenses access to."""
-        pass
 
     @abstractmethod
     def may_attest(self, user: User, cost_centre: str) -> bool:
@@ -50,7 +45,7 @@ class PermissionProvider(ABC):
         pass
 
     @abstractmethod
-    def may_account(self, user: User, target: Expense | Invoice) -> bool:
+    def may_account(self, user: User, target: Claim) -> bool:
         pass
 
     @abstractmethod

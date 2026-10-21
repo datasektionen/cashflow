@@ -1,19 +1,14 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.module_loading import import_string
 
-from django.conf import settings
-
-if TYPE_CHECKING:
-    from expenses.models import Expense, Comment
-    from invoices.models import Invoice
+lazy from core.models import Claim, Comment
 
 
 class NotificationProvider(ABC):
-
     @abstractmethod
     def on_expense_update(self, expense):
         pass
@@ -23,19 +18,19 @@ class NotificationProvider(ABC):
         pass
 
     @abstractmethod
-    def on_comment(self, claim: "Expense | Invoice", comment: "Comment"):
+    def on_comment(self, claim: Claim, comment: Comment):
         pass
 
     @abstractmethod
-    def on_attest(self, claim: "Expense | Invoice", attester: User):
+    def on_attest(self, claim: Claim, attester: User):
         pass
 
     @abstractmethod
-    def on_confirm(self, expense: "Expense", confirmer: User):
+    def on_confirm(self, claim: Claim, confirmer: User):
         pass
 
     @abstractmethod
-    def on_payment(self, claim: "Expense | Invoice", payer: User):
+    def on_payment(self, claim: Claim, payer: User):
         pass
 
 

@@ -1,13 +1,53 @@
-from datetime import date
-from typing import TypedDict
+from typing import ClassVar
 
-from django.db.models import QuerySet
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
-from core.api.problems import EmptyCommentProblem, NoExpensesProblem
-from expenses.models import File, Profile, Comment, Payment, ExpensePart, Expense
-from invoices.models import InvoicePart
+from core.api.problems import NoExpensesProblem
+from core.models import Claim, Comment, File, Profile
+
+
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = "__all__"
+
+
+class BankInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields: ClassVar = ["bank_account", "sorting_number", "bank_name"]
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", allow_blank=False)
+    last_name = serializers.CharField(source="user.last_name", allow_blank=False)
+    email = serializers.EmailField(source="user.email", allow_blank=False)
+    username = serializers.CharField(source="user.username", allow_blank=False)
+    has_bank_info = serializers.BooleanField(
+        read_only=True,
+        help_text="Whether the user has registered bank account and clearing number.",
+    )
+
+    class Meta:
+        model = Profile
+        fields: ClassVar = [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "username",
+            "has_bank_info",
+        ]
+
+
+class ClaimPartSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    cost_centre = serializers.CharField(allow_blank=True)
+    secondary_cost_centre = serializers.CharField(allow_blank=True)
+    budget_line = serializers.CharField(allow_blank=True)
+    amount = serializers.DecimalField(max_digits=9, decimal_places=2)
+    attested_by = ProfileSerializer(read_only=True)
+    attest_date = serializers.DateField(read_only=True)
 
 
 class ClaimTotalField(serializers.DecimalField):
@@ -25,99 +65,60 @@ class ClaimTotalField(serializers.DecimalField):
         return total if total is not None else instance.total_amount()
 
 
-class ClaimData(TypedDict):
-    id: int
-    type: str
-    description: str
-    amount: str
-    created_date: date
-    expense_date: date | None
-    invoice_date: date | None
-    is_attested: bool
-    is_confirmed: bool
-    is_paid: bool
-    is_flagged: bool | None
-    voucher: str | None
-    owner: Profile
-    parts: QuerySet[InvoicePart | ExpensePart]
-
-
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = "__all__"
-
-
-class BankInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ["bank_account", "sorting_number", "bank_name"]
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source="user.first_name", allow_blank=False)
-    last_name = serializers.CharField(source="user.last_name", allow_blank=False)
-    email = serializers.EmailField(source="user.email", allow_blank=False)
-    username = serializers.CharField(source="user.username", allow_blank=False)
-    # Deliberately a boolean only: the bank details themselves are private to
-    # the user (`/api/users/me/`); admins just need to know they exist.
-    has_bank_info = serializers.BooleanField(
-        read_only=True,
-        help_text="Whether the user has registered bank account and clearing number.",
-    )
-
-    class Meta:
-        model = Profile
-        fields = ["id", "first_name", "last_name", "email", "username", "has_bank_info"]
-
-
-class ClaimPartSerializer(serializers.Serializer):
-    cost_centre = serializers.CharField()
-    secondary_cost_centre = serializers.CharField()
-    budget_line = serializers.CharField()
-    amount = serializers.CharField()
-    attested_by = ProfileSerializer(read_only=True)
-    attest_date = serializers.DateField(allow_null=True)
-
-
 class ClaimSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    """Summary of a claim for the combined claims list.
+
+    Expects claims annotated with `total` (see `ClaimQuerySet.with_total`).
+    """
+
+    id = serializers.IntegerField(source="data_id", read_only=True)
     type = serializers.CharField()
     description = serializers.CharField()
-    amount = serializers.CharField()
+    amount = serializers.DecimalField(
+        source="total", max_digits=9, decimal_places=2, coerce_to_string=True
+    )
     created_date = serializers.DateField()
-    expense_date = serializers.DateField(allow_null=True)
-    invoice_date = serializers.DateField(allow_null=True)
-    is_attested = serializers.BooleanField(read_only=True)
-    is_confirmed = serializers.BooleanField(read_only=True)
-    is_paid = serializers.BooleanField(read_only=True)
-    is_flagged = serializers.BooleanField(
-        read_only=True,
-        allow_null=True,
+    expense_date = serializers.DateField(
+        source="expense_data.expense_date", allow_null=True
+    )
+    invoice_date = serializers.DateField(
+        source="invoice_data.invoice_date", allow_null=True
+    )
+    is_attested = serializers.SerializerMethodField()
+    is_confirmed = serializers.SerializerMethodField()
+    is_paid = serializers.SerializerMethodField()
+    is_flagged = serializers.SerializerMethodField(
         help_text="Whether or not this claim is flagged. Expenses only.",
     )
-    voucher = serializers.CharField(
-        allow_null=True,
+    voucher = serializers.SerializerMethodField(
         help_text="Fortnox voucher (verification) number. Null if not yet accounted.",
     )
     owner = ProfileSerializer(read_only=True)
     parts = ClaimPartSerializer(many=True)
 
+    # The methods below iterate the prefetched parts rather than querying
 
-class PaymentSerializer(serializers.ModelSerializer):
-    payer = ProfileSerializer(read_only=True)
-    receiver = ProfileSerializer(read_only=True)
-    tag = serializers.CharField(
-        read_only=True,
-        help_text="Bank-facing payment reference, e.g. 'Data1234'.",
-    )
-    total = serializers.DecimalField(
-        max_digits=11, decimal_places=2, source="amount", read_only=True
-    )
+    def get_is_attested(self, claim) -> bool:
+        return all(part.attested_by_id is not None for part in claim.parts.all())
 
-    class Meta:
-        model = Payment
-        fields = ["id", "date", "payer", "receiver", "tag", "total"]
+    def get_is_confirmed(self, claim) -> bool:
+        return (
+            claim.expense_data is not None
+            and claim.expense_data.confirmed_by_id is not None
+        )
+
+    def get_is_paid(self, claim) -> bool:
+        if claim.expense_data is not None:
+            return claim.expense_data.reimbursement_id is not None
+        return claim.invoice_data.paid_at is not None
+
+    def get_is_flagged(self, claim) -> bool | None:
+        if claim.expense_data is not None:
+            return claim.expense_data.is_flagged
+        return False
+
+    def get_voucher(self, claim) -> str | None:
+        return claim.verification or None
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -126,18 +127,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["date", "author", "content"]
-
-
-class CommentCreateSerializer(serializers.Serializer):
-    content = serializers.CharField(
-        allow_blank=True, help_text="The body of the comment, must be non-empty."
-    )
-
-    def validate_content(self, value):
-        if not value.strip():
-            raise EmptyCommentProblem()
-        return value
+        fields: ClassVar = ["date", "author", "content"]
 
 
 class AccountSerializer(serializers.Serializer):
@@ -179,10 +169,11 @@ class PendingPaymentsSerializer(serializers.Serializer):
 class PaymentCreateSerializer(serializers.Serializer):
     """Request body for creating a payment: the expenses to reimburse in one go."""
 
-    expenses = PrimaryKeyRelatedField(
+    expenses = serializers.SlugRelatedField(
+        slug_field="expense_data_id",
         many=True,
         allow_empty=True,
-        queryset=Expense.objects.all(),
+        queryset=Claim.objects.expenses(),
         help_text="IDs of the expenses to reimburse. All must belong to the same user.",
     )
 

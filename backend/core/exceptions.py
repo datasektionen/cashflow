@@ -70,6 +70,10 @@ class UnauthorizedPaymentError(PaymentError):
     pass
 
 
+class NotPayableError(PaymentError):
+    pass
+
+
 class MismatchedTotalAmountError(AccountingError):
     pass
 

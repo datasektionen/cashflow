@@ -74,3 +74,4 @@ django_settings_module = "cashflow.settings"
 [tool.basedpyright]
 typeCheckingMode = "standard"
 reportAttributeAccessIssue = false
+reportIncompatibleVariableOverride = false

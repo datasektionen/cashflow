@@ -1,17 +1,22 @@
-from django.db.models import Case, Model, QuerySet, When
-from rapidfuzz import process, fuzz
+from typing import Any, TypedDict, Unpack
+
+from django.db.models import Case, QuerySet, When
+from rapidfuzz import fuzz, process
+
+lazy from core.api.filters import apply_claim_filters
+lazy from core.models import ClaimQuerySet
 
 SCORE_CUTOFF = 80.0
 
 
-def fuzzy_model_search[T: Model](
-    queryset: QuerySet[T],
+def fuzzy_model_search[QS: QuerySet[Any]](
+    queryset: QS,
     query: str,
     field: str,
     partial: bool = True,
     pk_field: str = "id",
     score_cutoff: float = SCORE_CUTOFF,
-) -> QuerySet[T]:
+) -> QS:
     """Performs a fuzzy search on a model queryset.
 
     Fetches all objects and is therefore not very efficient, should only be used in dedicated search functions.
@@ -40,3 +45,23 @@ def fuzzy_model_search[T: Model](
         *[When(**{pk_field: pk}, then=rank) for rank, pk in enumerate(ids)]
     )
     return queryset.filter(**{f"{pk_field}__in": ids}).order_by(preserved_order)
+
+
+class ClaimSearchFields(TypedDict, total=False):
+    description: str | None
+    description_fuzzy: str | None
+
+
+def claim_search(
+    queryset: ClaimQuerySet, **search_fields: Unpack[ClaimSearchFields]
+) -> ClaimQuerySet:
+    filtered = apply_claim_filters(queryset, dict(search_fields), user=None)
+
+    for key, value in search_fields.items():
+        match key, value:
+            case "description", str():
+                filtered = filtered.filter(description__icontains=value)
+            case "description_fuzzy", str():
+                return fuzzy_model_search(filtered, value, "description")
+
+    return filtered

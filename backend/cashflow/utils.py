@@ -1,8 +1,8 @@
 import hashlib
-from datetime import datetime, date
+import unicodedata
+from datetime import date, datetime
 from decimal import Decimal
 
-import unicodedata
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -10,12 +10,10 @@ from pydantic import ValidationError
 from rapidfuzz import process
 from structlog import get_logger
 
-from cashflow import dauth
-from cashflow import gordian
-from expenses.models import ExpensePart
-from fortnox.api_client.models import CostCenter, Account
+from cashflow import dauth, gordian
+from core.models import ClaimPart
+from fortnox.api_client.models import Account, CostCenter
 from fortnox.django import FortnoxRequest
-from invoices.models import InvoicePart
 
 logger = get_logger(__name__)
 
@@ -78,9 +76,9 @@ def list_active_cost_centers(
             return [CostCenter.model_validate(cc) for cc in cached]
 
     client = request.fortnox_service
-    assert (
-        client is not None
-    ), "list_active_cost_centers requires a Fortnox service client"
+    assert client is not None, (
+        "list_active_cost_centers requires a Fortnox service client"
+    )
     all_cost_centers: list[CostCenter] = []
     page = 1
     while True:
@@ -110,13 +108,12 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
         # The GOrdian feed itself failed to parse (e.g. a schema change). This is
         # systemic — it breaks account resolution for *every* part, not just this
         # one — so log it loudly with the traceback rather than as a per-part miss.
-        logger.error(
+        logger.exception(
             "failed to parse gordian response while resolving account",
             part=part,
-            exc_info=True,
         )
         return None
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         # IndexError: budget line resolved but has no account.
         # ValueError: cost centre / secondary / budget line no longer exists on GOrdian.
         logger.error(
@@ -142,7 +139,7 @@ def fortnox_account_for_part(request: FortnoxRequest, part) -> Account | None:
 
 
 def fortnox_cost_center_for_part(
-    request: FortnoxRequest, part: ExpensePart | InvoicePart
+    request: FortnoxRequest, part: ClaimPart
 ) -> CostCenter | None:
     """Retrieves the Fortnox cost center that the part should be accounted in, based on Gordian."""
     cost_centers = list_active_cost_centers(request)
@@ -193,4 +190,4 @@ def json_serial(obj):
         return obj.isoformat()
     if isinstance(obj, Decimal):
         return FakeFloat(obj)
-    raise TypeError("Type %s not serializable" % type(obj))
+    raise TypeError(f"Type {type(obj)} not serializable")

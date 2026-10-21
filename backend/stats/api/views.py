@@ -1,23 +1,23 @@
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import Q, Subquery, Value
-from django.db.models.aggregates import Sum, Count
+from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce, TruncMonth
+from django.utils import timezone
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.api.pagination import DefaultPagination
-from expenses.models import Expense, Profile
-from invoices.models import Invoice
+from core.models import Claim, Profile
 from stats.api.serializers import (
-    LeaderboardSerializer,
+    LeaderboardFilter,
     LeaderboardQuerySerializer,
+    LeaderboardSerializer,
     MonthlyStatisticsSerializer,
     YearlyStatisticsSerializer,
-    LeaderboardFilter,
 )
 
 
@@ -35,31 +35,34 @@ class LeaderboardView(ListAPIView):
         ordering = query.validated_data.get("ordering") or "-expense_total"
 
         included = Q(
-            expense__expense_date__gte=start,
+            claim__expense_data__expense_date__gte=start,
         )
         if end is not None:
-            included &= Q(expense__expense_date__lte=end)
+            included &= Q(claim__expense_data__expense_date__lte=end)
 
         capped_expenses = (
-            Expense.objects.filter(
-                expense_date__gte=start,
+            Claim.objects.expenses()
+            .filter(
+                expense_data__expense_date__gte=start,
             )
-            .annotate(part_total=Sum("expensepart__amount"))
+            .annotate(part_total=Sum("part__amount"))
             .filter(part_total__lt=10000)
         )
         if end is not None:
-            capped_expenses = capped_expenses.filter(expense_date__lte=end)
+            capped_expenses = capped_expenses.filter(
+                expense_data__expense_date__lte=end
+            )
 
-        total_included = Q(expense__in=Subquery(capped_expenses.values("pk")))
+        total_included = Q(claim__in=Subquery(capped_expenses.values("pk")))
 
         queryset = (
             Profile.objects.annotate(
                 expense_total=Coalesce(
-                    Sum("expense__expensepart__amount", filter=total_included),
+                    Sum("claim__part__amount", filter=total_included),
                     Value(Decimal("0.00")),
                 )
             )
-            .annotate(expense_count=Count("expense", filter=included, distinct=True))
+            .annotate(expense_count=Count("claim", filter=included, distinct=True))
             .filter(expense_count__gt=0)
             .order_by(ordering, "-expense_total", "-expense_count")
         )
@@ -68,31 +71,30 @@ class LeaderboardView(ListAPIView):
 
 
 class MonthlyStatisticsView(APIView):
-
     def get(
         self, request, year: int | None = None, month: int | None = None
     ) -> Response:
 
-        year = year or datetime.now().year
-        month = month or datetime.now().month
+        year = year or timezone.localdate().year
+        month = month or timezone.localdate().month
 
-        start_date = datetime(year, month, 1)
+        start_date = date(year, month, 1)
         end_date = start_date + relativedelta(months=1)
 
-        expense_stats = Expense.objects.filter(
-            expense_date__gte=start_date,
-            expense_date__lt=end_date,
+        expense_stats = Claim.objects.filter(
+            expense_data__expense_date__gte=start_date,
+            expense_data__expense_date__lt=end_date,
         ).aggregate(
             count=Count("pk", distinct=True),
-            total=Coalesce(Sum("expensepart__amount"), Value(Decimal("0.00"))),
+            total=Coalesce(Sum("part__amount"), Value(Decimal("0.00"))),
         )
 
-        invoice_stats = Invoice.objects.filter(
-            invoice_date__gte=start_date,
-            invoice_date__lt=end_date,
+        invoice_stats = Claim.objects.filter(
+            invoice_data__invoice_date__gte=start_date,
+            invoice_data__invoice_date__lt=end_date,
         ).aggregate(
             count=Count("pk", distinct=True),
-            total=Coalesce(Sum("invoicepart__amount"), Value(Decimal("0.00"))),
+            total=Coalesce(Sum("part__amount"), Value(Decimal("0.00"))),
         )
 
         data = {
@@ -119,26 +121,25 @@ def _empty_month_stats(year: int, month: int) -> dict:
 
 
 class YearlyStatisticsView(APIView):
-
     def get(self, request, year: int | None = None) -> Response:
 
-        year = year or datetime.now().year
+        year = year or timezone.localdate().year
 
-        year_start = datetime(year, 1, 1)
+        year_start = date(year, 1, 1)
         year_end = year_start + relativedelta(years=1)
 
         months = {month: _empty_month_stats(year, month) for month in range(1, 13)}
 
         expense_rows = (
-            Expense.objects.filter(
-                expense_date__gte=year_start,
-                expense_date__lt=year_end,
+            Claim.objects.filter(
+                expense_data__expense_date__gte=year_start,
+                expense_data__expense_date__lt=year_end,
             )
-            .annotate(period=TruncMonth("expense_date"))
+            .annotate(period=TruncMonth("expense_data__expense_date"))
             .values("period")
             .annotate(
                 count=Count("pk", distinct=True),
-                total=Coalesce(Sum("expensepart__amount"), Value(Decimal("0.00"))),
+                total=Coalesce(Sum("part__amount"), Value(Decimal("0.00"))),
             )
         )
         for row in expense_rows:
@@ -147,15 +148,15 @@ class YearlyStatisticsView(APIView):
             stats["expense_total"] = row["total"]
 
         invoice_rows = (
-            Invoice.objects.filter(
-                invoice_date__gte=year_start,
-                invoice_date__lt=year_end,
+            Claim.objects.filter(
+                invoice_data__invoice_date__gte=year_start,
+                invoice_data__invoice_date__lt=year_end,
             )
-            .annotate(period=TruncMonth("invoice_date"))
+            .annotate(period=TruncMonth("invoice_data__invoice_date"))
             .values("period")
             .annotate(
                 count=Count("pk", distinct=True),
-                total=Coalesce(Sum("invoicepart__amount"), Value(Decimal("0.00"))),
+                total=Coalesce(Sum("part__amount"), Value(Decimal("0.00"))),
             )
         )
         for row in invoice_rows:

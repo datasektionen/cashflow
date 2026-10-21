@@ -28,8 +28,7 @@ from cashflow.gordian import (
     list_secondary_cost_centres_from_gordian,
 )
 from core.api.utils import AuthenticatedUserMixin
-from expenses.models import ExpensePart
-from invoices.models import InvoicePart
+from core.models import ClaimPart
 
 
 class CostCentreList(GenericAPIView):
@@ -73,16 +72,9 @@ class CostCentreList(GenericAPIView):
                 for cc in gordian_ccs
             ]
 
-            expense_ccs = ExpensePart.objects.values_list(
-                "cost_centre", flat=True
-            ).distinct()
-            invoice_ccs = InvoicePart.objects.values_list(
-                "cost_centre", flat=True
-            ).distinct()
+            ccs = ClaimPart.objects.values_list("cost_centre", flat=True).distinct()
             inactive_names = {
-                cc_name
-                for cc_name in (*expense_ccs, *invoice_ccs)
-                if cc_name and cc_name not in active_names
+                cc_name for cc_name in ccs if cc_name and cc_name not in active_names
             }
             inactive = [
                 {
@@ -133,15 +125,12 @@ class SecondaryCostCentreList(GenericAPIView):
             active_names = {scc.name for scc in gordian_sccs}
             active = [{**scc.model_dump(), "active": True} for scc in gordian_sccs]
 
-            expense_sccs = ExpensePart.objects.values_list(
-                "secondary_cost_centre", flat=True
-            ).distinct()
-            invoice_sccs = InvoicePart.objects.values_list(
+            sccs = ClaimPart.objects.values_list(
                 "secondary_cost_centre", flat=True
             ).distinct()
             inactive_names = {
                 scc_name
-                for scc_name in (*expense_sccs, *invoice_sccs)
+                for scc_name in sccs
                 if scc_name and scc_name not in active_names
             }
             inactive = [
@@ -180,16 +169,9 @@ class BudgetLineList(GenericAPIView):
         active_names = {bl.name for bl in gordian_bls}
         active = [{**bl.model_dump(), "active": True} for bl in gordian_bls]
 
-        expense_bls = ExpensePart.objects.values_list(
-            "budget_line", flat=True
-        ).distinct()
-        invoice_bls = InvoicePart.objects.values_list(
-            "budget_line", flat=True
-        ).distinct()
+        bls = ClaimPart.objects.values_list("budget_line", flat=True).distinct()
         inactive_names = {
-            bl_name
-            for bl_name in (*expense_bls, *invoice_bls)
-            if bl_name and bl_name not in active_names
+            bl_name for bl_name in bls if bl_name and bl_name not in active_names
         }
         inactive = [
             {
@@ -237,35 +219,31 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
     year_start = date(year, 1, 1)
     year_end = date(year + 1, 1, 1)
 
-    expense_rows = (
-        ExpensePart.objects.filter(
-            expense__expense_date__gte=year_start,
-            expense__expense_date__lt=year_end,
-        )
-        .values("cost_centre", "secondary_cost_centre", "budget_line")
-        .annotate(
-            uploaded=Sum("amount"),
-            attested=Sum("amount", filter=Q(attested_by__isnull=False)),
-            paid=Sum("amount", filter=Q(expense__reimbursement__isnull=False)),
-        )
-    )
-    invoice_rows = (
-        InvoicePart.objects.alias(
-            effective_date=Coalesce("invoice__invoice_date", "invoice__payed_at")
+    rows = (
+        ClaimPart.objects.alias(
+            effective_date=Coalesce(
+                "claim__expense_data__expense_date",
+                "claim__invoice_data__invoice_date",
+                "claim__invoice_data__paid_at",
+            )
         )
         .filter(effective_date__gte=year_start, effective_date__lt=year_end)
         .values("cost_centre", "secondary_cost_centre", "budget_line")
         .annotate(
             uploaded=Sum("amount"),
             attested=Sum("amount", filter=Q(attested_by__isnull=False)),
-            paid=Sum("amount", filter=Q(invoice__payed_at__isnull=False)),
+            paid=Sum(
+                "amount",
+                filter=Q(claim__expense_data__reimbursement__isnull=False)
+                | Q(claim__invoice_data__paid_at__isnull=False),
+            ),
         )
     )
 
     totals: dict[tuple[str, str, str], dict[str, Decimal]] = defaultdict(
         lambda: {field: Decimal(0) for field in _AMOUNT_FIELDS}
     )
-    for row in (*expense_rows, *invoice_rows):
+    for row in rows:
         entry = totals[
             (
                 _normalise(row["cost_centre"]),

@@ -1,228 +1,131 @@
-from collections import defaultdict
-from datetime import date
-from decimal import Decimal
 from typing import TypedDict
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import CharField, Prefetch, Q, Value
+from django.db.models import CharField, Q, Value
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Cast, Concat
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import (
-    ClaimQuerySerializer,
-    Filter,
-    Sorting,
-    apply_expense_filters,
-    apply_invoice_filters,
-)
+from core.api.filters import apply_claim_filters
 from core.api.pagination import DefaultPagination
 from core.api.problems import (
     AlreadyReimbursedProblem,
+    AttestationPermissionDeniedProblem,
+    IsFlaggedProblem,
     MultipleReceiversProblem,
     PaymentPermissionDeniedProblem,
 )
 from core.api.serializers import (
-    ClaimData,
+    ClaimPartSerializer,
     ClaimSerializer,
     PaymentCreateSerializer,
-    PaymentSerializer,
     PendingPaymentsSerializer,
     VoucherSeriesSerializer,
 )
 from core.api.utils import AuthenticatedUserMixin
-from core.permissions import get_permission_provider
-from expenses.models import (
-    Comment,
-    Expense,
-    ExpensePart,
-    ExpenseQuerySet,
-    Payment,
-    Profile,
+from core.exceptions import (
+    FlaggedAttestationError,
+    SelfAttestationError,
+    UnauthorizedAttestationError,
 )
+from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, Profile
+from core.permissions import get_permission_provider
+from expenses.api.serializers import PaymentSerializer
+from expenses.models import Payment
 from fortnox import FortnoxNotFound, FortnoxRequest, FortnoxServiceNotAvailableProblem
-from invoices.models import Invoice, InvoicePart, InvoiceQuerySet
 from notifications import get_notification_provider
 
 UserModel = get_user_model()
 logger = get_logger(__name__)
 
 
-class _WindowedClaims(list):
-    """The first rows of the merged claims feed plus the true combined count.
+class ClaimsList(ListAPIView, AuthenticatedUserMixin):
+    """Lists expenses and invoices together, see `ClaimQuerySerializer` for filters."""
 
-    Django's ``Paginator`` calls ``count()`` when the object list provides
-    one, so the view can hand over a window of only the rows that can appear
-    on or before the requested page while the reported totals stay correct.
-    """
-
-    def __init__(self, rows, total: int):
-        super().__init__(rows)
-        self._total = total
-
-    def count(self, *_, **__) -> int:
-        return self._total
-
-
-class ClaimsList(GenericAPIView, AuthenticatedUserMixin):
+    serializer_class = ClaimSerializer
     pagination_class = DefaultPagination
 
-    def get_serializer_class(self):
-        return ClaimSerializer
-
-    def get(self, request: Request):
-
-        claim_type = request.GET.get(Filter.TYPE)
-
-        query = ClaimQuerySerializer(data=request.GET)
-        query.is_valid(raise_exception=True)
-        sorting = Sorting(query.validated_data["sorting"])
-        reverse = sorting in (
-            Sorting.CREATED_AT_DESC,
-            Sorting.DATE_DESC,
-            Sorting.TOTAL_DESC,
+    def get_queryset(self) -> ClaimQuerySet:
+        queryset = (
+            Claim.objects.select_related("owner__user", "expense_data", "invoice_data")
+            .prefetch_related("parts__attested_by__user")
+            .viewable_by(self.current_user)
+            .with_total()
         )
-        date_sort = sorting in (Sorting.DATE_ASC, Sorting.DATE_DESC)
-        total_sort = sorting in (Sorting.TOTAL_ASC, Sorting.TOTAL_DESC)
+        return apply_claim_filters(
+            queryset, self.request.GET, self.current_user
+        ).distinct()
 
-        def sort_value(
-            total: Decimal, item_date: date | None, created: date
-        ) -> Decimal | date:
-            """The value each row is sorted on, matching the SQL ordering the
-            source querysets were sliced by."""
-            if total_sort:
-                return total
-            if date_sort:
-                return item_date or date.min
-            return created
 
-        # Each source queryset is sliced in SQL to the rows that can appear
-        # on or before the requested page, so page cost does not grow with
-        # table size. Non-numeric pages ("last") materialize everything.
-        window = None
-        if isinstance(self.paginator, DefaultPagination):
-            page_size = self.paginator.get_page_size(request)
-            raw_page = request.GET.get(self.paginator.page_query_param, "1")
-            if page_size and raw_page.isdigit():
-                window = int(raw_page) * page_size
+class ClaimPartAttestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
+    serializer_class = ClaimPartSerializer
+    permission_classes = [IsAuthenticated]
 
-        total = 0
-        rows: list[tuple[ClaimData, Decimal | date]] = []
-        if claim_type != "invoice":
-            expenses: ExpenseQuerySet = (
-                Expense.objects.viewable_by(self.current_user)
-                .select_related("reimbursement", "owner__user")
-                .prefetch_related(
-                    Prefetch(
-                        "parts",
-                        ExpensePart.objects.select_related("attested_by__user"),
-                    )
-                )
-                .annotate(total=Sum("expensepart__amount"))
+    def get_queryset(self):
+        return ClaimPart.objects.filter(
+            claim__in=Claim.objects.viewable_by(self.current_user)
+        ).select_related("claim__expense_data", "claim__owner")
+
+    def post(self, request: Request, pk: int) -> Response:
+        with transaction.atomic():
+            part = self.get_object()
+            part = (
+                ClaimPart.objects.select_for_update()
+                .select_related("claim__expense_data", "claim__owner")
+                .get(pk=part.pk)
             )
-            expenses = apply_expense_filters(
-                expenses, request.GET, self.current_user
-            ).distinct()
-            total += expenses.count()
-            if window is not None:
-                expenses = expenses[:window]
-            rows.extend(
-                (
-                    {
-                        "id": expense.id,
-                        "type": "expense",
-                        "description": expense.description,
-                        "amount": expense.total_amount().to_eng_string(),
-                        "created_date": expense.created_date,
-                        "expense_date": expense.expense_date,
-                        "invoice_date": None,
-                        "is_attested": expense.is_attested(),
-                        "is_confirmed": expense.confirmed_by_id is not None,
-                        "is_paid": expense.is_paid(),
-                        "is_flagged": expense.is_flagged,
-                        "voucher": expense.verification or None,
-                        "owner": expense.owner,
-                        "parts": expense.parts.all(),
-                    },
-                    sort_value(
-                        expense.total_amount(),
-                        expense.expense_date,
-                        expense.created_date,
-                    ),
-                )
-                for expense in expenses
+            try:
+                part.attest(self.current_user)
+            except FlaggedAttestationError as e:
+                raise IsFlaggedProblem(
+                    detail="This expense is flagged and cannot be attested."
+                ) from e
+            except UnauthorizedAttestationError as e:
+                raise AttestationPermissionDeniedProblem(
+                    detail=f"You do not have permission to attest this part, {part.cost_centre} is not a cost centre for which you can attest."
+                ) from e
+            except SelfAttestationError as e:
+                raise AttestationPermissionDeniedProblem(
+                    detail="You do not have permission to attest this part, you cannot attest your own expenses."
+                ) from e
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ClaimPartUnattestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
+    serializer_class = ClaimPartSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ClaimPart.objects.filter(
+            claim__in=Claim.objects.viewable_by(self.current_user)
+        ).select_related("claim")
+
+    def post(self, request: Request, pk: int) -> Response:
+        with transaction.atomic():
+            part = self.get_object()
+            part = (
+                ClaimPart.objects.select_for_update()
+                .select_related("claim")
+                .get(pk=part.pk)
             )
+            try:
+                part.unattest(self.current_user)
+            except UnauthorizedAttestationError as e:
+                raise AttestationPermissionDeniedProblem(
+                    detail=f"You do not have permission to unattest this part, {part.cost_centre} is not a cost centre for which you can attest."
+                ) from e
 
-        if claim_type != "expense":
-            invoices: InvoiceQuerySet = (
-                Invoice.objects.viewable_by(self.current_user)
-                .select_related("owner__user")
-                .prefetch_related(
-                    Prefetch(
-                        "parts",
-                        InvoicePart.objects.select_related("attested_by__user"),
-                    )
-                )
-                .annotate(total=Sum("invoicepart__amount"))
-            )
-            # See the expense branch: cost-centre and similar filters join
-            # `invoicepart`, so `.distinct()` collapses the per-part duplicates.
-            invoices = apply_invoice_filters(
-                invoices, request.GET, self.current_user
-            ).distinct()
-            total += invoices.count()
-            if window is not None:
-                invoices = invoices[:window]
-            rows.extend(
-                (
-                    {
-                        "id": invoice.id,
-                        "type": "invoice",
-                        "description": invoice.description,
-                        "amount": invoice.total_amount().to_eng_string(),
-                        "created_date": invoice.created_date,
-                        "expense_date": None,
-                        "invoice_date": invoice.invoice_date,
-                        "is_attested": invoice.is_attested(),
-                        "is_confirmed": invoice.confirmed_by_id is not None,
-                        "is_paid": invoice.is_paid(),
-                        "is_flagged": False,
-                        "voucher": invoice.verification or None,
-                        "owner": invoice.owner,
-                        "parts": invoice.parts.all(),
-                    },
-                    sort_value(
-                        Decimal(invoice.total_amount()),
-                        invoice.invoice_date,
-                        invoice.created_date,
-                    ),
-                )
-                for invoice in invoices
-            )
-
-        rows.sort(key=lambda row: row[0]["id"], reverse=True)
-        if sorting != Sorting.ID_DESC:
-            rows.sort(key=lambda row: row[1], reverse=reverse)
-        data: list[ClaimData] = [claim for claim, _ in rows]
-        if window is not None:
-            data = data[:window]
-
-        results = _WindowedClaims(data, total)
-        page: list[ClaimData] | None = self.paginate_queryset(results)  # type: ignore[arg-type]
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(results, many=True)
-        return Response(serializer.data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
@@ -273,9 +176,12 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        expenses: list[Expense] = serializer.validated_data["expenses"]
+        expenses: list[Claim] = serializer.validated_data["expenses"]
 
-        if not all(expense.reimbursement is None for expense in expenses):
+        if not all(
+            expense.expense_data and expense.expense_data.reimbursement is None
+            for expense in expenses
+        ):
             raise AlreadyReimbursedProblem(
                 detail="One or more expenses are already reimbursed."
             )
@@ -291,11 +197,13 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
                 payer=self.current_user.profile, receiver=receiver
             )
             for expense in expenses:
-                expense.reimbursement = payment
-                expense.save(update_fields=["reimbursement"])
+                assert expense.expense_data is not None
+                expense.expense_data.reimbursement = payment
+                expense.expense_data.save(update_fields=["reimbursement"])
+                expense.save(update_fields=["expense_data"])
                 comment = Comment.objects.create(
                     author=self.current_user.profile,
-                    expense=expense,
+                    claim=expense,
                     content=f"Betalade ut i betalning {payment.id}",
                 )
 
@@ -311,15 +219,15 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
             raise PermissionDenied()
 
         payable = Q(
-            expense__reimbursement__isnull=True,
-            expense__confirmed_by__isnull=False,
-            expense__expensepart__attested_by__isnull=False,
+            claim__expense_data__reimbursement__isnull=True,
+            claim__expense_data__confirmed_by__isnull=False,
+            claim__part__attested_by__isnull=False,
         )
         queryset = (
             Profile.objects.annotate(
-                count=Count("expense", filter=payable, distinct=True)
+                count=Count("claim", filter=payable, distinct=True)
             )
-            .annotate(total=Sum("expense__expensepart__amount", filter=payable))
+            .annotate(total=Sum("claim__part__amount", filter=payable))
             .filter(count__gt=0)
             .filter(total__isnull=False)
             .order_by("-total")
@@ -337,8 +245,8 @@ class PaymentViewSet(viewsets.GenericViewSet, AuthenticatedUserMixin):
 class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
     def get(self, request: Request):
         user = self.current_user
-        expenses = Expense.objects.viewable_by(user)
-        invoices = Invoice.objects.viewable_by(user)
+        expenses = Claim.objects.expenses()
+        invoices = Claim.objects.invoices()
         return Response(
             {
                 "expenses": {
@@ -356,33 +264,14 @@ class ActionSummary(GenericAPIView, AuthenticatedUserMixin):
         )
 
 
-def _counts_by_cost_centre(
-    expense_qs: ExpenseQuerySet, invoice_qs: InvoiceQuerySet
-) -> list[dict[str, object]]:
-    """Merges expense and invoice counts grouped by their part's cost centre.
-
-    A claim is counted once per cost centre it has a (matching) part in, so the
-    same claim can contribute to several cost centres. Counts are summed across
-    expenses and invoices and returned sorted by descending count.
-    """
-    counts: dict[str, int] = defaultdict(int)
-    for row in (
-        expense_qs.order_by()
-        .values("expensepart__cost_centre")
-        .annotate(count=Count("id", distinct=True))
-    ):
-        counts[row["expensepart__cost_centre"]] += row["count"]
-    for invoice_row in (
-        invoice_qs.order_by()
-        .values("invoicepart__cost_centre")
-        .annotate(count=Count("id", distinct=True))
-    ):
-        counts[invoice_row["invoicepart__cost_centre"]] += invoice_row["count"]
+def _counts_by_cost_centre(qs: ClaimQuerySet) -> list[dict[str, object]]:
+    """Counts claims grouped by cost centre, sorted by descending count."""
     return [
-        {"cost_centre": cost_centre, "count": count}
-        for cost_centre, count in sorted(
-            counts.items(), key=lambda item: item[1], reverse=True
-        )
+        {"cost_centre": row["part__cost_centre"], "count": row["count"]}
+        for row in qs.order_by()
+        .values("part__cost_centre")
+        .annotate(count=Count("id", distinct=True))
+        .order_by("-count")
     ]
 
 
@@ -393,58 +282,38 @@ class _OwnerCount(TypedDict):
     count: int
 
 
-def _counts_by_owner(
-    expense_qs: ExpenseQuerySet, invoice_qs: InvoiceQuerySet
-) -> list[_OwnerCount]:
-    """Merges expense and invoice counts grouped by the owning user.
+def _counts_by_owner(qs: ClaimQuerySet) -> list[_OwnerCount]:
+    """Counts claims grouped by the owning user, sorted by descending count.
 
-    Each claim has a single owner, so counts sum to the overall total. Returned
-    sorted by descending count.
+    Each claim has a single owner, so counts sum to the overall total.
     """
-    owners: dict[str, _OwnerCount] = {}
-    for qs in (expense_qs, invoice_qs):
-        for row in (
-            qs.order_by()
-            .values(
-                "owner__user__username",
-                "owner__user__first_name",
-                "owner__user__last_name",
-            )
-            .annotate(count=Count("id", distinct=True))
-        ):
-            username = row["owner__user__username"]
-            owner = owners.setdefault(
-                username,
-                {
-                    "username": username,
-                    "first_name": row["owner__user__first_name"],
-                    "last_name": row["owner__user__last_name"],
-                    "count": 0,
-                },
-            )
-            owner["count"] += row["count"]
-    return sorted(owners.values(), key=lambda owner: owner["count"], reverse=True)
+    return [
+        {
+            "username": row["owner__user__username"],
+            "first_name": row["owner__user__first_name"],
+            "last_name": row["owner__user__last_name"],
+            "count": row["count"],
+        }
+        for row in qs.order_by()
+        .values(
+            "owner__user__username",
+            "owner__user__first_name",
+            "owner__user__last_name",
+        )
+        .annotate(count=Count("id", distinct=True))
+        .order_by("-count")
+    ]
 
 
 class ActionOverview(GenericAPIView, AuthenticatedUserMixin):
     def get(self, request: Request):
         user = self.current_user
-        expenses = Expense.objects.viewable_by(user)
-        invoices = Invoice.objects.viewable_by(user)
         return Response(
             {
-                "attest": _counts_by_cost_centre(
-                    expenses.attestable_for(user), invoices.attestable_for(user)
-                ),
-                "account": _counts_by_cost_centre(
-                    expenses.accountable_for(user), invoices.accountable_for(user)
-                ),
-                "confirm": _counts_by_cost_centre(
-                    expenses.confirmable_for(user), invoices.none()
-                ),
-                "pay": _counts_by_owner(
-                    expenses.payable_for(user), invoices.payable_for(user)
-                ),
+                "attest": _counts_by_cost_centre(Claim.objects.attestable_for(user)),
+                "account": _counts_by_cost_centre(Claim.objects.accountable_for(user)),
+                "confirm": _counts_by_cost_centre(Claim.objects.confirmable_for(user)),
+                "pay": _counts_by_owner(Claim.objects.payable_for(user)),
             }
         )
 
@@ -476,25 +345,21 @@ class VoucherSeriesList(GenericAPIView):
                     "is unavailable."
                 ) from e
 
-        # Resolve voucher series from existing expenses and invoices
-        expense_codes = {
-            v[0].upper()
-            for v in Expense.objects.all().values_list("verification", flat=True)
-            if v is not None and len(v) > 0 and v[0].isalpha()
-        }
-        invoice_codes = {
-            v[0].upper()
-            for v in Invoice.objects.all().values_list("verification", flat=True)
-            if v is not None and len(v) > 0 and v[0].isalpha()
-        }
+        # Find voucher series from existing expenses and invoices
+        verifications = (
+            Claim.objects.exclude(verification="")
+            .values_list("verification", flat=True)
+            .distinct()
+        )
+        codes = {v[0].upper() for v in verifications if v[0].isalpha()}
+
+        known = {sc["code"] for sc in series}
         inactive: list[dict[str, str | None]] = [
-            {"code": code}
-            for code in expense_codes | invoice_codes
-            if code and code not in [sc["code"] for sc in series]
+            {"code": code} for code in sorted(codes - known)
         ]
         series += inactive
 
-        page: list[dict[str, str | None]] | None = self.paginate_queryset(series)  # type: ignore[arg-type]
+        page: list[dict[str, str | None]] | None = self.paginate_queryset(series)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
