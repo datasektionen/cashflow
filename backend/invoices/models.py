@@ -343,9 +343,9 @@ class InvoicePart(models.Model):
 
 
 class InvoiceData(models.Model):
-    invoice_date = models.DateField()
+    invoice_date = models.DateField(blank=True, null=True)
     invoice_number = models.TextField()
-    due_date = models.DateField()
+    due_date = models.DateField(blank=True, null=True)
     # TODO: Is there a better choice for on_delete?
     paid_at = models.DateField(blank=True, null=True, default=None)
     paid_by = models.ForeignKey(

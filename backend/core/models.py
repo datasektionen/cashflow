@@ -156,14 +156,6 @@ class Claim(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.PROTECT)
     description = models.TextField()
     created_date = models.DateField(auto_now_add=True)
-    confirmed_by = models.ForeignKey(
-        Profile,
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="confirmed_claims",
-    )
-    confirmed_at = models.DateField(null=True, blank=True)
     verification = models.CharField(max_length=7, blank=True)
 
     expense_data = models.ForeignKey(ExpenseData, null=True, on_delete=models.PROTECT)
