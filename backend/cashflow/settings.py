@@ -9,11 +9,11 @@ https://docs.djangoproject.com/en/stable/ref/settings/
 """
 
 import os  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import sys
 from typing import Any
 
 import dj_database_url
 import structlog
-import sys
 from corsheaders.defaults import default_methods
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -94,6 +94,26 @@ MIDDLEWARE = (
     ),
     "core.middleware.StructlogContextMiddleware",
 )
+
+# Django Debug Toolbar
+DEBUG_TOOLBAR_ENABLED = DEBUG and "PYTEST_VERSION" not in os.environ
+
+if DEBUG_TOOLBAR_ENABLED:
+    import cProfile
+
+    # Python 3.15 dropped cProfile.label, which the toolbar's profiling panel
+    # (as of 8.0.0) still uses. Remove once the toolbar is fixed upstream.
+    if not hasattr(cProfile, "label"):
+        from profiling.tracing import label
+
+        cProfile.label = label  # type: ignore[attr-defined]
+
+    INSTALLED_APPS += ("debug_toolbar",)
+    MIDDLEWARE = ("debug_toolbar.middleware.DebugToolbarMiddleware", *MIDDLEWARE)
+    DEBUG_TOOLBAR_CONFIG = {
+        # Requests reach Django through nginx/Docker, so INTERNAL_IPS is unreliable
+        "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
+    }
 
 
 TEMPLATES = [
