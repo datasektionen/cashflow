@@ -79,7 +79,7 @@ class ClaimPartAttestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
         with transaction.atomic():
             part = self.get_object()
             part = (
-                ClaimPart.objects.select_for_update()
+                ClaimPart.objects.select_for_update(of=("self",))
                 .select_related("claim__expense_data", "claim__owner")
                 .get(pk=part.pk)
             )
