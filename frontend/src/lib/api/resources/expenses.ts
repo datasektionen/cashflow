@@ -6,19 +6,13 @@ import type {
 	DescriptionSearch,
 	Expense,
 	ExpenseCreate,
-	ExpensePart,
 	ExpenseUpdate,
 	PaginatedResponse,
 	PartCreateUpdate
 } from '$lib/api/types';
 import type { ListResponse } from '$lib/api/client';
 import { toDecimal } from 'dinero.js';
-import {
-	type APIExpense,
-	type APIExpensePart,
-	parseExpense,
-	parseExpensePart
-} from '$lib/api/parse';
+import { type APIExpense, parseExpense } from '$lib/api/parse';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;
@@ -135,16 +129,12 @@ export class ExpensesAPI {
 		return this.apiClient.post<Comment>(`/expenses/${id}/comments/`, { content: content });
 	}
 
-	async attestPart(partId: number): Promise<ExpensePart> {
-		return parseExpensePart(
-			await this.apiClient.post<APIExpensePart>(`/expense-parts/${partId}/attest/`, {})
-		);
+	attestPart(partId: number) {
+		return this.apiClient.post<void>(`/expense-parts/${partId}/attest/`, {});
 	}
 
-	async unattestPart(partId: number): Promise<ExpensePart> {
-		return parseExpensePart(
-			await this.apiClient.post<APIExpensePart>(`/expense-parts/${partId}/unattest/`, {})
-		);
+	unattestPart(partId: number) {
+		return this.apiClient.post<void>(`/expense-parts/${partId}/unattest/`, {});
 	}
 
 	confirm(id: number) {
