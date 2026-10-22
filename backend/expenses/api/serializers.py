@@ -113,7 +113,6 @@ class ExpenseAdminSerializer(ExpenseSerializer):
     is_flagged = serializers.BooleanField(
         help_text="Whether the expense is flagged. Only included for users with attesting permissions.",
         source="expense_data.is_flagged",
-        allow_null=True,
     )
 
     class Meta(ExpenseSerializer.Meta):

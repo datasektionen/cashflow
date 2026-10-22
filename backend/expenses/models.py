@@ -55,4 +55,4 @@ class ExpenseData(models.Model):
     reimbursement = models.ForeignKey(
         Payment, blank=True, null=True, on_delete=models.DO_NOTHING
     )
-    is_flagged = models.BooleanField(null=True, blank=True)
+    is_flagged = models.BooleanField(default=False)

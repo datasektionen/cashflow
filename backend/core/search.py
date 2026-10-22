@@ -3,7 +3,6 @@ from typing import Any, TypedDict, Unpack
 from django.db.models import Case, QuerySet, When
 from rapidfuzz import fuzz, process
 
-lazy from core.api.filters import apply_claim_filters
 lazy from core.models import ClaimQuerySet
 
 SCORE_CUTOFF = 80.0
@@ -55,12 +54,11 @@ class ClaimSearchFields(TypedDict, total=False):
 def claim_search(
     queryset: ClaimQuerySet, **search_fields: Unpack[ClaimSearchFields]
 ) -> ClaimQuerySet:
-    filtered = apply_claim_filters(queryset, dict(search_fields), user=None)
+
+    filtered = queryset
 
     for key, value in search_fields.items():
         match key, value:
-            case "description", str():
-                filtered = filtered.filter(description__icontains=value)
             case "description_fuzzy", str():
                 return fuzzy_model_search(filtered, value, "description")
 
