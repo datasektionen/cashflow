@@ -138,7 +138,10 @@
 	{/if}
 </div>
 
-<ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
+<ClaimFilterBar
+	includeChecks={false}
+	exclude={['voucher_series', 'verification', 'invoice_number']}
+/>
 <PaginatedTable
 	paginatedResponse={data.claims}
 	{columns}

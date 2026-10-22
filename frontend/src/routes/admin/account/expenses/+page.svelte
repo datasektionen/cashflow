@@ -40,13 +40,15 @@
 			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
 			renderSnippet: ownerCell,
-			width: 'w-48'
+			width: 'w-48',
+			sorting: ['-user', 'user']
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: 'w-48'
+			width: 'w-48',
+			sorting: ['-cost_centre', 'cost_centre']
 		},
 		{
 			id: 'expense_date',
@@ -101,7 +103,10 @@
 	</div>
 {/snippet}
 
-<ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
+<ClaimFilterBar
+	includeChecks={false}
+	exclude={['voucher_series', 'verification', 'invoice_number']}
+/>
 
 <PaginatedTable
 	paginatedResponse={data.expenses}

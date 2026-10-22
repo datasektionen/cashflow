@@ -23,7 +23,8 @@
 			id: 'type',
 			header: $_('admin_attestable.columns.type'),
 			render: (c) => $_(c.type),
-			width: 'w-24'
+			width: 'w-24',
+			sorting: ['-type', 'type']
 		},
 		{
 			id: 'description',
@@ -35,13 +36,15 @@
 			id: 'owner',
 			header: $_('admin_attestable.columns.owner'),
 			renderSnippet: ownerCell,
-			width: 'w-24 lg:w-40'
+			width: 'w-24 lg:w-40',
+			sorting: ['-user', 'user']
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: 'w-48'
+			width: 'w-48',
+			sorting: ['-cost_centre', 'cost_centre']
 		},
 		{
 			id: 'expense_date',
@@ -157,7 +160,15 @@
 {/snippet}
 
 <ClaimFilterBar
-	exclude={['attested', 'paid', 'accounted', 'voucher_series', 'voucher_number', 'reimbursement']}
+	exclude={[
+		'attested',
+		'paid',
+		'accounted',
+		'voucher_series',
+		'verification',
+		'reimbursement',
+		'invoice_number'
+	]}
 />
 <PaginatedTable
 	paginatedResponse={data.claims}

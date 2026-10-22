@@ -6,6 +6,8 @@ import type {
 	DescriptionSearch,
 	Invoice,
 	InvoiceCreate,
+	InvoiceFilter,
+	InvoiceOrdering,
 	InvoiceUpdate,
 	PaginatedResponse,
 	PartCreateUpdate
@@ -38,12 +40,14 @@ export class InvoicesAPI {
 	async list(
 		page: number,
 		perPage: number,
-		filter?: ClaimFilter
+		filter?: InvoiceFilter,
+		ordering?: InvoiceOrdering[]
 	): Promise<PaginatedResponse<Invoice>> {
 		const res = await this.apiClient.get<RawResponse>('invoices/', {
 			page,
 			per_page: perPage,
-			...filter
+			...filter,
+			...(ordering ? { sorting: ordering.join(',') } : {})
 		});
 
 		return {
@@ -60,13 +64,15 @@ export class InvoicesAPI {
 	async search(
 		page: number,
 		perPage: number,
-		filter?: ClaimFilter,
+		filter?: InvoiceFilter,
+		ordering?: InvoiceOrdering[],
 		searchFields?: DescriptionSearch
 	): Promise<PaginatedResponse<Invoice>> {
 		const res = await this.apiClient.query<RawResponse>(
 			'invoices/search/',
 			{
-				query: { ...filter, ...searchFields }
+				query: { ...filter, ...searchFields },
+				...(ordering ? { sorting: ordering.join(',') } : {})
 			},
 			'application/json',
 			{

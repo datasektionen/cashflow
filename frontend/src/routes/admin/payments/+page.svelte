@@ -92,7 +92,7 @@
 <ClaimFilterBar
 	includeBudget={false}
 	includeChecks={false}
-	exclude={['voucher_number', 'voucher_series', 'description']}
+	exclude={['verification', 'voucher_series', 'description', 'invoice_number']}
 />
 <PaginatedTable
 	paginatedResponse={data.payments}

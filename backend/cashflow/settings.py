@@ -72,6 +72,7 @@ INSTALLED_APPS = (
     "invoices",
     "fortnox",
     "drf_problems",
+    "django_filters",
 )
 
 FORTNOX_ENABLED = os.getenv("FORTNOX_ENABLED", "true").lower() == "true"

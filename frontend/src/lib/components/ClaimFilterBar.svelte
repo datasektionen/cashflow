@@ -12,7 +12,8 @@
 		Search,
 		Stamp,
 		SlidersHorizontal,
-		HandCoins
+		HandCoins,
+		FileDigit
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -40,9 +41,10 @@
 		exclude?: (
 			| (typeof tristateKeys)[number]
 			| 'voucher_series'
-			| 'voucher_number'
 			| 'reimbursement'
 			| 'description'
+			| 'verification'
+			| 'invoice_number'
 		)[];
 	} = $props();
 
@@ -100,8 +102,9 @@
 		'secondary_cost_centre',
 		'budget_line',
 		'voucher_series',
-		'voucher_number',
-		'reimbursement'
+		'verification',
+		'reimbursement',
+		'invoice_number'
 	] as const;
 
 	const voucherSeriesColumns: ComboboxColumn<VoucherSeries>[] = [
@@ -312,14 +315,27 @@
 			/>
 		{/if}
 
+		{#if !exclude.includes('invoice_number')}
+			{#snippet voucherNrIcon()}
+				<FileDigit class="size-4" />
+			{/snippet}
+			<TextInput
+				class="text-sm"
+				value={filterValue('invoice_number')}
+				onchange={(v) => setFilter('invoice_number', v ?? '')}
+				placeholder={$_('search_invoice_number')}
+				icon={voucherNrIcon}
+			/>
+		{/if}
+
 		{#snippet voucherIcon()}
 			<Hash class="size-4" />
 		{/snippet}
-		{#if !exclude.includes('voucher_number')}
+		{#if !exclude.includes('verification')}
 			<TextInput
 				class="text-sm"
-				value={filterValue('voucher_number')}
-				onchange={(v) => setFilter('voucher_number', v ?? '')}
+				value={filterValue('verification')}
+				onchange={(v) => setFilter('verification', v ?? '')}
 				placeholder={$_('search_voucher_number')}
 				icon={voucherIcon}
 			/>

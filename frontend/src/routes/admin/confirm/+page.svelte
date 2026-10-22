@@ -3,24 +3,24 @@
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
 	import type { TableColumn } from '$lib/components/types';
-	import { type Claim, getClaimDate } from '$lib/api/types';
+	import { type Expense } from '$lib/api/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ExpensePreview from './ExpensePreview.svelte';
 	import UserLink from '$lib/components/UserLink.svelte';
-	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import { ScrollArea } from 'bits-ui';
 	import { isSmallLayout } from '$lib/stores/state.svelte';
-	import { formatDineroAmount } from '$lib/money';
+	import { formatDineroAmount, sumDinero } from '$lib/money';
+	import ExpenseStatusPills from '$lib/components/ExpenseStatusPills.svelte';
 
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
 	let sorting = $state(page.url.searchParams.get('sorting'));
 
-	const columns: TableColumn<Claim>[] = $derived([
+	const columns: TableColumn<Expense>[] = $derived([
 		{
 			id: 'description',
 			header: $_('admin_confirmable.columns.description'),
@@ -36,7 +36,7 @@
 		{
 			id: 'expense_date',
 			header: $_('date'),
-			render: (c) => getClaimDate(c),
+			render: (e) => e.expense_date,
 			width: 'w-28',
 			sorting: ['-date', 'date']
 		},
@@ -81,39 +81,39 @@
 		);
 	}
 
-	let preview: Claim | null = $state(null);
+	let preview: Expense | null = $state(null);
 
-	function handleRowClick(c: Claim) {
+	function handleRowClick(e: Expense) {
 		// lg breakpoint = where the preview pane becomes visible; below it, navigate instead
 		if (window.matchMedia('(min-width: 1024px)').matches) {
-			preview = c;
+			preview = e;
 		} else {
-			goto(`/admin/expenses/${c.id}`);
+			goto(`/admin/expenses/${e.id}`);
 		}
 	}
 </script>
 
-{#snippet contextSnippet(c: Claim)}
-	<ClaimContextMenu claim={c} kind={c.type} user={data.user} />
+{#snippet contextSnippet(e: Expense)}
+	<ClaimContextMenu claim={e} kind={'expense'} user={data.user} />
 {/snippet}
 
-{#snippet ownerCell(c: Claim)}
-	<UserLink user={c.owner} />
+{#snippet ownerCell(e: Expense)}
+	<UserLink user={e.owner} />
 {/snippet}
 
-{#snippet amountCell(c: Claim)}
-	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
+{#snippet amountCell(e: Expense)}
+	<span class="tabular-nums">{formatDineroAmount(sumDinero(e.parts.map((p) => p.amount)))} kr</span>
 {/snippet}
 
-{#snippet idCell(c: Claim)}
+{#snippet idCell(e: Expense)}
 	<div class="flex flex-row items-center">
 		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">#</span>
-		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{c.id}</span>
+		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{e.id}</span>
 	</div>
 {/snippet}
 
-{#snippet statusCell(c: Claim)}
-	<ClaimStatusPills claim={c} />
+{#snippet statusCell(expense: Expense)}
+	<ExpenseStatusPills {expense} />
 {/snippet}
 
 <!-- height = viewport - navbar (4rem) - main's py-4 (2rem) - page-title header (~4rem) -->
@@ -126,8 +126,9 @@
 				'paid',
 				'accounted',
 				'voucher_series',
-				'voucher_number',
-				'reimbursement'
+				'verification',
+				'reimbursement',
+				'invoice_number'
 			]}
 		/>
 		<PaginatedTable
@@ -159,8 +160,8 @@
 			scrollable
 			rowProps={{
 				onClick: handleRowClick,
-				class: (c: Claim) =>
-					preview && c.id === preview.id
+				class: (e: Expense) =>
+					preview && e.id === preview.id
 						? 'cursor-pointer bg-base-200 dark:bg-dark-base-200'
 						: 'cursor-pointer'
 			}}

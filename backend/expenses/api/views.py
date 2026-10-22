@@ -13,6 +13,8 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import F
+from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -20,7 +22,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import apply_expense_filters
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
@@ -57,6 +58,8 @@ from core.exceptions import (
 from core.files import normalize_upload
 from core.models import Claim, ClaimPart, Comment, File
 from core.permissions import get_permission_provider
+from core.search import claim_search
+from expenses.api.filters import ExpenseFilter
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
     ExpenseAdminSerializer,
@@ -86,6 +89,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         *(m for m in viewsets.ModelViewSet.http_method_names if m != "put"),
         "query",
     ]
+
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ExpenseFilter
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -195,7 +201,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         )
 
     def get_queryset(self):
-        queryset = (
+        return (
             Claim.objects.expenses()
             .select_related(
                 "owner__user",
@@ -209,22 +215,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
+            .annotate(date=F("expense_data__expense_date"))
             .with_total()
         )
-        return apply_expense_filters(
-            queryset, self.request.GET, self.current_user
-        ).distinct()
-
-    @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
-    def search(self, request: Request) -> Response:
-        assert isinstance(request.data, dict)
-        query = request.data.get("query") or {}
-        expenses = self.get_queryset().search(**query)
-        page = self.paginate_queryset(expenses)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        return Response(ExpenseSerializer(expenses, many=True).data)
 
     @action(detail=True, methods=["POST"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:

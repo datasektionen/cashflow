@@ -14,6 +14,7 @@
 	let { data }: PageProps = $props();
 
 	let loading = $state(false);
+	let sorting = $state(page.url.searchParams.get('sorting'));
 
 	const columns: TableColumn<Claim>[] = $derived(
 		(
@@ -28,7 +29,8 @@
 					id: 'type',
 					header: $_('claims_type'),
 					render: (c) => $_(c.type),
-					width: 'w-24'
+					width: 'w-24',
+					sorting: ['-type', 'type']
 				},
 				{
 					id: 'description',
@@ -40,19 +42,22 @@
 					id: 'owner',
 					header: $_('admin_expenses.columns.owner'),
 					renderSnippet: ownerCell,
-					width: ''
+					width: '',
+					sorting: ['-user', 'user']
 				},
 				{
 					id: 'cost_centres',
 					header: $_('admin_expenses.columns.cost_centres'),
 					renderSnippet: costCentres,
-					width: 'w-48'
+					width: 'w-48',
+					sorting: ['-cost_centre', 'cost_centre']
 				},
 				{
 					id: 'amount',
 					header: $_('amount'),
 					renderSnippet: amountCell,
-					width: 'w-32'
+					width: 'w-32',
+					sorting: ['-total', 'total']
 				},
 				{
 					id: 'created_date',
@@ -86,6 +91,19 @@
 			() => (loading = false)
 		);
 	}
+
+	function handleSortChange(sort: string) {
+		loading = true;
+		const url = new URL(page.url);
+		if (sort) {
+			url.searchParams.set('sorting', sort);
+		} else {
+			url.searchParams.delete('sorting');
+		}
+		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
+			() => (loading = false)
+		);
+	}
 </script>
 
 {#snippet voucherCell(c: Claim)}
@@ -111,13 +129,14 @@
 	</span>
 {/snippet}
 
-<ClaimFilterBar includeChecks={false} exclude={['reimbursement']} />
+<ClaimFilterBar includeChecks={false} exclude={['reimbursement', 'invoice_number']} />
 
 <PaginatedTable
 	paginatedResponse={data.claims}
 	{columns}
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
+	onSortChange={handleSortChange}
 	{loading}
 	scrollable
 	rowProps={{

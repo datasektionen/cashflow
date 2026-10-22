@@ -29,13 +29,15 @@
 			id: 'owner',
 			header: $_('admin_invoices.columns.owner'),
 			renderSnippet: ownerCell,
-			width: ''
+			width: '',
+			sorting: ['-user', 'user']
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: ''
+			width: '',
+			sorting: ['-cost_centre', 'cost_centre']
 		},
 		{
 			id: 'invoice_date',
@@ -125,7 +127,7 @@
 {/snippet}
 
 <ClaimFilterBar
-	exclude={['confirmed', 'flagged', 'voucher_series', 'voucher_number', 'reimbursement']}
+	exclude={['confirmed', 'flagged', 'voucher_series', 'verification', 'reimbursement']}
 />
 <PaginatedTable
 	paginatedResponse={data.invoices}

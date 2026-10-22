@@ -290,28 +290,102 @@ export type ActionOverview = {
 
 export type TristateFilter = 'true' | 'false' | 'none';
 
-export type ClaimSorting = 'created_at' | '-created_at' | 'date' | '-date' | 'total' | '-total';
+export type ClaimOrdering =
+	| 'date'
+	| '-date'
+	| 'total'
+	| '-total'
+	| 'description'
+	| '-description'
+	| 'type'
+	| '-type'
+	| 'created_date'
+	| '-created_date'
+	| 'user'
+	| '-user'
+	| 'is_flagged'
+	| '-is_flagged'
+	| 'cost_centre'
+	| '-cost_centre';
 
+export type ExpenseOrdering =
+	| ClaimOrdering
+	| 'id'
+	| '-id'
+	| 'expense_date'
+	| '-expense_date'
+	| 'confirmed_at'
+	| '-confirmed_at'
+	| 'is_flagged'
+	| '-is_flagged'
+	| 'reimbursement'
+	| '-reimbursement';
+
+export type InvoiceOrdering =
+	| ClaimOrdering
+	| 'id'
+	| '-id'
+	| 'invoice_date'
+	| 'invoice_number'
+	| '-invoice_number'
+	| '-invoice_number'
+	| 'due_date'
+	| '-due_date'
+	| 'paid_at'
+	| '-paid_at'
+	| 'paid_by'
+	| '-paid_by';
+
+// The backend filter is locatedd in backend/core/api/filters.py
+// These filters can be applied to both expenses and invoices
 export type ClaimFilter = {
-	type?: 'expense' | 'invoice';
 	user?: string;
+	type?: 'expense' | 'invoice';
+	date_after?: string;
+	date_before?: string;
+
 	cost_centre?: string;
 	secondary_cost_centre?: string;
 	budget_line?: string;
+
+	attestable?: boolean;
+	confirmable?: boolean;
+	accountable?: boolean;
+	payable?: boolean;
+
 	attested?: TristateFilter;
 	confirmed?: TristateFilter;
 	paid?: TristateFilter;
 	accounted?: TristateFilter;
 	flagged?: TristateFilter;
-	attestable?: boolean;
-	confirmable?: boolean;
-	accountable?: boolean;
-	payable?: boolean;
+
 	voucher_series?: string;
-	voucher_number?: string;
+	verification?: string;
+
 	reimbursement?: number;
+
 	q?: string;
-	sorting?: ClaimSorting;
+};
+
+// Should match backend/expenses/api/filters.py
+export type ExpenseFilter = Omit<ClaimFilter, 'sorting'> & {
+	expense_date_after?: string;
+	expense_date_before?: string;
+	confirmed_at_after?: string;
+	confirmed_at_before?: string;
+	confirmed_by?: string;
+};
+
+// Should match backend/invoices/api/filters.py
+export type InvoiceFilter = Omit<ClaimFilter, 'sorting'> & {
+	invoice_date_after?: string;
+	invoice_date_before?: string;
+	due_date_after?: string;
+	due_date_before?: string;
+	paid_at_after?: string;
+	paid_at_before?: string;
+	paid_by?: string;
+	invoice_number?: string;
 };
 
 export type CostCentreFilter = {
@@ -336,8 +410,9 @@ export type PendingPayment = {
 export type VoucherRow = {
 	account: number;
 	cost_centre?: string;
-	credit?: Dinero<number, 'SEK'>;
-	debit?: Dinero<number, 'SEK'>;
+	// Decimal strings, e.g. "125.50"
+	credit?: string;
+	debit?: string;
 	description?: string;
 	project?: string;
 	quantity?: number;
