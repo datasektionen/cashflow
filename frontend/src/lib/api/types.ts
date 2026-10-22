@@ -336,8 +336,9 @@ export type PendingPayment = {
 export type VoucherRow = {
 	account: number;
 	cost_centre?: string;
-	credit?: Dinero<number, 'SEK'>;
-	debit?: Dinero<number, 'SEK'>;
+	// Decimal strings, e.g. "125.50"
+	credit?: string;
+	debit?: string;
 	description?: string;
 	project?: string;
 	quantity?: number;
