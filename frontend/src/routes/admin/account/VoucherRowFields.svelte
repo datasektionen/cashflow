@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	import type { ExpensePart, InvoicePart, VoucherRow } from '$lib/api/types';
 	import type { VoucherRowDraft } from './voucherRowValidation';
-	import { add } from 'dinero.js';
+	import { add, isZero, toDecimal } from 'dinero.js';
 	import { sumDinero, ZERO } from '$lib/money';
 
 	function emptyVoucherRow(): VoucherRowDraft {
@@ -61,8 +61,8 @@
 				account: Number(d.account),
 				cost_centre: d.cost_centre || undefined,
 				description: d.description || undefined,
-				debit: d.debit ?? undefined,
-				credit: d.credit ?? undefined
+				debit: isZero(d.debit) ? undefined : toDecimal(d.debit),
+				credit: isZero(d.credit) ? undefined : toDecimal(d.credit)
 			}));
 	}
 </script>
@@ -73,7 +73,7 @@
 	import AmountInput from '$lib/components/AmountInput.svelte';
 	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
 	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
-	import { isZero, type Dinero } from 'dinero.js';
+	import type { Dinero } from 'dinero.js';
 	import { formatDineroAmount } from '$lib/money';
 	import type { FortnoxAccount, FortnoxCostCentre } from '$lib/api/types';
 	import {
