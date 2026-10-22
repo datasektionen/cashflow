@@ -326,6 +326,7 @@ export type InvoiceOrdering =
 	| 'id'
 	| '-id'
 	| 'invoice_date'
+	| '-invoice_date'
 	| 'invoice_number'
 	| '-invoice_number'
 	| '-invoice_number'
@@ -368,7 +369,7 @@ export type ClaimFilter = {
 };
 
 // Should match backend/expenses/api/filters.py
-export type ExpenseFilter = Omit<ClaimFilter, 'sorting'> & {
+export type ExpenseFilter = ClaimFilter & {
 	expense_date_after?: string;
 	expense_date_before?: string;
 	confirmed_at_after?: string;
@@ -377,7 +378,7 @@ export type ExpenseFilter = Omit<ClaimFilter, 'sorting'> & {
 };
 
 // Should match backend/invoices/api/filters.py
-export type InvoiceFilter = Omit<ClaimFilter, 'sorting'> & {
+export type InvoiceFilter = ClaimFilter & {
 	invoice_date_after?: string;
 	invoice_date_before?: string;
 	due_date_after?: string;
