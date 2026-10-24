@@ -1,9 +1,7 @@
 # Hej, {{ receiver }}!
-
-{% if comment.expense %}
-Utlägget "[{{ comment.expense.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
+{% if comment.claim.type == "expense" %}
+    Utlägget "[{{ comment.claim.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
 {% else %}
-Fakturan "[{{ comment.invoice.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
+    Fakturan "[{{ comment.claim.description }}]({{ link }})" har fått en ny kommentar av {{ comment.author }}:
 {% endif %}
-
 {{ comment.content }}
