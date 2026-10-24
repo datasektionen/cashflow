@@ -24,50 +24,95 @@ from stats.api.serializers import (
 class LeaderboardView(ListAPIView):
     serializer_class = LeaderboardSerializer
     pagination_class = DefaultPagination
-
+    
     def get_queryset(self):
+        return get_leaderboard_queryset(self.request)
 
-        query = LeaderboardQuerySerializer(data=self.request.query_params)
-        query.is_valid(raise_exception=True)
+class UserLeaderboardView(APIView):
+    def get(self, request, username: str) -> Response:
+        
+        leaderboard = get_leaderboard_queryset(request)
+        personal = get_leaderboard_queryset(request, include_all=True)
 
-        start = query.validated_data.get(LeaderboardFilter.START_DATE) or date.min
-        end = query.validated_data.get(LeaderboardFilter.END_DATE)
-        ordering = query.validated_data.get("ordering") or "-expense_total"
+        user = personal.filter(user__username=username).first()
 
-        included = Q(
-            claim__expense_data__expense_date__gte=start,
-        )
-        if end is not None:
-            included &= Q(claim__expense_data__expense_date__lte=end)
-
-        capped_expenses = (
-            Claim.objects.expenses()
-            .filter(
-                expense_data__expense_date__gte=start,
-            )
-            .annotate(part_total=Sum("part__amount"))
-            .filter(part_total__lt=10000)
-        )
-        if end is not None:
-            capped_expenses = capped_expenses.filter(
-                expense_data__expense_date__lte=end
-            )
-
-        total_included = Q(claim__in=Subquery(capped_expenses.values("pk")))
-
-        queryset = (
-            Profile.objects.annotate(
-                expense_total=Coalesce(
-                    Sum("claim__part__amount", filter=total_included),
-                    Value(Decimal("0.00")),
+        if user is None:
+            if not Profile.objects.filter(user__username=username).exists():
+                return Response(
+                    {"detail": "User not found."},
+                    status=404,
                 )
-            )
-            .annotate(expense_count=Count("claim", filter=included, distinct=True))
-            .filter(expense_count__gt=0)
-            .order_by(ordering, "-expense_total", "-expense_count")
+
+            return Response({
+                "expense_total": "0.00",
+                "expense_count": 0,
+                "amount_rank": None,
+                "count_rank": None,
+            })
+            
+        leaderboard_user = leaderboard.filter(user__username=username).first()
+
+        amount_rank = (
+            leaderboard.filter(expense_total__gt=leaderboard_user.expense_total).count() + 1
         )
 
-        return queryset
+        count_rank = (
+            leaderboard.filter(expense_count__gt=leaderboard_user.expense_count).count() + 1
+        )
+
+        data = LeaderboardSerializer(user).data
+        data["amount_rank"] = amount_rank
+        data["count_rank"] = count_rank
+
+        return Response(data)
+
+def get_leaderboard_queryset(request, include_all=False):
+    
+    query = LeaderboardQuerySerializer(data=request.query_params)
+    query.is_valid(raise_exception=True)
+
+    start = query.validated_data.get(LeaderboardFilter.START_DATE) or date.min
+    end = query.validated_data.get(LeaderboardFilter.END_DATE)
+    ordering = query.validated_data.get("ordering") or "-expense_total"
+
+    included = Q(
+        claim__expense_data__expense_date__gte=start,
+    )
+    if end is not None:
+        included &= Q(claim__expense_data__expense_date__lte=end)
+
+    capped_expenses = (
+        Claim.objects.expenses()
+        .filter(
+            expense_data__expense_date__gte=start,
+        )
+        .annotate(part_total=Sum("part__amount"))
+        .filter(part_total__lt=10000)
+    )
+    if end is not None:
+        capped_expenses = capped_expenses.filter(
+            expense_data__expense_date__lte=end
+        )
+
+    total_included = (
+        included
+        if include_all
+        else Q(claim__in=Subquery(capped_expenses.values("pk")))
+    )
+
+    queryset = (
+        Profile.objects.annotate(
+            expense_total=Coalesce(
+                Sum("claim__part__amount", filter=total_included),
+                Value(Decimal("0.00")),
+            )
+        )
+        .annotate(expense_count=Count("claim", filter=included, distinct=True))
+        .filter(expense_count__gt=0)
+        .order_by(ordering, "-expense_total", "-expense_count")
+    )
+
+    return queryset
 
 
 class MonthlyStatisticsView(APIView):

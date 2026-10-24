@@ -11,8 +11,30 @@
 	import ProfileCard from './ProfileCard.svelte';
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import { formatDineroAmount } from '$lib/money';
+	import { api } from '$lib/api';
+	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
 
 	let { data }: PageProps = $props();
+
+	let range = $state(0);
+
+	function rangeStart(r: number): string {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		if (r === 1) return `${year}-01-01`;
+		if (r === 2) return `${year}-${month}-01`;
+		return '2000-01-01';
+	}
+
+	let userStats = $derived(
+		data.user //<-- data is already used???
+			? api.stats.userLeaderboard(
+				data.user.username,
+				rangeStart(range)
+			)
+			: Promise.resolve(null)
+	);
 
 	const viewedUser = $derived(data.user);
 	const title = $derived(viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : '');
@@ -108,6 +130,81 @@
 {#if data.user}
 	<ProfileCard user={data.user} />
 {/if}
+
+<div class="relative mb-4 flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300">
+	<div
+		class={[
+			'absolute inset-y-0 w-16 bg-money-green-500 transition-all',
+			range === 0 && 'left-0',
+			range === 1 && 'left-16',
+			range === 2 && 'left-32'
+		]}
+	></div>
+	<button
+		onclick={() => (range = 0)}
+		class={[
+			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
+			range === 0 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+		]}>{$_('leaderboard.all_time')}</button
+	>
+	<button
+		onclick={() => (range = 1)}
+		class={[
+			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
+			range === 1 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+		]}>{$_('leaderboard.year')}</button
+	>
+	<button
+		onclick={() => (range = 2)}
+		class={[
+			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
+			range === 2 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
+		]}>{$_('leaderboard.month')}</button
+	>
+</div>
+{#await userStats}
+    <p>{$_('claims.loading')}</p>
+{:then stats}
+    {#if stats}
+        <div class="mb-2 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
+                <p>{$_('claims.total_cashflow')}</p>
+                <p class="text-2xl font-bold">
+                    {formatDineroAmount(stats.expense_total)} kr
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
+                <p>{$_('claims.total_cashflows')}</p>
+                <p class="text-2xl font-bold">
+                    {stats.expense_count}
+                </p>
+            </div>
+		</div>
+		<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+
+            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
+                <p>{$_('claims.amount_rank')}</p>
+                <p class="text-2xl font-bold">
+                    #{stats.amount_rank}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
+                <p>{$_('claims.count_rank')}</p>
+                <p class="text-2xl font-bold">
+                    #{stats.count_rank}
+                </p>
+            </div>
+        </div>
+    {:else}
+        <p>Ingen användare vald.</p>
+    {/if}
+{:catch error}
+    <p>{$_('claims.error')}</p>
+    <pre>{error?.message ?? String(error)}</pre>
+    {console.error('Failed to load user statistics:', error)}
+{/await}
 
 <ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
 <PaginatedTable
