@@ -28,6 +28,44 @@ class LeaderboardView(ListAPIView):
     def get_queryset(self):
         return get_leaderboard_queryset(self.request)
 
+class UserLeaderboardView(APIView):
+    def get(self, request, username: str) -> Response:
+        
+        leaderboard = get_leaderboard_queryset(request)
+        personal = get_leaderboard_queryset(request, include_all=True)
+
+        user = personal.filter(user__username=username).first()
+
+        if user is None:
+            if not Profile.objects.filter(user__username=username).exists():
+                return Response(
+                    {"detail": "User not found."},
+                    status=404,
+                )
+
+            return Response({
+                "expense_total": "0.00",
+                "expense_count": 0,
+                "amount_rank": None,
+                "count_rank": None,
+            })
+            
+        leaderboard_user = leaderboard.filter(user__username=username).first()
+
+        amount_rank = (
+            leaderboard.filter(expense_total__gt=leaderboard_user.expense_total).count() + 1
+        )
+
+        count_rank = (
+            leaderboard.filter(expense_count__gt=leaderboard_user.expense_count).count() + 1
+        )
+
+        data = LeaderboardSerializer(user).data
+        data["amount_rank"] = amount_rank
+        data["count_rank"] = count_rank
+
+        return Response(data)
+
 def get_leaderboard_queryset(request, include_all=False):
     
     query = LeaderboardQuerySerializer(data=request.query_params)
@@ -177,41 +215,3 @@ class YearlyStatisticsView(APIView):
         }
 
         return Response(YearlyStatisticsSerializer(data).data)
-
-class UserLeaderboardView(APIView):
-    def get(self, request, username: str) -> Response:
-        
-        leaderboard = get_leaderboard_queryset(request)
-        personal = get_leaderboard_queryset(request, include_all=True)
-
-        user = personal.filter(user__username=username).first()
-
-        if user is None:
-            if not Profile.objects.filter(user__username=username).exists():
-                return Response(
-                    {"detail": "User not found."},
-                    status=404,
-                )
-
-            return Response({
-                "expense_total": "0.00",
-                "expense_count": 0,
-                "amount_rank": None,
-                "count_rank": None,
-            })
-            
-        leaderboard_user = leaderboard.filter(user__username=username).first()
-
-        amount_rank = (
-            leaderboard.filter(expense_total__gt=leaderboard_user.expense_total).count() + 1
-        )
-
-        count_rank = (
-            leaderboard.filter(expense_count__gt=leaderboard_user.expense_count).count() + 1
-        )
-
-        data = LeaderboardSerializer(user).data
-        data["amount_rank"] = amount_rank
-        data["count_rank"] = count_rank
-
-        return Response(data)
