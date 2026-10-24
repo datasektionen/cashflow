@@ -163,19 +163,19 @@
 	>
 </div>
 {#await userStats}
-    <p>Laddar statistik...</p>
+    <p>{$_('claims.loading')}</p>
 {:then stats}
     {#if stats}
         <div class="mb-2 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>Totalt Cashflowat</p>
+                <p>{$_('claims.total_cashflow')}</p>
                 <p class="text-2xl font-bold">
                     {formatDineroAmount(stats.expense_total)} kr
                 </p>
             </div>
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>Antal utlägg</p>
+                <p>{$_('claims.total_cashflows')}</p>
                 <p class="text-2xl font-bold">
                     {stats.expense_count}
                 </p>
@@ -184,14 +184,14 @@
 		<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>Placering efter belopp</p>
+                <p>{$_('claims.amount_rank')}</p>
                 <p class="text-2xl font-bold">
                     #{stats.amount_rank}
                 </p>
             </div>
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>Placering efter antal</p>
+                <p>{$_('claims.count_rank')}</p>
                 <p class="text-2xl font-bold">
                     #{stats.count_rank}
                 </p>
@@ -201,7 +201,7 @@
         <p>Ingen användare vald.</p>
     {/if}
 {:catch error}
-    <p>Kunde inte ladda statistiken.</p>
+    <p>{$_('claims.error')}</p>
     <pre>{error?.message ?? String(error)}</pre>
     {console.error('Failed to load user statistics:', error)}
 {/await}
