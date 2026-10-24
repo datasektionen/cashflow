@@ -23,6 +23,11 @@ export type YearlyStatistics = {
 	months: MonthlyStatistics[];
 };
 
+export type UserLeaderboardStats = LeaderboardEntry & {
+    amount_rank: number | null;
+    count_rank: number | null;
+};
+
 export class StatsAPI {
 	private apiClient: ApiClient;
 
@@ -64,5 +69,30 @@ export class StatsAPI {
 		return parseYearlyStatistics(
 			await this.apiClient.get<APIYearlyStatistics>(`/stats/yearly/${year}/`)
 		);
+	}
+
+	async userLeaderboard(
+		username: string,
+		startDate?: string,
+		endDate?: string
+	): Promise<UserLeaderboardStats> {
+		const res = await this.apiClient.get<
+			APILeaderboardEntry & {
+				amount_rank: number;
+				count_rank: number;
+			}
+		>(
+			`/stats/leaderboard/${encodeURIComponent(username)}/`,
+			{
+				start_date: startDate,
+				end_date: endDate
+			}
+		);
+
+		return {
+			...parseLeaderboardEntry(res),
+			amount_rank: res.amount_rank,
+			count_rank: res.count_rank
+		};
 	}
 }

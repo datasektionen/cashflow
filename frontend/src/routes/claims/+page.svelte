@@ -14,6 +14,8 @@
 	import { api } from '$lib/api';
 	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
 
+	let { data }: PageProps = $props();
+
 	let range = $state(0);
 
 	function rangeStart(r: number): string {
@@ -25,44 +27,14 @@
 		return '2000-01-01';
 	}
 
-	let leaderboard: Promise<PaginatedResponse<LeaderboardEntry>> = $derived(
-		api.stats.leaderboard(1, 1000000, rangeStart(range), undefined, '-expense_count')
-	);
-
 	let userStats = $derived(
-		Promise.all([
-			api.stats.leaderboard(
-				1, 1000000, rangeStart(range), undefined, '-expense_total'
-			),
-			api.stats.leaderboard(
-				1, 1000000, rangeStart(range), undefined, '-expense_count'
+		data.user //<-- data is already used???
+			? api.stats.userLeaderboard(
+				data.user.username,
+				rangeStart(range)
 			)
-		]).then(([amountRes, countRes]) => {
-			const username = data.user?.username;
-			if (!username) return null;
-
-			const amountIndex = amountRes.data.findIndex(
-				(entry) => entry.owner.username === username
-			);
-
-			const countIndex = countRes.data.findIndex(
-				(entry) => entry.owner.username === username
-			);
-
-			if (amountIndex === -1 || countIndex === -1) return null;
-
-			const user = amountRes.data[amountIndex];
-
-			return {
-				totalAmount: user.expense_total,
-				totalCount: user.expense_count,
-				amountRank: amountIndex + 1,
-				countRank: countIndex + 1
-			};
-		})
+			: Promise.resolve(null)
 	);
-
-	let { data }: PageProps = $props();
 
 	const viewedUser = $derived(data.user);
 	const title = $derived(viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : '');
@@ -159,7 +131,7 @@
 	<ProfileCard user={data.user} />
 {/if}
 
-<div class="relative flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300">
+<div class="relative mb-4 flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300">
 	<div
 		class={[
 			'absolute inset-y-0 w-16 bg-money-green-500 transition-all',
@@ -190,48 +162,48 @@
 		]}>{$_('leaderboard.month')}</button
 	>
 </div>
-<br />
-
 {#await userStats}
     <p>Laddar statistik...</p>
 {:then stats}
     {#if stats}
-        <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div class="mb-2 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p class="text-sm">Totalt Cashflowat</p>
+                <p>Totalt Cashflowat</p>
                 <p class="text-2xl font-bold">
-                    {formatDineroAmount(stats.totalAmount)} kr
+                    {formatDineroAmount(stats.expense_total)} kr
                 </p>
             </div>
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p class="text-sm">Antal utlägg</p>
+                <p>Antal utlägg</p>
                 <p class="text-2xl font-bold">
-                    {stats.totalCount}
+                    {stats.expense_count}
                 </p>
             </div>
 		</div>
 		<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p class="text-sm">Placering efter belopp</p>
+                <p>Placering efter belopp</p>
                 <p class="text-2xl font-bold">
-                    #{stats.amountRank}
+                    #{stats.amount_rank}
                 </p>
             </div>
 
             <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p class="text-sm">Placering efter antal</p>
+                <p>Placering efter antal</p>
                 <p class="text-2xl font-bold">
-                    #{stats.countRank}
+                    #{stats.count_rank}
                 </p>
             </div>
         </div>
     {:else}
-        <p>Ingen statistik tillgänglig för denna period.</p>
+        <p>Ingen användare vald.</p>
     {/if}
 {:catch error}
     <p>Kunde inte ladda statistiken.</p>
+    <pre>{error?.message ?? String(error)}</pre>
+    {console.error('Failed to load user statistics:', error)}
 {/await}
 
 <ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
