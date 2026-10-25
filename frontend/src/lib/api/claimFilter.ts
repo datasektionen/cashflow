@@ -1,4 +1,4 @@
-import type { ClaimFilter, TristateFilter } from '$lib/api/types';
+import type { ClaimFilter, InvoiceFilter, TristateFilter } from '$lib/api/types';
 
 const TRISTATE_KEYS = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
 
@@ -24,7 +24,7 @@ export function claimFilterFromUrl(url: URL): ClaimFilter {
 		secondary_cost_centre: url.searchParams.get('secondary_cost_centre') || undefined,
 		budget_line: url.searchParams.get('budget_line') || undefined,
 		voucher_series: url.searchParams.get('voucher_series') || undefined,
-		voucher_number: url.searchParams.get('voucher_number') || undefined,
+		verification: url.searchParams.get('verification') || undefined,
 		reimbursement: reimbursementParam(url),
 		q: url.searchParams.get('q') || undefined
 	};
@@ -32,4 +32,11 @@ export function claimFilterFromUrl(url: URL): ClaimFilter {
 		filter[key] = tristateParam(url, key);
 	}
 	return filter;
+}
+
+export function invoiceFilterFromUrl(url: URL): InvoiceFilter {
+	return {
+		...claimFilterFromUrl(url),
+		invoice_number: url.searchParams.get('invoice_number') || undefined
+	};
 }

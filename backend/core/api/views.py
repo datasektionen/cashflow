@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import CharField, Q, Value
 from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Cast, Concat
+from django.db.models.functions import Cast, Coalesce, Concat
+from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -15,7 +16,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import apply_claim_filters
+from core.api.filters import ClaimFilter
 from core.api.pagination import DefaultPagination
 from core.api.problems import (
     AlreadyReimbursedProblem,
@@ -39,6 +40,7 @@ from core.exceptions import (
 )
 from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, Profile
 from core.permissions import get_permission_provider
+from core.search import claim_search
 from expenses.api.serializers import PaymentSerializer
 from expenses.models import Payment
 from fortnox import FortnoxNotFound, FortnoxRequest, FortnoxServiceNotAvailableProblem
@@ -49,21 +51,28 @@ logger = get_logger(__name__)
 
 
 class ClaimsList(ListAPIView, AuthenticatedUserMixin):
-    """Lists expenses and invoices together, see `ClaimQuerySerializer` for filters."""
+    """Lists both expenses and invoices."""
 
     serializer_class = ClaimSerializer
     pagination_class = DefaultPagination
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ClaimFilter
 
     def get_queryset(self) -> ClaimQuerySet:
-        queryset = (
+        return (
             Claim.objects.select_related("owner__user", "expense_data", "invoice_data")
             .prefetch_related("parts__attested_by__user")
             .viewable_by(self.current_user)
+            .annotate(
+                date=Coalesce(
+                    "expense_data__expense_date",
+                    "invoice_data__invoice_date",
+                    "invoice_data__paid_at",
+                )
+            )
             .with_total()
+            .distinct()
         )
-        return apply_claim_filters(
-            queryset, self.request.GET, self.current_user
-        ).distinct()
 
 
 class ClaimPartAttestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):

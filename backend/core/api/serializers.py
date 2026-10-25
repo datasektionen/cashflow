@@ -112,7 +112,7 @@ class ClaimSerializer(serializers.Serializer):
             return claim.expense_data.reimbursement_id is not None
         return claim.invoice_data.paid_at is not None
 
-    def get_is_flagged(self, claim) -> bool | None:
+    def get_is_flagged(self, claim) -> bool:
         if claim.expense_data is not None:
             return claim.expense_data.is_flagged
         return False

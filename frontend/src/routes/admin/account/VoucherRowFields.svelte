@@ -73,7 +73,7 @@
 	import AmountInput from '$lib/components/AmountInput.svelte';
 	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
 	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
-	import type { Dinero } from 'dinero.js';
+	import { type Dinero } from 'dinero.js';
 	import { formatDineroAmount } from '$lib/money';
 	import type { FortnoxAccount, FortnoxCostCentre } from '$lib/api/types';
 	import {

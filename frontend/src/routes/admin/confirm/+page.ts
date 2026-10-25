@@ -1,7 +1,7 @@
 import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import type { ClaimFilter, ClaimSorting } from '$lib/api/types';
+import type { ExpenseFilter, ExpenseOrdering } from '$lib/api/types';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url }) => {
@@ -11,19 +11,19 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? 'date';
+	const sortingParam = url.searchParams.get('sorting')?.split(',') as ExpenseOrdering[] | null;
+	const sorting = sortingParam ?? ['is_flagged', 'date'];
 
-	const filter: ClaimFilter = {
+	const filter: ExpenseFilter = {
 		...claimFilterFromUrl(url),
 		type: 'expense',
-		confirmable: true,
-		sorting
+		confirmable: true
 	};
 
-	const claims = api.claims.list(page, perPage, filter);
+	const expenses = api.expenses.list(page, perPage, filter, sorting);
 
 	return {
 		title_key: 'admin_confirmable.title',
-		claims
+		claims: expenses
 	};
 };

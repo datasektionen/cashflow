@@ -1,11 +1,13 @@
 import { ApiClient } from '$lib/api';
 import type {
 	AccountPayload,
-	ClaimFilter,
 	Comment,
 	DescriptionSearch,
 	Expense,
 	ExpenseCreate,
+	ExpenseFilter,
+	ExpenseOrdering,
+	ExpensePart,
 	ExpenseUpdate,
 	PaginatedResponse,
 	PartCreateUpdate
@@ -30,12 +32,14 @@ export class ExpensesAPI {
 	async list(
 		page: number,
 		perPage: number,
-		filter?: ClaimFilter
+		filter?: ExpenseFilter,
+		ordering?: ExpenseOrdering[]
 	): Promise<PaginatedResponse<Expense>> {
 		const res = await this.apiClient.get<ListResponse<APIExpense>>('expenses/', {
 			page: page,
 			per_page: perPage,
-			...filter
+			...filter,
+			...(ordering ? { sorting: ordering.join(',') } : {})
 		});
 
 		return {
@@ -52,13 +56,14 @@ export class ExpensesAPI {
 	async search(
 		page: number,
 		perPage: number,
-		filter?: ClaimFilter,
+		filter?: ExpenseFilter,
+		ordering?: ExpenseOrdering[],
 		searchFields?: DescriptionSearch
 	): Promise<PaginatedResponse<Expense>> {
 		const res = await this.apiClient.query<ListResponse<APIExpense>>(
 			'expenses/search/',
 			{
-				query: { ...filter, ...searchFields }
+				query: { ...filter, ...searchFields, ...(ordering ? { sorting: ordering.join(',') } : {}) }
 			},
 			'application/json',
 			{

@@ -3,7 +3,7 @@ import type { PageLoad } from './$types';
 import { API } from '$lib/api';
 import { isErrorResponse } from '$lib/api/errors';
 import { alerts, error } from '$lib/stores/alerts';
-import type { Claim, PaginatedResponse } from '$lib/api/types';
+import type { Claim, ClaimOrdering, PaginatedResponse } from '$lib/api/types';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
@@ -16,11 +16,19 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
+	const sortingParam = url.searchParams.get('sorting')?.split(',') as ClaimOrdering[] | null;
+	const sorting = sortingParam ?? ['-date'];
+
 	const claims = api.claims
-		.list(page, perPage, {
-			...claimFilterFromUrl(url),
-			accounted: 'true'
-		})
+		.list(
+			page,
+			perPage,
+			{
+				...claimFilterFromUrl(url),
+				accounted: 'true'
+			},
+			sorting
+		)
 		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
 			if (!isErrorResponse(e)) throw e;
 			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;

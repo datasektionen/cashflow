@@ -1,7 +1,7 @@
 import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import type { ClaimSorting } from '$lib/api/types';
+import type { InvoiceOrdering } from '$lib/api/types';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API(API_URL, fetch);
@@ -10,9 +10,9 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
+	const sorting: InvoiceOrdering[] = ['due_date', '-total'];
 
-	const invoices = api.invoices.list(page, perPage, { payable: true, sorting });
+	const invoices = api.invoices.list(page, perPage, { payable: true }, sorting);
 
 	return { title_key: 'admin_pay.title', invoices };
 };

@@ -5,7 +5,7 @@
 	import { _ } from 'svelte-i18n';
 	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
 	import type { TableColumn, TableRowProps } from '$lib/components/types';
-	import type { Claim, Expense } from '$lib/api/types';
+	import type { Claim } from '$lib/api/types';
 	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
 	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
@@ -109,7 +109,10 @@
 	<ProfileCard user={data.user} />
 {/if}
 
-<ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
+<ClaimFilterBar
+	includeChecks={false}
+	exclude={['voucher_series', 'verification', 'invoice_number', 'reimbursement']}
+/>
 <PaginatedTable
 	paginatedResponse={data.claims}
 	{columns}
