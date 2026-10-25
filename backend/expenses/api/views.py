@@ -278,7 +278,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             raise FlagPermissionDeniedProblem()
         expense = self.get_object()
         expense.expense_data.is_flagged = True
-        expense.save()
+        expense.expense_data.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
@@ -288,7 +288,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         expense: Claim = self.get_object()
         assert expense.expense_data is not None
         expense.expense_data.is_flagged = False
-        expense.save()
+        expense.expense_data.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
