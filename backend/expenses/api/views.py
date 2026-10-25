@@ -56,7 +56,7 @@ from core.exceptions import (
     UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
-from core.models import Claim, ClaimPart, Comment, File
+from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, File
 from core.permissions import get_permission_provider
 from core.search import claim_search
 from expenses.api.filters import ExpenseFilter
@@ -132,9 +132,10 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 
-    def destroy(self, request, *args, **kwargs):
-        expense = self.get_object()
-        if expense.reimbursement is not None:
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        expense: Claim = self.get_object()
+        assert expense.expense_data is not None
+        if expense.expense_data.reimbursement is not None:
             raise DeletionPermissionDeniedProblem()
         if not (
             get_permission_provider().may_delete(self.current_user)
@@ -144,7 +145,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         return super().destroy(request, *args, **kwargs)
 
     def partial_update(self, request: Request, *args, **kwargs) -> Response:
-        expense = self.get_object()
+        expense: Claim = self.get_object()
         assert expense.expense_data is not None
         if expense.expense_data.reimbursement_id is not None:
             raise UpdatePermissionDeniedProblem()
@@ -200,7 +201,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             ExpenseSerializer(expense, context=self.get_serializer_context()).data
         )
 
-    def get_queryset(self):
+    def get_queryset(self) -> ClaimQuerySet:
         return (
             Claim.objects.expenses()
             .select_related(
@@ -276,7 +277,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if not self.current_user.profile.may_flag():
             raise FlagPermissionDeniedProblem()
         expense = self.get_object()
-        expense.is_flagged = True
+        expense.expense_data.is_flagged = True
         expense.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -284,8 +285,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
     def unflag(self, request: Request, pk=None) -> Response:
         if not self.current_user.profile.may_flag():
             raise FlagPermissionDeniedProblem()
-        expense = self.get_object()
-        expense.is_flagged = False
+        expense: Claim = self.get_object()
+        assert expense.expense_data is not None
+        expense.expense_data.is_flagged = False
         expense.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

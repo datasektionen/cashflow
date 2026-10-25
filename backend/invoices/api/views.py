@@ -108,9 +108,10 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
-    def destroy(self, request, *args, **kwargs):
-        invoice = self.get_object()
-        if invoice.payed_at is not None:
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        invoice: Claim = self.get_object()
+        assert invoice.invoice_data is not None
+        if invoice.invoice_data.paid_at is not None:
             raise DeletionPermissionDeniedProblem()
         if not (
             get_permission_provider().may_delete(self.current_user)
@@ -171,7 +172,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             InvoiceSerializer(invoice, context=self.get_serializer_context()).data
         )
 
-    def get_queryset(self):
+    def get_queryset(self) -> ClaimQuerySet:
         return (
             Claim.objects.invoices()
             .select_related(
