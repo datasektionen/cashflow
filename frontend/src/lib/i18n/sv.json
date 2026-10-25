@@ -394,6 +394,7 @@
 	"search_description": "Sök på beskrivning",
 	"search_voucher_number": "Sök på verifikationsnummer",
 	"search_reimbursement": "Sök på utbetalning",
+	"search_invoice_number": "Sök på fakturanummer",
 	"show_all_filters": "Visa alla filter",
 	"attested": "Attesterad",
 	"not_attested": "Ej attesterad",

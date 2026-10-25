@@ -1,5 +1,5 @@
 import { ApiClient } from '$lib/api';
-import type { Claim, ClaimFilter, PaginatedResponse } from '$lib/api/types';
+import type { Claim, ClaimFilter, ClaimOrdering, PaginatedResponse } from '$lib/api/types';
 import { type APIClaim, parseClaim } from '$lib/api/parse';
 
 export class ClaimsAPI {
@@ -12,7 +12,8 @@ export class ClaimsAPI {
 	async list(
 		page: number,
 		perPage: number,
-		filter?: ClaimFilter
+		filter?: ClaimFilter,
+		ordering?: ClaimOrdering[]
 	): Promise<PaginatedResponse<Claim>> {
 		type RawResponse = {
 			data: APIClaim[];
@@ -27,7 +28,8 @@ export class ClaimsAPI {
 		const res = await this.apiClient.get<RawResponse>(`claims/`, {
 			page,
 			per_page: perPage,
-			...filter
+			...filter,
+			...(ordering ? { sorting: ordering.join(',') } : {})
 		});
 
 		return {

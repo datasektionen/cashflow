@@ -13,7 +13,8 @@ Including another URLconf
     1. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 
-from django.urls import include, re_path, path
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 
 from cashflow import settings
@@ -32,3 +33,10 @@ urlpatterns = [
 
 if settings.FORTNOX_ENABLED:
     urlpatterns += [re_path(r"^fortnox/", include("fortnox.urls"))]
+
+urlpatterns += staticfiles_urlpatterns()
+
+if settings.DEBUG_TOOLBAR_ENABLED:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns += debug_toolbar_urls()

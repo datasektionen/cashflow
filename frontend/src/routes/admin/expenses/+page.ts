@@ -2,7 +2,7 @@ import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
 import { alerts, error } from '$lib/stores/alerts';
-import type { ClaimSorting } from '$lib/api/types';
+import type { ExpenseOrdering } from '$lib/api/types';
 import { isErrorResponse } from '$lib/api/errors';
 import { logger } from '$lib/logger';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
@@ -15,19 +15,15 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 15;
 
-	// Search queries
-	const query = url.searchParams.get('q') || undefined;
-
 	// Sorting
-	const sorting = (url.searchParams.get('sorting') as ClaimSorting | null) ?? undefined;
+	const sortingParam = url.searchParams.get('sorting') as ExpenseOrdering | null;
+	const sorting: ExpenseOrdering[] = sortingParam ? [sortingParam] : ['-created_date', '-id'];
 
 	let expenses = null;
 	try {
 		const filter = claimFilterFromUrl(url);
 
-		expenses = query
-			? api.expenses.search(page, perPage, { ...filter, sorting }, { description_fuzzy: query })
-			: api.expenses.list(page, perPage, { ...filter, sorting });
+		expenses = api.expenses.list(page, perPage, { ...filter }, sorting);
 	} catch (e) {
 		if (isErrorResponse(e)) {
 			logger.error(e);

@@ -395,6 +395,7 @@
 	"search_description": "Search by description",
 	"search_voucher_number": "Search by voucher number",
 	"search_reimbursement": "Search by reimbursement",
+	"search_invoice_number": "Search by invoice number",
 	"show_all_filters": "Show all filters",
 	"attested": "Attested",
 	"not_attested": "Not attested",

@@ -2,8 +2,10 @@ import json
 from typing import Any, cast
 
 from django.db import transaction
+from django.db.models import F, QuerySet
 from django.http import QueryDict
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +13,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import apply_invoice_filters
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
@@ -44,8 +45,9 @@ from core.exceptions import (
     UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
-from core.models import Claim, ClaimPart, Comment, File
+from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, File
 from core.permissions import get_permission_provider
+from core.search import claim_search
 from fortnox import VoucherRow
 from fortnox.api.problems import (
     AlreadyAccountedProblem,
@@ -53,6 +55,7 @@ from fortnox.api.problems import (
     FortnoxRecordMissingProblem,
     FortnoxServiceNotAvailableProblem,
 )
+from invoices.api.filters import InvoiceFilter
 from notifications import get_notification_provider
 
 from .serializers import (
@@ -73,6 +76,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         *(m for m in viewsets.ModelViewSet.http_method_names if m != "put"),
         "query",
     ]
+
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = InvoiceFilter
 
     def create(self, request: Request, *args, **kwargs) -> Response:
 
@@ -102,9 +108,10 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
-    def destroy(self, request, *args, **kwargs):
-        invoice = self.get_object()
-        if invoice.payed_at is not None:
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        invoice: Claim = self.get_object()
+        assert invoice.invoice_data is not None
+        if invoice.invoice_data.paid_at is not None:
             raise DeletionPermissionDeniedProblem()
         if not (
             get_permission_provider().may_delete(self.current_user)
@@ -165,8 +172,8 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             InvoiceSerializer(invoice, context=self.get_serializer_context()).data
         )
 
-    def get_queryset(self):
-        queryset = (
+    def get_queryset(self) -> ClaimQuerySet:
+        return (
             Claim.objects.invoices()
             .select_related(
                 "owner__user",
@@ -178,30 +185,17 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
+            .annotate(date=F("invoice_data__invoice_date"))
             .with_total()
         )
-        return apply_invoice_filters(
-            queryset, self.request.GET, self.current_user
-        ).distinct()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         # Recommendations require a GOrdian/Fortnox lookup per part, so only
         # compute them for single-invoice reads (e.g. the accounting page),
         # never for list responses.
-        context["include_recommendations"] = self.action == "retrieve"
+        context["include_recommendations"] = self.action == "retrieve"  # pyright: ignore[reportIndexIssue]
         return context
-
-    @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
-    def search(self, request: Request) -> Response:
-        assert isinstance(request.data, dict)
-        query = request.data.get("query") or {}
-        invoices = self.get_queryset().search(**query)
-        page = self.paginate_queryset(invoices)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        return Response(InvoiceSerializer(invoices, many=True).data)
 
     @action(detail=True, methods=["post"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:

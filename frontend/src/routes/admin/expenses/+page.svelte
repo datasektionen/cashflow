@@ -29,13 +29,15 @@
 			id: 'owner',
 			header: $_('admin_expenses.columns.owner'),
 			renderSnippet: ownerCell,
-			width: ''
+			width: '',
+			sorting: ['-user', 'user']
 		},
 		{
 			id: 'cost_centres',
 			header: $_('admin_expenses.columns.cost_centres'),
 			renderSnippet: costCentres,
-			width: ''
+			width: '',
+			sorting: ['-cost_centre', 'cost_centre']
 		},
 		{
 			id: 'expense_date',
@@ -117,7 +119,7 @@
 {#snippet totalCell(e: Expense)}
 	<span class="tabular-nums">{formatDineroAmount(claimTotal(e))} kr</span>
 {/snippet}
-<ClaimFilterBar exclude={['voucher_series', 'voucher_number', 'reimbursement']} />
+<ClaimFilterBar exclude={['voucher_series', 'verification', 'reimbursement', 'invoice_number']} />
 
 <PaginatedTable
 	paginatedResponse={data.expenses ?? undefined}

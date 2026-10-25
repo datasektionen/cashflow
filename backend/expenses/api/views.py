@@ -13,6 +13,8 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import F
+from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -20,7 +22,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from structlog import get_logger
 
-from core.api.filters import apply_expense_filters
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
     AlreadyConfirmedProblem,
@@ -55,8 +56,10 @@ from core.exceptions import (
     UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
-from core.models import Claim, ClaimPart, Comment, File
+from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, File
 from core.permissions import get_permission_provider
+from core.search import claim_search
+from expenses.api.filters import ExpenseFilter
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
     ExpenseAdminSerializer,
@@ -86,6 +89,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         *(m for m in viewsets.ModelViewSet.http_method_names if m != "put"),
         "query",
     ]
+
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ExpenseFilter
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -126,9 +132,10 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
 
         return Response(ExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
 
-    def destroy(self, request, *args, **kwargs):
-        expense = self.get_object()
-        if expense.reimbursement is not None:
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        expense: Claim = self.get_object()
+        assert expense.expense_data is not None
+        if expense.expense_data.reimbursement is not None:
             raise DeletionPermissionDeniedProblem()
         if not (
             get_permission_provider().may_delete(self.current_user)
@@ -138,7 +145,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         return super().destroy(request, *args, **kwargs)
 
     def partial_update(self, request: Request, *args, **kwargs) -> Response:
-        expense = self.get_object()
+        expense: Claim = self.get_object()
         assert expense.expense_data is not None
         if expense.expense_data.reimbursement_id is not None:
             raise UpdatePermissionDeniedProblem()
@@ -194,8 +201,8 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             ExpenseSerializer(expense, context=self.get_serializer_context()).data
         )
 
-    def get_queryset(self):
-        queryset = (
+    def get_queryset(self) -> ClaimQuerySet:
+        return (
             Claim.objects.expenses()
             .select_related(
                 "owner__user",
@@ -209,22 +216,9 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                 "comment_set__author__user",
             )
             .viewable_by(self.current_user)
+            .annotate(date=F("expense_data__expense_date"))
             .with_total()
         )
-        return apply_expense_filters(
-            queryset, self.request.GET, self.current_user
-        ).distinct()
-
-    @action(detail=False, methods=["POST", "QUERY"], url_path="search")  # type: ignore[list-item]
-    def search(self, request: Request) -> Response:
-        assert isinstance(request.data, dict)
-        query = request.data.get("query") or {}
-        expenses = self.get_queryset().search(**query)
-        page = self.paginate_queryset(expenses)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        return Response(ExpenseSerializer(expenses, many=True).data)
 
     @action(detail=True, methods=["POST"], url_path="comments")
     def comment(self, request: Request, pk=None) -> Response:
@@ -283,17 +277,18 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         if not self.current_user.profile.may_flag():
             raise FlagPermissionDeniedProblem()
         expense = self.get_object()
-        expense.is_flagged = True
-        expense.save()
+        expense.expense_data.is_flagged = True
+        expense.expense_data.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
     def unflag(self, request: Request, pk=None) -> Response:
         if not self.current_user.profile.may_flag():
             raise FlagPermissionDeniedProblem()
-        expense = self.get_object()
-        expense.is_flagged = False
-        expense.save()
+        expense: Claim = self.get_object()
+        assert expense.expense_data is not None
+        expense.expense_data.is_flagged = False
+        expense.expense_data.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
