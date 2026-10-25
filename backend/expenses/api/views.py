@@ -294,7 +294,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             raise FlagPermissionDeniedProblem()
         expense: Claim = self.get_object()
         assert expense.expense_data is not None
-        expense.expense_data.is_flagged = True
+        expense.expense_data.is_flagged = False
         expense.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
