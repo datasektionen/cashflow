@@ -435,5 +435,13 @@
 		"attested": "Attesterat",
 		"uploaded": "Upplagt",
 		"exceeded_filter_help": "Visa endast överskridna budgetposter"
+	},
+	"claims": {
+		"total_cashflow": "Totalt Cashflowat",
+		"total_cashflows": "Antal utlägg",
+		"amount_rank": "Placering efter belopp",
+		"count_rank": "Placering efter antal",
+		"loading": "Laddar statistik...",
+		"error": "Kunde inte ladda statistik"
 	}
 }

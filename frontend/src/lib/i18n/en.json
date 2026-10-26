@@ -436,5 +436,13 @@
 		"attested": "Attested",
 		"uploaded": "Registered",
 		"exceeded_filter_help": "Only show exceeded budget lines"
+	},
+	"claims": {
+		"total_cashflow": "Total Cashflowed",
+		"total_cashflows": "Number of expenses",
+		"amount_rank": "Position by amount",
+		"count_rank": "Position by count",
+		"loading": "Loading statistics...",
+		"error": "Could not load statistics"
 	}
 }
