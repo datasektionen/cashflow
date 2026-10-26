@@ -435,7 +435,7 @@
 		"attested": "Attesterat",
 		"uploaded": "Upplagt",
 		"exceeded_filter_help": "Visa endast överskridna budgetposter"
-		},
+	},
 	"claims": {
 		"total_cashflow": "Totalt Cashflowat",
 		"total_cashflows": "Antal utlägg",

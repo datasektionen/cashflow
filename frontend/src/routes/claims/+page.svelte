@@ -29,10 +29,7 @@
 
 	let userStats = $derived(
 		data.user //<-- data is already used???
-			? api.stats.userLeaderboard(
-				data.user.username,
-				rangeStart(range)
-			)
+			? api.stats.userLeaderboard(data.user.username, rangeStart(range))
 			: Promise.resolve(null)
 	);
 
@@ -131,7 +128,9 @@
 	<ProfileCard user={data.user} />
 {/if}
 
-<div class="relative mb-4 flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300">
+<div
+	class="relative mb-4 flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300"
+>
 	<div
 		class={[
 			'absolute inset-y-0 w-16 bg-money-green-500 transition-all',
@@ -163,50 +162,48 @@
 	>
 </div>
 {#await userStats}
-    <p>{$_('claims.loading')}</p>
+	<p>{$_('claims.loading')}</p>
 {:then stats}
-    {#if stats}
-        <div class="mb-2 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>{$_('claims.total_cashflow')}</p>
-                <p class="text-2xl font-bold">
-                    {formatDineroAmount(stats.expense_total)} kr
-                </p>
-            </div>
+	{#if stats}
+		<div class="mb-2 grid grid-cols-2 gap-3 md:grid-cols-4">
+			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
+				<p>{$_('claims.total_cashflow')}</p>
+				<p class="text-2xl font-bold">
+					{formatDineroAmount(stats.expense_total)} kr
+				</p>
+			</div>
 
-            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>{$_('claims.total_cashflows')}</p>
-                <p class="text-2xl font-bold">
-                    {stats.expense_count}
-                </p>
-            </div>
+			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
+				<p>{$_('claims.total_cashflows')}</p>
+				<p class="text-2xl font-bold">
+					{stats.expense_count}
+				</p>
+			</div>
 		</div>
-		<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+		<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
+				<p>{$_('claims.amount_rank')}</p>
+				<p class="text-2xl font-bold">
+					#{stats.amount_rank}
+				</p>
+			</div>
 
-            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>{$_('claims.amount_rank')}</p>
-                <p class="text-2xl font-bold">
-                    #{stats.amount_rank}
-                </p>
-            </div>
-
-            <div class="rounded-lg bg-base-200 p-4 dark:bg-dark-base-200">
-                <p>{$_('claims.count_rank')}</p>
-                <p class="text-2xl font-bold">
-                    #{stats.count_rank}
-                </p>
-            </div>
-        </div>
-    {:else}
-        <p>Ingen användare vald.</p>
-    {/if}
+			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
+				<p>{$_('claims.count_rank')}</p>
+				<p class="text-2xl font-bold">
+					#{stats.count_rank}
+				</p>
+			</div>
+		</div>
+	{:else}
+		<p>Ingen användare vald.</p>
+	{/if}
 {:catch error}
-    <p>{$_('claims.error')}</p>
-    <pre>{error?.message ?? String(error)}</pre>
-    {console.error('Failed to load user statistics:', error)}
+	<p>{$_('claims.error')}</p>
+	<pre>{error?.message ?? String(error)}</pre>
+	{console.error('Failed to load user statistics:', error)}
 {/await}
 
-<ClaimFilterBar includeChecks={false} exclude={['voucher_series', 'voucher_number']} />
 <ClaimFilterBar
 	includeChecks={false}
 	exclude={['voucher_series', 'verification', 'invoice_number', 'reimbursement']}
