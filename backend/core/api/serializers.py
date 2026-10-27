@@ -2,6 +2,7 @@ from typing import ClassVar
 
 from rest_framework import serializers
 
+from budget.api.serializers import PartRecommendationsMixin
 from core.api.problems import NoExpensesProblem
 from core.models import Claim, Comment, File, Profile
 
@@ -40,7 +41,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
 
-class ClaimPartSerializer(serializers.Serializer):
+class ClaimPartSerializer(PartRecommendationsMixin, serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     cost_centre = serializers.CharField(allow_blank=True)
     secondary_cost_centre = serializers.CharField(allow_blank=True)
