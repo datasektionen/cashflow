@@ -90,8 +90,9 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	mux.HandleFunc("GET /fortnox/auth/complete", fortnoxAuth.complete)
 
 	// Everything else is the frontend; more specific routes above win.
-	mux.Handle("GET /", spa.Handler(spa.Dist()))
+	// Cashflow 3's addresses redirect to their new places.
+	mux.Handle("GET /", legacyRedirects(spa.Handler(spa.Dist())))
 
 	handler := authenticator.SessionMiddleware(mux)
-	return http.NewCrossOriginProtection().Handler(handler), nil
+	return securityHeaders(http.NewCrossOriginProtection().Handler(handler)), nil
 }

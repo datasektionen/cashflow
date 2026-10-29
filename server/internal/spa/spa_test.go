@@ -3,6 +3,7 @@ package spa
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -43,5 +44,24 @@ func TestHandlerWithoutBuild(t *testing.T) {
 	Handler(fstest.MapFS{}).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("got %d, want 404 with a hint to build the frontend", rec.Code)
+	}
+}
+
+func TestContentSecurityPolicyHashesInlineScripts(t *testing.T) {
+	page := []byte(`<head><script>alert(1)</script><script type="module" src="/assets/x.js"></script>` +
+		`<script data-x="">b()</script></head>`)
+	csp := ContentSecurityPolicy(page)
+	// sha256 of "alert(1)" and "b()"; the external script needs no hash.
+	for _, want := range []string{
+		"'sha256-bhHHL3z2vDgxUt0W3dWQOrprscmda2Y5pLsLg4GF+pI='",
+		"'sha256-",
+		"frame-ancestors 'none'",
+	} {
+		if !strings.Contains(csp, want) {
+			t.Errorf("CSP lacks %s: %s", want, csp)
+		}
+	}
+	if n := strings.Count(csp, "'sha256-"); n != 2 {
+		t.Errorf("want 2 hashes, got %d: %s", n, csp)
 	}
 }
