@@ -15,6 +15,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/hive"
 	"github.com/datasektionen/cashflow/server/internal/outbox"
+	"github.com/datasektionen/cashflow/server/internal/rfinger"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 	"github.com/datasektionen/cashflow/server/internal/web"
 )
@@ -61,6 +62,7 @@ func run(ctx context.Context) error {
 		Pool:      pool,
 		PublicURL: env.PublicURL,
 		Budget:    budgetClient,
+		Pictures:  rfinger.NewClient(env.RFingerURL, env.RFingerKey),
 		Hive:      hive.NewClient(env.HiveURL, env.HiveSecret),
 		Files:     files,
 	})

@@ -51,7 +51,11 @@ export function HistoryCard({ claim }: { claim: Claim }) {
             {comments.map((comment, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: comments have no id and never reorder
               <li key={i} className="flex gap-3">
-                <UserAvatar name={comment.author?.name ?? "?"} className="bg-secondary text-secondary-foreground" />
+                <UserAvatar
+                  name={comment.author?.name ?? "?"}
+                  username={comment.author?.username}
+                  className="bg-secondary text-secondary-foreground"
+                />
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <span className="font-medium text-sm">{comment.author?.name}</span>

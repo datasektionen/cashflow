@@ -49,6 +49,9 @@ type Env struct {
 	Outbox      outbox.Config
 	// BudgetURL is GOrdian, which also serves development: its API is public.
 	BudgetURL string
+	// rfinger serves profile pictures; without a key users show initials.
+	RFingerURL string
+	RFingerKey string
 }
 
 func FromEnv() (Env, error) {
@@ -59,6 +62,8 @@ func FromEnv() (Env, error) {
 		HiveURL:     strings.TrimSuffix(getenv("HIVE_URL", "https://hive.datasektionen.se"), "/"),
 		HiveSecret:  os.Getenv("HIVE_SECRET"),
 		BudgetURL:   getenv("BUDGET_URL", "https://budget.datasektionen.se"),
+		RFingerURL:  strings.TrimSuffix(getenv("RFINGER_API_URL", "https://rfinger.datasektionen.se"), "/"),
+		RFingerKey:  os.Getenv("RFINGER_API_KEY"),
 		// The same variables as Cashflow 3, plus S3_ENDPOINT for development.
 		S3: storage.Config{
 			Bucket:          os.Getenv("S3_BUCKET_NAME"),

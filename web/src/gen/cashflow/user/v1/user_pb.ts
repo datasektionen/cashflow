@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/user/v1/user.proto.
  */
 export const file_cashflow_user_v1_user: GenFile = /*@__PURE__*/
-  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0ImsKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcyJcChhVcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QSFwoPY2xlYXJpbmdfbnVtYmVyGAEgASgJEhQKDGJhbmtfYWNjb3VudBgCIAEoCRIRCgliYW5rX25hbWUYAyABKAkiQQoZVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuY2FzaGZsb3cudXNlci52MS5Vc2VyIncKBFVzZXISEAoIdXNlcm5hbWUYASABKAkSDAoEbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIUCgxiYW5rX2FjY291bnQYBCABKAkSFwoPY2xlYXJpbmdfbnVtYmVyGAUgASgJEhEKCWJhbmtfbmFtZRgGIAEoCSKoAwoMQ2FwYWJpbGl0aWVzEhAKCHZpZXdfYWxsGAEgASgIEhkKEXZpZXdfYWxsX3BheW1lbnRzGAIgASgIEhIKCmF0dGVzdF9hbGwYAyABKAgSGwoTYXR0ZXN0X2Nvc3RfY2VudHJlcxgEIAMoCRIQCgh1bmF0dGVzdBgFIAEoCBIPCgdjb25maXJtGAYgASgIEhYKDmFjY291bnRpbmdfYWxsGAggASgIEh8KF2FjY291bnRpbmdfY29zdF9jZW50cmVzGAkgAygJEgsKA3BheRgKIAEoCBIOCgZkZWxldGUYCyABKAgSFAoMZWRpdF9pbnZvaWNlGAwgASgIEhkKEW1vZGVyYXRlX2NvbW1lbnRzGA0gASgIEhYKDm1hbmFnZV9mb3J0bm94GA4gASgIEhUKDWZpcm1hdGVja25hcmUYDyABKAgSFAoMdmlld19hY2NvdW50GBAgASgIEhkKEXZpZXdfY29zdF9jZW50cmVzGBEgAygJEhIKCmF0dGVzdF9hbnkYEiABKAgSFgoOYWNjb3VudGluZ19hbnkYEyABKAhKBAgHEAgyzwEKC1VzZXJTZXJ2aWNlEk0KBUdldE1lEh4uY2FzaGZsb3cudXNlci52MS5HZXRNZVJlcXVlc3QaHy5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVzcG9uc2UiA5ACARJxChFVcGRhdGVCYW5rRGV0YWlscxIqLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0GisuY2FzaGZsb3cudXNlci52MS5VcGRhdGVCYW5rRGV0YWlsc1Jlc3BvbnNlIgOQAgJCyQEKFGNvbS5jYXNoZmxvdy51c2VyLnYxQglVc2VyUHJvdG9QAVpEZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvdXNlci92MTt1c2VydjGiAgNDVViqAhBDYXNoZmxvdy5Vc2VyLlYxygIQQ2FzaGZsb3dcVXNlclxWMeICHENhc2hmbG93XFVzZXJcVjFcR1BCTWV0YWRhdGHqAhJDYXNoZmxvdzo6VXNlcjo6VjFiBnByb3RvMw");
+  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0ImsKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcyJcChhVcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QSFwoPY2xlYXJpbmdfbnVtYmVyGAEgASgJEhQKDGJhbmtfYWNjb3VudBgCIAEoCRIRCgliYW5rX25hbWUYAyABKAkiQQoZVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuY2FzaGZsb3cudXNlci52MS5Vc2VyIncKBFVzZXISEAoIdXNlcm5hbWUYASABKAkSDAoEbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIUCgxiYW5rX2FjY291bnQYBCABKAkSFwoPY2xlYXJpbmdfbnVtYmVyGAUgASgJEhEKCWJhbmtfbmFtZRgGIAEoCSKoAwoMQ2FwYWJpbGl0aWVzEhAKCHZpZXdfYWxsGAEgASgIEhkKEXZpZXdfYWxsX3BheW1lbnRzGAIgASgIEhIKCmF0dGVzdF9hbGwYAyABKAgSGwoTYXR0ZXN0X2Nvc3RfY2VudHJlcxgEIAMoCRIQCgh1bmF0dGVzdBgFIAEoCBIPCgdjb25maXJtGAYgASgIEhYKDmFjY291bnRpbmdfYWxsGAggASgIEh8KF2FjY291bnRpbmdfY29zdF9jZW50cmVzGAkgAygJEgsKA3BheRgKIAEoCBIOCgZkZWxldGUYCyABKAgSFAoMZWRpdF9pbnZvaWNlGAwgASgIEhkKEW1vZGVyYXRlX2NvbW1lbnRzGA0gASgIEhYKDm1hbmFnZV9mb3J0bm94GA4gASgIEhUKDWZpcm1hdGVja25hcmUYDyABKAgSFAoMdmlld19hY2NvdW50GBAgASgIEhkKEXZpZXdfY29zdF9jZW50cmVzGBEgAygJEhIKCmF0dGVzdF9hbnkYEiABKAgSFgoOYWNjb3VudGluZ19hbnkYEyABKAhKBAgHEAgiLgoZR2V0UHJvZmlsZVBpY3R1cmVzUmVxdWVzdBIRCgl1c2VybmFtZXMYASADKAkijwEKGkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlEkQKBHVybHMYASADKAsyNi5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlLlVybHNFbnRyeRorCglVcmxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ATLFAgoLVXNlclNlcnZpY2USTQoFR2V0TWUSHi5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVxdWVzdBofLmNhc2hmbG93LnVzZXIudjEuR2V0TWVSZXNwb25zZSIDkAIBEnQKEkdldFByb2ZpbGVQaWN0dXJlcxIrLmNhc2hmbG93LnVzZXIudjEuR2V0UHJvZmlsZVBpY3R1cmVzUmVxdWVzdBosLmNhc2hmbG93LnVzZXIudjEuR2V0UHJvZmlsZVBpY3R1cmVzUmVzcG9uc2UiA5ACARJxChFVcGRhdGVCYW5rRGV0YWlscxIqLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0GisuY2FzaGZsb3cudXNlci52MS5VcGRhdGVCYW5rRGV0YWlsc1Jlc3BvbnNlIgOQAgJCyQEKFGNvbS5jYXNoZmxvdy51c2VyLnYxQglVc2VyUHJvdG9QAVpEZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvdXNlci92MTt1c2VydjGiAgNDVViqAhBDYXNoZmxvdy5Vc2VyLlYxygIQQ2FzaGZsb3dcVXNlclxWMeICHENhc2hmbG93XFVzZXJcVjFcR1BCTWV0YWRhdGHqAhJDYXNoZmxvdzo6VXNlcjo6VjFiBnByb3RvMw");
 
 /**
  * @generated from message cashflow.user.v1.GetMeRequest
@@ -447,6 +447,60 @@ export const CapabilitiesSchema: GenMessage<Capabilities, {jsonType: Capabilitie
   messageDesc(file_cashflow_user_v1_user, 5);
 
 /**
+ * @generated from message cashflow.user.v1.GetProfilePicturesRequest
+ */
+export type GetProfilePicturesRequest = Message<"cashflow.user.v1.GetProfilePicturesRequest"> & {
+  /**
+   * @generated from field: repeated string usernames = 1;
+   */
+  usernames: string[];
+};
+
+/**
+ * @generated from message cashflow.user.v1.GetProfilePicturesRequest
+ */
+export type GetProfilePicturesRequestJson = {
+  /**
+   * @generated from field: repeated string usernames = 1;
+   */
+  usernames?: string[];
+};
+
+/**
+ * Describes the message cashflow.user.v1.GetProfilePicturesRequest.
+ * Use `create(GetProfilePicturesRequestSchema)` to create a new message.
+ */
+export const GetProfilePicturesRequestSchema: GenMessage<GetProfilePicturesRequest, {jsonType: GetProfilePicturesRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 6);
+
+/**
+ * @generated from message cashflow.user.v1.GetProfilePicturesResponse
+ */
+export type GetProfilePicturesResponse = Message<"cashflow.user.v1.GetProfilePicturesResponse"> & {
+  /**
+   * @generated from field: map<string, string> urls = 1;
+   */
+  urls: { [key: string]: string };
+};
+
+/**
+ * @generated from message cashflow.user.v1.GetProfilePicturesResponse
+ */
+export type GetProfilePicturesResponseJson = {
+  /**
+   * @generated from field: map<string, string> urls = 1;
+   */
+  urls?: { [key: string]: string };
+};
+
+/**
+ * Describes the message cashflow.user.v1.GetProfilePicturesResponse.
+ * Use `create(GetProfilePicturesResponseSchema)` to create a new message.
+ */
+export const GetProfilePicturesResponseSchema: GenMessage<GetProfilePicturesResponse, {jsonType: GetProfilePicturesResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 7);
+
+/**
  * UserService exposes the logged-in user and what they may do.
  *
  * @generated from service cashflow.user.v1.UserService
@@ -461,6 +515,17 @@ export const UserService: GenService<{
     methodKind: "unary";
     input: typeof GetMeRequestSchema;
     output: typeof GetMeResponseSchema;
+  },
+  /**
+   * GetProfilePictures returns rfinger picture URLs for the given users;
+   * users without one are left out and show their initials.
+   *
+   * @generated from rpc cashflow.user.v1.UserService.GetProfilePictures
+   */
+  getProfilePictures: {
+    methodKind: "unary";
+    input: typeof GetProfilePicturesRequestSchema;
+    output: typeof GetProfilePicturesResponseSchema;
   },
   /**
    * UpdateBankDetails sets where the user's reimbursements are paid.

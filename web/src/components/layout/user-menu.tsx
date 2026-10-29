@@ -30,7 +30,11 @@ export function UserMenu({ user, onShowShortcuts }: { user: User; onShowShortcut
       <DropdownMenuTrigger
         render={
           <SidebarMenuButton size="lg" className="data-[popup-open]:bg-sidebar-accent">
-            <UserAvatar name={user.name} className="bg-sidebar-primary text-sidebar-primary-foreground" />
+            <UserAvatar
+              name={user.name}
+              username={user.username}
+              className="bg-sidebar-primary text-sidebar-primary-foreground"
+            />
             <span className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium text-sidebar-accent-foreground">{user.name}</span>
               <span className="truncate text-sidebar-foreground/60 text-xs">{user.username}</span>

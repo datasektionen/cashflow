@@ -107,7 +107,11 @@ function HeaderCard({ claim }: { claim: Claim }) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
           {s.owner && (
             <span className="flex items-center gap-2">
-              <UserAvatar name={s.owner.name} className="bg-secondary text-secondary-foreground" />
+              <UserAvatar
+                name={s.owner.name}
+                username={s.owner.username}
+                className="bg-secondary text-secondary-foreground"
+              />
               <span className="flex flex-col leading-tight">
                 <span className="font-medium">{s.owner.name}</span>
                 <span className="text-muted-foreground text-xs">

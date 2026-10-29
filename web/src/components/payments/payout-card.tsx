@@ -72,7 +72,11 @@ export function PayoutCard({
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="flex flex-wrap items-center gap-3 border-b py-4">
-        <UserAvatar name={name} className="bg-secondary text-secondary-foreground" />
+        <UserAvatar
+          name={name}
+          username={payout.receiver?.username}
+          className="bg-secondary text-secondary-foreground"
+        />
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="font-medium">{name}</span>
           <span className="text-muted-foreground text-xs">{t.pay.expenseCount(payout.expenses.length)}</span>

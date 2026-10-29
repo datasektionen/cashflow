@@ -12,6 +12,14 @@ import { UserService } from "./user_pb";
 export const getMe = UserService.method.getMe;
 
 /**
+ * GetProfilePictures returns rfinger picture URLs for the given users;
+ * users without one are left out and show their initials.
+ *
+ * @generated from rpc cashflow.user.v1.UserService.GetProfilePictures
+ */
+export const getProfilePictures = UserService.method.getProfilePictures;
+
+/**
  * UpdateBankDetails sets where the user's reimbursements are paid.
  *
  * @generated from rpc cashflow.user.v1.UserService.UpdateBankDetails

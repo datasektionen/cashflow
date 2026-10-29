@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -14,10 +15,12 @@ import (
 	userv1 "github.com/datasektionen/cashflow/server/gen/cashflow/user/v1"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
 	"github.com/datasektionen/cashflow/server/internal/perm"
+	"github.com/datasektionen/cashflow/server/internal/rfinger"
 )
 
 type UserService struct {
-	Queries *db.Queries
+	Queries  *db.Queries
+	Pictures *rfinger.Client
 }
 
 func (s *UserService) GetMe(ctx context.Context, _ *connect.Request[userv1.GetMeRequest]) (*connect.Response[userv1.GetMeResponse], error) {
@@ -153,4 +156,19 @@ func toProtoUser(u db.GetUserRow) *userv1.User {
 		ClearingNumber: u.SortingNumber,
 		BankName:       u.BankName,
 	}
+}
+
+// GetProfilePictures asks rfinger, at most 100 users at a time. A failing
+// rfinger is not an error for the page: everyone shows their initials.
+func (s *UserService) GetProfilePictures(ctx context.Context, req *connect.Request[userv1.GetProfilePicturesRequest]) (*connect.Response[userv1.GetProfilePicturesResponse], error) {
+	usernames := req.Msg.Usernames
+	if len(usernames) > 100 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at most 100 usernames"))
+	}
+	urls, err := s.Pictures.Pictures(ctx, usernames)
+	if err != nil {
+		slog.Warn("profile pictures unavailable", "error", err)
+		urls = map[string]string{}
+	}
+	return connect.NewResponse(&userv1.GetProfilePicturesResponse{Urls: urls}), nil
 }

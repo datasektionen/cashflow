@@ -9,6 +9,12 @@ service UserService {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
 
+  // GetProfilePictures returns rfinger picture URLs for the given users;
+  // users without one are left out and show their initials.
+  rpc GetProfilePictures(GetProfilePicturesRequest) returns (GetProfilePicturesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
   // UpdateBankDetails sets where the user's reimbursements are paid.
   rpc UpdateBankDetails(UpdateBankDetailsRequest) returns (UpdateBankDetailsResponse) {
     option idempotency_level = IDEMPOTENT;
@@ -70,4 +76,12 @@ message Capabilities {
   repeated string view_cost_centres = 17;
   bool attest_any = 18;
   bool accounting_any = 19;
+}
+
+message GetProfilePicturesRequest {
+  repeated string usernames = 1;
+}
+
+message GetProfilePicturesResponse {
+  map<string, string> urls = 1;
 }

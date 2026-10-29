@@ -22,7 +22,7 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 | Sorting: type, flagged, cost centre | ➖ queues keep flagged last automatically; type is a filter |
 | Claim detail: parts, files, comments, confirmed by, payment, invoice fields | ✅ |
 | Row context menu: open in new tab, copy link, view owner, account | ✅ real links (new tab, copy) · 🔜 4 view owner · 🔜 3 account |
-| Profile pictures (rfinger, `api/users/profile-pictures/`) | 🔜 2 |
+| Profile pictures (rfinger, `api/users/profile-pictures/`) | ✅ cached 12 h on the server; one batched request per page (TanStack Pacer) |
 
 ## Claims: writing
 

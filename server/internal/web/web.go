@@ -21,6 +21,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/claims"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
 	"github.com/datasektionen/cashflow/server/internal/hive"
+	"github.com/datasektionen/cashflow/server/internal/rfinger"
 	"github.com/datasektionen/cashflow/server/internal/rpc"
 	"github.com/datasektionen/cashflow/server/internal/spa"
 	"github.com/datasektionen/cashflow/server/internal/storage"
@@ -31,6 +32,7 @@ type Deps struct {
 	Pool      *pgxpool.Pool
 	PublicURL string
 	Budget    *budget.Client
+	Pictures  *rfinger.Client
 	Hive      *hive.Client
 	Files     *storage.Store
 }
@@ -61,7 +63,7 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 
 	api := http.NewServeMux()
 	opts := connect.WithInterceptors(rpc.AuthInterceptor(deps.Hive))
-	api.Handle(userv1connect.NewUserServiceHandler(&rpc.UserService{Queries: queries}, opts))
+	api.Handle(userv1connect.NewUserServiceHandler(&rpc.UserService{Queries: queries, Pictures: deps.Pictures}, opts))
 	api.Handle(claimv1connect.NewClaimServiceHandler(&rpc.ClaimService{Store: claimStore}, opts))
 	api.Handle(paymentv1connect.NewPaymentServiceHandler(&rpc.PaymentService{Store: claimStore}, opts))
 	api.Handle(budgetv1connect.NewBudgetServiceHandler(&rpc.BudgetService{Budget: deps.Budget, Store: claimStore}, opts))

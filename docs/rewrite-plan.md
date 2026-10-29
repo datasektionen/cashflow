@@ -70,8 +70,10 @@ merge the claim tables, store öre, encrypt the Fortnox tokens, drop Django's au
    streamed through `/files/{id}` with a permission check, the claims table (TanStack Table, URL search params,
    debounced search, J/K keyboard navigation, mobile cards), the claim detail page, and `cmd/seed`. Budget lookups
    moved to phase 2, where the forms need them.
-2. **Write path**: create/edit expenses and invoices, uploads (HEIC → JPEG), comments, attest/confirm/pay with undo,
-   emails through the outbox. Brings minio and mailpit into `compose.next.yaml`.
+2. **Write path** (done): workflow actions (attest, confirm, flag, pay invoices, comment, delete) with Cashflow 3's
+   comments and emails through an outbox; payouts per person and the payments list; creating and editing claims with
+   GOrdian budget pickers and usage warnings, uploads (HEIC converted in the browser); rfinger profile pictures.
+   Every Cashflow 3 feature and where it lands: [parity.md](parity.md).
 3. **Fortnox**: OAuth, accounting views, voucher creation, with parity tests against the Python implementation.
 4. **Stats, admin, polish**: stats/charts, user admin, i18n, accessibility, mobile.
 5. **Cutover**: staging on `cashflow-next` against a production copy, then against the production database next to
