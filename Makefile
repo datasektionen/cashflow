@@ -1,6 +1,10 @@
 # Cashflow 4 (server/, web/, proto/). Cashflow 3 still runs from compose.yaml.
 
-.PHONY: services dev-server dev-fortnox dev-web gen check fix build django-schema coexistence
+.PHONY: dev services dev-server dev-fortnox dev-web gen check fix build django-schema coexistence parity
+
+## Everything at once: services, fake Fortnox, server and web app (SEED=1 to fill the database first).
+dev:
+	SEED=$(SEED) ./scripts/dev.sh
 
 ## Postgres, mock SSO/Hive (nyckeln) and mock rfinger/spam (dock).
 services:
@@ -46,3 +50,10 @@ django-schema:
 ## Cashflow 3 and 4 on one database: each writes, both read everything (see the script).
 coexistence:
 	./scripts/coexistence.sh
+
+## Cashflow 3 and 4 answer the same questions about the dev database, as every
+## user: lists, queues, filters, every action on every claim, stats and budget.
+## Needs make dev (or dev-server) running.
+parity:
+	docker build -q --target base -t cashflow3-base . >/dev/null
+	python3 scripts/parity/compare.py

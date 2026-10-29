@@ -45,7 +45,7 @@ func TestAdvancedFilters(t *testing.T) {
 		"not attested":         {Advanced{Attested: &no}, []string{e(spel)}},
 		"flagged":              {Advanced{Flagged: &yes}, []string{e(spel)}},
 		"paid and accounted":   {Advanced{Paid: &yes, Accounted: &yes}, []string{e(fika)}},
-		"unconfirmed":          {Advanced{Confirmed: &no}, []string{i(hyra), e(spel)}},
+		"unconfirmed expenses": {Advanced{Confirmed: &no}, []string{e(spel)}},
 	} {
 		got := numbers(t, s, viewAll, Filter{Advanced: tc.a})
 		slices.Sort(got)
@@ -79,6 +79,18 @@ func TestBreakdown(t *testing.T) {
 	if err != nil || !slices.Equal(pay, []Count{{"anna", "anna Testsson", 2}}) {
 		t.Errorf("pay: %+v %v", pay, err)
 	}
+	// Scoped people only see the cost centres they can act on: anna's claim
+	// waits for an Ada attester under Ada alone, and attested parts don't count.
+	adaAttester := viewer("cecilia", map[string]hive.Grant{perm.Attest: scoped("ada")})
+	if got, _ := s.Breakdown(ctx, adaAttester, QueueAttest); !slices.Equal(got, []Count{{"Ada", "Ada", 2}}) {
+		t.Errorf("scoped attest: %+v", got)
+	}
+	f.add(claimSpec{kind: Expense, owner: "anna", paid: true, parts: []partSpec{{"Ada", 100, true}, {"DSys", 100, true}}})
+	dsysAccountant := viewer("david", map[string]hive.Grant{perm.Accounting: scoped("dsys")})
+	if got, _ := s.Breakdown(ctx, dsysAccountant, QueueAccount); !slices.Equal(got, []Count{{"DSys", "DSys", 1}}) {
+		t.Errorf("scoped account: %+v", got)
+	}
+
 	if _, err := s.Breakdown(ctx, viewer("nobody", nil), QueuePay); err != ErrForbiddenQueue {
 		t.Errorf("forbidden queue: %v", err)
 	}

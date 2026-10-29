@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/datasektionen/cashflow/server/internal/database/db"
+	"github.com/datasektionen/cashflow/server/internal/perm"
 )
 
 // Store reads claims. Lists are built here rather than in sqlc because their
@@ -57,6 +58,7 @@ SELECT
 	parts.unattested_count,
 	parts.lower_ccs,
 	parts.unattested_ccs,
+	parts.unattested_cc_names,
 	-- For the advanced filters.
 	parts.lower_sccs,
 	parts.lower_lines,
@@ -75,6 +77,7 @@ CROSS JOIN LATERAL (
 		COALESCE(array_agg(DISTINCT p.cost_centre ORDER BY p.cost_centre) FILTER (WHERE p.cost_centre <> ''), '{}') AS cost_centres,
 		COALESCE(array_agg(lower(p.cost_centre)), '{}') AS lower_ccs,
 		COALESCE(array_agg(lower(p.cost_centre)) FILTER (WHERE p.attested_by_id IS NULL), '{}') AS unattested_ccs,
+		COALESCE(array_agg(DISTINCT p.cost_centre) FILTER (WHERE p.attested_by_id IS NULL AND p.cost_centre <> ''), '{}') AS unattested_cc_names,
 		COALESCE(array_agg(lower(p.secondary_cost_centre)), '{}') AS lower_sccs,
 		COALESCE(array_agg(lower(p.budget_line)), '{}') AS lower_lines
 	FROM core_claimpart p
@@ -178,7 +181,7 @@ func advancedConditions(a Advanced, args pgx.NamedArgs) []string {
 		value  *bool
 		column string
 	}{
-		{a.Attested, "attested"}, {a.Confirmed, "confirmed"}, {a.Paid, "paid"},
+		{a.Attested, "attested"}, {a.Paid, "paid"},
 		{a.Accounted, "verification <> ''"}, {a.Flagged, "flagged"},
 	} {
 		if flag.value == nil {
@@ -188,6 +191,14 @@ func advancedConditions(a Advanced, args pgx.NamedArgs) []string {
 			conds = append(conds, "("+flag.column+")")
 		} else {
 			conds = append(conds, "NOT ("+flag.column+")")
+		}
+	}
+	// Only expenses have a receipt to confirm, so this one is about them alone.
+	if a.Confirmed != nil {
+		if *a.Confirmed {
+			conds = append(conds, "kind = 'expense' AND confirmed")
+		} else {
+			conds = append(conds, "kind = 'expense' AND NOT confirmed")
 		}
 	}
 	return conds
@@ -342,15 +353,29 @@ type Count struct {
 }
 
 // Breakdown counts the claims in q by cost centre, or for the pay queue by
-// owner, most first: Cashflow 3's action overview. A claim with parts in two
-// cost centres counts in both.
+// owner, most first: Cashflow 3's action overview. A claim counts under each
+// cost centre in which it waits for the viewer: to attest, its unattested
+// parts in cost centres they attest; to account, its parts in cost centres
+// they account. So nobody sees a cost centre they cannot act on.
 func (s *Store) Breakdown(ctx context.Context, v Viewer, q Queue) ([]Count, error) {
 	clause, args, ok := where(v, Filter{Queue: q})
 	if !ok {
 		return nil, ErrForbiddenQueue
 	}
-	sql := "SELECT cc, cc, count(*) FROM (" + claimRows + ") claims CROSS JOIN LATERAL unnest(cost_centres) cc " +
-		clause + " GROUP BY cc ORDER BY count(*) DESC, cc"
+	names, scope := "cost_centres", perm.CostCentres{All: true}
+	switch q {
+	case QueueAttest:
+		names, scope = "unattested_cc_names", v.Perms.AttestQueueCostCentres()
+	case QueueAccount:
+		scope = v.Perms.AccountQueueCostCentres()
+	}
+	inScope := ""
+	if !scope.All {
+		inScope = " AND lower(cc) = ANY(@breakdown_ccs)"
+		args["breakdown_ccs"] = scope.Names
+	}
+	sql := "SELECT cc, cc, count(*) FROM (" + claimRows + ") claims CROSS JOIN LATERAL unnest(" + names + ") cc " +
+		clause + inScope + " GROUP BY cc ORDER BY count(*) DESC, cc"
 	if q == QueuePay {
 		sql = "SELECT owner_username, owner_name, count(*) FROM (" + claimRows + ") claims " +
 			clause + " GROUP BY 1, 2 ORDER BY count(*) DESC, 2"

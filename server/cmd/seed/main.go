@@ -14,6 +14,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"math/rand/v2"
 	"net/url"
 	"os"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/config"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
 	"github.com/datasektionen/cashflow/server/internal/storage"
@@ -49,8 +51,10 @@ var users = []*user{
 }
 
 // Cost centres and their budget lines; the first two match nyckeln's scoped
-// grants for diadat and bilbek.
-var budget = map[string][][2]string{
+// grants for diadat and bilbek. All five are in GOrdian, whose real budget
+// lines replace these when it answers (useRealBudget), so the budget page,
+// usage warnings and voucher drafts show real numbers in development.
+var seedBudget = map[string][][2]string{
 	"Sektionslokalsgruppen": {{"Inköp", "Förbrukningsmaterial"}, {"Inköp", "Städmaterial"}, {"Evenemang", "Pubkvällar"}},
 	"Mottagningen 2026":     {{"Mottagningsveckan", "Mat"}, {"Mottagningsveckan", "Aktiviteter"}, {"Phadderiet", "Tröjor"}},
 	"Ada":                   {{"Kärnverksamhet", "Fika"}, {"Kärnverksamhet", "Spel"}},
@@ -137,6 +141,7 @@ func run(ctx context.Context, reset bool) error {
 		return err
 	}
 
+	useRealBudget(ctx, env.BudgetURL)
 	s := &seeder{tx: tx, files: files, rnd: rand.New(rand.NewPCG(2026, 10)), now: time.Now()}
 	if err := s.claims(ctx); err != nil {
 		return err
@@ -196,13 +201,13 @@ func (s *seeder) claims(ctx context.Context) error {
 // partsFor splits amountOre over one or two cost centres.
 func (s *seeder) partsFor(i int, amountOre int64) []part {
 	cc := costCentres[i%len(costCentres)]
-	lines := budget[cc]
+	lines := seedBudget[cc]
 	line := lines[s.pick(len(lines))]
 	if i%4 != 0 {
 		return []part{{cc, line[0], line[1], amountOre}}
 	}
 	cc2 := costCentres[(i+2)%len(costCentres)]
-	line2 := budget[cc2][0]
+	line2 := seedBudget[cc2][0]
 	first := amountOre * int64(40+s.pick(30)) / 100
 	return []part{{cc, line[0], line[1], first}, {cc2, line2[0], line2[1], amountOre - first}}
 }
@@ -385,4 +390,30 @@ func (s *seeder) userID(ctx context.Context, u *user) int64 {
 		fmt.Fprintln(os.Stderr, err)
 	}
 	return id
+}
+
+// useRealBudget swaps the made-up budget lines for GOrdian's, keeping only
+// lines with an expense budget, so claims count against real budgets.
+func useRealBudget(ctx context.Context, url string) {
+	tree, err := budget.NewClient(url).Tree(ctx)
+	if err != nil {
+		slog.Warn("GOrdian unreachable; seeding made-up budget lines", "error", err)
+		return
+	}
+	for _, cc := range tree {
+		if _, seeded := seedBudget[cc.Name]; !seeded {
+			continue
+		}
+		var lines [][2]string
+		for _, scc := range cc.Secondary {
+			for _, l := range scc.Lines {
+				if l.ExpenseOre > 0 {
+					lines = append(lines, [2]string{scc.Name, l.Name})
+				}
+			}
+		}
+		if len(lines) > 0 {
+			seedBudget[cc.Name] = lines
+		}
+	}
 }
