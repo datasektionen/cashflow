@@ -1,6 +1,6 @@
 # Cashflow 4 (server/, web/, proto/). Cashflow 3 still runs from compose.yaml.
 
-.PHONY: services dev-server dev-fortnox dev-web gen check fix build django-schema
+.PHONY: services dev-server dev-fortnox dev-web gen check fix build django-schema coexistence
 
 ## Postgres, mock SSO/Hive (nyckeln) and mock rfinger/spam (dock).
 services:
@@ -42,3 +42,7 @@ build:
 ## runs Cashflow 3's migrations in a scratch database and dumps the result.
 django-schema:
 	./scripts/django-schema.sh
+
+## Cashflow 3 and 4 on one database: each writes, both read everything (see the script).
+coexistence:
+	./scripts/coexistence.sh

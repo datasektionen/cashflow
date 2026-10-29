@@ -90,3 +90,15 @@ func ContentType(name string) string {
 	}
 	return "application/octet-stream"
 }
+
+// Exists reports whether a file is stored as name.
+func (s *Store) Exists(ctx context.Context, name string) (bool, error) {
+	_, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: aws.String(s.bucket), Key: aws.String(prefix + name)})
+	if _, ok := errors.AsType[*types.NotFound](err); ok {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("storage: head %s: %w", name, err)
+	}
+	return true, nil
+}

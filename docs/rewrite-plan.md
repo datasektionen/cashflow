@@ -81,5 +81,5 @@ merge the claim tables, store öre, encrypt the Fortnox tokens, drop Django's au
    pass: the main flows fit a 1366×768 laptop screen without scrolling.
 4. **Stats, admin, filters** (done): statistics and leaderboards, the budget page with usage per line, the home
    page's work overview, person pages, and a filter panel on every claims list.
-5. **Cutover**: staging on `cashflow-next` against a production copy, then against the production database next to
+5. **Cutover** (prepared; the steps need D-Sys, see [cutover.md](cutover.md)): staging on `cashflow-next` against a production copy, then against the production database next to
    Cashflow 3; move users over page by page; switch Traefik; Go takes over the schema and starts the cleanup.

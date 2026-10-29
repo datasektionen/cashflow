@@ -113,3 +113,9 @@ Until the cutover the database is shared with Cashflow 3, and Django owns its ta
 
 The dev database is created from `cashflow3/schema.sql`. To start over with an empty one:
 `docker compose -f compose.next.yaml rm -sfv db && make services`.
+
+## Before a deploy
+
+- `make coexistence` checks that Cashflow 3 and 4 still read each other's data.
+- `cashflow-verify` (in the image; `go run ./cmd/verify` locally) reads every claim and checks every receipt is in S3,
+  read-only. Run it on staging; see [cutover.md](cutover.md).
