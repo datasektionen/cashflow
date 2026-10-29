@@ -505,7 +505,8 @@ type ListClaimsRequest struct {
 	Mine  bool      `protobuf:"varint,1,opt,name=mine,proto3" json:"mine,omitempty"`
 	Queue Queue     `protobuf:"varint,2,opt,name=queue,proto3,enum=cashflow.claim.v1.Queue" json:"queue,omitempty"`
 	Kind  ClaimKind `protobuf:"varint,3,opt,name=kind,proto3,enum=cashflow.claim.v1.ClaimKind" json:"kind,omitempty"`
-	// Matches the description, the owner's name or username, or "#<number>".
+	// Matches the description, the owner's name or username, the voucher
+	// number, or "#<number>".
 	Query      string    `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
 	CostCentre string    `protobuf:"bytes,5,opt,name=cost_centre,json=costCentre,proto3" json:"cost_centre,omitempty"`
 	Sort       SortField `protobuf:"varint,6,opt,name=sort,proto3,enum=cashflow.claim.v1.SortField" json:"sort,omitempty"`
@@ -513,7 +514,10 @@ type ListClaimsRequest struct {
 	// 1-based.
 	Page int32 `protobuf:"varint,8,opt,name=page,proto3" json:"page,omitempty"`
 	// Defaults to 25, at most 100.
-	PageSize      int32 `protobuf:"varint,9,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageSize int32 `protobuf:"varint,9,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Only claims with a voucher; voucher_series narrows to one series ("E").
+	Accounted     bool   `protobuf:"varint,10,opt,name=accounted,proto3" json:"accounted,omitempty"`
+	VoucherSeries string `protobuf:"bytes,11,opt,name=voucher_series,json=voucherSeries,proto3" json:"voucher_series,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -609,6 +613,20 @@ func (x *ListClaimsRequest) GetPageSize() int32 {
 		return x.PageSize
 	}
 	return 0
+}
+
+func (x *ListClaimsRequest) GetAccounted() bool {
+	if x != nil {
+		return x.Accounted
+	}
+	return false
+}
+
+func (x *ListClaimsRequest) GetVoucherSeries() string {
+	if x != nil {
+		return x.VoucherSeries
+	}
+	return ""
 }
 
 type ListClaimsResponse struct {
@@ -781,6 +799,7 @@ type Actions struct {
 	Pay             bool                   `protobuf:"varint,7,opt,name=pay,proto3" json:"pay,omitempty"`
 	Delete          bool                   `protobuf:"varint,8,opt,name=delete,proto3" json:"delete,omitempty"`
 	Edit            bool                   `protobuf:"varint,9,opt,name=edit,proto3" json:"edit,omitempty"`
+	Account         bool                   `protobuf:"varint,10,opt,name=account,proto3" json:"account,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -874,6 +893,13 @@ func (x *Actions) GetDelete() bool {
 func (x *Actions) GetEdit() bool {
 	if x != nil {
 		return x.Edit
+	}
+	return false
+}
+
+func (x *Actions) GetAccount() bool {
+	if x != nil {
+		return x.Account
 	}
 	return false
 }
@@ -2534,7 +2560,7 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"\x04date\x18\x06 \x01(\tR\x04date\x12!\n" +
 	"\fcreated_date\x18\a \x01(\tR\vcreatedDate\x12!\n" +
 	"\fcost_centres\x18\b \x03(\tR\vcostCentres\x121\n" +
-	"\x06status\x18\t \x01(\v2\x19.cashflow.claim.v1.StatusR\x06status\"\xc3\x02\n" +
+	"\x06status\x18\t \x01(\v2\x19.cashflow.claim.v1.StatusR\x06status\"\x88\x03\n" +
 	"\x11ListClaimsRequest\x12\x12\n" +
 	"\x04mine\x18\x01 \x01(\bR\x04mine\x12.\n" +
 	"\x05queue\x18\x02 \x01(\x0e2\x18.cashflow.claim.v1.QueueR\x05queue\x120\n" +
@@ -2547,7 +2573,10 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"descending\x18\a \x01(\bR\n" +
 	"descending\x12\x12\n" +
 	"\x04page\x18\b \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\t \x01(\x05R\bpageSize\"c\n" +
+	"\tpage_size\x18\t \x01(\x05R\bpageSize\x12\x1c\n" +
+	"\taccounted\x18\n" +
+	" \x01(\bR\taccounted\x12%\n" +
+	"\x0evoucher_series\x18\v \x01(\tR\rvoucherSeries\"c\n" +
 	"\x12ListClaimsResponse\x127\n" +
 	"\x06claims\x18\x01 \x03(\v2\x1f.cashflow.claim.v1.ClaimSummaryR\x06claims\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\"[\n" +
@@ -2556,7 +2585,7 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"\x06number\x18\x02 \x01(\x03R\x06number\"T\n" +
 	"\bClaimRef\x120\n" +
 	"\x04kind\x18\x01 \x01(\x0e2\x1c.cashflow.claim.v1.ClaimKindR\x04kind\x12\x16\n" +
-	"\x06number\x18\x02 \x01(\x03R\x06number\"\xff\x01\n" +
+	"\x06number\x18\x02 \x01(\x03R\x06number\"\x99\x02\n" +
 	"\aActions\x12&\n" +
 	"\x0fattest_part_ids\x18\x01 \x03(\x03R\rattestPartIds\x12*\n" +
 	"\x11unattest_part_ids\x18\x02 \x03(\x03R\x0funattestPartIds\x12\x18\n" +
@@ -2566,7 +2595,9 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"\x06unflag\x18\x06 \x01(\bR\x06unflag\x12\x10\n" +
 	"\x03pay\x18\a \x01(\bR\x03pay\x12\x16\n" +
 	"\x06delete\x18\b \x01(\bR\x06delete\x12\x12\n" +
-	"\x04edit\x18\t \x01(\bR\x04edit\"\x88\x02\n" +
+	"\x04edit\x18\t \x01(\bR\x04edit\x12\x18\n" +
+	"\aaccount\x18\n" +
+	" \x01(\bR\aaccount\"\x88\x02\n" +
 	"\x04Part\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
 	"\vcost_centre\x18\x02 \x01(\tR\n" +

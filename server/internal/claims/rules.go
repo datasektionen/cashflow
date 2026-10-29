@@ -10,6 +10,8 @@ package claims
 // translated message for it.
 type Problem struct {
 	Code string
+	// Detail is a value the message mentions, e.g. a voucher number.
+	Detail string
 	// Forbidden problems are about who the viewer is rather than the
 	// claim's state; the API reports them as PermissionDenied.
 	Forbidden bool
@@ -34,6 +36,7 @@ var (
 	ErrFlagUnchanged    = &Problem{Code: "flag_unchanged"}
 	ErrNoExpenses       = &Problem{Code: "no_expenses"}
 	ErrSeveralReceivers = &Problem{Code: "several_receivers"}
+	ErrAlreadyAccounted = &Problem{Code: "already_accounted"}
 )
 
 // State is what the rules look at.
@@ -43,8 +46,10 @@ type State struct {
 	Flagged   bool
 	Confirmed bool
 	// Paid: reimbursed for expenses; paid_by or paid_at set for invoices.
-	Paid  bool
-	Parts []PartState
+	Paid bool
+	// Verification is the voucher number once accounted, e.g. "E123".
+	Verification string
+	Parts        []PartState
 }
 
 type PartState struct {
@@ -172,6 +177,24 @@ func (v Viewer) CanEdit(s State) error {
 	return nil
 }
 
+// CanAccount: Claim.account. Anyone accounting one of the claim's cost
+// centres may record its voucher, once. Cashflow 3 does not require the
+// claim to be paid first, and neither does bookkeeping: an unpaid expense or
+// invoice is booked as a debt (2820, 2440).
+func (v Viewer) CanAccount(s State) error {
+	ccs := make([]string, len(s.Parts))
+	for i, p := range s.Parts {
+		ccs[i] = p.CostCentre
+	}
+	switch {
+	case !v.Perms.MayAccountClaim(ccs):
+		return ErrNotPermitted
+	case s.Verification != "":
+		return ErrAlreadyAccounted
+	}
+	return nil
+}
+
 // Actions is what the viewer may do with a claim right now.
 type Actions struct {
 	Attest, Unattest   []int64 // part ids
@@ -179,6 +202,7 @@ type Actions struct {
 	Flag, Unflag       bool
 	PayInvoice         bool
 	Delete, Edit       bool
+	Account            bool
 }
 
 func (v Viewer) Actions(s State) Actions {
@@ -191,6 +215,7 @@ func (v Viewer) Actions(s State) Actions {
 		PayInvoice: ok(v.CanPayInvoice(s)),
 		Delete:     ok(v.CanDelete(s)),
 		Edit:       ok(v.CanEdit(s)),
+		Account:    ok(v.CanAccount(s)),
 	}
 	for _, p := range s.Parts {
 		if ok(v.CanAttest(s, p)) {

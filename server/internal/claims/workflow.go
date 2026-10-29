@@ -76,6 +76,8 @@ func lock(ctx context.Context, q *db.Queries, v Viewer, summary Summary) (*chang
 		Flagged:   claim.IsFlagged.Bool,
 		Confirmed: claim.ConfirmedByID.Valid,
 		Paid:      claim.ReimbursementID.Valid || claim.PaidByID.Valid || claim.PaidAt.Valid,
+
+		Verification: claim.Verification,
 	}
 	for _, p := range parts {
 		state.Parts = append(state.Parts, PartState{ID: p.ID, CostCentre: p.CostCentre, Attested: p.Attested})
@@ -91,7 +93,7 @@ func (s *Store) State(ctx context.Context, v Viewer, summary Summary) (State, er
 	}
 	state := State{
 		Kind: summary.Kind, Owner: summary.Owner.Username, Flagged: summary.Flagged,
-		Confirmed: summary.Confirmed, Paid: summary.Paid,
+		Confirmed: summary.Confirmed, Paid: summary.Paid, Verification: summary.Verification,
 	}
 	for _, p := range parts {
 		state.Parts = append(state.Parts, PartState{ID: p.ID, CostCentre: p.CostCentre, Attested: p.Attested})

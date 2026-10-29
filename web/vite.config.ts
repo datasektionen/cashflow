@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 
 // Paths the Go server owns. In production it serves the SPA itself; in dev
 // Vite forwards these so the session cookie lives on the Vite origin.
-const SERVER_PATHS = ["/api", "/login", "/auth", "/logout", "/fortnox", "/files", "/healthz"];
+const SERVER_PATHS = ["/api", "/login", "/auth", "/logout", "/fortnox/auth", "/files", "/healthz"];
 const serverUrl = process.env.CASHFLOW_SERVER_URL ?? "http://localhost:3000";
 
 export default defineConfig({

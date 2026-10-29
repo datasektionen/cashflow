@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/datasektionen/cashflow/server/internal/fortnox"
 	"github.com/datasektionen/cashflow/server/internal/outbox"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 )
@@ -52,6 +53,8 @@ type Env struct {
 	// rfinger serves profile pictures; without a key users show initials.
 	RFingerURL string
 	RFingerKey string
+	// Fortnox is off without a client id.
+	Fortnox fortnox.Config
 }
 
 func FromEnv() (Env, error) {
@@ -64,6 +67,12 @@ func FromEnv() (Env, error) {
 		BudgetURL:   getenv("BUDGET_URL", "https://budget.datasektionen.se"),
 		RFingerURL:  strings.TrimSuffix(getenv("RFINGER_API_URL", "https://rfinger.datasektionen.se"), "/"),
 		RFingerKey:  os.Getenv("RFINGER_API_KEY"),
+		Fortnox: fortnox.Config{
+			ClientID:     os.Getenv("FORTNOX_CLIENT_ID"),
+			ClientSecret: os.Getenv("FORTNOX_CLIENT_SECRET"),
+			APIURL:       getenv("FORTNOX_API_URL", "https://api.fortnox.se/3"),
+			AuthURL:      getenv("FORTNOX_AUTH_URL", "https://apps.fortnox.se/oauth-v1"),
+		},
 		// The same variables as Cashflow 3, plus S3_ENDPOINT for development.
 		S3: storage.Config{
 			Bucket:          os.Getenv("S3_BUCKET_NAME"),
@@ -83,6 +92,9 @@ func FromEnv() (Env, error) {
 	}
 	if env.HiveSecret == "" {
 		missing = append(missing, "HIVE_SECRET")
+	}
+	if env.Fortnox.ClientID != "" && env.Fortnox.ClientSecret == "" {
+		missing = append(missing, "FORTNOX_CLIENT_SECRET")
 	}
 	for name, value := range map[string]string{
 		"S3_BUCKET_NAME":       env.S3.Bucket,

@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package cashflow.accounting.v1;
+
+import "cashflow/claim/v1/claim.proto";
+import "google/protobuf/timestamp.proto";
+
+// AccountingService books claims in Fortnox, the bookkeeping system, and
+// manages the connection to it. Every claim gets a voucher ("verifikation"):
+// booked here from voucher rows, or booked by hand in Fortnox and recorded
+// here by its number.
+service AccountingService {
+  // GetFortnoxStatus says whether Fortnox is enabled and connected. For
+  // those who manage Fortnox or view everything.
+  rpc GetFortnoxStatus(GetFortnoxStatusRequest) returns (GetFortnoxStatusResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // DisconnectFortnox forgets the service account's tokens. Connecting is
+  // a browser redirect: GET /fortnox/auth.
+  rpc DisconnectFortnox(DisconnectFortnoxRequest) returns (DisconnectFortnoxResponse);
+
+  // ListFortnoxAccounts lists Fortnox's active accounts, cached.
+  rpc ListFortnoxAccounts(ListFortnoxAccountsRequest) returns (ListFortnoxAccountsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // ListFortnoxCostCentres lists Fortnox's active cost centres, cached.
+  rpc ListFortnoxCostCentres(ListFortnoxCostCentresRequest) returns (ListFortnoxCostCentresResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // ListVoucherSeries lists Fortnox's single-letter voucher series, then
+  // series only seen on accounted claims.
+  rpc ListVoucherSeries(ListVoucherSeriesRequest) returns (ListVoucherSeriesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // GetVoucherDraft suggests the voucher for a claim: a debit row per
+  // budget line, on the account GOrdian lists for it and the matching
+  // Fortnox cost centre, and the balancing credit row.
+  rpc GetVoucherDraft(GetVoucherDraftRequest) returns (GetVoucherDraftResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // AccountClaim books a voucher in Fortnox from rows, or records the
+  // number of an existing voucher.
+  rpc AccountClaim(AccountClaimRequest) returns (AccountClaimResponse);
+}
+
+message GetFortnoxStatusRequest {}
+
+message GetFortnoxStatusResponse {
+  // enabled is false when the server has no Fortnox credentials.
+  bool enabled = 1;
+  bool connected = 2;
+  cashflow.claim.v1.Person connected_by = 3;
+  google.protobuf.Timestamp connected_at = 4;
+}
+
+message DisconnectFortnoxRequest {}
+
+message DisconnectFortnoxResponse {}
+
+message FortnoxAccount {
+  int32 number = 1;
+  string description = 2;
+}
+
+message ListFortnoxAccountsRequest {}
+
+message ListFortnoxAccountsResponse {
+  repeated FortnoxAccount accounts = 1;
+}
+
+message FortnoxCostCentre {
+  string code = 1;
+  string description = 2;
+}
+
+message ListFortnoxCostCentresRequest {}
+
+message ListFortnoxCostCentresResponse {
+  repeated FortnoxCostCentre cost_centres = 1;
+}
+
+message VoucherSeries {
+  string code = 1;
+  string description = 2;
+  // in_fortnox is false for series only seen on accounted claims.
+  bool in_fortnox = 3;
+}
+
+message ListVoucherSeriesRequest {}
+
+message ListVoucherSeriesResponse {
+  repeated VoucherSeries series = 1;
+}
+
+message GetVoucherDraftRequest {
+  cashflow.claim.v1.ClaimRef claim = 1;
+}
+
+message VoucherRow {
+  // account is 0 when no account is known yet.
+  int32 account = 1;
+  string cost_centre = 2;
+  int64 debit_ore = 3;
+  int64 credit_ore = 4;
+}
+
+message DraftRow {
+  VoucherRow row = 1;
+  // label says where the row comes from, e.g. the budget line.
+  string label = 2;
+  // balancing is the credit row against the debt account (2820 or 2440).
+  bool balancing = 3;
+}
+
+message GetVoucherDraftResponse {
+  string series = 1;
+  // description and transaction_date are what Fortnox gets.
+  string description = 2;
+  string transaction_date = 3;
+  int64 total_ore = 4;
+  repeated DraftRow rows = 5;
+  // fortnox_available is false when Fortnox is disabled or disconnected;
+  // a voucher number can still be recorded.
+  bool fortnox_available = 6;
+}
+
+message AccountClaimRequest {
+  cashflow.claim.v1.ClaimRef claim = 1;
+  oneof method {
+    // voucher_number is an existing voucher, e.g. "E123".
+    string voucher_number = 2;
+    VoucherRows rows = 3;
+  }
+}
+
+message VoucherRows {
+  repeated VoucherRow rows = 1;
+}
+
+message AccountClaimResponse {
+  cashflow.claim.v1.Claim claim = 1;
+  string voucher_number = 2;
+}

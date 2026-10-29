@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/user/v1/user.proto.
  */
 export const file_cashflow_user_v1_user: GenFile = /*@__PURE__*/
-  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0ImsKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcyJcChhVcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QSFwoPY2xlYXJpbmdfbnVtYmVyGAEgASgJEhQKDGJhbmtfYWNjb3VudBgCIAEoCRIRCgliYW5rX25hbWUYAyABKAkiQQoZVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuY2FzaGZsb3cudXNlci52MS5Vc2VyIncKBFVzZXISEAoIdXNlcm5hbWUYASABKAkSDAoEbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIUCgxiYW5rX2FjY291bnQYBCABKAkSFwoPY2xlYXJpbmdfbnVtYmVyGAUgASgJEhEKCWJhbmtfbmFtZRgGIAEoCSKoAwoMQ2FwYWJpbGl0aWVzEhAKCHZpZXdfYWxsGAEgASgIEhkKEXZpZXdfYWxsX3BheW1lbnRzGAIgASgIEhIKCmF0dGVzdF9hbGwYAyABKAgSGwoTYXR0ZXN0X2Nvc3RfY2VudHJlcxgEIAMoCRIQCgh1bmF0dGVzdBgFIAEoCBIPCgdjb25maXJtGAYgASgIEhYKDmFjY291bnRpbmdfYWxsGAggASgIEh8KF2FjY291bnRpbmdfY29zdF9jZW50cmVzGAkgAygJEgsKA3BheRgKIAEoCBIOCgZkZWxldGUYCyABKAgSFAoMZWRpdF9pbnZvaWNlGAwgASgIEhkKEW1vZGVyYXRlX2NvbW1lbnRzGA0gASgIEhYKDm1hbmFnZV9mb3J0bm94GA4gASgIEhUKDWZpcm1hdGVja25hcmUYDyABKAgSFAoMdmlld19hY2NvdW50GBAgASgIEhkKEXZpZXdfY29zdF9jZW50cmVzGBEgAygJEhIKCmF0dGVzdF9hbnkYEiABKAgSFgoOYWNjb3VudGluZ19hbnkYEyABKAhKBAgHEAgiLgoZR2V0UHJvZmlsZVBpY3R1cmVzUmVxdWVzdBIRCgl1c2VybmFtZXMYASADKAkijwEKGkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlEkQKBHVybHMYASADKAsyNi5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlLlVybHNFbnRyeRorCglVcmxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ATLFAgoLVXNlclNlcnZpY2USTQoFR2V0TWUSHi5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVxdWVzdBofLmNhc2hmbG93LnVzZXIudjEuR2V0TWVSZXNwb25zZSIDkAIBEnQKEkdldFByb2ZpbGVQaWN0dXJlcxIrLmNhc2hmbG93LnVzZXIudjEuR2V0UHJvZmlsZVBpY3R1cmVzUmVxdWVzdBosLmNhc2hmbG93LnVzZXIudjEuR2V0UHJvZmlsZVBpY3R1cmVzUmVzcG9uc2UiA5ACARJxChFVcGRhdGVCYW5rRGV0YWlscxIqLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0GisuY2FzaGZsb3cudXNlci52MS5VcGRhdGVCYW5rRGV0YWlsc1Jlc3BvbnNlIgOQAgJCyQEKFGNvbS5jYXNoZmxvdy51c2VyLnYxQglVc2VyUHJvdG9QAVpEZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvdXNlci92MTt1c2VydjGiAgNDVViqAhBDYXNoZmxvdy5Vc2VyLlYxygIQQ2FzaGZsb3dcVXNlclxWMeICHENhc2hmbG93XFVzZXJcVjFcR1BCTWV0YWRhdGHqAhJDYXNoZmxvdzo6VXNlcjo6VjFiBnByb3RvMw");
+  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0IpkBCg1HZXRNZVJlc3BvbnNlEiQKBHVzZXIYASABKAsyFi5jYXNoZmxvdy51c2VyLnYxLlVzZXISNAoMY2FwYWJpbGl0aWVzGAIgASgLMh4uY2FzaGZsb3cudXNlci52MS5DYXBhYmlsaXRpZXMSLAoIZmVhdHVyZXMYAyABKAsyGi5jYXNoZmxvdy51c2VyLnYxLkZlYXR1cmVzIhsKCEZlYXR1cmVzEg8KB2ZvcnRub3gYASABKAgiXAoYVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0EhcKD2NsZWFyaW5nX251bWJlchgBIAEoCRIUCgxiYW5rX2FjY291bnQYAiABKAkSEQoJYmFua19uYW1lGAMgASgJIkEKGVVwZGF0ZUJhbmtEZXRhaWxzUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlciJ3CgRVc2VyEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFZW1haWwYAyABKAkSFAoMYmFua19hY2NvdW50GAQgASgJEhcKD2NsZWFyaW5nX251bWJlchgFIAEoCRIRCgliYW5rX25hbWUYBiABKAkiqAMKDENhcGFiaWxpdGllcxIQCgh2aWV3X2FsbBgBIAEoCBIZChF2aWV3X2FsbF9wYXltZW50cxgCIAEoCBISCgphdHRlc3RfYWxsGAMgASgIEhsKE2F0dGVzdF9jb3N0X2NlbnRyZXMYBCADKAkSEAoIdW5hdHRlc3QYBSABKAgSDwoHY29uZmlybRgGIAEoCBIWCg5hY2NvdW50aW5nX2FsbBgIIAEoCBIfChdhY2NvdW50aW5nX2Nvc3RfY2VudHJlcxgJIAMoCRILCgNwYXkYCiABKAgSDgoGZGVsZXRlGAsgASgIEhQKDGVkaXRfaW52b2ljZRgMIAEoCBIZChFtb2RlcmF0ZV9jb21tZW50cxgNIAEoCBIWCg5tYW5hZ2VfZm9ydG5veBgOIAEoCBIVCg1maXJtYXRlY2tuYXJlGA8gASgIEhQKDHZpZXdfYWNjb3VudBgQIAEoCBIZChF2aWV3X2Nvc3RfY2VudHJlcxgRIAMoCRISCgphdHRlc3RfYW55GBIgASgIEhYKDmFjY291bnRpbmdfYW55GBMgASgISgQIBxAIIi4KGUdldFByb2ZpbGVQaWN0dXJlc1JlcXVlc3QSEQoJdXNlcm5hbWVzGAEgAygJIo8BChpHZXRQcm9maWxlUGljdHVyZXNSZXNwb25zZRJECgR1cmxzGAEgAygLMjYuY2FzaGZsb3cudXNlci52MS5HZXRQcm9maWxlUGljdHVyZXNSZXNwb25zZS5VcmxzRW50cnkaKwoJVXJsc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEyxQIKC1VzZXJTZXJ2aWNlEk0KBUdldE1lEh4uY2FzaGZsb3cudXNlci52MS5HZXRNZVJlcXVlc3QaHy5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVzcG9uc2UiA5ACARJ0ChJHZXRQcm9maWxlUGljdHVyZXMSKy5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1JlcXVlc3QaLC5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlIgOQAgEScQoRVXBkYXRlQmFua0RldGFpbHMSKi5jYXNoZmxvdy51c2VyLnYxLlVwZGF0ZUJhbmtEZXRhaWxzUmVxdWVzdBorLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZSIDkAICQskBChRjb20uY2FzaGZsb3cudXNlci52MUIJVXNlclByb3RvUAFaRGdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L3VzZXIvdjE7dXNlcnYxogIDQ1VYqgIQQ2FzaGZsb3cuVXNlci5WMcoCEENhc2hmbG93XFVzZXJcVjHiAhxDYXNoZmxvd1xVc2VyXFYxXEdQQk1ldGFkYXRh6gISQ2FzaGZsb3c6OlVzZXI6OlYxYgZwcm90bzM");
 
 /**
  * @generated from message cashflow.user.v1.GetMeRequest
@@ -44,6 +44,11 @@ export type GetMeResponse = Message<"cashflow.user.v1.GetMeResponse"> & {
    * @generated from field: cashflow.user.v1.Capabilities capabilities = 2;
    */
   capabilities?: Capabilities | undefined;
+
+  /**
+   * @generated from field: cashflow.user.v1.Features features = 3;
+   */
+  features?: Features | undefined;
 };
 
 /**
@@ -59,6 +64,11 @@ export type GetMeResponseJson = {
    * @generated from field: cashflow.user.v1.Capabilities capabilities = 2;
    */
   capabilities?: CapabilitiesJson;
+
+  /**
+   * @generated from field: cashflow.user.v1.Features features = 3;
+   */
+  features?: FeaturesJson;
 };
 
 /**
@@ -67,6 +77,41 @@ export type GetMeResponseJson = {
  */
 export const GetMeResponseSchema: GenMessage<GetMeResponse, {jsonType: GetMeResponseJson}> = /*@__PURE__*/
   messageDesc(file_cashflow_user_v1_user, 1);
+
+/**
+ * Features are parts of Cashflow the server has switched on.
+ *
+ * @generated from message cashflow.user.v1.Features
+ */
+export type Features = Message<"cashflow.user.v1.Features"> & {
+  /**
+   * fortnox: booking claims in Fortnox (FORTNOX_CLIENT_ID is set).
+   *
+   * @generated from field: bool fortnox = 1;
+   */
+  fortnox: boolean;
+};
+
+/**
+ * Features are parts of Cashflow the server has switched on.
+ *
+ * @generated from message cashflow.user.v1.Features
+ */
+export type FeaturesJson = {
+  /**
+   * fortnox: booking claims in Fortnox (FORTNOX_CLIENT_ID is set).
+   *
+   * @generated from field: bool fortnox = 1;
+   */
+  fortnox?: boolean;
+};
+
+/**
+ * Describes the message cashflow.user.v1.Features.
+ * Use `create(FeaturesSchema)` to create a new message.
+ */
+export const FeaturesSchema: GenMessage<Features, {jsonType: FeaturesJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 2);
 
 /**
  * @generated from message cashflow.user.v1.UpdateBankDetailsRequest
@@ -121,7 +166,7 @@ export type UpdateBankDetailsRequestJson = {
  * Use `create(UpdateBankDetailsRequestSchema)` to create a new message.
  */
 export const UpdateBankDetailsRequestSchema: GenMessage<UpdateBankDetailsRequest, {jsonType: UpdateBankDetailsRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 2);
+  messageDesc(file_cashflow_user_v1_user, 3);
 
 /**
  * @generated from message cashflow.user.v1.UpdateBankDetailsResponse
@@ -148,7 +193,7 @@ export type UpdateBankDetailsResponseJson = {
  * Use `create(UpdateBankDetailsResponseSchema)` to create a new message.
  */
 export const UpdateBankDetailsResponseSchema: GenMessage<UpdateBankDetailsResponse, {jsonType: UpdateBankDetailsResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 3);
+  messageDesc(file_cashflow_user_v1_user, 4);
 
 /**
  * @generated from message cashflow.user.v1.User
@@ -229,7 +274,7 @@ export type UserJson = {
  * Use `create(UserSchema)` to create a new message.
  */
 export const UserSchema: GenMessage<User, {jsonType: UserJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 4);
+  messageDesc(file_cashflow_user_v1_user, 5);
 
 /**
  * Capabilities are resolved from Hive on the server, so the frontend only
@@ -444,7 +489,7 @@ export type CapabilitiesJson = {
  * Use `create(CapabilitiesSchema)` to create a new message.
  */
 export const CapabilitiesSchema: GenMessage<Capabilities, {jsonType: CapabilitiesJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 5);
+  messageDesc(file_cashflow_user_v1_user, 6);
 
 /**
  * @generated from message cashflow.user.v1.GetProfilePicturesRequest
@@ -471,7 +516,7 @@ export type GetProfilePicturesRequestJson = {
  * Use `create(GetProfilePicturesRequestSchema)` to create a new message.
  */
 export const GetProfilePicturesRequestSchema: GenMessage<GetProfilePicturesRequest, {jsonType: GetProfilePicturesRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 6);
+  messageDesc(file_cashflow_user_v1_user, 7);
 
 /**
  * @generated from message cashflow.user.v1.GetProfilePicturesResponse
@@ -498,7 +543,7 @@ export type GetProfilePicturesResponseJson = {
  * Use `create(GetProfilePicturesResponseSchema)` to create a new message.
  */
 export const GetProfilePicturesResponseSchema: GenMessage<GetProfilePicturesResponse, {jsonType: GetProfilePicturesResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 7);
+  messageDesc(file_cashflow_user_v1_user, 8);
 
 /**
  * UserService exposes the logged-in user and what they may do.

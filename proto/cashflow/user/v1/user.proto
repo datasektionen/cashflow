@@ -26,6 +26,13 @@ message GetMeRequest {}
 message GetMeResponse {
   User user = 1;
   Capabilities capabilities = 2;
+  Features features = 3;
+}
+
+// Features are parts of Cashflow the server has switched on.
+message Features {
+  // fortnox: booking claims in Fortnox (FORTNOX_CLIENT_ID is set).
+  bool fortnox = 1;
 }
 
 message UpdateBankDetailsRequest {

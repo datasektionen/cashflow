@@ -14,6 +14,7 @@ import (
 
 	userv1 "github.com/datasektionen/cashflow/server/gen/cashflow/user/v1"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
+	"github.com/datasektionen/cashflow/server/internal/fortnox"
 	"github.com/datasektionen/cashflow/server/internal/perm"
 	"github.com/datasektionen/cashflow/server/internal/rfinger"
 )
@@ -21,6 +22,7 @@ import (
 type UserService struct {
 	Queries  *db.Queries
 	Pictures *rfinger.Client
+	Fortnox  *fortnox.Client
 }
 
 func (s *UserService) GetMe(ctx context.Context, _ *connect.Request[userv1.GetMeRequest]) (*connect.Response[userv1.GetMeResponse], error) {
@@ -62,6 +64,7 @@ func (s *UserService) GetMe(ctx context.Context, _ *connect.Request[userv1.GetMe
 			Firmatecknare:         p.MayFirmatecknare(),
 			ViewAccount:           p.MayViewAccount(),
 		},
+		Features: &userv1.Features{Fortnox: s.Fortnox.Enabled()},
 	}), nil
 }
 

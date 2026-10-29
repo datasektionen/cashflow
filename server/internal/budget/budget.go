@@ -224,3 +224,28 @@ func ParseAccounts(s string) []int {
 	}
 	return nil
 }
+
+// Find returns the budget line a claim part names, matching names as
+// Cashflow 3 does but forgiving case and spacing; nil when there is none.
+func Find(tree []CostCentre, costCentre, secondary, line string) *Line {
+	for _, cc := range tree {
+		if !sameName(cc.Name, costCentre) {
+			continue
+		}
+		for _, scc := range cc.Secondary {
+			if !sameName(scc.Name, secondary) {
+				continue
+			}
+			for i, l := range scc.Lines {
+				if sameName(l.Name, line) {
+					return &scc.Lines[i]
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func sameName(a, b string) bool {
+	return strings.EqualFold(strings.Join(strings.Fields(a), " "), strings.Join(strings.Fields(b), " "))
+}

@@ -19,4 +19,8 @@ message FieldViolation {
 // an action breaks a workflow rule, e.g. "flagged" or "own_expense".
 message Problem {
   string code = 1;
+  // detail is a value the message mentions, e.g. a voucher number.
+  string detail = 2;
+  // fortnox_message is Fortnox's own explanation when it refused a voucher.
+  string fortnox_message = 3;
 }

@@ -33,6 +33,9 @@ func (s *ClaimService) ListClaims(ctx context.Context, req *connect.Request[clai
 		Descending: m.Descending,
 		Page:       int(m.Page),
 		PageSize:   int(m.PageSize),
+
+		Accounted:     m.Accounted,
+		VoucherSeries: m.VoucherSeries,
 	}
 	list, total, err := s.Store.List(ctx, callerFrom(ctx).viewer, f)
 	if err != nil {
@@ -75,7 +78,7 @@ func (s *ClaimService) load(ctx context.Context, kind claims.Kind, number int64)
 	claim.Actions = &claimv1.Actions{
 		AttestPartIds: a.Attest, UnattestPartIds: a.Unattest,
 		Confirm: a.Confirm, Unconfirm: a.Unconfirm, Flag: a.Flag, Unflag: a.Unflag,
-		Pay: a.PayInvoice, Delete: a.Delete, Edit: a.Edit,
+		Pay: a.PayInvoice, Delete: a.Delete, Edit: a.Edit, Account: a.Account,
 	}
 
 	parts, err := q.ListClaimParts(ctx, summary.ID)
@@ -177,13 +180,21 @@ func (s *ClaimService) GetOverview(ctx context.Context, _ *connect.Request[claim
 }
 
 func claimError(err error) error {
+	var refused *claims.FortnoxError
+	if errors.As(err, &refused) {
+		cerr := connect.NewError(connect.CodeFailedPrecondition, err)
+		if detail, err := connect.NewErrorDetail(&commonv1.Problem{Code: "fortnox_refused", FortnoxMessage: refused.Message}); err == nil {
+			cerr.AddDetail(detail)
+		}
+		return cerr
+	}
 	if problem, ok := claims.IsProblem(err); ok {
 		code := connect.CodeFailedPrecondition
 		if problem.Forbidden {
 			code = connect.CodePermissionDenied
 		}
 		cerr := connect.NewError(code, err)
-		if detail, err := connect.NewErrorDetail(&commonv1.Problem{Code: problem.Code}); err == nil {
+		if detail, err := connect.NewErrorDetail(&commonv1.Problem{Code: problem.Code, Detail: problem.Detail}); err == nil {
 			cerr.AddDetail(detail)
 		}
 		return cerr

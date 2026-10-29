@@ -103,8 +103,15 @@ func where(v Viewer, f Filter) (clause string, args pgx.NamedArgs, ok bool) {
 		conds = append(conds, "@cost_centre = ANY(cost_centres)")
 		args["cost_centre"] = f.CostCentre
 	}
+	if f.Accounted {
+		conds = append(conds, "verification <> ''")
+	}
+	if f.VoucherSeries != "" {
+		conds = append(conds, "upper(left(verification, 1)) = upper(@voucher_series)")
+		args["voucher_series"] = f.VoucherSeries
+	}
 	if q := strings.TrimSpace(f.Query); q != "" {
-		cond := "(description ILIKE @like ESCAPE '\\' OR owner_name ILIKE @like ESCAPE '\\' OR owner_username ILIKE @like ESCAPE '\\'"
+		cond := "(description ILIKE @like ESCAPE '\\' OR owner_name ILIKE @like ESCAPE '\\' OR owner_username ILIKE @like ESCAPE '\\' OR verification ILIKE @like ESCAPE '\\'"
 		if n, isNumber := claimNumber(q); isNumber {
 			cond += " OR number = @query_number"
 			args["query_number"] = n

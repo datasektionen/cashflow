@@ -13,6 +13,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/config"
 	"github.com/datasektionen/cashflow/server/internal/database"
+	"github.com/datasektionen/cashflow/server/internal/fortnox"
 	"github.com/datasektionen/cashflow/server/internal/hive"
 	"github.com/datasektionen/cashflow/server/internal/outbox"
 	"github.com/datasektionen/cashflow/server/internal/rfinger"
@@ -57,6 +58,11 @@ func run(ctx context.Context) error {
 	// Keeps GOrdian's budget in memory, refreshed in the background.
 	budgetClient := budget.NewClient(env.BudgetURL)
 	go budgetClient.Run(ctx)
+	// Keeps the Fortnox connection alive by refreshing its tokens in time.
+	fortnoxClient := fortnox.New(env.Fortnox, pool)
+	if fortnoxClient.Enabled() {
+		go fortnoxClient.KeepAlive(ctx)
+	}
 
 	handler, err := web.NewHandler(ctx, web.Deps{
 		Pool:      pool,
@@ -65,6 +71,7 @@ func run(ctx context.Context) error {
 		Pictures:  rfinger.NewClient(env.RFingerURL, env.RFingerKey),
 		Hive:      hive.NewClient(env.HiveURL, env.HiveSecret),
 		Files:     files,
+		Fortnox:   fortnoxClient,
 	})
 	if err != nil {
 		return err

@@ -1,6 +1,6 @@
 # Cashflow 4 (server/, web/, proto/). Cashflow 3 still runs from compose.yaml.
 
-.PHONY: services dev-server dev-web gen check fix build django-schema
+.PHONY: services dev-server dev-fortnox dev-web gen check fix build django-schema
 
 ## Postgres, mock SSO/Hive (nyckeln) and mock rfinger/spam (dock).
 services:
@@ -9,6 +9,10 @@ services:
 ## The Go server on :3000. Reads server/.env (copy server/.env.example).
 dev-server:
 	cd server && go run .
+
+## A fake Fortnox on :9004 for the server to book vouchers in (see server/.env.example).
+dev-fortnox:
+	cd server && go run ./cmd/fakefortnox
 
 ## The web app on :5173, forwarding API and login routes to the server.
 dev-web:

@@ -124,10 +124,14 @@ func (x *FieldViolation) GetCode() string {
 // Problem is attached to FailedPrecondition and PermissionDenied errors when
 // an action breaks a workflow rule, e.g. "flagged" or "own_expense".
 type Problem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Code  string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	// detail is a value the message mentions, e.g. a voucher number.
+	Detail string `protobuf:"bytes,2,opt,name=detail,proto3" json:"detail,omitempty"`
+	// fortnox_message is Fortnox's own explanation when it refused a voucher.
+	FortnoxMessage string `protobuf:"bytes,3,opt,name=fortnox_message,json=fortnoxMessage,proto3" json:"fortnox_message,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Problem) Reset() {
@@ -167,6 +171,20 @@ func (x *Problem) GetCode() string {
 	return ""
 }
 
+func (x *Problem) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+func (x *Problem) GetFortnoxMessage() string {
+	if x != nil {
+		return x.FortnoxMessage
+	}
+	return ""
+}
+
 var File_cashflow_common_v1_errors_proto protoreflect.FileDescriptor
 
 const file_cashflow_common_v1_errors_proto_rawDesc = "" +
@@ -178,9 +196,11 @@ const file_cashflow_common_v1_errors_proto_rawDesc = "" +
 	"violations\":\n" +
 	"\x0eFieldViolation\x12\x14\n" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x12\n" +
-	"\x04code\x18\x02 \x01(\tR\x04code\"\x1d\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\"^\n" +
 	"\aProblem\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04codeB\xd9\x01\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x16\n" +
+	"\x06detail\x18\x02 \x01(\tR\x06detail\x12'\n" +
+	"\x0ffortnox_message\x18\x03 \x01(\tR\x0efortnoxMessageB\xd9\x01\n" +
 	"\x16com.cashflow.common.v1B\vErrorsProtoP\x01ZHgithub.com/datasektionen/cashflow/server/gen/cashflow/common/v1;commonv1\xa2\x02\x03CCX\xaa\x02\x12Cashflow.Common.V1\xca\x02\x12Cashflow\\Common\\V1\xe2\x02\x1eCashflow\\Common\\V1\\GPBMetadata\xea\x02\x14Cashflow::Common::V1b\x06proto3"
 
 var (

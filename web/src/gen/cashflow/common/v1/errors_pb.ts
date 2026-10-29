@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/common/v1/errors.proto.
  */
 export const file_cashflow_common_v1_errors: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jYXNoZmxvdy9jb21tb24vdjEvZXJyb3JzLnByb3RvEhJjYXNoZmxvdy5jb21tb24udjEiSQoPRmllbGRWaW9sYXRpb25zEjYKCnZpb2xhdGlvbnMYASADKAsyIi5jYXNoZmxvdy5jb21tb24udjEuRmllbGRWaW9sYXRpb24iLQoORmllbGRWaW9sYXRpb24SDQoFZmllbGQYASABKAkSDAoEY29kZRgCIAEoCSIXCgdQcm9ibGVtEgwKBGNvZGUYASABKAlC2QEKFmNvbS5jYXNoZmxvdy5jb21tb24udjFCC0Vycm9yc1Byb3RvUAFaSGdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L2NvbW1vbi92MTtjb21tb252MaICA0NDWKoCEkNhc2hmbG93LkNvbW1vbi5WMcoCEkNhc2hmbG93XENvbW1vblxWMeICHkNhc2hmbG93XENvbW1vblxWMVxHUEJNZXRhZGF0YeoCFENhc2hmbG93OjpDb21tb246OlYxYgZwcm90bzM");
+  fileDesc("Ch9jYXNoZmxvdy9jb21tb24vdjEvZXJyb3JzLnByb3RvEhJjYXNoZmxvdy5jb21tb24udjEiSQoPRmllbGRWaW9sYXRpb25zEjYKCnZpb2xhdGlvbnMYASADKAsyIi5jYXNoZmxvdy5jb21tb24udjEuRmllbGRWaW9sYXRpb24iLQoORmllbGRWaW9sYXRpb24SDQoFZmllbGQYASABKAkSDAoEY29kZRgCIAEoCSJACgdQcm9ibGVtEgwKBGNvZGUYASABKAkSDgoGZGV0YWlsGAIgASgJEhcKD2ZvcnRub3hfbWVzc2FnZRgDIAEoCULZAQoWY29tLmNhc2hmbG93LmNvbW1vbi52MUILRXJyb3JzUHJvdG9QAVpIZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvY29tbW9uL3YxO2NvbW1vbnYxogIDQ0NYqgISQ2FzaGZsb3cuQ29tbW9uLlYxygISQ2FzaGZsb3dcQ29tbW9uXFYx4gIeQ2FzaGZsb3dcQ29tbW9uXFYxXEdQQk1ldGFkYXRh6gIUQ2FzaGZsb3c6OkNvbW1vbjo6VjFiBnByb3RvMw");
 
 /**
  * FieldViolations is attached to InvalidArgument errors so a form can show
@@ -101,6 +101,20 @@ export type Problem = Message<"cashflow.common.v1.Problem"> & {
    * @generated from field: string code = 1;
    */
   code: string;
+
+  /**
+   * detail is a value the message mentions, e.g. a voucher number.
+   *
+   * @generated from field: string detail = 2;
+   */
+  detail: string;
+
+  /**
+   * fortnox_message is Fortnox's own explanation when it refused a voucher.
+   *
+   * @generated from field: string fortnox_message = 3;
+   */
+  fortnoxMessage: string;
 };
 
 /**
@@ -114,6 +128,20 @@ export type ProblemJson = {
    * @generated from field: string code = 1;
    */
   code?: string;
+
+  /**
+   * detail is a value the message mentions, e.g. a voucher number.
+   *
+   * @generated from field: string detail = 2;
+   */
+  detail?: string;
+
+  /**
+   * fortnox_message is Fortnox's own explanation when it refused a voucher.
+   *
+   * @generated from field: string fortnox_message = 3;
+   */
+  fortnoxMessage?: string;
 };
 
 /**

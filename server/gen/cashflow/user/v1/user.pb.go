@@ -61,6 +61,7 @@ type GetMeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	Capabilities  *Capabilities          `protobuf:"bytes,2,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
+	Features      *Features              `protobuf:"bytes,3,opt,name=features,proto3" json:"features,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -109,6 +110,59 @@ func (x *GetMeResponse) GetCapabilities() *Capabilities {
 	return nil
 }
 
+func (x *GetMeResponse) GetFeatures() *Features {
+	if x != nil {
+		return x.Features
+	}
+	return nil
+}
+
+// Features are parts of Cashflow the server has switched on.
+type Features struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// fortnox: booking claims in Fortnox (FORTNOX_CLIENT_ID is set).
+	Fortnox       bool `protobuf:"varint,1,opt,name=fortnox,proto3" json:"fortnox,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Features) Reset() {
+	*x = Features{}
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Features) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Features) ProtoMessage() {}
+
+func (x *Features) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Features.ProtoReflect.Descriptor instead.
+func (*Features) Descriptor() ([]byte, []int) {
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Features) GetFortnox() bool {
+	if x != nil {
+		return x.Fortnox
+	}
+	return false
+}
+
 type UpdateBankDetailsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Digits only after normalisation; 4 or 5 digits.
@@ -122,7 +176,7 @@ type UpdateBankDetailsRequest struct {
 
 func (x *UpdateBankDetailsRequest) Reset() {
 	*x = UpdateBankDetailsRequest{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -134,7 +188,7 @@ func (x *UpdateBankDetailsRequest) String() string {
 func (*UpdateBankDetailsRequest) ProtoMessage() {}
 
 func (x *UpdateBankDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -147,7 +201,7 @@ func (x *UpdateBankDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankDetailsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBankDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{2}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UpdateBankDetailsRequest) GetClearingNumber() string {
@@ -180,7 +234,7 @@ type UpdateBankDetailsResponse struct {
 
 func (x *UpdateBankDetailsResponse) Reset() {
 	*x = UpdateBankDetailsResponse{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -192,7 +246,7 @@ func (x *UpdateBankDetailsResponse) String() string {
 func (*UpdateBankDetailsResponse) ProtoMessage() {}
 
 func (x *UpdateBankDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -205,7 +259,7 @@ func (x *UpdateBankDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBankDetailsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBankDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{3}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UpdateBankDetailsResponse) GetUser() *User {
@@ -230,7 +284,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -242,7 +296,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -255,7 +309,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{4}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *User) GetUsername() string {
@@ -332,7 +386,7 @@ type Capabilities struct {
 
 func (x *Capabilities) Reset() {
 	*x = Capabilities{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -344,7 +398,7 @@ func (x *Capabilities) String() string {
 func (*Capabilities) ProtoMessage() {}
 
 func (x *Capabilities) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -357,7 +411,7 @@ func (x *Capabilities) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Capabilities.ProtoReflect.Descriptor instead.
 func (*Capabilities) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{5}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Capabilities) GetViewAll() bool {
@@ -495,7 +549,7 @@ type GetProfilePicturesRequest struct {
 
 func (x *GetProfilePicturesRequest) Reset() {
 	*x = GetProfilePicturesRequest{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[6]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -507,7 +561,7 @@ func (x *GetProfilePicturesRequest) String() string {
 func (*GetProfilePicturesRequest) ProtoMessage() {}
 
 func (x *GetProfilePicturesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[6]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -520,7 +574,7 @@ func (x *GetProfilePicturesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfilePicturesRequest.ProtoReflect.Descriptor instead.
 func (*GetProfilePicturesRequest) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{6}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetProfilePicturesRequest) GetUsernames() []string {
@@ -539,7 +593,7 @@ type GetProfilePicturesResponse struct {
 
 func (x *GetProfilePicturesResponse) Reset() {
 	*x = GetProfilePicturesResponse{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[7]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -551,7 +605,7 @@ func (x *GetProfilePicturesResponse) String() string {
 func (*GetProfilePicturesResponse) ProtoMessage() {}
 
 func (x *GetProfilePicturesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[7]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -564,7 +618,7 @@ func (x *GetProfilePicturesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfilePicturesResponse.ProtoReflect.Descriptor instead.
 func (*GetProfilePicturesResponse) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{7}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetProfilePicturesResponse) GetUrls() map[string]string {
@@ -579,10 +633,13 @@ var File_cashflow_user_v1_user_proto protoreflect.FileDescriptor
 const file_cashflow_user_v1_user_proto_rawDesc = "" +
 	"\n" +
 	"\x1bcashflow/user/v1/user.proto\x12\x10cashflow.user.v1\"\x0e\n" +
-	"\fGetMeRequest\"\x7f\n" +
+	"\fGetMeRequest\"\xb7\x01\n" +
 	"\rGetMeResponse\x12*\n" +
 	"\x04user\x18\x01 \x01(\v2\x16.cashflow.user.v1.UserR\x04user\x12B\n" +
-	"\fcapabilities\x18\x02 \x01(\v2\x1e.cashflow.user.v1.CapabilitiesR\fcapabilities\"\x83\x01\n" +
+	"\fcapabilities\x18\x02 \x01(\v2\x1e.cashflow.user.v1.CapabilitiesR\fcapabilities\x126\n" +
+	"\bfeatures\x18\x03 \x01(\v2\x1a.cashflow.user.v1.FeaturesR\bfeatures\"$\n" +
+	"\bFeatures\x12\x18\n" +
+	"\afortnox\x18\x01 \x01(\bR\afortnox\"\x83\x01\n" +
 	"\x18UpdateBankDetailsRequest\x12'\n" +
 	"\x0fclearing_number\x18\x01 \x01(\tR\x0eclearingNumber\x12!\n" +
 	"\fbank_account\x18\x02 \x01(\tR\vbankAccount\x12\x1b\n" +
@@ -643,34 +700,36 @@ func file_cashflow_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_cashflow_user_v1_user_proto_rawDescData
 }
 
-var file_cashflow_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_cashflow_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_cashflow_user_v1_user_proto_goTypes = []any{
 	(*GetMeRequest)(nil),               // 0: cashflow.user.v1.GetMeRequest
 	(*GetMeResponse)(nil),              // 1: cashflow.user.v1.GetMeResponse
-	(*UpdateBankDetailsRequest)(nil),   // 2: cashflow.user.v1.UpdateBankDetailsRequest
-	(*UpdateBankDetailsResponse)(nil),  // 3: cashflow.user.v1.UpdateBankDetailsResponse
-	(*User)(nil),                       // 4: cashflow.user.v1.User
-	(*Capabilities)(nil),               // 5: cashflow.user.v1.Capabilities
-	(*GetProfilePicturesRequest)(nil),  // 6: cashflow.user.v1.GetProfilePicturesRequest
-	(*GetProfilePicturesResponse)(nil), // 7: cashflow.user.v1.GetProfilePicturesResponse
-	nil,                                // 8: cashflow.user.v1.GetProfilePicturesResponse.UrlsEntry
+	(*Features)(nil),                   // 2: cashflow.user.v1.Features
+	(*UpdateBankDetailsRequest)(nil),   // 3: cashflow.user.v1.UpdateBankDetailsRequest
+	(*UpdateBankDetailsResponse)(nil),  // 4: cashflow.user.v1.UpdateBankDetailsResponse
+	(*User)(nil),                       // 5: cashflow.user.v1.User
+	(*Capabilities)(nil),               // 6: cashflow.user.v1.Capabilities
+	(*GetProfilePicturesRequest)(nil),  // 7: cashflow.user.v1.GetProfilePicturesRequest
+	(*GetProfilePicturesResponse)(nil), // 8: cashflow.user.v1.GetProfilePicturesResponse
+	nil,                                // 9: cashflow.user.v1.GetProfilePicturesResponse.UrlsEntry
 }
 var file_cashflow_user_v1_user_proto_depIdxs = []int32{
-	4, // 0: cashflow.user.v1.GetMeResponse.user:type_name -> cashflow.user.v1.User
-	5, // 1: cashflow.user.v1.GetMeResponse.capabilities:type_name -> cashflow.user.v1.Capabilities
-	4, // 2: cashflow.user.v1.UpdateBankDetailsResponse.user:type_name -> cashflow.user.v1.User
-	8, // 3: cashflow.user.v1.GetProfilePicturesResponse.urls:type_name -> cashflow.user.v1.GetProfilePicturesResponse.UrlsEntry
-	0, // 4: cashflow.user.v1.UserService.GetMe:input_type -> cashflow.user.v1.GetMeRequest
-	6, // 5: cashflow.user.v1.UserService.GetProfilePictures:input_type -> cashflow.user.v1.GetProfilePicturesRequest
-	2, // 6: cashflow.user.v1.UserService.UpdateBankDetails:input_type -> cashflow.user.v1.UpdateBankDetailsRequest
-	1, // 7: cashflow.user.v1.UserService.GetMe:output_type -> cashflow.user.v1.GetMeResponse
-	7, // 8: cashflow.user.v1.UserService.GetProfilePictures:output_type -> cashflow.user.v1.GetProfilePicturesResponse
-	3, // 9: cashflow.user.v1.UserService.UpdateBankDetails:output_type -> cashflow.user.v1.UpdateBankDetailsResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	5, // 0: cashflow.user.v1.GetMeResponse.user:type_name -> cashflow.user.v1.User
+	6, // 1: cashflow.user.v1.GetMeResponse.capabilities:type_name -> cashflow.user.v1.Capabilities
+	2, // 2: cashflow.user.v1.GetMeResponse.features:type_name -> cashflow.user.v1.Features
+	5, // 3: cashflow.user.v1.UpdateBankDetailsResponse.user:type_name -> cashflow.user.v1.User
+	9, // 4: cashflow.user.v1.GetProfilePicturesResponse.urls:type_name -> cashflow.user.v1.GetProfilePicturesResponse.UrlsEntry
+	0, // 5: cashflow.user.v1.UserService.GetMe:input_type -> cashflow.user.v1.GetMeRequest
+	7, // 6: cashflow.user.v1.UserService.GetProfilePictures:input_type -> cashflow.user.v1.GetProfilePicturesRequest
+	3, // 7: cashflow.user.v1.UserService.UpdateBankDetails:input_type -> cashflow.user.v1.UpdateBankDetailsRequest
+	1, // 8: cashflow.user.v1.UserService.GetMe:output_type -> cashflow.user.v1.GetMeResponse
+	8, // 9: cashflow.user.v1.UserService.GetProfilePictures:output_type -> cashflow.user.v1.GetProfilePicturesResponse
+	4, // 10: cashflow.user.v1.UserService.UpdateBankDetails:output_type -> cashflow.user.v1.UpdateBankDetailsResponse
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_cashflow_user_v1_user_proto_init() }
@@ -684,7 +743,7 @@ func file_cashflow_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cashflow_user_v1_user_proto_rawDesc), len(file_cashflow_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

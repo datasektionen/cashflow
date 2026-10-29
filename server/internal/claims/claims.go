@@ -132,10 +132,13 @@ type Filter struct {
 	Kind       Kind
 	Query      string
 	CostCentre string
-	Sort       Sort
-	Descending bool
-	Page       int // 1-based
-	PageSize   int
+	// Accounted keeps only claims with a voucher, optionally in one series.
+	Accounted     bool
+	VoucherSeries string
+	Sort          Sort
+	Descending    bool
+	Page          int // 1-based
+	PageSize      int
 
 	// Exact lookups, for the detail page and file access.
 	ID     int64

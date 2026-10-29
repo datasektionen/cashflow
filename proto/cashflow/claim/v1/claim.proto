@@ -143,7 +143,8 @@ message ListClaimsRequest {
   bool mine = 1;
   Queue queue = 2;
   ClaimKind kind = 3;
-  // Matches the description, the owner's name or username, or "#<number>".
+  // Matches the description, the owner's name or username, the voucher
+  // number, or "#<number>".
   string query = 4;
   string cost_centre = 5;
   SortField sort = 6;
@@ -152,6 +153,9 @@ message ListClaimsRequest {
   int32 page = 8;
   // Defaults to 25, at most 100.
   int32 page_size = 9;
+  // Only claims with a voucher; voucher_series narrows to one series ("E").
+  bool accounted = 10;
+  string voucher_series = 11;
 }
 
 message ListClaimsResponse {
@@ -182,6 +186,7 @@ message Actions {
   bool pay = 7;
   bool delete = 8;
   bool edit = 9;
+  bool account = 10;
 }
 
 message Part {
