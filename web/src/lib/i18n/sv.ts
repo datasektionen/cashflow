@@ -27,7 +27,6 @@ export const sv = {
     logout: "Logga ut",
   },
   overview: {
-    greeting: (name: string) => `Hej ${name}`,
     title: "Dina utlägg",
     awaitingAttest: "Väntar på attest",
     awaitingPayment: "Väntar på utbetalning",
@@ -121,31 +120,26 @@ export const sv = {
   queues: {
     attest: {
       title: "Attestera",
-      description: "Utlägg och fakturor med delar på dina resultatställen. Äldst först.",
       emptyTitle: "Allt är attesterat",
       emptyBody: "Inget väntar på dig just nu. Snyggt jobbat!",
     },
     confirm: {
       title: "Bekräfta kvitton",
-      description: "Kontrollera att kvittot stämmer med utlägget.",
       emptyTitle: "Alla kvitton är bekräftade",
       emptyBody: "Inga kvitton väntar på granskning.",
     },
     account: {
       title: "Bokför",
-      description: "Betalda utlägg och fakturor som saknar verifikation.",
       emptyTitle: "Allt är bokfört",
       emptyBody: "Bokföringen är i fas. Bra jobbat!",
     },
     pay: {
       title: "Betala",
-      description: "Attesterade utlägg med bekräftade kvitton, och attesterade fakturor.",
       emptyTitle: "Inget att betala",
       emptyBody: "Allt som är klart har betalats ut.",
     },
     all: {
       title: "Alla utlägg och fakturor",
-      description: "Allt du har behörighet att se.",
       emptyTitle: "Inga utlägg eller fakturor",
       emptyBody: "Här syns allt du har behörighet att se när det skickats in.",
     },

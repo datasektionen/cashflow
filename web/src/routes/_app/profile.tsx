@@ -24,7 +24,7 @@ function ProfilePage() {
   if (!data.user) throw new Error("GetMe returned no user");
 
   return (
-    <Page eyebrow={data.user.name} title={t.profile.title}>
+    <Page title={t.profile.title}>
       <BankDetailsCard user={data.user} />
     </Page>
   );

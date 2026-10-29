@@ -25,7 +25,6 @@ export const en: Messages = {
     logout: "Log out",
   },
   overview: {
-    greeting: (name) => `Hi ${name}`,
     title: "Your expenses",
     awaitingAttest: "Awaiting attestation",
     awaitingPayment: "Awaiting payout",
@@ -119,31 +118,26 @@ export const en: Messages = {
   queues: {
     attest: {
       title: "Attest",
-      description: "Expenses and invoices with parts in your cost centres. Oldest first.",
       emptyTitle: "Everything is attested",
       emptyBody: "Nothing is waiting for you right now. Nice work!",
     },
     confirm: {
       title: "Confirm receipts",
-      description: "Check that each receipt matches its expense.",
       emptyTitle: "All receipts are confirmed",
       emptyBody: "No receipts are waiting for review.",
     },
     account: {
       title: "Bookkeeping",
-      description: "Paid expenses and invoices without a voucher.",
       emptyTitle: "Everything is booked",
       emptyBody: "The books are up to date. Well done!",
     },
     pay: {
       title: "Pay",
-      description: "Attested expenses with confirmed receipts, and attested invoices.",
       emptyTitle: "Nothing to pay",
       emptyBody: "Everything that is ready has been paid out.",
     },
     all: {
       title: "All expenses and invoices",
-      description: "Everything you have access to.",
       emptyTitle: "No expenses or invoices",
       emptyBody: "Everything you have access to shows up here once it's submitted.",
     },

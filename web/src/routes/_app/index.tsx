@@ -10,7 +10,6 @@ import { ButtonLink } from "#/components/ui/button-link";
 import { Card, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getOverview } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
-import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
 import { useT } from "#/lib/i18n";
 import { transport } from "#/lib/rpc";
 
@@ -28,12 +27,9 @@ function Overview() {
   const t = useT();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const me = useQuery(getMe, {});
-  const firstName = me.data?.user?.name.split(" ")[0] ?? "";
 
   return (
     <Page
-      eyebrow={t.overview.greeting(firstName)}
       title={t.overview.title}
       actions={
         <>

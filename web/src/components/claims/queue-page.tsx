@@ -21,7 +21,7 @@ export function QueuePage({
   const text = t.queues[queue];
   const Icon = icons[queue];
   return (
-    <Page title={text.title} eyebrow={text.description}>
+    <Page title={text.title}>
       <ClaimsList
         scope={queue === "all" ? {} : { queue }}
         search={search}
