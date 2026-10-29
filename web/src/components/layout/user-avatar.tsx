@@ -12,10 +12,20 @@ export function initials(name: string): string {
 }
 
 /** A person's rfinger picture, or their initials while it loads or if there is none. */
-export function UserAvatar({ name, username, className }: { name: string; username?: string; className?: string }) {
+export function UserAvatar({
+  name,
+  username,
+  className,
+  size = "md",
+}: {
+  name: string;
+  username?: string;
+  className?: string;
+  size?: "sm" | "md";
+}) {
   const picture = useProfilePicture(username);
   return (
-    <Avatar className="size-8 rounded-lg">
+    <Avatar className={cn("rounded-lg", size === "sm" ? "size-6 text-[10px]" : "size-8")}>
       {picture && <AvatarImage src={picture} alt="" className="rounded-lg object-cover" />}
       <AvatarFallback className={cn("rounded-lg font-medium", className)}>{initials(name)}</AvatarFallback>
     </Avatar>

@@ -17,8 +17,18 @@ import { useIsMobile } from "#/hooks/use-mobile";
 import { claimLink, type KindSlug } from "#/lib/claims";
 import { useT } from "#/lib/i18n";
 import { ClaimCards } from "./claim-cards";
-import { type ClaimScope, type ClaimSearch, effectiveSort, listRequest, PAGE_SIZE } from "./claim-search";
+import {
+  ADVANCED_KEYS,
+  advancedCount,
+  type ClaimScope,
+  type ClaimSearch,
+  effectiveSort,
+  type Flag,
+  listRequest,
+  PAGE_SIZE,
+} from "./claim-search";
 import { ClaimsTable } from "./claims-table";
+import { FilterChips, FilterPanel } from "./filter-panel";
 
 type Props = {
   scope: ClaimScope;
@@ -32,6 +42,8 @@ type Props = {
   /** More filters, after the built-in ones. */
   toolbar?: ReactNode;
   searchPlaceholder?: string;
+  /** Status filters the list already fixes, left out of the filter panel. */
+  hideFlags?: Flag[];
 };
 
 /**
@@ -39,7 +51,16 @@ type Props = {
  * in the URL. Changing a filter keeps the old rows on screen until the new
  * ones arrive, so the list never flashes.
  */
-export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind, toolbar, searchPlaceholder }: Props) {
+export function ClaimsList({
+  scope,
+  search: urlSearch,
+  onSearch,
+  empty,
+  kind,
+  toolbar,
+  searchPlaceholder,
+  hideFlags,
+}: Props) {
   const t = useT();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -49,8 +70,10 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind, to
   const claims = query.data?.claims ?? [];
   const total = query.data?.total ?? 0;
   const page = search.page ?? 1;
-  const hasFilters = Boolean(search.q || (!kind && search.kind) || search.cc || search.series);
-  const showOwner = !scope.mine;
+  const hasFilters = Boolean(
+    search.q || (!kind && search.kind) || search.cc || search.series || advancedCount(search) > 0,
+  );
+  const showOwner = !scope.mine && !scope.owner;
 
   // Keyboard navigation: J/K move, Enter opens, / searches.
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -112,6 +135,8 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind, to
           </Button>
         )}
         {toolbar}
+        <FilterChips search={search} onSearch={onSearch} />
+        <FilterPanel search={search} onSearch={onSearch} hide={hideFlags} />
       </div>
 
       <Card className="relative gap-0 overflow-hidden p-0">
@@ -141,7 +166,15 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind, to
               action={
                 <Button
                   variant="outline"
-                  onClick={() => onSearch({ q: undefined, kind: undefined, cc: undefined, series: undefined })}
+                  onClick={() =>
+                    onSearch({
+                      q: undefined,
+                      kind: undefined,
+                      cc: undefined,
+                      series: undefined,
+                      ...Object.fromEntries(ADVANCED_KEYS.map((key) => [key, undefined])),
+                    })
+                  }
                 >
                   {t.claims.clearFilters}
                 </Button>

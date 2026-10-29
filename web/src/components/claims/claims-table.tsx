@@ -1,3 +1,4 @@
+import { useQuery } from "@connectrpc/connect-query";
 import { Link } from "@tanstack/react-router";
 import {
   createColumnHelper,
@@ -10,8 +11,10 @@ import {
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { useMemo } from "react";
 import type { ClaimSummary } from "#/gen/cashflow/claim/v1/claim_pb";
+import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
 import { claimLink, formatDate, type QueueSlug, type SortSlug } from "#/lib/claims";
 import { type Messages, useLocale, useT } from "#/lib/i18n";
+import { canLookUpUsers } from "#/lib/navigation";
 import { cn } from "#/lib/utils";
 import { Amount, CostCentreChip, KindIcon, StageBadge } from "./badges";
 
@@ -47,11 +50,13 @@ export function ClaimsTable({
   showVoucher = false,
 }: Props) {
   const t = useT();
+  const caps = useQuery(getMe, {}).data?.capabilities;
+  const ownerLinks = Boolean(caps && canLookUpUsers(caps));
   const locale = useLocale();
 
   const columns = useMemo(
-    () => buildColumns(t, locale, showOwner, onCostCentre, queue, showVoucher),
-    [t, locale, showOwner, onCostCentre, queue, showVoucher],
+    () => buildColumns(t, locale, showOwner, onCostCentre, queue, showVoucher, ownerLinks),
+    [t, locale, showOwner, onCostCentre, queue, showVoucher, ownerLinks],
   );
   const sorting: SortingState = [{ id: sort.sort, desc: sort.desc }];
 
@@ -145,6 +150,7 @@ function buildColumns(
   onCostCentre: (cc: string) => void,
   queue: QueueSlug | undefined,
   showVoucher: boolean,
+  ownerLinks: boolean,
 ) {
   const c = t.claims.columns;
   return column.columns([
@@ -183,7 +189,22 @@ function buildColumns(
             id: "owner",
             header: c.owner,
             meta: { className: "hidden w-40 lg:table-cell" } satisfies ColumnMeta,
-            cell: ({ getValue }) => <span className="block truncate">{getValue()}</span>,
+            cell: ({ getValue, row }) => {
+              const owner = row.original.owner;
+              return ownerLinks && owner ? (
+                // Above the row link, so it opens the person rather than the claim.
+                <Link
+                  to="/users/$username"
+                  params={{ username: owner.username }}
+                  title={t.users.view(owner.name)}
+                  className="relative z-10 block truncate underline-offset-2 hover:underline"
+                >
+                  {getValue()}
+                </Link>
+              ) : (
+                <span className="block truncate">{getValue()}</span>
+              );
+            },
           }),
         ]
       : []),

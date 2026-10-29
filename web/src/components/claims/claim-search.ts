@@ -24,7 +24,34 @@ export type ClaimSearch = {
   page?: number;
   /** A voucher series, e.g. "E", on lists of accounted claims. */
   series?: string;
-};
+} & AdvancedSearch;
+
+/** The filter panel's filters, in the URL like the rest. */
+export type AdvancedSearch = {
+  scc?: string;
+  line?: string;
+  /** YYYY-MM-DD, inclusive. */
+  from?: string;
+  to?: string;
+  /** An owner's username. */
+  owner?: string;
+  inv?: string;
+  ver?: string;
+  /** A payout's id, the number in its reference "Data12". */
+  pay?: number;
+} & Partial<Record<Flag, boolean>>;
+
+export const FLAGS = ["attested", "confirmed", "paid", "accounted", "flagged"] as const;
+export type Flag = (typeof FLAGS)[number];
+
+/** Every filter the panel sets, for counting and clearing them. */
+export const ADVANCED_KEYS = ["scc", "line", "from", "to", "owner", "inv", "ver", "pay", ...FLAGS] as const;
+
+/** How many panel filters are set. */
+export const advancedCount = (search: ClaimSearch) => ADVANCED_KEYS.filter((key) => search[key] !== undefined).length;
+
+const isoDate = (value: unknown) =>
+  typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
 
 const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
   values.find((v) => v === value);
@@ -41,11 +68,26 @@ export function validateClaimSearch(raw: Record<string, unknown>): ClaimSearch {
     desc: raw.desc === true ? true : undefined,
     page,
     series: typeof raw.series === "string" && /^[A-Z]$/.test(raw.series) ? raw.series : undefined,
+    scc: text(raw.scc),
+    line: text(raw.line),
+    from: isoDate(raw.from),
+    to: isoDate(raw.to),
+    owner: text(raw.owner),
+    inv: text(raw.inv),
+    ver: text(raw.ver),
+    pay: typeof raw.pay === "number" && Number.isInteger(raw.pay) && raw.pay > 0 ? raw.pay : undefined,
+    ...Object.fromEntries(FLAGS.map((flag) => [flag, typeof raw[flag] === "boolean" ? raw[flag] : undefined])),
   };
 }
 
 /** Which claims a list shows: the caller's own, a work queue, or everything visible. */
-export type ClaimScope = { mine?: boolean; queue?: QueueSlug; accounted?: boolean };
+export type ClaimScope = {
+  mine?: boolean;
+  queue?: QueueSlug;
+  accounted?: boolean;
+  /** One person's claims (the admin user page). */
+  owner?: string;
+};
 
 export const PAGE_SIZE = 25;
 
@@ -70,6 +112,21 @@ export function listRequest(scope: ClaimScope, search: ClaimSearch): MessageInit
     pageSize: PAGE_SIZE,
     accounted: Boolean(scope.accounted),
     voucherSeries: search.series,
+    filter: {
+      secondaryCostCentre: search.scc,
+      budgetLine: search.line,
+      fromDate: search.from,
+      toDate: search.to,
+      owner: scope.owner ?? search.owner,
+      invoiceNumber: search.inv,
+      verification: search.ver,
+      paymentId: search.pay === undefined ? undefined : BigInt(search.pay),
+      attested: search.attested,
+      confirmed: search.confirmed,
+      paid: search.paid,
+      accounted: search.accounted,
+      flagged: search.flagged,
+    },
   };
 }
 

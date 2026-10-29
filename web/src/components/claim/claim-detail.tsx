@@ -1,15 +1,17 @@
-import { useSuspenseQuery } from "@connectrpc/connect-query";
-import { useCanGoBack, useRouter } from "@tanstack/react-router";
+import { useQuery, useSuspenseQuery } from "@connectrpc/connect-query";
+import { Link, useCanGoBack, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Amount, CostCentreChip, KindIcon } from "#/components/claims/badges";
 import { UserAvatar } from "#/components/layout/user-avatar";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { type Claim, ClaimKind, Stage } from "#/gen/cashflow/claim/v1/claim_pb";
+import { type Claim, ClaimKind, type Person, Stage } from "#/gen/cashflow/claim/v1/claim_pb";
 import { getClaim } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
+import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
 import { formatDate, kindSlug, type QueueSlug, stageSlug } from "#/lib/claims";
 import { useLocale, useT } from "#/lib/i18n";
+import { canLookUpUsers } from "#/lib/navigation";
 import { FilesViewer } from "./files-viewer";
 import { HistoryCard } from "./history-card";
 import { NextStep } from "./next-step";
@@ -113,7 +115,7 @@ function HeaderCard({ claim }: { claim: Claim }) {
                 className="bg-secondary text-secondary-foreground"
               />
               <span className="flex flex-col leading-tight">
-                <span className="font-medium">{s.owner.name}</span>
+                <OwnerName owner={s.owner} />
                 <span className="text-muted-foreground text-xs">
                   {t.claim.submittedOn(formatDate(s.createdDate, locale))}
                 </span>
@@ -143,5 +145,22 @@ function HeaderCard({ claim }: { claim: Claim }) {
         <StageTimeline claim={claim} />
       </CardContent>
     </Card>
+  );
+}
+
+/** The owner, linking to their page for those who may see it. */
+function OwnerName({ owner }: { owner: Person }) {
+  const t = useT();
+  const caps = useQuery(getMe, {}).data?.capabilities;
+  if (!caps || !canLookUpUsers(caps)) return <span className="font-medium">{owner.name}</span>;
+  return (
+    <Link
+      to="/users/$username"
+      params={{ username: owner.username }}
+      title={t.users.view(owner.name)}
+      className="font-medium underline-offset-2 hover:underline"
+    >
+      {owner.name}
+    </Link>
   );
 }

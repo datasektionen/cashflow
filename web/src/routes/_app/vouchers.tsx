@@ -32,6 +32,7 @@ function VouchersPage() {
         search={search}
         onSearch={onSearch}
         searchPlaceholder={t.vouchers.search}
+        hideFlags={["accounted"]}
         empty={{ icon: <ScrollText />, title: t.vouchers.emptyTitle, body: t.vouchers.emptyBody }}
         toolbar={
           series.data &&

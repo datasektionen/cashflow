@@ -14,14 +14,14 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 | All viewable claims (`/admin/expenses`, `/admin/invoices`), visibility = `viewable_by` | ✅ "Alla utlägg" |
 | Queues: attest, confirm, account, pay (`attestable_for` etc.) | ✅ Queue pages |
 | Queue counts (`api/actions/`) | ✅ Sidebar badges |
-| Queue overview by cost centre / owner (`api/actions/overview/`, `/admin`) | 🔜 4 (admin overview) |
+| Queue overview by cost centre / owner (`api/actions/overview/`, `/admin`) | ✅ "Att göra" on the home page (`GetWorkOverview`); each count opens the queue filtered to it, pay counts open the person |
 | Search (fuzzy on description) | ✅ Substring on description, owner and `#number` |
 | Filters: type, cost centre | ✅ |
-| Filters: secondary cost centre, budget line, date range, owner, invoice number, verification, voucher series, reimbursement, attested/confirmed/paid/accounted/flagged checkboxes | 🔜 4 (advanced filter panel) |
+| Filters: secondary cost centre, budget line, date range, owner, invoice number, verification, voucher series, reimbursement, attested/confirmed/paid/accounted/flagged checkboxes | ✅ filter panel on every claims list (yes/no/any per status), active filters as removable chips, all in the URL. Voucher series on the vouchers page |
 | Sorting: date, total, description, owner, created | ✅ |
 | Sorting: type, flagged, cost centre | ➖ queues keep flagged last automatically; type is a filter |
 | Claim detail: parts, files, comments, confirmed by, payment, invoice fields | ✅ |
-| Row context menu: open in new tab, copy link, view owner, account | ✅ real links (new tab, copy) · 🔜 4 view owner · ✅ account: rows in the bookkeeping queue open the booking page |
+| Row context menu: open in new tab, copy link, view owner, account | ✅ real links (new tab, copy) · ✅ view owner: owner names link to the person page for payers and admins · ✅ account: rows in the bookkeeping queue open the booking page |
 | Profile pictures (rfinger, `api/users/profile-pictures/`) | ✅ cached 12 h on the server; one batched request per page (TanStack Pacer) |
 
 ## Claims: writing
@@ -80,12 +80,12 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 
 | Feature | Cashflow 4 |
 |---|---|
-| Budget page: cost centres from GOrdian, "blown" filter (`/budget`) | 🔜 4 |
-| Cost centre detail: budget lines with uploaded / attested / paid vs budget (`/budget/[id]`) | 🔜 4 |
+| Budget page: cost centres from GOrdian, "blown" filter (`/budget`) | ✅ one page: cost centres grouped by kind with search, the overspent filter and a year switch; cost centres only seen on old claims are not listed |
+| Cost centre detail: budget lines with uploaded / attested / paid vs budget (`/budget/[id]`) | ✅ beside the list (`/budget?cc=`), with a usage bar per line; each line links to its claims for the year |
 | GOrdian cache warm-up (`warm_gordian_cache`) | ✅ in memory, loaded at start and refreshed every 12 hours |
-| Statistics: monthly, yearly, leaderboard by total and count (`/stats`) | 🔜 4 |
-| Personal stats on one's claims page (totals, rank) | 🔜 4 |
-| Admin user page: a user's claims and bank details (`/admin/users/[user]`, pay or view-all) | 🔜 4 |
-| User list (`api/users/`) | 🔜 4, as part of the admin user page |
+| Statistics: monthly, yearly, leaderboard by total and count (`/stats`) | ✅ the year by month (expenses or invoices, sum or number), top ten by sum and by number for all time, this year or this month. Monthly is the yearly chart's month |
+| Personal stats on one's claims page (totals, rank) | ✅ the place on this year's leaderboard on the home page; full stats on the person page. Equal totals share a place |
+| Admin user page: a user's claims and bank details (`/admin/users/[user]`, pay or view-all) | ✅ `/users/$username` with bank details to copy, their stats and claims |
+| User list (`api/users/`) | ✅ `/users`, searchable (50 at a time) |
 | Own bank details | ✅ Profile |
 | Language sv/en, dark mode | ✅ |

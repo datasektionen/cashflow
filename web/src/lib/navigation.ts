@@ -15,6 +15,7 @@ import {
   ScrollText,
   Stamp,
   UserRound,
+  UsersRound,
   Wallet,
 } from "lucide-react";
 import { Queue } from "#/gen/cashflow/claim/v1/claim_pb";
@@ -45,6 +46,8 @@ export type NavGroup = {
 // Queues show to those who can act on them, and to view-all admins.
 const canAttest = (c: Capabilities) => c.attestAny || c.viewAll;
 const canAccount = (c: Capabilities) => c.accountingAny || c.viewAll;
+// As the server's mayLookUpUsers: the user list and pages.
+export const canLookUpUsers = (c: Capabilities) => c.pay || c.viewAll;
 // Anyone who sees claims beyond their own (as ClaimQuerySet.viewable_by).
 const canSeeOthers = (c: Capabilities) =>
   c.viewAll || c.pay || c.confirm || c.attestAny || c.accountingAny || c.viewCostCentres.length > 0;
@@ -96,6 +99,7 @@ export const navigation: NavGroup[] = [
         show: (c) => c.pay || c.viewAll || c.viewAllPayments,
       },
       { to: "/vouchers", label: (t) => t.nav.vouchers, icon: ScrollText, key: "V", show: canAccount },
+      { to: "/users", label: (t) => t.nav.users, icon: UsersRound, key: "R", show: canLookUpUsers },
     ],
   },
   {
