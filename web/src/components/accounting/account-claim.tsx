@@ -167,8 +167,8 @@ export function AccountClaim({ kind, number, queue }: { kind: ClaimKind; number:
         {/* Skipping one: booking moves on by itself. */}
         {queue && <NextInQueue queue={queue} current={number} kind={kind} size="sm" />}
       </div>
-      <div className="mt-2 grid items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="flex flex-col gap-3">
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div className="flex min-w-0 flex-col gap-3">
           <Header claim={claim} />
           {body()}
         </div>
