@@ -32,6 +32,8 @@ var (
 	ErrEmptyComment     = &Problem{Code: "empty_comment"}
 	ErrPartNotOnClaim   = &Problem{Code: "part_not_on_claim"}
 	ErrFlagUnchanged    = &Problem{Code: "flag_unchanged"}
+	ErrNoExpenses       = &Problem{Code: "no_expenses"}
+	ErrSeveralReceivers = &Problem{Code: "several_receivers"}
 )
 
 // State is what the rules look at.
@@ -199,4 +201,26 @@ func (v Viewer) Actions(s State) Actions {
 		}
 	}
 	return a
+}
+
+// CanPayOut: an expense may join a payout when it is fully attested, its
+// receipt confirmed, not yet paid and not flagged. Cashflow 3's payment
+// endpoint only checked "not reimbursed"; the pay queue's rules are applied
+// here too, so nothing unready can be paid by accident.
+func (v Viewer) CanPayOut(s State) error {
+	switch {
+	case s.Kind != Expense:
+		return ErrNotExpense
+	case !v.Perms.MayPay():
+		return ErrNotPermitted
+	case s.Paid:
+		return ErrAlreadyPaid
+	case s.Flagged:
+		return ErrFlagged
+	case !s.fullyAttested():
+		return ErrNotFullyAttested
+	case !s.Confirmed:
+		return ErrNotConfirmed
+	}
+	return nil
 }

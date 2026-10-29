@@ -47,31 +47,40 @@ func (s *Store) withClaim(ctx context.Context, v Viewer, kind Kind, number int64
 		return err
 	}
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
-		q := db.New(tx)
-		claim, err := q.LockClaim(ctx, summary.ID)
+		c, err := lock(ctx, db.New(tx), v, summary)
 		if err != nil {
-			return fmt.Errorf("lock claim: %w", err)
+			return err
 		}
-		actor, err := q.GetActor(ctx, v.Username)
-		if err != nil {
-			return fmt.Errorf("actor: %w", err)
-		}
-		parts, err := q.ListPartStates(ctx, claim.ID)
-		if err != nil {
-			return fmt.Errorf("parts: %w", err)
-		}
-		state := State{
-			Kind:      Kind(claim.Type.String),
-			Owner:     summary.Owner.Username,
-			Flagged:   claim.IsFlagged.Bool,
-			Confirmed: claim.ConfirmedByID.Valid,
-			Paid:      claim.ReimbursementID.Valid || claim.PaidByID.Valid || claim.PaidAt.Valid,
-		}
-		for _, p := range parts {
-			state.Parts = append(state.Parts, PartState{ID: p.ID, CostCentre: p.CostCentre, Attested: p.Attested})
-		}
-		return fn(&change{q: q, claim: claim, state: state, viewer: v, actor: actor})
+		return fn(c)
 	})
+}
+
+// lock locks a claim the viewer may see inside a transaction and reads the
+// state the rules need.
+func lock(ctx context.Context, q *db.Queries, v Viewer, summary Summary) (*change, error) {
+	claim, err := q.LockClaim(ctx, summary.ID)
+	if err != nil {
+		return nil, fmt.Errorf("lock claim: %w", err)
+	}
+	actor, err := q.GetActor(ctx, v.Username)
+	if err != nil {
+		return nil, fmt.Errorf("actor: %w", err)
+	}
+	parts, err := q.ListPartStates(ctx, claim.ID)
+	if err != nil {
+		return nil, fmt.Errorf("parts: %w", err)
+	}
+	state := State{
+		Kind:      Kind(claim.Type.String),
+		Owner:     summary.Owner.Username,
+		Flagged:   claim.IsFlagged.Bool,
+		Confirmed: claim.ConfirmedByID.Valid,
+		Paid:      claim.ReimbursementID.Valid || claim.PaidByID.Valid || claim.PaidAt.Valid,
+	}
+	for _, p := range parts {
+		state.Parts = append(state.Parts, PartState{ID: p.ID, CostCentre: p.CostCentre, Attested: p.Attested})
+	}
+	return &change{q: q, claim: claim, state: state, viewer: v, actor: actor}, nil
 }
 
 // State returns the rule state of a claim the viewer may see, for Actions.
@@ -261,3 +270,5 @@ func IsProblem(err error) (*Problem, bool) {
 	var p *Problem
 	return p, errors.As(err, &p)
 }
+
+func pgInt8(v int64) pgtype.Int8 { return pgtype.Int8{Int64: v, Valid: true} }

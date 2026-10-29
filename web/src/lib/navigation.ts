@@ -86,7 +86,14 @@ export const navigation: NavGroup[] = [
         queue: Queue.PAY,
       },
       { to: "/claims", label: (t) => t.nav.allClaims, icon: Layers, key: "L", show: canSeeOthers },
-      { to: "/payments", label: (t) => t.nav.payments, icon: Wallet, key: "U", show: (c) => c.viewAllPayments },
+      {
+        to: "/payments",
+        label: (t) => t.nav.payments,
+        icon: Wallet,
+        key: "U",
+        // As the server's claims.Viewer.MaySeePayments.
+        show: (c) => c.pay || c.viewAll || c.viewAllPayments,
+      },
     ],
   },
   {

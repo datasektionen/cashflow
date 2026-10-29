@@ -27,6 +27,8 @@ type Props = {
   onSearch: (change: Partial<ClaimSearch>) => void;
   /** Shown when the list is empty without any filter. */
   empty: { icon: ReactNode; title: string; body: string; action?: ReactNode };
+  /** Shows only this kind, without the kind filter. */
+  kind?: KindSlug;
 };
 
 /**
@@ -34,16 +36,17 @@ type Props = {
  * in the URL. Changing a filter keeps the old rows on screen until the new
  * ones arrive, so the list never flashes.
  */
-export function ClaimsList({ scope, search, onSearch, empty }: Props) {
+export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: Props) {
   const t = useT();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const search = kind ? { ...urlSearch, kind } : urlSearch;
   const query = useQuery(listClaims, listRequest(scope, search), { placeholderData: keepPreviousData });
 
   const claims = query.data?.claims ?? [];
   const total = query.data?.total ?? 0;
   const page = search.page ?? 1;
-  const hasFilters = Boolean(search.q || search.kind || search.cc);
+  const hasFilters = Boolean(search.q || (!kind && search.kind) || search.cc);
   const showOwner = !scope.mine;
 
   // Keyboard navigation: J/K move, Enter opens, / searches.
@@ -78,20 +81,22 @@ export function ClaimsList({ scope, search, onSearch, empty }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <SearchBox value={search.q ?? ""} onChange={(q) => onSearch({ q: q || undefined })} inputRef={searchRef} />
-        <ToggleGroup
-          variant="outline"
-          value={[search.kind ?? "all"]}
-          onValueChange={(value: string[]) => {
-            const kind = value[0];
-            if (kind) onSearch({ kind: kind === "all" ? undefined : (kind as KindSlug) });
-          }}
-        >
-          {(["all", "expense", "invoice"] as const).map((kind) => (
-            <ToggleGroupItem key={kind} value={kind} className="px-3">
-              {t.claims.kindFilter[kind]}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        {!kind && (
+          <ToggleGroup
+            variant="outline"
+            value={[search.kind ?? "all"]}
+            onValueChange={(value: string[]) => {
+              const kind = value[0];
+              if (kind) onSearch({ kind: kind === "all" ? undefined : (kind as KindSlug) });
+            }}
+          >
+            {(["all", "expense", "invoice"] as const).map((kind) => (
+              <ToggleGroupItem key={kind} value={kind} className="px-3">
+                {t.claims.kindFilter[kind]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
         {search.cc && (
           <Button variant="secondary" size="sm" onClick={() => onSearch({ cc: undefined })} className="gap-1.5">
             {t.claims.costCentreFilter(search.cc)}

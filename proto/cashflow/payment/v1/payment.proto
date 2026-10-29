@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package cashflow.payment.v1;
+
+import "cashflow/claim/v1/claim.proto";
+
+// PaymentService pays out expenses: one bank transfer per person, covering
+// any number of their expenses. Invoices are paid one by one through
+// cashflow.claim.v1.ClaimService.PayInvoice.
+service PaymentService {
+  // ListPendingPayouts lists, per person, the expenses in the pay queue,
+  // with the bank details to pay them to.
+  rpc ListPendingPayouts(ListPendingPayoutsRequest) returns (ListPendingPayoutsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // CreatePayout records that the caller transferred money for the given
+  // expenses, which must all be one person's and ready to pay.
+  rpc CreatePayout(CreatePayoutRequest) returns (CreatePayoutResponse);
+
+  // ListPayments lists payouts, newest first.
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+message BankDetails {
+  string clearing_number = 1;
+  string account = 2;
+  string bank_name = 3;
+}
+
+message PendingPayout {
+  cashflow.claim.v1.Person receiver = 1;
+  BankDetails bank = 2;
+  // Flagged expenses are listed but cannot be paid until the flag is removed.
+  repeated cashflow.claim.v1.ClaimSummary expenses = 3;
+  // The total of the expenses that can be paid now.
+  int64 total_ore = 4;
+}
+
+message ListPendingPayoutsRequest {}
+
+message ListPendingPayoutsResponse {
+  repeated PendingPayout payouts = 1;
+}
+
+message CreatePayoutRequest {
+  repeated int64 expense_numbers = 1;
+}
+
+message CreatePayoutResponse {
+  Payment payment = 1;
+  // Where the money goes, for the confirmation the payer sees.
+  BankDetails bank = 2;
+}
+
+message Payment {
+  int64 id = 1;
+  // The bank reference, e.g. "Data1234".
+  string tag = 2;
+  // YYYY-MM-DD.
+  string date = 3;
+  cashflow.claim.v1.Person payer = 4;
+  cashflow.claim.v1.Person receiver = 5;
+  int64 total_ore = 6;
+  repeated int64 expense_numbers = 7;
+}
+
+message ListPaymentsRequest {
+  // Part of a payment reference, e.g. "Data12".
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  int32 total = 2;
+}

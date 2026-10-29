@@ -42,9 +42,9 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 | Confirm / unconfirm an invoice | ➖ the endpoints exist but the model always refuses (`NotConfirmableError`) |
 | Flag / unflag an expense (attesters and payers) | ✅ |
 | Pay an invoice (fully attested, unpaid) | ✅ |
-| Pay out expenses: pending payouts per person with bank details, pick expenses, create a payment (`api/payments/`, `/admin/pay/expenses`) | 🔜 2 |
-| Payments list with search by tag (`/admin/payments`) | 🔜 2 |
-| Workflow steps leave a comment ("Attesterar kvittodelen …", "Betalade ut i betalning N", …) | ✅ same Swedish texts, so both apps show the same history while they run side by side (payouts: 🔜 2) |
+| Pay out expenses: pending payouts per person with bank details, pick expenses, create a payment (`api/payments/`, `/admin/pay/expenses`) | ✅ Betala: one card per person; afterwards amount, account and reference to copy into the bank. Stricter: only ready, unflagged expenses |
+| Payments list with search by tag (`/admin/payments`) | ✅ Utbetalningar |
+| Workflow steps leave a comment ("Attesterar kvittodelen …", "Betalade ut i betalning N", …) | ✅ same Swedish texts, so both apps show the same history while they run side by side |
 
 ## New in Cashflow 4
 
