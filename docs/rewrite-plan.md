@@ -66,8 +66,10 @@ merge the claim tables, store öre, encrypt the Fortnox tokens, drop Django's au
    schema, compose (Postgres, nyckeln, dock), CI, `Dockerfile.next`, `job.next.nomad.hcl`. `web/` SPA shell with design
    tokens, i18n, the form kit, hotkeys and devtools; the profile/bank details page as the first full slice. See
    [cashflow4.md](cashflow4.md).
-1. **Read path**: claims list/detail, files, budget lookups, the action queues (attest, confirm, account, pay).
-   Brings the shared TanStack Table setup and Pacer (debounced search).
+1. **Read path** (done): `ClaimService` (lists, the four queues, detail, queue counts, overview totals), attachments
+   streamed through `/files/{id}` with a permission check, the claims table (TanStack Table, URL search params,
+   debounced search, J/K keyboard navigation, mobile cards), the claim detail page, and `cmd/seed`. Budget lookups
+   moved to phase 2, where the forms need them.
 2. **Write path**: create/edit expenses and invoices, uploads (HEIC → JPEG), comments, attest/confirm/pay with undo,
    emails through the outbox. Brings minio and mailpit into `compose.next.yaml`.
 3. **Fortnox**: OAuth, accounting views, voucher creation, with parity tests against the Python implementation.

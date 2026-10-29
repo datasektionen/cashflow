@@ -15,6 +15,12 @@ $ make dev-server    # terminal 1: http://localhost:3000
 $ make dev-web       # terminal 2: http://localhost:5173  <- open this one
 ```
 
+Fill the database with claims at every stage, with receipts in the S3 mock:
+
+```console
+$ cd server && go run ./cmd/seed      # add -reset to start over
+```
+
 Log in as any user from `compose.next.yaml` (e.g. `turetek`, the kassör, or `diadat`, who attests one cost centre).
 Their Hive permissions are listed there too.
 
@@ -50,7 +56,12 @@ kronor, so queries convert with `(amount * 100)::bigint`. Only `formatOre` in `w
 decimal, for display.
 
 **Permissions** are checked on the server for every action; the `Capabilities` in `GetMe` only decide what the
-frontend shows. Permission rules live in `server/internal/perm` and nowhere else.
+frontend shows. Hive-based rules live in `server/internal/perm`; which claims someone sees and which queue a claim
+is in live in `server/internal/claims` as SQL predicates, shared by lists, counts, lookups and file access. Their
+tests run against Postgres (`TEST_DATABASE_URL`, set by `make check`).
+
+**Lists** keep their state in the URL (`validateClaimSearch`), so views can be shared and survive reloads. Use
+`ClaimsList` for any list of claims; it brings search, sorting, paging, keyboard navigation and empty states.
 
 **Validation** happens on the server. A handler collects problems with `violations.add(field, code)` and returns
 `v.err()`, an `InvalidArgument` error carrying `FieldViolations`. The frontend shows each code's message from

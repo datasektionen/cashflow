@@ -252,7 +252,7 @@ func (s *seeder) expense(ctx context.Context, owner *user, st stage, flagged boo
 	if err := s.attach(ctx, claimID, dataID, owner, description, amount, date, i%3 == 0); err != nil {
 		return err
 	}
-	if err := s.comments(ctx, claimID, owner, st, flagged, paymentID); err != nil {
+	if err := s.comments(ctx, claimID, owner, st, flagged, paymentID, date); err != nil {
 		return err
 	}
 	s.expenses++
@@ -290,7 +290,7 @@ func (s *seeder) invoice(ctx context.Context, owner *user, st stage, i int) erro
 	if err := s.attach(ctx, claimID, dataID, owner, "Faktura från "+supplier, amount, date, true); err != nil {
 		return err
 	}
-	if err := s.comments(ctx, claimID, owner, st, false, nil); err != nil {
+	if err := s.comments(ctx, claimID, owner, st, false, nil, date); err != nil {
 		return err
 	}
 	s.invoices++
@@ -340,7 +340,7 @@ func (s *seeder) attach(ctx context.Context, claimID, number int64, owner *user,
 }
 
 // comments writes the history Cashflow 3 would have, plus a human note now and then.
-func (s *seeder) comments(ctx context.Context, claimID int64, owner *user, st stage, flagged bool, paymentID *int64) error {
+func (s *seeder) comments(ctx context.Context, claimID int64, owner *user, st stage, flagged bool, paymentID *int64, from time.Time) error {
 	type c struct {
 		author *user
 		body   string
@@ -364,9 +364,12 @@ func (s *seeder) comments(ctx context.Context, claimID int64, owner *user, st st
 	if st == accounted {
 		list = append(list, c{users[5], "Bokförde i Fortnox."})
 	}
-	at := s.now.AddDate(0, 0, -40)
+	at := from.AddDate(0, 0, 1)
 	for _, cm := range list {
-		at = at.Add(time.Duration(6+s.pick(40)) * time.Hour)
+		at = at.Add(time.Duration(6+s.pick(30)) * time.Hour)
+		if at.After(s.now) {
+			at = s.now.Add(-time.Hour)
+		}
 		if _, err := s.tx.Exec(ctx, `INSERT INTO core_comment (claim_id, date, author_id, content) VALUES ($1, $2, $3, $4)`,
 			claimID, at, cm.author.profileID, cm.body); err != nil {
 			return err

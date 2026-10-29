@@ -14,13 +14,16 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAttestRouteImport } from './routes/_app/attest'
 import { Route as AppBudgetRouteImport } from './routes/_app/budget'
+import { Route as AppClaimsRouteImport } from './routes/_app/claims'
 import { Route as AppConfirmRouteImport } from './routes/_app/confirm'
 import { Route as AppFortnoxRouteImport } from './routes/_app/fortnox'
 import { Route as AppPayRouteImport } from './routes/_app/pay'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
+import { Route as AppExpensesNumberRouteImport } from './routes/_app/expenses/$number'
 import { Route as AppExpensesNewRouteImport } from './routes/_app/expenses/new'
+import { Route as AppInvoicesNumberRouteImport } from './routes/_app/invoices/$number'
 import { Route as AppInvoicesNewRouteImport } from './routes/_app/invoices/new'
 
 const AppRoute = AppRouteImport.update({
@@ -45,6 +48,11 @@ const AppAttestRoute = AppAttestRouteImport.update({
 const AppBudgetRoute = AppBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClaimsRoute = AppClaimsRouteImport.update({
+  id: '/claims',
+  path: '/claims',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfirmRoute = AppConfirmRouteImport.update({
@@ -77,9 +85,19 @@ const AppStatsRoute = AppStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExpensesNumberRoute = AppExpensesNumberRouteImport.update({
+  id: '/expenses/$number',
+  path: '/expenses/$number',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExpensesNewRoute = AppExpensesNewRouteImport.update({
   id: '/expenses/new',
   path: '/expenses/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvoicesNumberRoute = AppInvoicesNumberRouteImport.update({
+  id: '/invoices/$number',
+  path: '/invoices/$number',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInvoicesNewRoute = AppInvoicesNewRouteImport.update({
@@ -93,19 +111,23 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRoute
   '/attest': typeof AppAttestRoute
   '/budget': typeof AppBudgetRoute
+  '/claims': typeof AppClaimsRoute
   '/confirm': typeof AppConfirmRoute
   '/fortnox': typeof AppFortnoxRoute
   '/pay': typeof AppPayRoute
   '/payments': typeof AppPaymentsRoute
   '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
+  '/expenses/$number': typeof AppExpensesNumberRoute
   '/expenses/new': typeof AppExpensesNewRoute
+  '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
 }
 export interface FileRoutesByTo {
   '/account': typeof AppAccountRoute
   '/attest': typeof AppAttestRoute
   '/budget': typeof AppBudgetRoute
+  '/claims': typeof AppClaimsRoute
   '/confirm': typeof AppConfirmRoute
   '/fortnox': typeof AppFortnoxRoute
   '/pay': typeof AppPayRoute
@@ -113,7 +135,9 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
   '/': typeof AppIndexRoute
+  '/expenses/$number': typeof AppExpensesNumberRoute
   '/expenses/new': typeof AppExpensesNewRoute
+  '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
 }
 export interface FileRoutesById {
@@ -122,6 +146,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRoute
   '/_app/attest': typeof AppAttestRoute
   '/_app/budget': typeof AppBudgetRoute
+  '/_app/claims': typeof AppClaimsRoute
   '/_app/confirm': typeof AppConfirmRoute
   '/_app/fortnox': typeof AppFortnoxRoute
   '/_app/pay': typeof AppPayRoute
@@ -129,7 +154,9 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/_app/stats': typeof AppStatsRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/expenses/$number': typeof AppExpensesNumberRoute
   '/_app/expenses/new': typeof AppExpensesNewRoute
+  '/_app/invoices/$number': typeof AppInvoicesNumberRoute
   '/_app/invoices/new': typeof AppInvoicesNewRoute
 }
 export interface FileRouteTypes {
@@ -139,19 +166,23 @@ export interface FileRouteTypes {
     | '/account'
     | '/attest'
     | '/budget'
+    | '/claims'
     | '/confirm'
     | '/fortnox'
     | '/pay'
     | '/payments'
     | '/profile'
     | '/stats'
+    | '/expenses/$number'
     | '/expenses/new'
+    | '/invoices/$number'
     | '/invoices/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account'
     | '/attest'
     | '/budget'
+    | '/claims'
     | '/confirm'
     | '/fortnox'
     | '/pay'
@@ -159,7 +190,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/stats'
     | '/'
+    | '/expenses/$number'
     | '/expenses/new'
+    | '/invoices/$number'
     | '/invoices/new'
   id:
     | '__root__'
@@ -167,6 +200,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/attest'
     | '/_app/budget'
+    | '/_app/claims'
     | '/_app/confirm'
     | '/_app/fortnox'
     | '/_app/pay'
@@ -174,7 +208,9 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/stats'
     | '/_app/'
+    | '/_app/expenses/$number'
     | '/_app/expenses/new'
+    | '/_app/invoices/$number'
     | '/_app/invoices/new'
   fileRoutesById: FileRoutesById
 }
@@ -219,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBudgetRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/claims': {
+      id: '/_app/claims'
+      path: '/claims'
+      fullPath: '/claims'
+      preLoaderRoute: typeof AppClaimsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/confirm': {
       id: '/_app/confirm'
       path: '/confirm'
@@ -261,11 +304,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStatsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/expenses/$number': {
+      id: '/_app/expenses/$number'
+      path: '/expenses/$number'
+      fullPath: '/expenses/$number'
+      preLoaderRoute: typeof AppExpensesNumberRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/expenses/new': {
       id: '/_app/expenses/new'
       path: '/expenses/new'
       fullPath: '/expenses/new'
       preLoaderRoute: typeof AppExpensesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/invoices/$number': {
+      id: '/_app/invoices/$number'
+      path: '/invoices/$number'
+      fullPath: '/invoices/$number'
+      preLoaderRoute: typeof AppInvoicesNumberRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/invoices/new': {
@@ -282,6 +339,7 @@ interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppAttestRoute: typeof AppAttestRoute
   AppBudgetRoute: typeof AppBudgetRoute
+  AppClaimsRoute: typeof AppClaimsRoute
   AppConfirmRoute: typeof AppConfirmRoute
   AppFortnoxRoute: typeof AppFortnoxRoute
   AppPayRoute: typeof AppPayRoute
@@ -289,7 +347,9 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppStatsRoute: typeof AppStatsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppExpensesNumberRoute: typeof AppExpensesNumberRoute
   AppExpensesNewRoute: typeof AppExpensesNewRoute
+  AppInvoicesNumberRoute: typeof AppInvoicesNumberRoute
   AppInvoicesNewRoute: typeof AppInvoicesNewRoute
 }
 
@@ -297,6 +357,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppAttestRoute: AppAttestRoute,
   AppBudgetRoute: AppBudgetRoute,
+  AppClaimsRoute: AppClaimsRoute,
   AppConfirmRoute: AppConfirmRoute,
   AppFortnoxRoute: AppFortnoxRoute,
   AppPayRoute: AppPayRoute,
@@ -304,7 +365,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppStatsRoute: AppStatsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppExpensesNumberRoute: AppExpensesNumberRoute,
   AppExpensesNewRoute: AppExpensesNewRoute,
+  AppInvoicesNumberRoute: AppInvoicesNumberRoute,
   AppInvoicesNewRoute: AppInvoicesNewRoute,
 }
 

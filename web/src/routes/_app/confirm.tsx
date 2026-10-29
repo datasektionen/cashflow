@@ -1,17 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Page } from "#/components/layout/page";
-import { ComingSoon } from "#/components/layout/states";
-import { useT } from "#/lib/i18n";
+import { applySearchChange, validateClaimSearch } from "#/components/claims/claim-search";
+import { prefetchClaims } from "#/components/claims/claims-route";
+import { QueuePage } from "#/components/claims/queue-page";
 
 export const Route = createFileRoute("/_app/confirm")({
+  validateSearch: validateClaimSearch,
+  loaderDeps: ({ search }) => search,
+  loader: prefetchClaims({ queue: "confirm" }),
   component: ConfirmPage,
 });
 
 function ConfirmPage() {
-  const t = useT();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
-    <Page title={t.nav.confirm}>
-      <ComingSoon />
-    </Page>
+    <QueuePage
+      queue="confirm"
+      search={search}
+      onSearch={(change) => navigate({ search: (prev) => applySearchChange(prev, change), replace: true })}
+    />
   );
 }

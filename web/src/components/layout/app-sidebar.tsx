@@ -1,3 +1,4 @@
+import { useQuery } from "@connectrpc/connect-query";
 import { Link } from "@tanstack/react-router";
 import {
   Sidebar,
@@ -7,9 +8,12 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "#/components/ui/sidebar";
+import type { Queue } from "#/gen/cashflow/claim/v1/claim_pb";
+import { getQueueCounts } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
 import type { Capabilities, User } from "#/gen/cashflow/user/v1/user_pb";
 import { useT } from "#/lib/i18n";
 import { visibleNavigation } from "#/lib/navigation";
@@ -24,6 +28,7 @@ type Props = {
 
 export function AppSidebar({ user, capabilities, onShowShortcuts }: Props) {
   const t = useT();
+  const counts = useQueueCounts();
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader className="px-3 pt-3">
@@ -49,6 +54,11 @@ export function AppSidebar({ user, capabilities, onShowShortcuts }: Props) {
                     <item.icon />
                     <span>{item.label(t)}</span>
                   </SidebarMenuButton>
+                  {item.queue !== undefined && Boolean(counts.get(item.queue)) && (
+                    <SidebarMenuBadge className="amount rounded-full bg-sidebar-primary/15 text-sidebar-primary">
+                      {counts.get(item.queue)}
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -64,4 +74,10 @@ export function AppSidebar({ user, capabilities, onShowShortcuts }: Props) {
       </SidebarFooter>
     </Sidebar>
   );
+}
+
+/** How many claims wait in each of the user's queues; refreshed every minute and on focus. */
+function useQueueCounts(): Map<Queue, number> {
+  const { data } = useQuery(getQueueCounts, {}, { refetchInterval: 60_000 });
+  return new Map(data?.counts.map((c) => [c.queue, c.count]));
 }

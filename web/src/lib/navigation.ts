@@ -8,6 +8,7 @@ import {
   FileText,
   Home,
   Landmark,
+  Layers,
   type LucideIcon,
   PiggyBank,
   Receipt,
@@ -15,6 +16,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
+import { Queue } from "#/gen/cashflow/claim/v1/claim_pb";
 import type { Capabilities } from "#/gen/cashflow/user/v1/user_pb";
 import type { Messages } from "#/lib/i18n";
 
@@ -30,6 +32,8 @@ export type NavItem = {
   key: LetterKey;
   /** Who sees the item; absent means everyone. */
   show?: (c: Capabilities) => boolean;
+  /** The work queue behind the item, whose count the sidebar shows. */
+  queue?: Queue;
 };
 
 export type NavGroup = {
@@ -40,6 +44,9 @@ export type NavGroup = {
 // Queues show to those who can act on them, and to view-all admins.
 const canAttest = (c: Capabilities) => c.attestAny || c.viewAll;
 const canAccount = (c: Capabilities) => c.accountingAny || c.viewAll;
+// Anyone who sees claims beyond their own (as ClaimQuerySet.viewable_by).
+const canSeeOthers = (c: Capabilities) =>
+  c.viewAll || c.pay || c.confirm || c.attestAny || c.accountingAny || c.viewCostCentres.length > 0;
 
 export const navigation: NavGroup[] = [
   {
@@ -53,10 +60,32 @@ export const navigation: NavGroup[] = [
   {
     label: (t) => t.nav.groups.manage,
     items: [
-      { to: "/attest", label: (t) => t.nav.attest, icon: Stamp, key: "A", show: canAttest },
-      { to: "/confirm", label: (t) => t.nav.confirm, icon: BadgeCheck, key: "C", show: (c) => c.confirm || c.viewAll },
-      { to: "/account", label: (t) => t.nav.account, icon: BookOpenCheck, key: "K", show: canAccount },
-      { to: "/pay", label: (t) => t.nav.pay, icon: Banknote, key: "P", show: (c) => c.pay || c.viewAll },
+      { to: "/attest", label: (t) => t.nav.attest, icon: Stamp, key: "A", show: canAttest, queue: Queue.ATTEST },
+      {
+        to: "/confirm",
+        label: (t) => t.nav.confirm,
+        icon: BadgeCheck,
+        key: "C",
+        show: (c) => c.confirm || c.viewAll,
+        queue: Queue.CONFIRM,
+      },
+      {
+        to: "/account",
+        label: (t) => t.nav.account,
+        icon: BookOpenCheck,
+        key: "K",
+        show: canAccount,
+        queue: Queue.ACCOUNT,
+      },
+      {
+        to: "/pay",
+        label: (t) => t.nav.pay,
+        icon: Banknote,
+        key: "P",
+        show: (c) => c.pay || c.viewAll,
+        queue: Queue.PAY,
+      },
+      { to: "/claims", label: (t) => t.nav.allClaims, icon: Layers, key: "L", show: canSeeOthers },
       { to: "/payments", label: (t) => t.nav.payments, icon: Wallet, key: "U", show: (c) => c.viewAllPayments },
     ],
   },
