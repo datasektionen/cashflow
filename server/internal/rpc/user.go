@@ -2,11 +2,14 @@ package rpc
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"connectrpc.com/connect"
+	auth "github.com/datasektionen/GO-auth-yourself"
+	"github.com/jackc/pgx/v5"
 
 	userv1 "github.com/datasektionen/cashflow/server/gen/cashflow/user/v1"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
@@ -21,11 +24,10 @@ func (s *UserService) GetMe(ctx context.Context, _ *connect.Request[userv1.GetMe
 	c := callerFrom(ctx)
 
 	// The frontend calls GetMe on load, which is when a new SSO user gets a row.
-	u, err := s.Queries.UpsertUser(ctx, db.UpsertUserParams{
-		Username: c.user.Username,
-		Name:     c.user.Name,
-		Email:    c.user.Email,
-	})
+	if err := s.ensureUser(ctx, c.user); err != nil {
+		return nil, err
+	}
+	u, err := s.Queries.GetUser(ctx, c.user.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +62,21 @@ func (s *UserService) GetMe(ctx context.Context, _ *connect.Request[userv1.GetMe
 	}), nil
 }
 
+// ensureUser creates the Django user and profile rows on a first login. Two
+// first requests can race: the loser inserts nothing and, not seeing the
+// winner's uncommitted row, finds no user, so it tries once more.
+func (s *UserService) ensureUser(ctx context.Context, user auth.User) error {
+	first, last, _ := strings.Cut(user.Name, " ")
+	params := db.UpsertUserParams{Username: user.Username, FirstName: first, LastName: last, Email: user.Email}
+	for attempt := 0; ; attempt++ {
+		_, err := s.Queries.UpsertUser(ctx, params)
+		if errors.Is(err, pgx.ErrNoRows) && attempt == 0 {
+			continue
+		}
+		return err
+	}
+}
+
 func (s *UserService) UpdateBankDetails(ctx context.Context, req *connect.Request[userv1.UpdateBankDetailsRequest]) (*connect.Response[userv1.UpdateBankDetailsResponse], error) {
 	details, err := parseBankDetails(req.Msg)
 	if err != nil {
@@ -67,7 +84,10 @@ func (s *UserService) UpdateBankDetails(ctx context.Context, req *connect.Reques
 	}
 	details.Username = callerFrom(ctx).user.Username
 
-	u, err := s.Queries.UpdateBankDetails(ctx, details)
+	if err := s.Queries.UpdateBankDetails(ctx, details); err != nil {
+		return nil, err
+	}
+	u, err := s.Queries.GetUser(ctx, details.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -124,13 +144,13 @@ func isDigits(s string) bool {
 	return true
 }
 
-func toProtoUser(u db.User) *userv1.User {
+func toProtoUser(u db.GetUserRow) *userv1.User {
 	return &userv1.User{
 		Username:       u.Username,
-		Name:           u.Name,
+		Name:           strings.TrimSpace(u.FirstName + " " + u.LastName),
 		Email:          u.Email,
 		BankAccount:    u.BankAccount,
-		ClearingNumber: u.ClearingNumber,
+		ClearingNumber: u.SortingNumber,
 		BankName:       u.BankName,
 	}
 }

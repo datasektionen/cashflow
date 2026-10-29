@@ -1,6 +1,6 @@
 # Cashflow 4 (server/, web/, proto/). Cashflow 3 still runs from compose.yaml.
 
-.PHONY: services dev-server dev-web gen check fix build
+.PHONY: services dev-server dev-web gen check fix build django-schema
 
 ## Postgres, mock SSO/Hive (nyckeln) and mock rfinger/spam (dock).
 services:
@@ -33,3 +33,8 @@ fix:
 ## The production image, as deployed.
 build:
 	docker build -f Dockerfile.next -t cashflow-next .
+
+## Refresh server/internal/database/cashflow3/schema.sql after a Django migration:
+## runs Cashflow 3's migrations in a scratch database and dumps the result.
+django-schema:
+	./scripts/django-schema.sh

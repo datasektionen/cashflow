@@ -41,6 +41,8 @@ job "cashflow-next" {
       template {
         data        = <<ENV
 {{ with nomadVar "nomad/jobs/cashflow-next" }}
+# A copy of production restored from a dump. Once Cashflow 4 is trusted, this
+# points at the production database so both versions run side by side.
 DATABASE_URL=postgres://cashflow_next:{{ .db_password }}@postgres.dsekt.internal:5432/cashflow_next
 APP_SECRET_KEY={{ .app_secret_key }}
 OIDC_CLIENT_SECRET={{ .oidc_secret }}

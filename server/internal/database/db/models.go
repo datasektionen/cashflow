@@ -5,198 +5,146 @@
 package db
 
 import (
-	"database/sql/driver"
-	"fmt"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type ClaimEventType string
-
-const (
-	ClaimEventTypeCreated     ClaimEventType = "created"
-	ClaimEventTypeUpdated     ClaimEventType = "updated"
-	ClaimEventTypeAttested    ClaimEventType = "attested"
-	ClaimEventTypeUnattested  ClaimEventType = "unattested"
-	ClaimEventTypeConfirmed   ClaimEventType = "confirmed"
-	ClaimEventTypeUnconfirmed ClaimEventType = "unconfirmed"
-	ClaimEventTypeFlagged     ClaimEventType = "flagged"
-	ClaimEventTypeUnflagged   ClaimEventType = "unflagged"
-	ClaimEventTypeAccounted   ClaimEventType = "accounted"
-	ClaimEventTypePaid        ClaimEventType = "paid"
-	ClaimEventTypeReimbursed  ClaimEventType = "reimbursed"
-)
-
-func (e *ClaimEventType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = ClaimEventType(s)
-	case string:
-		*e = ClaimEventType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for ClaimEventType: %T", src)
-	}
-	return nil
+type AuthGroup struct {
+	ID   int32
+	Name string
 }
 
-type NullClaimEventType struct {
-	ClaimEventType ClaimEventType
-	Valid          bool // Valid is true if ClaimEventType is not NULL
+type AuthGroupPermission struct {
+	ID           int64
+	GroupID      int32
+	PermissionID int32
 }
 
-// Scan implements the Scanner interface.
-func (ns *NullClaimEventType) Scan(value interface{}) error {
-	if value == nil {
-		ns.ClaimEventType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.ClaimEventType.Scan(value)
+type AuthPermission struct {
+	ID            int32
+	Name          string
+	ContentTypeID int32
+	Codename      string
 }
 
-// Value implements the driver Valuer interface.
-func (ns NullClaimEventType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.ClaimEventType), nil
+type AuthUser struct {
+	ID          int32
+	Password    string
+	LastLogin   pgtype.Timestamptz
+	IsSuperuser bool
+	Username    string
+	FirstName   string
+	LastName    string
+	Email       string
+	IsStaff     bool
+	IsActive    bool
+	DateJoined  pgtype.Timestamptz
 }
 
-type ClaimKind string
-
-const (
-	ClaimKindExpense ClaimKind = "expense"
-	ClaimKindInvoice ClaimKind = "invoice"
-)
-
-func (e *ClaimKind) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = ClaimKind(s)
-	case string:
-		*e = ClaimKind(s)
-	default:
-		return fmt.Errorf("unsupported scan type for ClaimKind: %T", src)
-	}
-	return nil
+type AuthUserGroup struct {
+	ID      int64
+	UserID  int32
+	GroupID int32
 }
 
-type NullClaimKind struct {
-	ClaimKind ClaimKind
-	Valid     bool // Valid is true if ClaimKind is not NULL
+type AuthUserUserPermission struct {
+	ID           int64
+	UserID       int32
+	PermissionID int32
 }
 
-// Scan implements the Scanner interface.
-func (ns *NullClaimKind) Scan(value interface{}) error {
-	if value == nil {
-		ns.ClaimKind, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.ClaimKind.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullClaimKind) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.ClaimKind), nil
-}
-
-type Claim struct {
+type CoreClaim struct {
 	ID            int64
-	Kind          ClaimKind
-	Number        int64
-	Owner         string
 	Description   string
-	CreatedAt     pgtype.Timestamptz
+	CreatedDate   pgtype.Date
 	Verification  string
-	ExpenseDate   pgtype.Date
-	ConfirmedBy   pgtype.Text
-	ConfirmedAt   pgtype.Timestamptz
-	PaymentID     pgtype.Int8
-	Flagged       bool
-	InvoiceNumber pgtype.Text
-	InvoiceDate   pgtype.Date
-	DueDate       pgtype.Date
-	PaidBy        pgtype.Text
-	PaidAt        pgtype.Timestamptz
+	ExpenseDataID pgtype.Int8
+	InvoiceDataID pgtype.Int8
+	Type          pgtype.Text
+	OwnerID       int64
 }
 
-type ClaimEvent struct {
-	ID        int64
-	ClaimID   int64
-	Actor     string
-	Type      ClaimEventType
-	PartID    pgtype.Int8
-	Data      []byte
-	CreatedAt pgtype.Timestamptz
-}
-
-type ClaimFile struct {
-	ID          int64
-	ClaimID     int64
-	StorageKey  string
-	Filename    string
-	ContentType string
-	SizeBytes   int64
-	PageCount   pgtype.Int4
-	CreatedAt   pgtype.Timestamptz
-}
-
-type ClaimPart struct {
+type CoreClaimpart struct {
 	ID                  int64
-	ClaimID             int64
-	Position            int32
 	CostCentre          string
 	SecondaryCostCentre string
 	BudgetLine          string
-	AmountOre           int64
-	AttestedBy          pgtype.Text
-	AttestedAt          pgtype.Timestamptz
+	Amount              pgtype.Numeric
+	AttestDate          pgtype.Date
+	ClaimID             int64
+	AttestedByID        pgtype.Int8
 }
 
-type Comment struct {
-	ID        int64
-	ClaimID   int64
-	Author    string
-	Body      string
-	CreatedAt pgtype.Timestamptz
+type CoreComment struct {
+	ID       int64
+	Date     pgtype.Timestamptz
+	Content  string
+	ClaimID  int64
+	AuthorID int64
 }
 
-type FortnoxAccount struct {
-	Singleton       bool
-	AuthenticatedBy string
-	AccessToken     []byte
-	RefreshToken    []byte
-	ExpiresAt       pgtype.Timestamptz
-	CreatedAt       pgtype.Timestamptz
+type CoreFile struct {
+	ID      int64
+	File    string
+	ClaimID int64
 }
 
-type Job struct {
-	ID        int64
-	Kind      string
-	Payload   []byte
-	RunAt     pgtype.Timestamptz
-	Attempts  int32
-	LastError string
-	DoneAt    pgtype.Timestamptz
+type CoreProfile struct {
+	ID            int64
+	BankAccount   string
+	SortingNumber string
+	BankName      string
+	UserID        int32
 }
 
-type Payment struct {
-	ID        int64
-	Payer     string
-	Receiver  string
-	CreatedAt pgtype.Timestamptz
+type DjangoContentType struct {
+	ID       int32
+	AppLabel string
+	Model    string
 }
 
-type User struct {
-	Username       string
-	Name           string
-	Email          string
-	BankAccount    string
-	ClearingNumber string
-	BankName       string
-	CreatedAt      pgtype.Timestamptz
+type DjangoMigration struct {
+	ID      int64
+	App     string
+	Name    string
+	Applied pgtype.Timestamptz
+}
+
+type DjangoSession struct {
+	SessionKey  string
+	SessionData string
+	ExpireDate  pgtype.Timestamptz
+}
+
+type ExpensesExpensedatum struct {
+	ID              int64
+	ExpenseDate     pgtype.Date
+	ConfirmedAt     pgtype.Date
+	IsFlagged       bool
+	ConfirmedByID   pgtype.Int4
+	ReimbursementID pgtype.Int8
+}
+
+type ExpensesPayment struct {
+	ID         int64
+	Date       pgtype.Date
+	PayerID    int64
+	ReceiverID int64
+}
+
+type FortnoxServiceaccount struct {
+	ID                int64
+	AuthenticatedByID int32
+	CreatedAt         pgtype.Timestamptz
+	AccessToken       string
+	RefreshToken      string
+	ExpiresAt         pgtype.Timestamptz
+}
+
+type InvoicesInvoicedatum struct {
+	ID            int64
+	InvoiceDate   pgtype.Date
+	InvoiceNumber string
+	DueDate       pgtype.Date
+	PaidAt        pgtype.Date
+	PaidByID      pgtype.Int8
 }

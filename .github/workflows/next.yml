@@ -3,9 +3,9 @@ name: Cashflow 4
 on:
   push:
     branches: [master, slop-rewrite]
-    paths: [server/**, web/**, proto/**, Dockerfile.next*, .github/workflows/next.yml]
+    paths: [server/**, web/**, proto/**, backend/**/migrations/**, Dockerfile.next*, .github/workflows/next.yml]
   pull_request:
-    paths: [server/**, web/**, proto/**, Dockerfile.next*, .github/workflows/next.yml]
+    paths: [server/**, web/**, proto/**, backend/**/migrations/**, Dockerfile.next*, .github/workflows/next.yml]
   workflow_dispatch:
 
 concurrency:
@@ -61,9 +61,26 @@ jobs:
       - run: make gen
       - run: git diff --exit-code
 
+  # Go's copy of the Django schema must match Cashflow 3's migrations.
+  django-schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: cashflow
+          POSTGRES_PASSWORD: cashflow
+          POSTGRES_DB: cashflow
+        ports: ["5433:5432"]
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: make django-schema
+      - run: git diff --exit-code server/internal/database/cashflow3/schema.sql
+
   image:
     runs-on: ubuntu-latest
-    needs: [web, server, generated]
+    needs: [web, server, generated, django-schema]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

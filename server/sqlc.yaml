@@ -1,12 +1,14 @@
 version: "2"
 sql:
   - engine: postgresql
-    schema: internal/database/migrations
+    # Django's tables first, then Go's own migrations on top.
+    schema:
+      - internal/database/cashflow3/schema.sql
+      - internal/database/migrations
     queries: internal/database/queries
     gen:
       go:
         package: db
         out: internal/database/db
         sql_package: pgx/v5
-        emit_json_tags: false
         emit_empty_slices: true

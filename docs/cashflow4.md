@@ -28,7 +28,8 @@ proto/cashflow/<service>/v1/      API: services, messages, error details
 server/
   main.go                         startup: config, database, HTTP server
   internal/config                 environment variables
-  internal/database               pool + migrations (migrations/*.sql), queries/*.sql → db/ (sqlc)
+  internal/database               pool; queries/*.sql → db/ (sqlc); cashflow3/schema.sql (Django's tables);
+                                  migrations/ (Go-only tables)
   internal/hive, internal/perm    Hive client; Cashflow's permission rules (port of cashflow/dauth.py)
   internal/rpc                    Connect service implementations
   internal/spa                    serves the embedded frontend build
@@ -44,8 +45,9 @@ web/src/
 
 ## Conventions
 
-**Money** is an integer number of öre everywhere: `bigint` in Postgres, `int64` in proto, `bigint` in TypeScript. Only
-`formatOre` in `web/src/lib/money.ts` turns it into a decimal, for display.
+**Money** is an integer number of öre: `int64` in Go and proto, `bigint` in TypeScript. Django stores `numeric(9,2)`
+kronor, so queries convert with `(amount * 100)::bigint`. Only `formatOre` in `web/src/lib/money.ts` turns öre into a
+decimal, for display.
 
 **Permissions** are checked on the server for every action; the `Capabilities` in `GetMe` only decide what the
 frontend shows. Permission rules live in `server/internal/perm` and nowhere else.
@@ -85,5 +87,13 @@ call the mutation and pass errors to `applyServerErrors(formApi, error, t)`. New
 
 ### Change the schema
 
-Add a new numbered pair `server/internal/database/migrations/00000N_<name>.{up,down}.sql`. Never edit a migration
-that has been deployed. The server applies migrations on startup.
+Until the cutover the database is shared with Cashflow 3, and Django owns its tables
+([why](rewrite-plan.md#database)):
+
+- **Changing a Django table** happens in a Django migration in `backend/`. Then run `make django-schema` and
+  `make gen` so sqlc sees it.
+- **A table only Go uses** goes in a new numbered pair `server/internal/database/migrations/00000N_<name>.{up,down}.sql`.
+  The server applies it on startup. Never edit a migration that has been deployed.
+
+The dev database is created from `cashflow3/schema.sql`. To start over with an empty one:
+`docker compose -f compose.next.yaml rm -sfv db && make services`.

@@ -10,26 +10,44 @@ import (
 )
 
 const getUser = `-- name: GetUser :one
-SELECT username, name, email, bank_account, clearing_number, bank_name, created_at FROM users WHERE username = $1
+SELECT u.username, u.first_name, u.last_name, u.email,
+       p.id AS profile_id, p.sorting_number, p.bank_account, p.bank_name
+FROM auth_user u
+JOIN core_profile p ON p.user_id = u.id
+WHERE u.username = $1
 `
 
-func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
+type GetUserRow struct {
+	Username      string
+	FirstName     string
+	LastName      string
+	Email         string
+	ProfileID     int64
+	SortingNumber string
+	BankAccount   string
+	BankName      string
+}
+
+// A user is split over Django's auth_user (identity) and core_profile (bank
+// details); claims reference the profile.
+func (q *Queries) GetUser(ctx context.Context, username string) (GetUserRow, error) {
 	row := q.db.QueryRow(ctx, getUser, username)
-	var i User
+	var i GetUserRow
 	err := row.Scan(
 		&i.Username,
-		&i.Name,
+		&i.FirstName,
+		&i.LastName,
 		&i.Email,
+		&i.ProfileID,
+		&i.SortingNumber,
 		&i.BankAccount,
-		&i.ClearingNumber,
 		&i.BankName,
-		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listCostCentres = `-- name: ListCostCentres :many
-SELECT DISTINCT cost_centre FROM claim_parts WHERE cost_centre <> '' ORDER BY cost_centre
+SELECT DISTINCT cost_centre FROM core_claimpart WHERE cost_centre <> '' ORDER BY cost_centre
 `
 
 // Every cost centre that appears on a claim part; permission scopes are
@@ -54,67 +72,69 @@ func (q *Queries) ListCostCentres(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const updateBankDetails = `-- name: UpdateBankDetails :one
-UPDATE users
-SET clearing_number = $2, bank_account = $3, bank_name = $4
-WHERE username = $1
-RETURNING username, name, email, bank_account, clearing_number, bank_name, created_at
+const updateBankDetails = `-- name: UpdateBankDetails :exec
+UPDATE core_profile p
+SET sorting_number = $1, bank_account = $2, bank_name = $3
+FROM auth_user u
+WHERE p.user_id = u.id AND u.username = $4
 `
 
 type UpdateBankDetailsParams struct {
-	Username       string
 	ClearingNumber string
 	BankAccount    string
 	BankName       string
+	Username       string
 }
 
-func (q *Queries) UpdateBankDetails(ctx context.Context, arg UpdateBankDetailsParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateBankDetails,
-		arg.Username,
+func (q *Queries) UpdateBankDetails(ctx context.Context, arg UpdateBankDetailsParams) error {
+	_, err := q.db.Exec(ctx, updateBankDetails,
 		arg.ClearingNumber,
 		arg.BankAccount,
 		arg.BankName,
+		arg.Username,
 	)
-	var i User
-	err := row.Scan(
-		&i.Username,
-		&i.Name,
-		&i.Email,
-		&i.BankAccount,
-		&i.ClearingNumber,
-		&i.BankName,
-		&i.CreatedAt,
-	)
-	return i, err
+	return err
 }
 
 const upsertUser = `-- name: UpsertUser :one
-INSERT INTO users (username, name, email)
-VALUES ($1, $2, $3)
-ON CONFLICT (username) DO UPDATE
-SET name = EXCLUDED.name, email = EXCLUDED.email
-RETURNING username, name, email, bank_account, clearing_number, bank_name, created_at
+WITH inserted_user AS (
+    INSERT INTO auth_user (username, first_name, last_name, email, password,
+                           is_superuser, is_staff, is_active, date_joined)
+    -- "!" is Django's unusable password: SSO is the only way in.
+    VALUES ($1, $2, $3, $4, '!', false, false, true, now())
+    ON CONFLICT (username) DO NOTHING
+    RETURNING id
+), target AS (
+    SELECT id FROM inserted_user
+    UNION ALL
+    SELECT id FROM auth_user WHERE username = $1
+    LIMIT 1
+), inserted_profile AS (
+    INSERT INTO core_profile (user_id, bank_account, sorting_number, bank_name)
+    SELECT id, '', '', '' FROM target
+    ON CONFLICT (user_id) DO NOTHING
+)
+SELECT id FROM target
 `
 
 type UpsertUserParams struct {
-	Username string
-	Name     string
-	Email    string
+	Username  string
+	FirstName string
+	LastName  string
+	Email     string
 }
 
-// Called on authenticated requests so every SSO user has a row; keeps name and
-// email in sync with the SSO without touching bank details.
-func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, upsertUser, arg.Username, arg.Name, arg.Email)
-	var i User
-	err := row.Scan(
-		&i.Username,
-		&i.Name,
-		&i.Email,
-		&i.BankAccount,
-		&i.ClearingNumber,
-		&i.BankName,
-		&i.CreatedAt,
+// Creates the auth_user and core_profile rows for a first-time SSO user, as
+// Django's login and post_save signal would. An existing user is left as is:
+// Cashflow 3 keeps the SSO's given and family names, which the session lacks.
+func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (int32, error) {
+	row := q.db.QueryRow(ctx, upsertUser,
+		arg.Username,
+		arg.FirstName,
+		arg.LastName,
+		arg.Email,
 	)
-	return i, err
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }

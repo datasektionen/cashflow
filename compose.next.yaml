@@ -16,6 +16,9 @@ services:
       POSTGRES_DB: cashflow
     ports:
       - 5433:5432
+    # A fresh database starts with Cashflow 3's schema, as production has.
+    volumes:
+      - ./server/internal/database/cashflow3/schema.sql:/docker-entrypoint-initdb.d/cashflow3.sql:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "cashflow"]
       interval: 2s
