@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/datasektionen/cashflow/server/internal/outbox"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 )
 
@@ -38,16 +39,20 @@ func LoadDotEnv(path string) error {
 }
 
 type Env struct {
-	Port        string
+	Port string
+	// PublicURL is where users reach Cashflow; emails link there.
+	PublicURL   string
 	DatabaseURL string
 	HiveURL     string
 	HiveSecret  string
 	S3          storage.Config
+	Outbox      outbox.Config
 }
 
 func FromEnv() (Env, error) {
 	env := Env{
 		Port:        getenv("PORT", "3000"),
+		PublicURL:   getenv("PUBLIC_URL", "http://localhost:5173"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		HiveURL:     strings.TrimSuffix(getenv("HIVE_URL", "https://hive.datasektionen.se"), "/"),
 		HiveSecret:  os.Getenv("HIVE_SECRET"),
@@ -58,6 +63,10 @@ func FromEnv() (Env, error) {
 			AccessKeyID:     os.Getenv("S3_ACCESS_KEY_ID"),
 			SecretAccessKey: os.Getenv("S3_SECRET_ACCESS_KEY"),
 			Endpoint:        os.Getenv("S3_ENDPOINT"),
+		},
+		Outbox: outbox.Config{
+			SpamURL: strings.TrimSuffix(getenv("SPAM_URL", "https://spam.datasektionen.se"), "/"),
+			APIKey:  os.Getenv("SPAM_API_KEY"),
 		},
 	}
 	var missing []string

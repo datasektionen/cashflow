@@ -1,18 +1,26 @@
 import { Link } from "@tanstack/react-router";
 import type { ClaimSummary } from "#/gen/cashflow/claim/v1/claim_pb";
-import { claimLink, formatDate } from "#/lib/claims";
+import { claimLink, formatDate, type QueueSlug } from "#/lib/claims";
 import { useLocale } from "#/lib/i18n";
 import { Amount, CostCentreChip, KindIcon, StageBadge } from "./badges";
 
 /** The claims list on small screens: one tappable card per claim. */
-export function ClaimCards({ claims, showOwner }: { claims: ClaimSummary[]; showOwner: boolean }) {
+export function ClaimCards({
+  claims,
+  showOwner,
+  queue,
+}: {
+  claims: ClaimSummary[];
+  showOwner: boolean;
+  queue?: QueueSlug;
+}) {
   const locale = useLocale();
   return (
     <ul className="divide-y">
       {claims.map((claim) => (
         <li key={`${claim.kind}-${claim.number}`}>
           <Link
-            {...claimLink(claim.kind, claim.number)}
+            {...claimLink(claim.kind, claim.number, queue)}
             className="flex flex-col gap-2 px-4 py-3 outline-none transition-colors active:bg-muted focus-visible:bg-accent"
           >
             <div className="flex items-start justify-between gap-3">

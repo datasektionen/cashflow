@@ -14,11 +14,17 @@ export function kindSlug(kind: ClaimKind): KindSlug {
   return kind === ClaimKind.INVOICE ? "invoice" : "expense";
 }
 
-/** The detail page of a claim. */
-export function claimLink(kind: ClaimKind, number: bigint) {
+/** The detail page of a claim; opened from a queue, it offers the next claim in it. */
+export function claimLink(kind: ClaimKind, number: bigint, queue?: QueueSlug) {
+  const search = queue ? { queue } : {};
   return kind === ClaimKind.INVOICE
-    ? ({ to: "/invoices/$number", params: { number } } as const)
-    : ({ to: "/expenses/$number", params: { number } } as const);
+    ? ({ to: "/invoices/$number", params: { number }, search } as const)
+    : ({ to: "/expenses/$number", params: { number }, search } as const);
+}
+
+/** The detail page's search params. */
+export function validateClaimPageSearch(raw: Record<string, unknown>): { queue?: QueueSlug } {
+  return { queue: QUEUES.find((q) => q === raw.queue) };
 }
 
 export const QUEUES = ["attest", "confirm", "account", "pay"] as const;

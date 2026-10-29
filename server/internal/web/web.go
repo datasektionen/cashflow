@@ -25,9 +25,10 @@ import (
 
 // Deps are what the routes need, built once in main.
 type Deps struct {
-	Pool  *pgxpool.Pool
-	Hive  *hive.Client
-	Files *storage.Store
+	Pool      *pgxpool.Pool
+	PublicURL string
+	Hive      *hive.Client
+	Files     *storage.Store
 }
 
 func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
@@ -40,7 +41,7 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	}
 
 	queries := db.New(deps.Pool)
-	claimStore := claims.NewStore(deps.Pool)
+	claimStore := claims.NewStore(deps.Pool, deps.PublicURL)
 	mux := http.NewServeMux()
 
 	// /login, /auth/callback and /logout.

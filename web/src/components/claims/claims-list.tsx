@@ -63,7 +63,7 @@ export function ClaimsList({ scope, search, onSearch, empty }: Props) {
     "Enter",
     () => {
       const claim = claims[activeIndex];
-      if (claim) void navigate(claimLink(claim.kind, claim.number));
+      if (claim) void navigate(claimLink(claim.kind, claim.number, scope.queue));
     },
     { enabled: keysEnabled && activeIndex >= 0 },
   );
@@ -134,7 +134,7 @@ export function ClaimsList({ scope, search, onSearch, empty }: Props) {
             <StateCard className="m-4 border-0" {...empty} description={empty.body} />
           )
         ) : isMobile ? (
-          <ClaimCards claims={claims} showOwner={showOwner} />
+          <ClaimCards claims={claims} showOwner={showOwner} queue={scope.queue} />
         ) : (
           <ClaimsTable
             claims={claims}
@@ -143,6 +143,7 @@ export function ClaimsList({ scope, search, onSearch, empty }: Props) {
             onSortChange={(sort) => onSearch({ sort: sort.sort, desc: sort.desc || undefined })}
             onCostCentre={filterByCostCentre}
             activeIndex={activeIndex}
+            queue={scope.queue}
           />
         )}
       </Card>

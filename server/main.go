@@ -13,6 +13,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/config"
 	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/hive"
+	"github.com/datasektionen/cashflow/server/internal/outbox"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 	"github.com/datasektionen/cashflow/server/internal/web"
 )
@@ -49,10 +50,14 @@ func run(ctx context.Context) error {
 		return err
 	}
 
+	// Sends emails queued by workflow changes; stops with the server.
+	go outbox.NewWorker(pool, env.Outbox).Run(ctx)
+
 	handler, err := web.NewHandler(ctx, web.Deps{
-		Pool:  pool,
-		Hive:  hive.NewClient(env.HiveURL, env.HiveSecret),
-		Files: files,
+		Pool:      pool,
+		PublicURL: env.PublicURL,
+		Hive:      hive.NewClient(env.HiveURL, env.HiveSecret),
+		Files:     files,
 	})
 	if err != nil {
 		return err

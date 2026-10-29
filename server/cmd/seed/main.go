@@ -179,7 +179,8 @@ func (s *seeder) claims(ctx context.Context) error {
 		if i%7 == 3 {
 			owner = treasurer // the treasurer's own expenses must stay out of their attest queue
 		}
-		flagged := st == submitted && i%5 == 0
+		// Flag claims in another cost centre than the attesters' own (i%5 == 0).
+		flagged := st == submitted && i%5 == 2
 		if err := s.expense(ctx, owner, st, flagged, i); err != nil {
 			return err
 		}

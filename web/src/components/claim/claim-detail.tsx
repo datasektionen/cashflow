@@ -1,23 +1,23 @@
 import { useSuspenseQuery } from "@connectrpc/connect-query";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Flag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Amount, CostCentreChip, KindIcon } from "#/components/claims/badges";
 import { UserAvatar } from "#/components/layout/user-avatar";
-import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { type Claim, ClaimKind, Stage } from "#/gen/cashflow/claim/v1/claim_pb";
 import { getClaim } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
-import { formatDate, kindSlug, stageSlug } from "#/lib/claims";
+import { formatDate, kindSlug, type QueueSlug, stageSlug } from "#/lib/claims";
 import { useLocale, useT } from "#/lib/i18n";
 import { FilesViewer } from "./files-viewer";
 import { HistoryCard } from "./history-card";
+import { NextStep } from "./next-step";
 import { PartsCard } from "./parts-card";
 import { StageTimeline } from "./stage-timeline";
 
 /** One expense or invoice in full: the claim on the left, its receipts beside it. */
-export function ClaimDetail({ kind, number }: { kind: ClaimKind; number: bigint }) {
+export function ClaimDetail({ kind, number, queue }: { kind: ClaimKind; number: bigint; queue?: QueueSlug }) {
   const { data } = useSuspenseQuery(getClaim, { kind, number });
   const claim = data.claim;
   if (!claim?.summary) throw new Error("GetClaim returned no claim");
@@ -31,22 +31,18 @@ export function ClaimDetail({ kind, number }: { kind: ClaimKind; number: bigint 
         column beside everything on large ones.
       */}
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-        {claim.summary.status?.flagged && (
-          <div className="lg:col-start-1">
-            <FlaggedAlert />
-          </div>
-        )}
-        <div className="lg:col-start-1">
+        <div className="flex flex-col gap-4 lg:col-start-1">
           <HeaderCard claim={claim} />
+          <NextStep claim={claim} queue={queue} />
         </div>
-        <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-4 lg:row-start-1">
+        <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <FilesViewer files={claim.files} />
         </div>
         <div className="lg:col-start-1">
-          <PartsCard parts={claim.parts} total={claim.summary.amountOre} />
+          <PartsCard claim={claim} />
         </div>
         <div className="lg:col-start-1">
-          <HistoryCard comments={claim.comments} />
+          <HistoryCard claim={claim} />
         </div>
       </div>
     </main>
@@ -67,17 +63,6 @@ function BackButton() {
     >
       <ArrowLeft /> {t.claim.backTo(canGoBack ? t.claim.previousPage : t.nav.overview)}
     </Button>
-  );
-}
-
-function FlaggedAlert() {
-  const t = useT();
-  return (
-    <Alert variant="destructive">
-      <Flag />
-      <AlertTitle>{t.claim.flaggedTitle}</AlertTitle>
-      <AlertDescription>{t.claim.flaggedBody}</AlertDescription>
-    </Alert>
   );
 }
 

@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/claim/v1/claim.proto.
  */
 export const file_cashflow_claim_v1_claim: GenFile = /*@__PURE__*/
-  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzIvsBChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUiVAoSTGlzdENsYWltc1Jlc3BvbnNlEi8KBmNsYWltcxgBIAMoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRINCgV0b3RhbBgCIAEoBSJNCg9HZXRDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMitAEKBFBhcnQSCgoCaWQYASABKAMSEwoLY29zdF9jZW50cmUYAiABKAkSHQoVc2Vjb25kYXJ5X2Nvc3RfY2VudHJlGAMgASgJEhMKC2J1ZGdldF9saW5lGAQgASgJEhIKCmFtb3VudF9vcmUYBSABKAMSLgoLYXR0ZXN0ZWRfYnkYBiABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEwoLYXR0ZXN0ZWRfYXQYByABKAkiQwoERmlsZRIKCgJpZBgBIAEoAxIMCgRuYW1lGAIgASgJEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRILCgN1cmwYBCABKAkicgoHQ29tbWVudBIpCgZhdXRob3IYASABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SDAoEYm9keRgCIAEoCRIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJaCgdQYXltZW50EgoKAmlkGAEgASgDEgsKA3RhZxgCIAEoCRIoCgVwYXllchgDIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIMCgRkYXRlGAQgASgJIpIDCgVDbGFpbRIwCgdzdW1tYXJ5GAEgASgLMh8uY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1TdW1tYXJ5EiYKBXBhcnRzGAIgAygLMhcuY2FzaGZsb3cuY2xhaW0udjEuUGFydBImCgVmaWxlcxgDIAMoCzIXLmNhc2hmbG93LmNsYWltLnYxLkZpbGUSLAoIY29tbWVudHMYBCADKAsyGi5jYXNoZmxvdy5jbGFpbS52MS5Db21tZW50Ei8KDGNvbmZpcm1lZF9ieRgFIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIUCgxjb25maXJtZWRfYXQYBiABKAkSKwoHcGF5bWVudBgHIAEoCzIaLmNhc2hmbG93LmNsYWltLnYxLlBheW1lbnQSFgoOaW52b2ljZV9udW1iZXIYCCABKAkSEAoIZHVlX2RhdGUYCSABKAkSKgoHcGFpZF9ieRgKIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIPCgdwYWlkX2F0GAsgASgJIjsKEEdldENsYWltUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSIXChVHZXRRdWV1ZUNvdW50c1JlcXVlc3QiRAoKUXVldWVDb3VudBInCgVxdWV1ZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlF1ZXVlEg0KBWNvdW50GAIgASgFIkcKFkdldFF1ZXVlQ291bnRzUmVzcG9uc2USLQoGY291bnRzGAEgAygLMh0uY2FzaGZsb3cuY2xhaW0udjEuUXVldWVDb3VudCIUChJHZXRPdmVydmlld1JlcXVlc3QibAoTR2V0T3ZlcnZpZXdSZXNwb25zZRIbChNhd2FpdGluZ19hdHRlc3Rfb3JlGAEgASgDEhwKFGF3YWl0aW5nX3BheW1lbnRfb3JlGAIgASgDEhoKEnBhaWRfdGhpc195ZWFyX29yZRgDIAEoAypXCglDbGFpbUtpbmQSGgoWQ0xBSU1fS0lORF9VTlNQRUNJRklFRBAAEhYKEkNMQUlNX0tJTkRfRVhQRU5TRRABEhYKEkNMQUlNX0tJTkRfSU5WT0lDRRACKmUKBVF1ZXVlEhUKEVFVRVVFX1VOU1BFQ0lGSUVEEAASEAoMUVVFVUVfQVRURVNUEAESEQoNUVVFVUVfQ09ORklSTRACEhEKDVFVRVVFX0FDQ09VTlQQAxINCglRVUVVRV9QQVkQBCqBAQoFU3RhZ2USFQoRU1RBR0VfVU5TUEVDSUZJRUQQABITCg9TVEFHRV9TVUJNSVRURUQQARISCg5TVEFHRV9BVFRFU1RFRBACEhMKD1NUQUdFX0NPTkZJUk1FRBADEg4KClNUQUdFX1BBSUQQBBITCg9TVEFHRV9BQ0NPVU5URUQQBSqdAQoJU29ydEZpZWxkEhoKFlNPUlRfRklFTERfVU5TUEVDSUZJRUQQABITCg9TT1JUX0ZJRUxEX0RBVEUQARIVChFTT1JUX0ZJRUxEX0FNT1VOVBACEhoKFlNPUlRfRklFTERfREVTQ1JJUFRJT04QAxIUChBTT1JUX0ZJRUxEX09XTkVSEAQSFgoSU09SVF9GSUVMRF9DUkVBVEVEEAUylwMKDENsYWltU2VydmljZRJeCgpMaXN0Q2xhaW1zEiQuY2FzaGZsb3cuY2xhaW0udjEuTGlzdENsYWltc1JlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5MaXN0Q2xhaW1zUmVzcG9uc2UiA5ACARJYCghHZXRDbGFpbRIiLmNhc2hmbG93LmNsYWltLnYxLkdldENsYWltUmVxdWVzdBojLmNhc2hmbG93LmNsYWltLnYxLkdldENsYWltUmVzcG9uc2UiA5ACARJqCg5HZXRRdWV1ZUNvdW50cxIoLmNhc2hmbG93LmNsYWltLnYxLkdldFF1ZXVlQ291bnRzUmVxdWVzdBopLmNhc2hmbG93LmNsYWltLnYxLkdldFF1ZXVlQ291bnRzUmVzcG9uc2UiA5ACARJhCgtHZXRPdmVydmlldxIlLmNhc2hmbG93LmNsYWltLnYxLkdldE92ZXJ2aWV3UmVxdWVzdBomLmNhc2hmbG93LmNsYWltLnYxLkdldE92ZXJ2aWV3UmVzcG9uc2UiA5ACAULRAQoVY29tLmNhc2hmbG93LmNsYWltLnYxQgpDbGFpbVByb3RvUAFaRmdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L2NsYWltL3YxO2NsYWltdjGiAgNDQ1iqAhFDYXNoZmxvdy5DbGFpbS5WMcoCEUNhc2hmbG93XENsYWltXFYx4gIdQ2FzaGZsb3dcQ2xhaW1cVjFcR1BCTWV0YWRhdGHqAhNDYXNoZmxvdzo6Q2xhaW06OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzIvsBChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUiVAoSTGlzdENsYWltc1Jlc3BvbnNlEi8KBmNsYWltcxgBIAMoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRINCgV0b3RhbBgCIAEoBSJNCg9HZXRDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiRgoIQ2xhaW1SZWYSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiqgEKB0FjdGlvbnMSFwoPYXR0ZXN0X3BhcnRfaWRzGAEgAygDEhkKEXVuYXR0ZXN0X3BhcnRfaWRzGAIgAygDEg8KB2NvbmZpcm0YAyABKAgSEQoJdW5jb25maXJtGAQgASgIEgwKBGZsYWcYBSABKAgSDgoGdW5mbGFnGAYgASgIEgsKA3BheRgHIAEoCBIOCgZkZWxldGUYCCABKAgSDAoEZWRpdBgJIAEoCCK0AQoEUGFydBIKCgJpZBgBIAEoAxITCgtjb3N0X2NlbnRyZRgCIAEoCRIdChVzZWNvbmRhcnlfY29zdF9jZW50cmUYAyABKAkSEwoLYnVkZ2V0X2xpbmUYBCABKAkSEgoKYW1vdW50X29yZRgFIAEoAxIuCgthdHRlc3RlZF9ieRgGIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhITCgthdHRlc3RlZF9hdBgHIAEoCSJDCgRGaWxlEgoKAmlkGAEgASgDEgwKBG5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEgsKA3VybBgEIAEoCSJyCgdDb21tZW50EikKBmF1dGhvchgBIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIMCgRib2R5GAIgASgJEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIloKB1BheW1lbnQSCgoCaWQYASABKAMSCwoDdGFnGAIgASgJEigKBXBheWVyGAMgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEgwKBGRhdGUYBCABKAkivwMKBUNsYWltEjAKB3N1bW1hcnkYASABKAsyHy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVN1bW1hcnkSJgoFcGFydHMYAiADKAsyFy5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0EiYKBWZpbGVzGAMgAygLMhcuY2FzaGZsb3cuY2xhaW0udjEuRmlsZRIsCghjb21tZW50cxgEIAMoCzIaLmNhc2hmbG93LmNsYWltLnYxLkNvbW1lbnQSLwoMY29uZmlybWVkX2J5GAUgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEhQKDGNvbmZpcm1lZF9hdBgGIAEoCRIrCgdwYXltZW50GAcgASgLMhouY2FzaGZsb3cuY2xhaW0udjEuUGF5bWVudBIWCg5pbnZvaWNlX251bWJlchgIIAEoCRIQCghkdWVfZGF0ZRgJIAEoCRIqCgdwYWlkX2J5GAogASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEg8KB3BhaWRfYXQYCyABKAkSKwoHYWN0aW9ucxgMIAEoCzIaLmNhc2hmbG93LmNsYWltLnYxLkFjdGlvbnMiOwoQR2V0Q2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIhcKFUdldFF1ZXVlQ291bnRzUmVxdWVzdCJECgpRdWV1ZUNvdW50EicKBXF1ZXVlGAEgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSDQoFY291bnQYAiABKAUiRwoWR2V0UXVldWVDb3VudHNSZXNwb25zZRItCgZjb3VudHMYASADKAsyHS5jYXNoZmxvdy5jbGFpbS52MS5RdWV1ZUNvdW50IhQKEkdldE92ZXJ2aWV3UmVxdWVzdCJsChNHZXRPdmVydmlld1Jlc3BvbnNlEhsKE2F3YWl0aW5nX2F0dGVzdF9vcmUYASABKAMSHAoUYXdhaXRpbmdfcGF5bWVudF9vcmUYAiABKAMSGgoScGFpZF90aGlzX3llYXJfb3JlGAMgASgDIk0KEUFkZENvbW1lbnRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDAoEYm9keRgCIAEoCSI9ChJBZGRDb21tZW50UmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJnChZTZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDwoHcGFydF9pZBgCIAEoAxIQCghhdHRlc3RlZBgDIAEoCCJCChdTZXRQYXJ0QXR0ZXN0ZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjgKE1NldENvbmZpcm1lZFJlcXVlc3QSDgoGbnVtYmVyGAEgASgDEhEKCWNvbmZpcm1lZBgCIAEoCCI/ChRTZXRDb25maXJtZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjQKEVNldEZsYWdnZWRSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAxIPCgdmbGFnZ2VkGAIgASgIIj0KElNldEZsYWdnZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIiMKEVBheUludm9pY2VSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAyI9ChJQYXlJbnZvaWNlUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJAChJEZWxldGVDbGFpbVJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZiIVChNEZWxldGVDbGFpbVJlc3BvbnNlKlcKCUNsYWltS2luZBIaChZDTEFJTV9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSQ0xBSU1fS0lORF9FWFBFTlNFEAESFgoSQ0xBSU1fS0lORF9JTlZPSUNFEAIqZQoFUXVldWUSFQoRUVVFVUVfVU5TUEVDSUZJRUQQABIQCgxRVUVVRV9BVFRFU1QQARIRCg1RVUVVRV9DT05GSVJNEAISEQoNUVVFVUVfQUNDT1VOVBADEg0KCVFVRVVFX1BBWRAEKoEBCgVTdGFnZRIVChFTVEFHRV9VTlNQRUNJRklFRBAAEhMKD1NUQUdFX1NVQk1JVFRFRBABEhIKDlNUQUdFX0FUVEVTVEVEEAISEwoPU1RBR0VfQ09ORklSTUVEEAMSDgoKU1RBR0VfUEFJRBAEEhMKD1NUQUdFX0FDQ09VTlRFRBAFKp0BCglTb3J0RmllbGQSGgoWU09SVF9GSUVMRF9VTlNQRUNJRklFRBAAEhMKD1NPUlRfRklFTERfREFURRABEhUKEVNPUlRfRklFTERfQU1PVU5UEAISGgoWU09SVF9GSUVMRF9ERVNDUklQVElPThADEhQKEFNPUlRfRklFTERfT1dORVIQBBIWChJTT1JUX0ZJRUxEX0NSRUFURUQQBTLgBwoMQ2xhaW1TZXJ2aWNlEl4KCkxpc3RDbGFpbXMSJC5jYXNoZmxvdy5jbGFpbS52MS5MaXN0Q2xhaW1zUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkxpc3RDbGFpbXNSZXNwb25zZSIDkAIBElgKCEdldENsYWltEiIuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXF1ZXN0GiMuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXNwb25zZSIDkAIBEmoKDkdldFF1ZXVlQ291bnRzEiguY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXF1ZXN0GikuY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXNwb25zZSIDkAIBEmEKC0dldE92ZXJ2aWV3EiUuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXNwb25zZSIDkAIBElkKCkFkZENvbW1lbnQSJC5jYXNoZmxvdy5jbGFpbS52MS5BZGRDb21tZW50UmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkFkZENvbW1lbnRSZXNwb25zZRJtCg9TZXRQYXJ0QXR0ZXN0ZWQSKS5jYXNoZmxvdy5jbGFpbS52MS5TZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0GiouY2FzaGZsb3cuY2xhaW0udjEuU2V0UGFydEF0dGVzdGVkUmVzcG9uc2UiA5ACAhJkCgxTZXRDb25maXJtZWQSJi5jYXNoZmxvdy5jbGFpbS52MS5TZXRDb25maXJtZWRSZXF1ZXN0GicuY2FzaGZsb3cuY2xhaW0udjEuU2V0Q29uZmlybWVkUmVzcG9uc2UiA5ACAhJeCgpTZXRGbGFnZ2VkEiQuY2FzaGZsb3cuY2xhaW0udjEuU2V0RmxhZ2dlZFJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5TZXRGbGFnZ2VkUmVzcG9uc2UiA5ACAhJZCgpQYXlJbnZvaWNlEiQuY2FzaGZsb3cuY2xhaW0udjEuUGF5SW52b2ljZVJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5QYXlJbnZvaWNlUmVzcG9uc2USXAoLRGVsZXRlQ2xhaW0SJS5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlc3BvbnNlQtEBChVjb20uY2FzaGZsb3cuY2xhaW0udjFCCkNsYWltUHJvdG9QAVpGZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvY2xhaW0vdjE7Y2xhaW12MaICA0NDWKoCEUNhc2hmbG93LkNsYWltLlYxygIRQ2FzaGZsb3dcQ2xhaW1cVjHiAh1DYXNoZmxvd1xDbGFpbVxWMVxHUEJNZXRhZGF0YeoCE0Nhc2hmbG93OjpDbGFpbTo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message cashflow.claim.v1.Person
@@ -459,6 +459,158 @@ export const GetClaimRequestSchema: GenMessage<GetClaimRequest, {jsonType: GetCl
   messageDesc(file_cashflow_claim_v1_claim, 5);
 
 /**
+ * ClaimRef points at one claim.
+ *
+ * @generated from message cashflow.claim.v1.ClaimRef
+ */
+export type ClaimRef = Message<"cashflow.claim.v1.ClaimRef"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimKind kind = 1;
+   */
+  kind: ClaimKind;
+
+  /**
+   * @generated from field: int64 number = 2;
+   */
+  number: bigint;
+};
+
+/**
+ * ClaimRef points at one claim.
+ *
+ * @generated from message cashflow.claim.v1.ClaimRef
+ */
+export type ClaimRefJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimKind kind = 1;
+   */
+  kind?: ClaimKindJson;
+
+  /**
+   * @generated from field: int64 number = 2;
+   */
+  number?: string;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.ClaimRef.
+ * Use `create(ClaimRefSchema)` to create a new message.
+ */
+export const ClaimRefSchema: GenMessage<ClaimRef, {jsonType: ClaimRefJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 6);
+
+/**
+ * What the caller may do with a claim right now.
+ *
+ * @generated from message cashflow.claim.v1.Actions
+ */
+export type Actions = Message<"cashflow.claim.v1.Actions"> & {
+  /**
+   * @generated from field: repeated int64 attest_part_ids = 1;
+   */
+  attestPartIds: bigint[];
+
+  /**
+   * @generated from field: repeated int64 unattest_part_ids = 2;
+   */
+  unattestPartIds: bigint[];
+
+  /**
+   * @generated from field: bool confirm = 3;
+   */
+  confirm: boolean;
+
+  /**
+   * @generated from field: bool unconfirm = 4;
+   */
+  unconfirm: boolean;
+
+  /**
+   * @generated from field: bool flag = 5;
+   */
+  flag: boolean;
+
+  /**
+   * @generated from field: bool unflag = 6;
+   */
+  unflag: boolean;
+
+  /**
+   * @generated from field: bool pay = 7;
+   */
+  pay: boolean;
+
+  /**
+   * @generated from field: bool delete = 8;
+   */
+  delete: boolean;
+
+  /**
+   * @generated from field: bool edit = 9;
+   */
+  edit: boolean;
+};
+
+/**
+ * What the caller may do with a claim right now.
+ *
+ * @generated from message cashflow.claim.v1.Actions
+ */
+export type ActionsJson = {
+  /**
+   * @generated from field: repeated int64 attest_part_ids = 1;
+   */
+  attestPartIds?: string[];
+
+  /**
+   * @generated from field: repeated int64 unattest_part_ids = 2;
+   */
+  unattestPartIds?: string[];
+
+  /**
+   * @generated from field: bool confirm = 3;
+   */
+  confirm?: boolean;
+
+  /**
+   * @generated from field: bool unconfirm = 4;
+   */
+  unconfirm?: boolean;
+
+  /**
+   * @generated from field: bool flag = 5;
+   */
+  flag?: boolean;
+
+  /**
+   * @generated from field: bool unflag = 6;
+   */
+  unflag?: boolean;
+
+  /**
+   * @generated from field: bool pay = 7;
+   */
+  pay?: boolean;
+
+  /**
+   * @generated from field: bool delete = 8;
+   */
+  delete?: boolean;
+
+  /**
+   * @generated from field: bool edit = 9;
+   */
+  edit?: boolean;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.Actions.
+ * Use `create(ActionsSchema)` to create a new message.
+ */
+export const ActionsSchema: GenMessage<Actions, {jsonType: ActionsJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 7);
+
+/**
  * @generated from message cashflow.claim.v1.Part
  */
 export type Part = Message<"cashflow.claim.v1.Part"> & {
@@ -547,7 +699,7 @@ export type PartJson = {
  * Use `create(PartSchema)` to create a new message.
  */
 export const PartSchema: GenMessage<Part, {jsonType: PartJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 6);
+  messageDesc(file_cashflow_claim_v1_claim, 8);
 
 /**
  * @generated from message cashflow.claim.v1.File
@@ -608,7 +760,7 @@ export type FileJson = {
  * Use `create(FileSchema)` to create a new message.
  */
 export const FileSchema: GenMessage<File, {jsonType: FileJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 7);
+  messageDesc(file_cashflow_claim_v1_claim, 9);
 
 /**
  * @generated from message cashflow.claim.v1.Comment
@@ -655,7 +807,7 @@ export type CommentJson = {
  * Use `create(CommentSchema)` to create a new message.
  */
 export const CommentSchema: GenMessage<Comment, {jsonType: CommentJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 8);
+  messageDesc(file_cashflow_claim_v1_claim, 10);
 
 /**
  * @generated from message cashflow.claim.v1.Payment
@@ -720,7 +872,7 @@ export type PaymentJson = {
  * Use `create(PaymentSchema)` to create a new message.
  */
 export const PaymentSchema: GenMessage<Payment, {jsonType: PaymentJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 9);
+  messageDesc(file_cashflow_claim_v1_claim, 11);
 
 /**
  * @generated from message cashflow.claim.v1.Claim
@@ -784,6 +936,11 @@ export type Claim = Message<"cashflow.claim.v1.Claim"> & {
    * @generated from field: string paid_at = 11;
    */
   paidAt: string;
+
+  /**
+   * @generated from field: cashflow.claim.v1.Actions actions = 12;
+   */
+  actions?: Actions | undefined;
 };
 
 /**
@@ -848,6 +1005,11 @@ export type ClaimJson = {
    * @generated from field: string paid_at = 11;
    */
   paidAt?: string;
+
+  /**
+   * @generated from field: cashflow.claim.v1.Actions actions = 12;
+   */
+  actions?: ActionsJson;
 };
 
 /**
@@ -855,7 +1017,7 @@ export type ClaimJson = {
  * Use `create(ClaimSchema)` to create a new message.
  */
 export const ClaimSchema: GenMessage<Claim, {jsonType: ClaimJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 10);
+  messageDesc(file_cashflow_claim_v1_claim, 12);
 
 /**
  * @generated from message cashflow.claim.v1.GetClaimResponse
@@ -882,7 +1044,7 @@ export type GetClaimResponseJson = {
  * Use `create(GetClaimResponseSchema)` to create a new message.
  */
 export const GetClaimResponseSchema: GenMessage<GetClaimResponse, {jsonType: GetClaimResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 11);
+  messageDesc(file_cashflow_claim_v1_claim, 13);
 
 /**
  * @generated from message cashflow.claim.v1.GetQueueCountsRequest
@@ -901,7 +1063,7 @@ export type GetQueueCountsRequestJson = {
  * Use `create(GetQueueCountsRequestSchema)` to create a new message.
  */
 export const GetQueueCountsRequestSchema: GenMessage<GetQueueCountsRequest, {jsonType: GetQueueCountsRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 12);
+  messageDesc(file_cashflow_claim_v1_claim, 14);
 
 /**
  * @generated from message cashflow.claim.v1.QueueCount
@@ -938,7 +1100,7 @@ export type QueueCountJson = {
  * Use `create(QueueCountSchema)` to create a new message.
  */
 export const QueueCountSchema: GenMessage<QueueCount, {jsonType: QueueCountJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 13);
+  messageDesc(file_cashflow_claim_v1_claim, 15);
 
 /**
  * @generated from message cashflow.claim.v1.GetQueueCountsResponse
@@ -969,7 +1131,7 @@ export type GetQueueCountsResponseJson = {
  * Use `create(GetQueueCountsResponseSchema)` to create a new message.
  */
 export const GetQueueCountsResponseSchema: GenMessage<GetQueueCountsResponse, {jsonType: GetQueueCountsResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 14);
+  messageDesc(file_cashflow_claim_v1_claim, 16);
 
 /**
  * @generated from message cashflow.claim.v1.GetOverviewRequest
@@ -988,7 +1150,7 @@ export type GetOverviewRequestJson = {
  * Use `create(GetOverviewRequestSchema)` to create a new message.
  */
 export const GetOverviewRequestSchema: GenMessage<GetOverviewRequest, {jsonType: GetOverviewRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 15);
+  messageDesc(file_cashflow_claim_v1_claim, 17);
 
 /**
  * @generated from message cashflow.claim.v1.GetOverviewResponse
@@ -1047,7 +1209,385 @@ export type GetOverviewResponseJson = {
  * Use `create(GetOverviewResponseSchema)` to create a new message.
  */
 export const GetOverviewResponseSchema: GenMessage<GetOverviewResponse, {jsonType: GetOverviewResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 16);
+  messageDesc(file_cashflow_claim_v1_claim, 18);
+
+/**
+ * @generated from message cashflow.claim.v1.AddCommentRequest
+ */
+export type AddCommentRequest = Message<"cashflow.claim.v1.AddCommentRequest"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRef | undefined;
+
+  /**
+   * @generated from field: string body = 2;
+   */
+  body: string;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.AddCommentRequest
+ */
+export type AddCommentRequestJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRefJson;
+
+  /**
+   * @generated from field: string body = 2;
+   */
+  body?: string;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.AddCommentRequest.
+ * Use `create(AddCommentRequestSchema)` to create a new message.
+ */
+export const AddCommentRequestSchema: GenMessage<AddCommentRequest, {jsonType: AddCommentRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 19);
+
+/**
+ * @generated from message cashflow.claim.v1.AddCommentResponse
+ */
+export type AddCommentResponse = Message<"cashflow.claim.v1.AddCommentResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.AddCommentResponse
+ */
+export type AddCommentResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.AddCommentResponse.
+ * Use `create(AddCommentResponseSchema)` to create a new message.
+ */
+export const AddCommentResponseSchema: GenMessage<AddCommentResponse, {jsonType: AddCommentResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 20);
+
+/**
+ * @generated from message cashflow.claim.v1.SetPartAttestedRequest
+ */
+export type SetPartAttestedRequest = Message<"cashflow.claim.v1.SetPartAttestedRequest"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRef | undefined;
+
+  /**
+   * @generated from field: int64 part_id = 2;
+   */
+  partId: bigint;
+
+  /**
+   * @generated from field: bool attested = 3;
+   */
+  attested: boolean;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetPartAttestedRequest
+ */
+export type SetPartAttestedRequestJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRefJson;
+
+  /**
+   * @generated from field: int64 part_id = 2;
+   */
+  partId?: string;
+
+  /**
+   * @generated from field: bool attested = 3;
+   */
+  attested?: boolean;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetPartAttestedRequest.
+ * Use `create(SetPartAttestedRequestSchema)` to create a new message.
+ */
+export const SetPartAttestedRequestSchema: GenMessage<SetPartAttestedRequest, {jsonType: SetPartAttestedRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 21);
+
+/**
+ * @generated from message cashflow.claim.v1.SetPartAttestedResponse
+ */
+export type SetPartAttestedResponse = Message<"cashflow.claim.v1.SetPartAttestedResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetPartAttestedResponse
+ */
+export type SetPartAttestedResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetPartAttestedResponse.
+ * Use `create(SetPartAttestedResponseSchema)` to create a new message.
+ */
+export const SetPartAttestedResponseSchema: GenMessage<SetPartAttestedResponse, {jsonType: SetPartAttestedResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 22);
+
+/**
+ * @generated from message cashflow.claim.v1.SetConfirmedRequest
+ */
+export type SetConfirmedRequest = Message<"cashflow.claim.v1.SetConfirmedRequest"> & {
+  /**
+   * An expense number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number: bigint;
+
+  /**
+   * @generated from field: bool confirmed = 2;
+   */
+  confirmed: boolean;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetConfirmedRequest
+ */
+export type SetConfirmedRequestJson = {
+  /**
+   * An expense number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number?: string;
+
+  /**
+   * @generated from field: bool confirmed = 2;
+   */
+  confirmed?: boolean;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetConfirmedRequest.
+ * Use `create(SetConfirmedRequestSchema)` to create a new message.
+ */
+export const SetConfirmedRequestSchema: GenMessage<SetConfirmedRequest, {jsonType: SetConfirmedRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 23);
+
+/**
+ * @generated from message cashflow.claim.v1.SetConfirmedResponse
+ */
+export type SetConfirmedResponse = Message<"cashflow.claim.v1.SetConfirmedResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetConfirmedResponse
+ */
+export type SetConfirmedResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetConfirmedResponse.
+ * Use `create(SetConfirmedResponseSchema)` to create a new message.
+ */
+export const SetConfirmedResponseSchema: GenMessage<SetConfirmedResponse, {jsonType: SetConfirmedResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 24);
+
+/**
+ * @generated from message cashflow.claim.v1.SetFlaggedRequest
+ */
+export type SetFlaggedRequest = Message<"cashflow.claim.v1.SetFlaggedRequest"> & {
+  /**
+   * An expense number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number: bigint;
+
+  /**
+   * @generated from field: bool flagged = 2;
+   */
+  flagged: boolean;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetFlaggedRequest
+ */
+export type SetFlaggedRequestJson = {
+  /**
+   * An expense number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number?: string;
+
+  /**
+   * @generated from field: bool flagged = 2;
+   */
+  flagged?: boolean;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetFlaggedRequest.
+ * Use `create(SetFlaggedRequestSchema)` to create a new message.
+ */
+export const SetFlaggedRequestSchema: GenMessage<SetFlaggedRequest, {jsonType: SetFlaggedRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 25);
+
+/**
+ * @generated from message cashflow.claim.v1.SetFlaggedResponse
+ */
+export type SetFlaggedResponse = Message<"cashflow.claim.v1.SetFlaggedResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.SetFlaggedResponse
+ */
+export type SetFlaggedResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.SetFlaggedResponse.
+ * Use `create(SetFlaggedResponseSchema)` to create a new message.
+ */
+export const SetFlaggedResponseSchema: GenMessage<SetFlaggedResponse, {jsonType: SetFlaggedResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 26);
+
+/**
+ * @generated from message cashflow.claim.v1.PayInvoiceRequest
+ */
+export type PayInvoiceRequest = Message<"cashflow.claim.v1.PayInvoiceRequest"> & {
+  /**
+   * An invoice number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number: bigint;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.PayInvoiceRequest
+ */
+export type PayInvoiceRequestJson = {
+  /**
+   * An invoice number.
+   *
+   * @generated from field: int64 number = 1;
+   */
+  number?: string;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.PayInvoiceRequest.
+ * Use `create(PayInvoiceRequestSchema)` to create a new message.
+ */
+export const PayInvoiceRequestSchema: GenMessage<PayInvoiceRequest, {jsonType: PayInvoiceRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 27);
+
+/**
+ * @generated from message cashflow.claim.v1.PayInvoiceResponse
+ */
+export type PayInvoiceResponse = Message<"cashflow.claim.v1.PayInvoiceResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.PayInvoiceResponse
+ */
+export type PayInvoiceResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.PayInvoiceResponse.
+ * Use `create(PayInvoiceResponseSchema)` to create a new message.
+ */
+export const PayInvoiceResponseSchema: GenMessage<PayInvoiceResponse, {jsonType: PayInvoiceResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 28);
+
+/**
+ * @generated from message cashflow.claim.v1.DeleteClaimRequest
+ */
+export type DeleteClaimRequest = Message<"cashflow.claim.v1.DeleteClaimRequest"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRef | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.DeleteClaimRequest
+ */
+export type DeleteClaimRequestJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef claim = 1;
+   */
+  claim?: ClaimRefJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.DeleteClaimRequest.
+ * Use `create(DeleteClaimRequestSchema)` to create a new message.
+ */
+export const DeleteClaimRequestSchema: GenMessage<DeleteClaimRequest, {jsonType: DeleteClaimRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 29);
+
+/**
+ * @generated from message cashflow.claim.v1.DeleteClaimResponse
+ */
+export type DeleteClaimResponse = Message<"cashflow.claim.v1.DeleteClaimResponse"> & {
+};
+
+/**
+ * @generated from message cashflow.claim.v1.DeleteClaimResponse
+ */
+export type DeleteClaimResponseJson = {
+};
+
+/**
+ * Describes the message cashflow.claim.v1.DeleteClaimResponse.
+ * Use `create(DeleteClaimResponseSchema)` to create a new message.
+ */
+export const DeleteClaimResponseSchema: GenMessage<DeleteClaimResponse, {jsonType: DeleteClaimResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 30);
 
 /**
  * @generated from enum cashflow.claim.v1.ClaimKind
@@ -1279,6 +1819,66 @@ export const ClaimService: GenService<{
     methodKind: "unary";
     input: typeof GetOverviewRequestSchema;
     output: typeof GetOverviewResponseSchema;
+  },
+  /**
+   * AddComment comments on a claim; the owner is emailed unless they wrote it.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.AddComment
+   */
+  addComment: {
+    methodKind: "unary";
+    input: typeof AddCommentRequestSchema;
+    output: typeof AddCommentResponseSchema;
+  },
+  /**
+   * SetPartAttested attests or unattests one part.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.SetPartAttested
+   */
+  setPartAttested: {
+    methodKind: "unary";
+    input: typeof SetPartAttestedRequestSchema;
+    output: typeof SetPartAttestedResponseSchema;
+  },
+  /**
+   * SetConfirmed confirms or unconfirms an expense's receipts.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.SetConfirmed
+   */
+  setConfirmed: {
+    methodKind: "unary";
+    input: typeof SetConfirmedRequestSchema;
+    output: typeof SetConfirmedResponseSchema;
+  },
+  /**
+   * SetFlagged flags an expense for its owner to fix, or clears the flag.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.SetFlagged
+   */
+  setFlagged: {
+    methodKind: "unary";
+    input: typeof SetFlaggedRequestSchema;
+    output: typeof SetFlaggedResponseSchema;
+  },
+  /**
+   * PayInvoice records an invoice as paid. Expenses are paid out in payouts.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.PayInvoice
+   */
+  payInvoice: {
+    methodKind: "unary";
+    input: typeof PayInvoiceRequestSchema;
+    output: typeof PayInvoiceResponseSchema;
+  },
+  /**
+   * DeleteClaim deletes an unpaid claim.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.DeleteClaim
+   */
+  deleteClaim: {
+    methodKind: "unary";
+    input: typeof DeleteClaimRequestSchema;
+    output: typeof DeleteClaimResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_cashflow_claim_v1_claim, 0);

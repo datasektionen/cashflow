@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/hive"
 	"github.com/datasektionen/cashflow/server/internal/perm"
 )
@@ -56,13 +57,16 @@ func testStore(t *testing.T) (*Store, *fixtures) {
 	if _, err := conn.Exec(ctx, string(schema)); err != nil {
 		t.Fatalf("load schema: %v", err)
 	}
+	if err := database.Migrate(u.String()); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
 
 	pool, err := pgxpool.New(ctx, u.String())
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	return NewStore(pool), &fixtures{t: t, pool: pool, profiles: map[string]int64{}}
+	return NewStore(pool, "https://cashflow.test"), &fixtures{t: t, pool: pool, profiles: map[string]int64{}}
 }
 
 type fixtures struct {
@@ -85,7 +89,7 @@ func (f *fixtures) profile(username string) int64 {
 		return id
 	}
 	userID := f.exec(`INSERT INTO auth_user (username, first_name, last_name, email, password, is_superuser, is_staff, is_active, date_joined)
-		VALUES ($1, $1, 'Testsson', '', '!', false, false, true, now())`, username)
+		VALUES ($1::text, $1::text, 'Testsson', $1::text || '@kth.se', '!', false, false, true, now())`, username)
 	id := f.exec(`INSERT INTO core_profile (user_id, bank_account, sorting_number, bank_name) VALUES ($1, '', '', '')`, userID)
 	f.profiles[username] = id
 	return id

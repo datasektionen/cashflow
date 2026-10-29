@@ -33,3 +33,45 @@ export const getQueueCounts = ClaimService.method.getQueueCounts;
  * @generated from rpc cashflow.claim.v1.ClaimService.GetOverview
  */
 export const getOverview = ClaimService.method.getOverview;
+
+/**
+ * AddComment comments on a claim; the owner is emailed unless they wrote it.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.AddComment
+ */
+export const addComment = ClaimService.method.addComment;
+
+/**
+ * SetPartAttested attests or unattests one part.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.SetPartAttested
+ */
+export const setPartAttested = ClaimService.method.setPartAttested;
+
+/**
+ * SetConfirmed confirms or unconfirms an expense's receipts.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.SetConfirmed
+ */
+export const setConfirmed = ClaimService.method.setConfirmed;
+
+/**
+ * SetFlagged flags an expense for its owner to fix, or clears the flag.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.SetFlagged
+ */
+export const setFlagged = ClaimService.method.setFlagged;
+
+/**
+ * PayInvoice records an invoice as paid. Expenses are paid out in payouts.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.PayInvoice
+ */
+export const payInvoice = ClaimService.method.payInvoice;
+
+/**
+ * DeleteClaim deletes an unpaid claim.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.DeleteClaim
+ */
+export const deleteClaim = ClaimService.method.deleteClaim;

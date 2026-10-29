@@ -20,10 +20,12 @@ import (
 type Store struct {
 	pool    *pgxpool.Pool
 	Queries *db.Queries
+	// publicURL is where emails link to, e.g. https://cashflow.datasektionen.se.
+	publicURL string
 }
 
-func NewStore(pool *pgxpool.Pool) *Store {
-	return &Store{pool: pool, Queries: db.New(pool)}
+func NewStore(pool *pgxpool.Pool, publicURL string) *Store {
+	return &Store{pool: pool, Queries: db.New(pool), publicURL: publicURL}
 }
 
 // claimRows flattens Cashflow 3's claim tables into one row per claim. Part

@@ -43,6 +43,21 @@ const (
 	// ClaimServiceGetOverviewProcedure is the fully-qualified name of the ClaimService's GetOverview
 	// RPC.
 	ClaimServiceGetOverviewProcedure = "/cashflow.claim.v1.ClaimService/GetOverview"
+	// ClaimServiceAddCommentProcedure is the fully-qualified name of the ClaimService's AddComment RPC.
+	ClaimServiceAddCommentProcedure = "/cashflow.claim.v1.ClaimService/AddComment"
+	// ClaimServiceSetPartAttestedProcedure is the fully-qualified name of the ClaimService's
+	// SetPartAttested RPC.
+	ClaimServiceSetPartAttestedProcedure = "/cashflow.claim.v1.ClaimService/SetPartAttested"
+	// ClaimServiceSetConfirmedProcedure is the fully-qualified name of the ClaimService's SetConfirmed
+	// RPC.
+	ClaimServiceSetConfirmedProcedure = "/cashflow.claim.v1.ClaimService/SetConfirmed"
+	// ClaimServiceSetFlaggedProcedure is the fully-qualified name of the ClaimService's SetFlagged RPC.
+	ClaimServiceSetFlaggedProcedure = "/cashflow.claim.v1.ClaimService/SetFlagged"
+	// ClaimServicePayInvoiceProcedure is the fully-qualified name of the ClaimService's PayInvoice RPC.
+	ClaimServicePayInvoiceProcedure = "/cashflow.claim.v1.ClaimService/PayInvoice"
+	// ClaimServiceDeleteClaimProcedure is the fully-qualified name of the ClaimService's DeleteClaim
+	// RPC.
+	ClaimServiceDeleteClaimProcedure = "/cashflow.claim.v1.ClaimService/DeleteClaim"
 )
 
 // ClaimServiceClient is a client for the cashflow.claim.v1.ClaimService service.
@@ -57,6 +72,18 @@ type ClaimServiceClient interface {
 	GetQueueCounts(context.Context, *connect.Request[v1.GetQueueCountsRequest]) (*connect.Response[v1.GetQueueCountsResponse], error)
 	// GetOverview summarises the caller's own claims.
 	GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error)
+	// AddComment comments on a claim; the owner is emailed unless they wrote it.
+	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
+	// SetPartAttested attests or unattests one part.
+	SetPartAttested(context.Context, *connect.Request[v1.SetPartAttestedRequest]) (*connect.Response[v1.SetPartAttestedResponse], error)
+	// SetConfirmed confirms or unconfirms an expense's receipts.
+	SetConfirmed(context.Context, *connect.Request[v1.SetConfirmedRequest]) (*connect.Response[v1.SetConfirmedResponse], error)
+	// SetFlagged flags an expense for its owner to fix, or clears the flag.
+	SetFlagged(context.Context, *connect.Request[v1.SetFlaggedRequest]) (*connect.Response[v1.SetFlaggedResponse], error)
+	// PayInvoice records an invoice as paid. Expenses are paid out in payouts.
+	PayInvoice(context.Context, *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error)
+	// DeleteClaim deletes an unpaid claim.
+	DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error)
 }
 
 // NewClaimServiceClient constructs a client for the cashflow.claim.v1.ClaimService service. By
@@ -98,15 +125,60 @@ func NewClaimServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
+		addComment: connect.NewClient[v1.AddCommentRequest, v1.AddCommentResponse](
+			httpClient,
+			baseURL+ClaimServiceAddCommentProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("AddComment")),
+			connect.WithClientOptions(opts...),
+		),
+		setPartAttested: connect.NewClient[v1.SetPartAttestedRequest, v1.SetPartAttestedResponse](
+			httpClient,
+			baseURL+ClaimServiceSetPartAttestedProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("SetPartAttested")),
+			connect.WithIdempotency(connect.IdempotencyIdempotent),
+			connect.WithClientOptions(opts...),
+		),
+		setConfirmed: connect.NewClient[v1.SetConfirmedRequest, v1.SetConfirmedResponse](
+			httpClient,
+			baseURL+ClaimServiceSetConfirmedProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("SetConfirmed")),
+			connect.WithIdempotency(connect.IdempotencyIdempotent),
+			connect.WithClientOptions(opts...),
+		),
+		setFlagged: connect.NewClient[v1.SetFlaggedRequest, v1.SetFlaggedResponse](
+			httpClient,
+			baseURL+ClaimServiceSetFlaggedProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("SetFlagged")),
+			connect.WithIdempotency(connect.IdempotencyIdempotent),
+			connect.WithClientOptions(opts...),
+		),
+		payInvoice: connect.NewClient[v1.PayInvoiceRequest, v1.PayInvoiceResponse](
+			httpClient,
+			baseURL+ClaimServicePayInvoiceProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("PayInvoice")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteClaim: connect.NewClient[v1.DeleteClaimRequest, v1.DeleteClaimResponse](
+			httpClient,
+			baseURL+ClaimServiceDeleteClaimProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("DeleteClaim")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // claimServiceClient implements ClaimServiceClient.
 type claimServiceClient struct {
-	listClaims     *connect.Client[v1.ListClaimsRequest, v1.ListClaimsResponse]
-	getClaim       *connect.Client[v1.GetClaimRequest, v1.GetClaimResponse]
-	getQueueCounts *connect.Client[v1.GetQueueCountsRequest, v1.GetQueueCountsResponse]
-	getOverview    *connect.Client[v1.GetOverviewRequest, v1.GetOverviewResponse]
+	listClaims      *connect.Client[v1.ListClaimsRequest, v1.ListClaimsResponse]
+	getClaim        *connect.Client[v1.GetClaimRequest, v1.GetClaimResponse]
+	getQueueCounts  *connect.Client[v1.GetQueueCountsRequest, v1.GetQueueCountsResponse]
+	getOverview     *connect.Client[v1.GetOverviewRequest, v1.GetOverviewResponse]
+	addComment      *connect.Client[v1.AddCommentRequest, v1.AddCommentResponse]
+	setPartAttested *connect.Client[v1.SetPartAttestedRequest, v1.SetPartAttestedResponse]
+	setConfirmed    *connect.Client[v1.SetConfirmedRequest, v1.SetConfirmedResponse]
+	setFlagged      *connect.Client[v1.SetFlaggedRequest, v1.SetFlaggedResponse]
+	payInvoice      *connect.Client[v1.PayInvoiceRequest, v1.PayInvoiceResponse]
+	deleteClaim     *connect.Client[v1.DeleteClaimRequest, v1.DeleteClaimResponse]
 }
 
 // ListClaims calls cashflow.claim.v1.ClaimService.ListClaims.
@@ -129,6 +201,36 @@ func (c *claimServiceClient) GetOverview(ctx context.Context, req *connect.Reque
 	return c.getOverview.CallUnary(ctx, req)
 }
 
+// AddComment calls cashflow.claim.v1.ClaimService.AddComment.
+func (c *claimServiceClient) AddComment(ctx context.Context, req *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error) {
+	return c.addComment.CallUnary(ctx, req)
+}
+
+// SetPartAttested calls cashflow.claim.v1.ClaimService.SetPartAttested.
+func (c *claimServiceClient) SetPartAttested(ctx context.Context, req *connect.Request[v1.SetPartAttestedRequest]) (*connect.Response[v1.SetPartAttestedResponse], error) {
+	return c.setPartAttested.CallUnary(ctx, req)
+}
+
+// SetConfirmed calls cashflow.claim.v1.ClaimService.SetConfirmed.
+func (c *claimServiceClient) SetConfirmed(ctx context.Context, req *connect.Request[v1.SetConfirmedRequest]) (*connect.Response[v1.SetConfirmedResponse], error) {
+	return c.setConfirmed.CallUnary(ctx, req)
+}
+
+// SetFlagged calls cashflow.claim.v1.ClaimService.SetFlagged.
+func (c *claimServiceClient) SetFlagged(ctx context.Context, req *connect.Request[v1.SetFlaggedRequest]) (*connect.Response[v1.SetFlaggedResponse], error) {
+	return c.setFlagged.CallUnary(ctx, req)
+}
+
+// PayInvoice calls cashflow.claim.v1.ClaimService.PayInvoice.
+func (c *claimServiceClient) PayInvoice(ctx context.Context, req *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error) {
+	return c.payInvoice.CallUnary(ctx, req)
+}
+
+// DeleteClaim calls cashflow.claim.v1.ClaimService.DeleteClaim.
+func (c *claimServiceClient) DeleteClaim(ctx context.Context, req *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error) {
+	return c.deleteClaim.CallUnary(ctx, req)
+}
+
 // ClaimServiceHandler is an implementation of the cashflow.claim.v1.ClaimService service.
 type ClaimServiceHandler interface {
 	// ListClaims lists claims, optionally narrowed to one work queue.
@@ -141,6 +243,18 @@ type ClaimServiceHandler interface {
 	GetQueueCounts(context.Context, *connect.Request[v1.GetQueueCountsRequest]) (*connect.Response[v1.GetQueueCountsResponse], error)
 	// GetOverview summarises the caller's own claims.
 	GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error)
+	// AddComment comments on a claim; the owner is emailed unless they wrote it.
+	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
+	// SetPartAttested attests or unattests one part.
+	SetPartAttested(context.Context, *connect.Request[v1.SetPartAttestedRequest]) (*connect.Response[v1.SetPartAttestedResponse], error)
+	// SetConfirmed confirms or unconfirms an expense's receipts.
+	SetConfirmed(context.Context, *connect.Request[v1.SetConfirmedRequest]) (*connect.Response[v1.SetConfirmedResponse], error)
+	// SetFlagged flags an expense for its owner to fix, or clears the flag.
+	SetFlagged(context.Context, *connect.Request[v1.SetFlaggedRequest]) (*connect.Response[v1.SetFlaggedResponse], error)
+	// PayInvoice records an invoice as paid. Expenses are paid out in payouts.
+	PayInvoice(context.Context, *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error)
+	// DeleteClaim deletes an unpaid claim.
+	DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error)
 }
 
 // NewClaimServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -178,6 +292,45 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
+	claimServiceAddCommentHandler := connect.NewUnaryHandler(
+		ClaimServiceAddCommentProcedure,
+		svc.AddComment,
+		connect.WithSchema(claimServiceMethods.ByName("AddComment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceSetPartAttestedHandler := connect.NewUnaryHandler(
+		ClaimServiceSetPartAttestedProcedure,
+		svc.SetPartAttested,
+		connect.WithSchema(claimServiceMethods.ByName("SetPartAttested")),
+		connect.WithIdempotency(connect.IdempotencyIdempotent),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceSetConfirmedHandler := connect.NewUnaryHandler(
+		ClaimServiceSetConfirmedProcedure,
+		svc.SetConfirmed,
+		connect.WithSchema(claimServiceMethods.ByName("SetConfirmed")),
+		connect.WithIdempotency(connect.IdempotencyIdempotent),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceSetFlaggedHandler := connect.NewUnaryHandler(
+		ClaimServiceSetFlaggedProcedure,
+		svc.SetFlagged,
+		connect.WithSchema(claimServiceMethods.ByName("SetFlagged")),
+		connect.WithIdempotency(connect.IdempotencyIdempotent),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServicePayInvoiceHandler := connect.NewUnaryHandler(
+		ClaimServicePayInvoiceProcedure,
+		svc.PayInvoice,
+		connect.WithSchema(claimServiceMethods.ByName("PayInvoice")),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceDeleteClaimHandler := connect.NewUnaryHandler(
+		ClaimServiceDeleteClaimProcedure,
+		svc.DeleteClaim,
+		connect.WithSchema(claimServiceMethods.ByName("DeleteClaim")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/cashflow.claim.v1.ClaimService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ClaimServiceListClaimsProcedure:
@@ -188,6 +341,18 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 			claimServiceGetQueueCountsHandler.ServeHTTP(w, r)
 		case ClaimServiceGetOverviewProcedure:
 			claimServiceGetOverviewHandler.ServeHTTP(w, r)
+		case ClaimServiceAddCommentProcedure:
+			claimServiceAddCommentHandler.ServeHTTP(w, r)
+		case ClaimServiceSetPartAttestedProcedure:
+			claimServiceSetPartAttestedHandler.ServeHTTP(w, r)
+		case ClaimServiceSetConfirmedProcedure:
+			claimServiceSetConfirmedHandler.ServeHTTP(w, r)
+		case ClaimServiceSetFlaggedProcedure:
+			claimServiceSetFlaggedHandler.ServeHTTP(w, r)
+		case ClaimServicePayInvoiceProcedure:
+			claimServicePayInvoiceHandler.ServeHTTP(w, r)
+		case ClaimServiceDeleteClaimProcedure:
+			claimServiceDeleteClaimHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -211,4 +376,28 @@ func (UnimplementedClaimServiceHandler) GetQueueCounts(context.Context, *connect
 
 func (UnimplementedClaimServiceHandler) GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.GetOverview is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.AddComment is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) SetPartAttested(context.Context, *connect.Request[v1.SetPartAttestedRequest]) (*connect.Response[v1.SetPartAttestedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.SetPartAttested is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) SetConfirmed(context.Context, *connect.Request[v1.SetConfirmedRequest]) (*connect.Response[v1.SetConfirmedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.SetConfirmed is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) SetFlagged(context.Context, *connect.Request[v1.SetFlaggedRequest]) (*connect.Response[v1.SetFlaggedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.SetFlagged is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) PayInvoice(context.Context, *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.PayInvoice is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.DeleteClaim is not implemented"))
 }

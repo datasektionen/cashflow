@@ -28,6 +28,34 @@ service ClaimService {
   rpc GetOverview(GetOverviewRequest) returns (GetOverviewResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
+
+  // Workflow actions. Each returns the claim as it is afterwards, and fails
+  // with a cashflow.common.v1.Problem when a rule forbids it; Claim.actions
+  // says beforehand which are allowed.
+
+  // AddComment comments on a claim; the owner is emailed unless they wrote it.
+  rpc AddComment(AddCommentRequest) returns (AddCommentResponse);
+
+  // SetPartAttested attests or unattests one part.
+  rpc SetPartAttested(SetPartAttestedRequest) returns (SetPartAttestedResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // SetConfirmed confirms or unconfirms an expense's receipts.
+  rpc SetConfirmed(SetConfirmedRequest) returns (SetConfirmedResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // SetFlagged flags an expense for its owner to fix, or clears the flag.
+  rpc SetFlagged(SetFlaggedRequest) returns (SetFlaggedResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // PayInvoice records an invoice as paid. Expenses are paid out in payouts.
+  rpc PayInvoice(PayInvoiceRequest) returns (PayInvoiceResponse);
+
+  // DeleteClaim deletes an unpaid claim.
+  rpc DeleteClaim(DeleteClaimRequest) returns (DeleteClaimResponse);
 }
 
 enum ClaimKind {
@@ -128,6 +156,25 @@ message GetClaimRequest {
   int64 number = 2;
 }
 
+// ClaimRef points at one claim.
+message ClaimRef {
+  ClaimKind kind = 1;
+  int64 number = 2;
+}
+
+// What the caller may do with a claim right now.
+message Actions {
+  repeated int64 attest_part_ids = 1;
+  repeated int64 unattest_part_ids = 2;
+  bool confirm = 3;
+  bool unconfirm = 4;
+  bool flag = 5;
+  bool unflag = 6;
+  bool pay = 7;
+  bool delete = 8;
+  bool edit = 9;
+}
+
 message Part {
   int64 id = 1;
   string cost_centre = 2;
@@ -178,6 +225,8 @@ message Claim {
   string due_date = 9;
   Person paid_by = 10;
   string paid_at = 11;
+
+  Actions actions = 12;
 }
 
 message GetClaimResponse {
@@ -206,3 +255,57 @@ message GetOverviewResponse {
   // Paid out this calendar year.
   int64 paid_this_year_ore = 3;
 }
+
+message AddCommentRequest {
+  ClaimRef claim = 1;
+  string body = 2;
+}
+
+message AddCommentResponse {
+  Claim claim = 1;
+}
+
+message SetPartAttestedRequest {
+  ClaimRef claim = 1;
+  int64 part_id = 2;
+  bool attested = 3;
+}
+
+message SetPartAttestedResponse {
+  Claim claim = 1;
+}
+
+message SetConfirmedRequest {
+  // An expense number.
+  int64 number = 1;
+  bool confirmed = 2;
+}
+
+message SetConfirmedResponse {
+  Claim claim = 1;
+}
+
+message SetFlaggedRequest {
+  // An expense number.
+  int64 number = 1;
+  bool flagged = 2;
+}
+
+message SetFlaggedResponse {
+  Claim claim = 1;
+}
+
+message PayInvoiceRequest {
+  // An invoice number.
+  int64 number = 1;
+}
+
+message PayInvoiceResponse {
+  Claim claim = 1;
+}
+
+message DeleteClaimRequest {
+  ClaimRef claim = 1;
+}
+
+message DeleteClaimResponse {}

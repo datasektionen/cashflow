@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	claimv1 "github.com/datasektionen/cashflow/server/gen/cashflow/claim/v1"
+	commonv1 "github.com/datasektionen/cashflow/server/gen/cashflow/common/v1"
 	"github.com/datasektionen/cashflow/server/internal/claims"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 )
@@ -49,20 +50,33 @@ func (s *ClaimService) GetClaim(ctx context.Context, req *connect.Request[claimv
 	if kind == "" || req.Msg.Number <= 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("kind and number are required"))
 	}
-	summary, err := s.Store.Get(ctx, callerFrom(ctx).viewer, kind, req.Msg.Number)
-	if err != nil {
-		return nil, claimError(err)
-	}
-	claim, err := s.details(ctx, summary)
+	claim, err := s.load(ctx, kind, req.Msg.Number)
 	if err != nil {
 		return nil, err
 	}
 	return connect.NewResponse(&claimv1.GetClaimResponse{Claim: claim}), nil
 }
 
-func (s *ClaimService) details(ctx context.Context, summary claims.Summary) (*claimv1.Claim, error) {
+// load returns a claim in full, with what the caller may do with it.
+func (s *ClaimService) load(ctx context.Context, kind claims.Kind, number int64) (*claimv1.Claim, error) {
+	viewer := callerFrom(ctx).viewer
+	summary, err := s.Store.Get(ctx, viewer, kind, number)
+	if err != nil {
+		return nil, claimError(err)
+	}
 	q := s.Store.Queries
 	claim := &claimv1.Claim{Summary: toProtoSummary(summary)}
+
+	state, err := s.Store.State(ctx, viewer, summary)
+	if err != nil {
+		return nil, fmt.Errorf("state: %w", err)
+	}
+	a := viewer.Actions(state)
+	claim.Actions = &claimv1.Actions{
+		AttestPartIds: a.Attest, UnattestPartIds: a.Unattest,
+		Confirm: a.Confirm, Unconfirm: a.Unconfirm, Flag: a.Flag, Unflag: a.Unflag,
+		Pay: a.PayInvoice, Delete: a.Delete, Edit: a.Edit,
+	}
 
 	parts, err := q.ListClaimParts(ctx, summary.ID)
 	if err != nil {
@@ -163,6 +177,17 @@ func (s *ClaimService) GetOverview(ctx context.Context, _ *connect.Request[claim
 }
 
 func claimError(err error) error {
+	if problem, ok := claims.IsProblem(err); ok {
+		code := connect.CodeFailedPrecondition
+		if problem.Forbidden {
+			code = connect.CodePermissionDenied
+		}
+		cerr := connect.NewError(code, err)
+		if detail, err := connect.NewErrorDetail(&commonv1.Problem{Code: problem.Code}); err == nil {
+			cerr.AddDetail(detail)
+		}
+		return cerr
+	}
 	switch {
 	case errors.Is(err, claims.ErrNotFound):
 		return connect.NewError(connect.CodeNotFound, err)
@@ -241,4 +266,90 @@ func invert[K, V comparable](m map[K]V) map[V]K {
 		out[v] = k
 	}
 	return out
+}
+
+// ref validates a claim reference from a request.
+func ref(r *claimv1.ClaimRef) (claims.Kind, int64, error) {
+	kind := kindFromProto[r.GetKind()]
+	if kind == "" || r.GetNumber() <= 0 {
+		return "", 0, connect.NewError(connect.CodeInvalidArgument, errors.New("a claim kind and number are required"))
+	}
+	return kind, r.GetNumber(), nil
+}
+
+// after runs a workflow change and returns the claim as it is afterwards.
+func (s *ClaimService) after(ctx context.Context, kind claims.Kind, number int64, change func(claims.Viewer) error) (*claimv1.Claim, error) {
+	if err := change(callerFrom(ctx).viewer); err != nil {
+		return nil, claimError(err)
+	}
+	return s.load(ctx, kind, number)
+}
+
+func (s *ClaimService) AddComment(ctx context.Context, req *connect.Request[claimv1.AddCommentRequest]) (*connect.Response[claimv1.AddCommentResponse], error) {
+	kind, number, err := ref(req.Msg.Claim)
+	if err != nil {
+		return nil, err
+	}
+	claim, err := s.after(ctx, kind, number, func(v claims.Viewer) error {
+		return s.Store.AddComment(ctx, v, kind, number, req.Msg.Body)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.AddCommentResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) SetPartAttested(ctx context.Context, req *connect.Request[claimv1.SetPartAttestedRequest]) (*connect.Response[claimv1.SetPartAttestedResponse], error) {
+	kind, number, err := ref(req.Msg.Claim)
+	if err != nil {
+		return nil, err
+	}
+	claim, err := s.after(ctx, kind, number, func(v claims.Viewer) error {
+		return s.Store.SetAttested(ctx, v, kind, number, req.Msg.PartId, req.Msg.Attested)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.SetPartAttestedResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) SetConfirmed(ctx context.Context, req *connect.Request[claimv1.SetConfirmedRequest]) (*connect.Response[claimv1.SetConfirmedResponse], error) {
+	claim, err := s.after(ctx, claims.Expense, req.Msg.Number, func(v claims.Viewer) error {
+		return s.Store.SetConfirmed(ctx, v, req.Msg.Number, req.Msg.Confirmed)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.SetConfirmedResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) SetFlagged(ctx context.Context, req *connect.Request[claimv1.SetFlaggedRequest]) (*connect.Response[claimv1.SetFlaggedResponse], error) {
+	claim, err := s.after(ctx, claims.Expense, req.Msg.Number, func(v claims.Viewer) error {
+		return s.Store.SetFlagged(ctx, v, req.Msg.Number, req.Msg.Flagged)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.SetFlaggedResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) PayInvoice(ctx context.Context, req *connect.Request[claimv1.PayInvoiceRequest]) (*connect.Response[claimv1.PayInvoiceResponse], error) {
+	claim, err := s.after(ctx, claims.Invoice, req.Msg.Number, func(v claims.Viewer) error {
+		return s.Store.PayInvoice(ctx, v, req.Msg.Number)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.PayInvoiceResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) DeleteClaim(ctx context.Context, req *connect.Request[claimv1.DeleteClaimRequest]) (*connect.Response[claimv1.DeleteClaimResponse], error) {
+	kind, number, err := ref(req.Msg.Claim)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.Store.Delete(ctx, callerFrom(ctx).viewer, kind, number); err != nil {
+		return nil, claimError(err)
+	}
+	return connect.NewResponse(&claimv1.DeleteClaimResponse{}), nil
 }

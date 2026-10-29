@@ -10,7 +10,7 @@ import {
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { useMemo } from "react";
 import type { ClaimSummary } from "#/gen/cashflow/claim/v1/claim_pb";
-import { claimLink, formatDate, type SortSlug } from "#/lib/claims";
+import { claimLink, formatDate, type QueueSlug, type SortSlug } from "#/lib/claims";
 import { type Messages, useLocale, useT } from "#/lib/i18n";
 import { cn } from "#/lib/utils";
 import { Amount, CostCentreChip, KindIcon, StageBadge } from "./badges";
@@ -25,6 +25,8 @@ type Props = {
   onSortChange: (sort: { sort: SortSlug; desc: boolean }) => void;
   onCostCentre: (cc: string) => void;
   activeIndex: number;
+  /** The queue the list shows, carried to claim pages for "next in queue". */
+  queue?: QueueSlug;
 };
 
 /**
@@ -32,11 +34,14 @@ type Props = {
  * renders and reports clicks. Each row's description is a real link stretched
  * over the row, so middle-click and cmd-click open new tabs.
  */
-export function ClaimsTable({ claims, showOwner, sort, onSortChange, onCostCentre, activeIndex }: Props) {
+export function ClaimsTable({ claims, showOwner, sort, onSortChange, onCostCentre, activeIndex, queue }: Props) {
   const t = useT();
   const locale = useLocale();
 
-  const columns = useMemo(() => buildColumns(t, locale, showOwner, onCostCentre), [t, locale, showOwner, onCostCentre]);
+  const columns = useMemo(
+    () => buildColumns(t, locale, showOwner, onCostCentre, queue),
+    [t, locale, showOwner, onCostCentre, queue],
+  );
   const sorting: SortingState = [{ id: sort.sort, desc: sort.desc }];
 
   const table = useTable({
@@ -127,6 +132,7 @@ function buildColumns(
   locale: ReturnType<typeof useLocale>,
   showOwner: boolean,
   onCostCentre: (cc: string) => void,
+  queue?: QueueSlug,
 ) {
   const c = t.claims.columns;
   return column.columns([
@@ -148,7 +154,7 @@ function buildColumns(
       cell: ({ row }) => (
         <div className="min-w-0">
           <Link
-            {...claimLink(row.original.kind, row.original.number)}
+            {...claimLink(row.original.kind, row.original.number, queue)}
             className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
           >
             {row.original.description}

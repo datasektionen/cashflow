@@ -3,6 +3,7 @@
 # writes `from "cn"`, so fix the import and drop the bogus package afterwards.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-bunx --bun shadcn@latest add -y "$@"
+# Never overwrite existing components: some are customised (e.g. sonner.tsx).
+{ yes n || true; } | bunx --bun shadcn@latest add -y "$@"
 sed -i 's|from "cn"|from "#/lib/utils"|' src/components/ui/*.tsx
 bun remove cn next-themes >/dev/null 2>&1 || true

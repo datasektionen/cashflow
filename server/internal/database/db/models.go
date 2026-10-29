@@ -52,6 +52,16 @@ type AuthUserUserPermission struct {
 	PermissionID int32
 }
 
+type Cashflow4Outbox struct {
+	ID        int64
+	Payload   []byte
+	CreatedAt pgtype.Timestamptz
+	RunAt     pgtype.Timestamptz
+	Attempts  int32
+	LastError string
+	SentAt    pgtype.Timestamptz
+}
+
 type CoreClaim struct {
 	ID            int64
 	Description   string

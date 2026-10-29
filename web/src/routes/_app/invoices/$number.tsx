@@ -8,9 +8,11 @@ import {
   stringifyNumberParam,
 } from "#/components/claim/claim-route";
 import { ClaimKind } from "#/gen/cashflow/claim/v1/claim_pb";
+import { validateClaimPageSearch } from "#/lib/claims";
 
 export const Route = createFileRoute("/_app/invoices/$number")({
   params: { parse: parseNumberParam, stringify: stringifyNumberParam },
+  validateSearch: validateClaimPageSearch,
   loader: ({ context, params }) => loadClaim(context.queryClient, ClaimKind.INVOICE, params.number),
   pendingComponent: ClaimSkeleton,
   notFoundComponent: ClaimNotFound,
@@ -19,5 +21,6 @@ export const Route = createFileRoute("/_app/invoices/$number")({
 
 function InvoicePage() {
   const { number } = Route.useParams();
-  return <ClaimDetail kind={ClaimKind.INVOICE} number={number} />;
+  const { queue } = Route.useSearch();
+  return <ClaimDetail kind={ClaimKind.INVOICE} number={number} queue={queue} />;
 }

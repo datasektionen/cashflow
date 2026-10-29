@@ -33,16 +33,17 @@ func Open(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 		pool.Close()
 		return nil, fmt.Errorf("ping: %w", err)
 	}
-	if err := migrateUp(databaseURL); err != nil {
+	if err := Migrate(databaseURL); err != nil {
 		pool.Close()
 		return nil, err
 	}
 	return pool, nil
 }
 
-// migrateUp runs on its own connection, so the migrate driver's lock and
-// connection are released by m.Close without touching the app's pool.
-func migrateUp(databaseURL string) error {
+// Migrate applies Go's own migrations. It runs on its own connection, so the
+// migrate driver's lock and connection are released by m.Close without
+// touching the app's pool.
+func Migrate(databaseURL string) error {
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
 		return fmt.Errorf("read migrations: %w", err)
