@@ -10,3 +10,10 @@ import { UserService } from "./user_pb";
  * @generated from rpc cashflow.user.v1.UserService.GetMe
  */
 export const getMe = UserService.method.getMe;
+
+/**
+ * UpdateBankDetails sets where the user's reimbursements are paid.
+ *
+ * @generated from rpc cashflow.user.v1.UserService.UpdateBankDetails
+ */
+export const updateBankDetails = UserService.method.updateBankDetails;

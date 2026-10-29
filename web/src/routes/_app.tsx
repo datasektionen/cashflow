@@ -1,7 +1,9 @@
 import { createQueryOptions, useSuspenseQuery } from "@connectrpc/connect-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppSidebar } from "#/components/layout/app-sidebar";
 import { Logo } from "#/components/layout/logo";
+import { GlobalHotkeys, ShortcutsDialog } from "#/components/layout/shortcuts";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "#/components/ui/sidebar";
 import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
 import { transport } from "#/lib/rpc";
@@ -16,13 +18,15 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const { data } = useSuspenseQuery(getMe, {});
-  const user = data.user;
-  const capabilities = data.capabilities;
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const { user, capabilities } = data;
   if (!user || !capabilities) throw new Error("GetMe returned no user");
+
+  const showShortcuts = () => setShortcutsOpen(true);
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} capabilities={capabilities} />
+      <AppSidebar user={user} capabilities={capabilities} onShowShortcuts={showShortcuts} />
       <SidebarInset className="overflow-hidden">
         <header className="flex h-12 items-center gap-2 bg-sidebar px-3 text-sidebar-accent-foreground md:hidden">
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
@@ -30,6 +34,8 @@ function AppLayout() {
         </header>
         <Outlet />
       </SidebarInset>
+      <GlobalHotkeys capabilities={capabilities} onShowShortcuts={showShortcuts} />
+      <ShortcutsDialog capabilities={capabilities} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </SidebarProvider>
   );
 }

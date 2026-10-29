@@ -54,6 +54,40 @@ func (q *Queries) ListCostCentres(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
+const updateBankDetails = `-- name: UpdateBankDetails :one
+UPDATE users
+SET clearing_number = $2, bank_account = $3, bank_name = $4
+WHERE username = $1
+RETURNING username, name, email, bank_account, clearing_number, bank_name, created_at
+`
+
+type UpdateBankDetailsParams struct {
+	Username       string
+	ClearingNumber string
+	BankAccount    string
+	BankName       string
+}
+
+func (q *Queries) UpdateBankDetails(ctx context.Context, arg UpdateBankDetailsParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateBankDetails,
+		arg.Username,
+		arg.ClearingNumber,
+		arg.BankAccount,
+		arg.BankName,
+	)
+	var i User
+	err := row.Scan(
+		&i.Username,
+		&i.Name,
+		&i.Email,
+		&i.BankAccount,
+		&i.ClearingNumber,
+		&i.BankName,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO users (username, name, email)
 VALUES ($1, $2, $3)

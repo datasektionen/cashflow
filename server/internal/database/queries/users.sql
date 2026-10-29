@@ -14,3 +14,9 @@ SELECT * FROM users WHERE username = $1;
 -- Every cost centre that appears on a claim part; permission scopes are
 -- matched against these.
 SELECT DISTINCT cost_centre FROM claim_parts WHERE cost_centre <> '' ORDER BY cost_centre;
+
+-- name: UpdateBankDetails :one
+UPDATE users
+SET clearing_number = $2, bank_account = $3, bank_name = $4
+WHERE username = $1
+RETURNING *;

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package cashflow.common.v1;
+
+// FieldViolations is attached to InvalidArgument errors so a form can show
+// each message next to its field.
+message FieldViolations {
+  repeated FieldViolation violations = 1;
+}
+
+message FieldViolation {
+  // The request field, in its proto name, e.g. "clearing_number".
+  string field = 1;
+  // A stable code the frontend translates, e.g. "clearing_number.length".
+  string code = 2;
+}

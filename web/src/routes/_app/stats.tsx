@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "#/components/layout/coming-soon";
+import { Page } from "#/components/layout/page";
+import { ComingSoon } from "#/components/layout/states";
+import { useT } from "#/lib/i18n";
 
 export const Route = createFileRoute("/_app/stats")({
-  component: () => <ComingSoon title="Statistik" />,
+  component: StatsPage,
 });
+
+function StatsPage() {
+  const t = useT();
+  return (
+    <Page title={t.nav.stats}>
+      <ComingSoon />
+    </Page>
+  );
+}

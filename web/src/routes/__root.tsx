@@ -1,15 +1,18 @@
 import { TransportProvider } from "@connectrpc/connect-query";
+import { HotkeysProvider } from "@tanstack/react-hotkeys";
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { Toaster } from "#/components/ui/sonner";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { transport } from "#/lib/rpc";
 import styles from "#/styles.css?url";
 
-// Runs before first paint so a dark-mode user never sees a white flash. Mirrors
-// applyTheme in lib/theme.ts.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("cashflow-theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
+// Runs before first paint so a dark-mode user never sees a white flash, and
+// sets the document language. Mirrors lib/theme.ts and lib/i18n.
+const BOOT_SCRIPT = `try{var t=localStorage.getItem("cashflow-theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark");var l=localStorage.getItem("cashflow-locale");document.documentElement.lang=l==="en"||(!l&&navigator.language.startsWith("en"))?"en":"sv"}catch(e){}`;
+
+const Devtools = import.meta.env.DEV ? lazy(() => import("#/components/layout/devtools")) : () => null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -32,8 +35,8 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="sv" suppressHydrationWarning>
       <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static, see THEME_SCRIPT */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a static string, see BOOT_SCRIPT */}
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
@@ -49,10 +52,15 @@ function RootComponent() {
   return (
     <TransportProvider transport={transport}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Outlet />
-          <Toaster richColors position="bottom-right" />
-        </TooltipProvider>
+        <HotkeysProvider>
+          <TooltipProvider>
+            <Outlet />
+            <Toaster richColors position="bottom-right" />
+          </TooltipProvider>
+        </HotkeysProvider>
+        <Suspense>
+          <Devtools />
+        </Suspense>
       </QueryClientProvider>
     </TransportProvider>
   );

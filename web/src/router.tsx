@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { NotFound, RouteError } from "#/components/layout/states";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -10,8 +11,12 @@ export function getRouter() {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Loaders run on hover, so pages usually open with their data ready.
     defaultPreload: "intent",
+    // Query's cache decides freshness, not the router's.
     defaultPreloadStaleTime: 0,
+    defaultErrorComponent: RouteError,
+    defaultNotFoundComponent: NotFound,
   });
 }
 

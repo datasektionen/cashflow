@@ -1,44 +1,30 @@
-import { useSyncExternalStore } from "react";
+import { createPreference, usePreference } from "./preference";
 
-export type Theme = "light" | "dark" | "system";
+export const THEMES = ["light", "dark", "system"] as const;
+export type Theme = (typeof THEMES)[number];
 
-const STORAGE_KEY = "cashflow-theme";
-const listeners = new Set<() => void>();
-const media = () => window.matchMedia("(prefers-color-scheme: dark)");
+const prefersDark = () => window.matchMedia("(prefers-color-scheme: dark)");
 
-function stored(): Theme {
-  const value = localStorage.getItem(STORAGE_KEY);
-  return value === "light" || value === "dark" ? value : "system";
-}
-
-/** Puts `.dark` on <html> to match the chosen theme (or the OS, for "system"). */
-export function applyTheme() {
-  const theme = stored();
-  const dark = theme === "dark" || (theme === "system" && media().matches);
+/** Puts `.dark` on <html>. Mirrored by THEME_SCRIPT in routes/__root.tsx, which runs before first paint. */
+function apply(theme: Theme) {
+  const dark = theme === "dark" || (theme === "system" && prefersDark().matches);
   document.documentElement.classList.toggle("dark", dark);
 }
 
-export function setTheme(theme: Theme) {
-  if (theme === "system") localStorage.removeItem(STORAGE_KEY);
-  else localStorage.setItem(STORAGE_KEY, theme);
-  applyTheme();
-  for (const listener of listeners) listener();
+const theme = createPreference<Theme>({
+  key: "cashflow-theme",
+  values: THEMES,
+  fallback: () => "system",
+  onChange: apply,
+});
+
+// Follow the OS while the preference is "system".
+if (typeof window !== "undefined") {
+  prefersDark().addEventListener("change", () => {
+    apply(theme.get());
+    theme.notify();
+  });
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  const mq = media();
-  const onChange = () => {
-    applyTheme();
-    listener();
-  };
-  mq.addEventListener("change", onChange);
-  return () => {
-    listeners.delete(listener);
-    mq.removeEventListener("change", onChange);
-  };
-}
-
-export function useTheme(): Theme {
-  return useSyncExternalStore(subscribe, stored, () => "system");
-}
+export const useTheme = () => usePreference(theme);
+export const setTheme = theme.set;

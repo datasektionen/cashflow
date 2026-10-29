@@ -35,12 +35,17 @@ const (
 const (
 	// UserServiceGetMeProcedure is the fully-qualified name of the UserService's GetMe RPC.
 	UserServiceGetMeProcedure = "/cashflow.user.v1.UserService/GetMe"
+	// UserServiceUpdateBankDetailsProcedure is the fully-qualified name of the UserService's
+	// UpdateBankDetails RPC.
+	UserServiceUpdateBankDetailsProcedure = "/cashflow.user.v1.UserService/UpdateBankDetails"
 )
 
 // UserServiceClient is a client for the cashflow.user.v1.UserService service.
 type UserServiceClient interface {
 	// GetMe returns the logged-in user, their bank details and capabilities.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// UpdateBankDetails sets where the user's reimbursements are paid.
+	UpdateBankDetails(context.Context, *connect.Request[v1.UpdateBankDetailsRequest]) (*connect.Response[v1.UpdateBankDetailsResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the cashflow.user.v1.UserService service. By
@@ -61,12 +66,20 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
+		updateBankDetails: connect.NewClient[v1.UpdateBankDetailsRequest, v1.UpdateBankDetailsResponse](
+			httpClient,
+			baseURL+UserServiceUpdateBankDetailsProcedure,
+			connect.WithSchema(userServiceMethods.ByName("UpdateBankDetails")),
+			connect.WithIdempotency(connect.IdempotencyIdempotent),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
-	getMe *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	getMe             *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	updateBankDetails *connect.Client[v1.UpdateBankDetailsRequest, v1.UpdateBankDetailsResponse]
 }
 
 // GetMe calls cashflow.user.v1.UserService.GetMe.
@@ -74,10 +87,17 @@ func (c *userServiceClient) GetMe(ctx context.Context, req *connect.Request[v1.G
 	return c.getMe.CallUnary(ctx, req)
 }
 
+// UpdateBankDetails calls cashflow.user.v1.UserService.UpdateBankDetails.
+func (c *userServiceClient) UpdateBankDetails(ctx context.Context, req *connect.Request[v1.UpdateBankDetailsRequest]) (*connect.Response[v1.UpdateBankDetailsResponse], error) {
+	return c.updateBankDetails.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the cashflow.user.v1.UserService service.
 type UserServiceHandler interface {
 	// GetMe returns the logged-in user, their bank details and capabilities.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// UpdateBankDetails sets where the user's reimbursements are paid.
+	UpdateBankDetails(context.Context, *connect.Request[v1.UpdateBankDetailsRequest]) (*connect.Response[v1.UpdateBankDetailsResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -94,10 +114,19 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceUpdateBankDetailsHandler := connect.NewUnaryHandler(
+		UserServiceUpdateBankDetailsProcedure,
+		svc.UpdateBankDetails,
+		connect.WithSchema(userServiceMethods.ByName("UpdateBankDetails")),
+		connect.WithIdempotency(connect.IdempotencyIdempotent),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/cashflow.user.v1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceGetMeProcedure:
 			userServiceGetMeHandler.ServeHTTP(w, r)
+		case UserServiceUpdateBankDetailsProcedure:
+			userServiceUpdateBankDetailsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -109,4 +138,8 @@ type UnimplementedUserServiceHandler struct{}
 
 func (UnimplementedUserServiceHandler) GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.user.v1.UserService.GetMe is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) UpdateBankDetails(context.Context, *connect.Request[v1.UpdateBankDetailsRequest]) (*connect.Response[v1.UpdateBankDetailsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.user.v1.UserService.UpdateBankDetails is not implemented"))
 }

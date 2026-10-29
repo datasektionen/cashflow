@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/user/v1/user.proto.
  */
 export const file_cashflow_user_v1_user: GenFile = /*@__PURE__*/
-  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0ImsKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcyJ3CgRVc2VyEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFZW1haWwYAyABKAkSFAoMYmFua19hY2NvdW50GAQgASgJEhcKD2NsZWFyaW5nX251bWJlchgFIAEoCRIRCgliYW5rX25hbWUYBiABKAki/AIKDENhcGFiaWxpdGllcxIQCgh2aWV3X2FsbBgBIAEoCBIZChF2aWV3X2FsbF9wYXltZW50cxgCIAEoCBISCgphdHRlc3RfYWxsGAMgASgIEhsKE2F0dGVzdF9jb3N0X2NlbnRyZXMYBCADKAkSEAoIdW5hdHRlc3QYBSABKAgSDwoHY29uZmlybRgGIAEoCBIWCg5hY2NvdW50aW5nX2FsbBgIIAEoCBIfChdhY2NvdW50aW5nX2Nvc3RfY2VudHJlcxgJIAMoCRILCgNwYXkYCiABKAgSDgoGZGVsZXRlGAsgASgIEhQKDGVkaXRfaW52b2ljZRgMIAEoCBIZChFtb2RlcmF0ZV9jb21tZW50cxgNIAEoCBIWCg5tYW5hZ2VfZm9ydG5veBgOIAEoCBIVCg1maXJtYXRlY2tuYXJlGA8gASgIEhQKDHZpZXdfYWNjb3VudBgQIAEoCBIZChF2aWV3X2Nvc3RfY2VudHJlcxgRIAMoCUoECAcQCDJcCgtVc2VyU2VydmljZRJNCgVHZXRNZRIeLmNhc2hmbG93LnVzZXIudjEuR2V0TWVSZXF1ZXN0Gh8uY2FzaGZsb3cudXNlci52MS5HZXRNZVJlc3BvbnNlIgOQAgFCyQEKFGNvbS5jYXNoZmxvdy51c2VyLnYxQglVc2VyUHJvdG9QAVpEZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvdXNlci92MTt1c2VydjGiAgNDVViqAhBDYXNoZmxvdy5Vc2VyLlYxygIQQ2FzaGZsb3dcVXNlclxWMeICHENhc2hmbG93XFVzZXJcVjFcR1BCTWV0YWRhdGHqAhJDYXNoZmxvdzo6VXNlcjo6VjFiBnByb3RvMw");
+  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0ImsKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcyJcChhVcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QSFwoPY2xlYXJpbmdfbnVtYmVyGAEgASgJEhQKDGJhbmtfYWNjb3VudBgCIAEoCRIRCgliYW5rX25hbWUYAyABKAkiQQoZVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuY2FzaGZsb3cudXNlci52MS5Vc2VyIncKBFVzZXISEAoIdXNlcm5hbWUYASABKAkSDAoEbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIUCgxiYW5rX2FjY291bnQYBCABKAkSFwoPY2xlYXJpbmdfbnVtYmVyGAUgASgJEhEKCWJhbmtfbmFtZRgGIAEoCSKoAwoMQ2FwYWJpbGl0aWVzEhAKCHZpZXdfYWxsGAEgASgIEhkKEXZpZXdfYWxsX3BheW1lbnRzGAIgASgIEhIKCmF0dGVzdF9hbGwYAyABKAgSGwoTYXR0ZXN0X2Nvc3RfY2VudHJlcxgEIAMoCRIQCgh1bmF0dGVzdBgFIAEoCBIPCgdjb25maXJtGAYgASgIEhYKDmFjY291bnRpbmdfYWxsGAggASgIEh8KF2FjY291bnRpbmdfY29zdF9jZW50cmVzGAkgAygJEgsKA3BheRgKIAEoCBIOCgZkZWxldGUYCyABKAgSFAoMZWRpdF9pbnZvaWNlGAwgASgIEhkKEW1vZGVyYXRlX2NvbW1lbnRzGA0gASgIEhYKDm1hbmFnZV9mb3J0bm94GA4gASgIEhUKDWZpcm1hdGVja25hcmUYDyABKAgSFAoMdmlld19hY2NvdW50GBAgASgIEhkKEXZpZXdfY29zdF9jZW50cmVzGBEgAygJEhIKCmF0dGVzdF9hbnkYEiABKAgSFgoOYWNjb3VudGluZ19hbnkYEyABKAhKBAgHEAgyzwEKC1VzZXJTZXJ2aWNlEk0KBUdldE1lEh4uY2FzaGZsb3cudXNlci52MS5HZXRNZVJlcXVlc3QaHy5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVzcG9uc2UiA5ACARJxChFVcGRhdGVCYW5rRGV0YWlscxIqLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0GisuY2FzaGZsb3cudXNlci52MS5VcGRhdGVCYW5rRGV0YWlsc1Jlc3BvbnNlIgOQAgJCyQEKFGNvbS5jYXNoZmxvdy51c2VyLnYxQglVc2VyUHJvdG9QAVpEZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvdXNlci92MTt1c2VydjGiAgNDVViqAhBDYXNoZmxvdy5Vc2VyLlYxygIQQ2FzaGZsb3dcVXNlclxWMeICHENhc2hmbG93XFVzZXJcVjFcR1BCTWV0YWRhdGHqAhJDYXNoZmxvdzo6VXNlcjo6VjFiBnByb3RvMw");
 
 /**
  * @generated from message cashflow.user.v1.GetMeRequest
@@ -67,6 +67,88 @@ export type GetMeResponseJson = {
  */
 export const GetMeResponseSchema: GenMessage<GetMeResponse, {jsonType: GetMeResponseJson}> = /*@__PURE__*/
   messageDesc(file_cashflow_user_v1_user, 1);
+
+/**
+ * @generated from message cashflow.user.v1.UpdateBankDetailsRequest
+ */
+export type UpdateBankDetailsRequest = Message<"cashflow.user.v1.UpdateBankDetailsRequest"> & {
+  /**
+   * Digits only after normalisation; 4 or 5 digits.
+   *
+   * @generated from field: string clearing_number = 1;
+   */
+  clearingNumber: string;
+
+  /**
+   * Digits only after normalisation; at most 13 digits.
+   *
+   * @generated from field: string bank_account = 2;
+   */
+  bankAccount: string;
+
+  /**
+   * @generated from field: string bank_name = 3;
+   */
+  bankName: string;
+};
+
+/**
+ * @generated from message cashflow.user.v1.UpdateBankDetailsRequest
+ */
+export type UpdateBankDetailsRequestJson = {
+  /**
+   * Digits only after normalisation; 4 or 5 digits.
+   *
+   * @generated from field: string clearing_number = 1;
+   */
+  clearingNumber?: string;
+
+  /**
+   * Digits only after normalisation; at most 13 digits.
+   *
+   * @generated from field: string bank_account = 2;
+   */
+  bankAccount?: string;
+
+  /**
+   * @generated from field: string bank_name = 3;
+   */
+  bankName?: string;
+};
+
+/**
+ * Describes the message cashflow.user.v1.UpdateBankDetailsRequest.
+ * Use `create(UpdateBankDetailsRequestSchema)` to create a new message.
+ */
+export const UpdateBankDetailsRequestSchema: GenMessage<UpdateBankDetailsRequest, {jsonType: UpdateBankDetailsRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 2);
+
+/**
+ * @generated from message cashflow.user.v1.UpdateBankDetailsResponse
+ */
+export type UpdateBankDetailsResponse = Message<"cashflow.user.v1.UpdateBankDetailsResponse"> & {
+  /**
+   * @generated from field: cashflow.user.v1.User user = 1;
+   */
+  user?: User | undefined;
+};
+
+/**
+ * @generated from message cashflow.user.v1.UpdateBankDetailsResponse
+ */
+export type UpdateBankDetailsResponseJson = {
+  /**
+   * @generated from field: cashflow.user.v1.User user = 1;
+   */
+  user?: UserJson;
+};
+
+/**
+ * Describes the message cashflow.user.v1.UpdateBankDetailsResponse.
+ * Use `create(UpdateBankDetailsResponseSchema)` to create a new message.
+ */
+export const UpdateBankDetailsResponseSchema: GenMessage<UpdateBankDetailsResponse, {jsonType: UpdateBankDetailsResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 3);
 
 /**
  * @generated from message cashflow.user.v1.User
@@ -147,7 +229,7 @@ export type UserJson = {
  * Use `create(UserSchema)` to create a new message.
  */
 export const UserSchema: GenMessage<User, {jsonType: UserJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 2);
+  messageDesc(file_cashflow_user_v1_user, 4);
 
 /**
  * Capabilities are resolved from Hive on the server, so the frontend only
@@ -168,6 +250,8 @@ export type Capabilities = Message<"cashflow.user.v1.Capabilities"> & {
 
   /**
    * Cost centres the user may attest; attest_all means every cost centre.
+   * attest_any is true for any attest grant, even for a cost centre with no
+   * claims yet, and decides whether the attest queue is shown.
    *
    * @generated from field: bool attest_all = 3;
    */
@@ -239,6 +323,16 @@ export type Capabilities = Message<"cashflow.user.v1.Capabilities"> & {
    * @generated from field: repeated string view_cost_centres = 17;
    */
   viewCostCentres: string[];
+
+  /**
+   * @generated from field: bool attest_any = 18;
+   */
+  attestAny: boolean;
+
+  /**
+   * @generated from field: bool accounting_any = 19;
+   */
+  accountingAny: boolean;
 };
 
 /**
@@ -260,6 +354,8 @@ export type CapabilitiesJson = {
 
   /**
    * Cost centres the user may attest; attest_all means every cost centre.
+   * attest_any is true for any attest grant, even for a cost centre with no
+   * claims yet, and decides whether the attest queue is shown.
    *
    * @generated from field: bool attest_all = 3;
    */
@@ -331,6 +427,16 @@ export type CapabilitiesJson = {
    * @generated from field: repeated string view_cost_centres = 17;
    */
   viewCostCentres?: string[];
+
+  /**
+   * @generated from field: bool attest_any = 18;
+   */
+  attestAny?: boolean;
+
+  /**
+   * @generated from field: bool accounting_any = 19;
+   */
+  accountingAny?: boolean;
 };
 
 /**
@@ -338,7 +444,7 @@ export type CapabilitiesJson = {
  * Use `create(CapabilitiesSchema)` to create a new message.
  */
 export const CapabilitiesSchema: GenMessage<Capabilities, {jsonType: CapabilitiesJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 3);
+  messageDesc(file_cashflow_user_v1_user, 5);
 
 /**
  * UserService exposes the logged-in user and what they may do.
@@ -355,6 +461,16 @@ export const UserService: GenService<{
     methodKind: "unary";
     input: typeof GetMeRequestSchema;
     output: typeof GetMeResponseSchema;
+  },
+  /**
+   * UpdateBankDetails sets where the user's reimbursements are paid.
+   *
+   * @generated from rpc cashflow.user.v1.UserService.UpdateBankDetails
+   */
+  updateBankDetails: {
+    methodKind: "unary";
+    input: typeof UpdateBankDetailsRequestSchema;
+    output: typeof UpdateBankDetailsResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_cashflow_user_v1_user, 0);

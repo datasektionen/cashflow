@@ -8,6 +8,11 @@ service UserService {
   rpc GetMe(GetMeRequest) returns (GetMeResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
+
+  // UpdateBankDetails sets where the user's reimbursements are paid.
+  rpc UpdateBankDetails(UpdateBankDetailsRequest) returns (UpdateBankDetailsResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
 }
 
 message GetMeRequest {}
@@ -15,6 +20,18 @@ message GetMeRequest {}
 message GetMeResponse {
   User user = 1;
   Capabilities capabilities = 2;
+}
+
+message UpdateBankDetailsRequest {
+  // Digits only after normalisation; 4 or 5 digits.
+  string clearing_number = 1;
+  // Digits only after normalisation; at most 13 digits.
+  string bank_account = 2;
+  string bank_name = 3;
+}
+
+message UpdateBankDetailsResponse {
+  User user = 1;
 }
 
 message User {
@@ -33,6 +50,8 @@ message Capabilities {
   bool view_all = 1;
   bool view_all_payments = 2;
   // Cost centres the user may attest; attest_all means every cost centre.
+  // attest_any is true for any attest grant, even for a cost centre with no
+  // claims yet, and decides whether the attest queue is shown.
   bool attest_all = 3;
   repeated string attest_cost_centres = 4;
   bool unattest = 5;
@@ -49,4 +68,6 @@ message Capabilities {
   bool firmatecknare = 15;
   bool view_account = 16;
   repeated string view_cost_centres = 17;
+  bool attest_any = 18;
+  bool accounting_any = 19;
 }

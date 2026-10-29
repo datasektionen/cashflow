@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "#/components/layout/coming-soon";
+import { Page } from "#/components/layout/page";
+import { ComingSoon } from "#/components/layout/states";
+import { useT } from "#/lib/i18n";
 
 export const Route = createFileRoute("/_app/invoices/new")({
-  component: () => <ComingSoon title="Ny faktura" />,
+  component: InvoicesNewPage,
 });
+
+function InvoicesNewPage() {
+  const t = useT();
+  return (
+    <Page title={t.nav.newInvoice}>
+      <ComingSoon />
+    </Page>
+  );
+}

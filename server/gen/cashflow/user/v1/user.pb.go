@@ -109,6 +109,112 @@ func (x *GetMeResponse) GetCapabilities() *Capabilities {
 	return nil
 }
 
+type UpdateBankDetailsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Digits only after normalisation; 4 or 5 digits.
+	ClearingNumber string `protobuf:"bytes,1,opt,name=clearing_number,json=clearingNumber,proto3" json:"clearing_number,omitempty"`
+	// Digits only after normalisation; at most 13 digits.
+	BankAccount   string `protobuf:"bytes,2,opt,name=bank_account,json=bankAccount,proto3" json:"bank_account,omitempty"`
+	BankName      string `protobuf:"bytes,3,opt,name=bank_name,json=bankName,proto3" json:"bank_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateBankDetailsRequest) Reset() {
+	*x = UpdateBankDetailsRequest{}
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateBankDetailsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateBankDetailsRequest) ProtoMessage() {}
+
+func (x *UpdateBankDetailsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateBankDetailsRequest.ProtoReflect.Descriptor instead.
+func (*UpdateBankDetailsRequest) Descriptor() ([]byte, []int) {
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UpdateBankDetailsRequest) GetClearingNumber() string {
+	if x != nil {
+		return x.ClearingNumber
+	}
+	return ""
+}
+
+func (x *UpdateBankDetailsRequest) GetBankAccount() string {
+	if x != nil {
+		return x.BankAccount
+	}
+	return ""
+}
+
+func (x *UpdateBankDetailsRequest) GetBankName() string {
+	if x != nil {
+		return x.BankName
+	}
+	return ""
+}
+
+type UpdateBankDetailsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateBankDetailsResponse) Reset() {
+	*x = UpdateBankDetailsResponse{}
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateBankDetailsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateBankDetailsResponse) ProtoMessage() {}
+
+func (x *UpdateBankDetailsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateBankDetailsResponse.ProtoReflect.Descriptor instead.
+func (*UpdateBankDetailsResponse) Descriptor() ([]byte, []int) {
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UpdateBankDetailsResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
 type User struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// KTH ID, e.g. "turetek".
@@ -124,7 +230,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -136,7 +242,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[2]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -149,7 +255,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{2}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *User) GetUsername() string {
@@ -201,6 +307,8 @@ type Capabilities struct {
 	ViewAll         bool                   `protobuf:"varint,1,opt,name=view_all,json=viewAll,proto3" json:"view_all,omitempty"`
 	ViewAllPayments bool                   `protobuf:"varint,2,opt,name=view_all_payments,json=viewAllPayments,proto3" json:"view_all_payments,omitempty"`
 	// Cost centres the user may attest; attest_all means every cost centre.
+	// attest_any is true for any attest grant, even for a cost centre with no
+	// claims yet, and decides whether the attest queue is shown.
 	AttestAll         bool     `protobuf:"varint,3,opt,name=attest_all,json=attestAll,proto3" json:"attest_all,omitempty"`
 	AttestCostCentres []string `protobuf:"bytes,4,rep,name=attest_cost_centres,json=attestCostCentres,proto3" json:"attest_cost_centres,omitempty"`
 	Unattest          bool     `protobuf:"varint,5,opt,name=unattest,proto3" json:"unattest,omitempty"`
@@ -216,13 +324,15 @@ type Capabilities struct {
 	Firmatecknare         bool     `protobuf:"varint,15,opt,name=firmatecknare,proto3" json:"firmatecknare,omitempty"`
 	ViewAccount           bool     `protobuf:"varint,16,opt,name=view_account,json=viewAccount,proto3" json:"view_account,omitempty"`
 	ViewCostCentres       []string `protobuf:"bytes,17,rep,name=view_cost_centres,json=viewCostCentres,proto3" json:"view_cost_centres,omitempty"`
+	AttestAny             bool     `protobuf:"varint,18,opt,name=attest_any,json=attestAny,proto3" json:"attest_any,omitempty"`
+	AccountingAny         bool     `protobuf:"varint,19,opt,name=accounting_any,json=accountingAny,proto3" json:"accounting_any,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Capabilities) Reset() {
 	*x = Capabilities{}
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -234,7 +344,7 @@ func (x *Capabilities) String() string {
 func (*Capabilities) ProtoMessage() {}
 
 func (x *Capabilities) ProtoReflect() protoreflect.Message {
-	mi := &file_cashflow_user_v1_user_proto_msgTypes[3]
+	mi := &file_cashflow_user_v1_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -247,7 +357,7 @@ func (x *Capabilities) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Capabilities.ProtoReflect.Descriptor instead.
 func (*Capabilities) Descriptor() ([]byte, []int) {
-	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{3}
+	return file_cashflow_user_v1_user_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Capabilities) GetViewAll() bool {
@@ -362,6 +472,20 @@ func (x *Capabilities) GetViewCostCentres() []string {
 	return nil
 }
 
+func (x *Capabilities) GetAttestAny() bool {
+	if x != nil {
+		return x.AttestAny
+	}
+	return false
+}
+
+func (x *Capabilities) GetAccountingAny() bool {
+	if x != nil {
+		return x.AccountingAny
+	}
+	return false
+}
+
 var File_cashflow_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_cashflow_user_v1_user_proto_rawDesc = "" +
@@ -370,14 +494,20 @@ const file_cashflow_user_v1_user_proto_rawDesc = "" +
 	"\fGetMeRequest\"\x7f\n" +
 	"\rGetMeResponse\x12*\n" +
 	"\x04user\x18\x01 \x01(\v2\x16.cashflow.user.v1.UserR\x04user\x12B\n" +
-	"\fcapabilities\x18\x02 \x01(\v2\x1e.cashflow.user.v1.CapabilitiesR\fcapabilities\"\xb5\x01\n" +
+	"\fcapabilities\x18\x02 \x01(\v2\x1e.cashflow.user.v1.CapabilitiesR\fcapabilities\"\x83\x01\n" +
+	"\x18UpdateBankDetailsRequest\x12'\n" +
+	"\x0fclearing_number\x18\x01 \x01(\tR\x0eclearingNumber\x12!\n" +
+	"\fbank_account\x18\x02 \x01(\tR\vbankAccount\x12\x1b\n" +
+	"\tbank_name\x18\x03 \x01(\tR\bbankName\"G\n" +
+	"\x19UpdateBankDetailsResponse\x12*\n" +
+	"\x04user\x18\x01 \x01(\v2\x16.cashflow.user.v1.UserR\x04user\"\xb5\x01\n" +
 	"\x04User\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12!\n" +
 	"\fbank_account\x18\x04 \x01(\tR\vbankAccount\x12'\n" +
 	"\x0fclearing_number\x18\x05 \x01(\tR\x0eclearingNumber\x12\x1b\n" +
-	"\tbank_name\x18\x06 \x01(\tR\bbankName\"\xd5\x04\n" +
+	"\tbank_name\x18\x06 \x01(\tR\bbankName\"\x9b\x05\n" +
 	"\fCapabilities\x12\x19\n" +
 	"\bview_all\x18\x01 \x01(\bR\aviewAll\x12*\n" +
 	"\x11view_all_payments\x18\x02 \x01(\bR\x0fviewAllPayments\x12\x1d\n" +
@@ -396,9 +526,13 @@ const file_cashflow_user_v1_user_proto_rawDesc = "" +
 	"\x0emanage_fortnox\x18\x0e \x01(\bR\rmanageFortnox\x12$\n" +
 	"\rfirmatecknare\x18\x0f \x01(\bR\rfirmatecknare\x12!\n" +
 	"\fview_account\x18\x10 \x01(\bR\vviewAccount\x12*\n" +
-	"\x11view_cost_centres\x18\x11 \x03(\tR\x0fviewCostCentresJ\x04\b\a\x10\b2\\\n" +
+	"\x11view_cost_centres\x18\x11 \x03(\tR\x0fviewCostCentres\x12\x1d\n" +
+	"\n" +
+	"attest_any\x18\x12 \x01(\bR\tattestAny\x12%\n" +
+	"\x0eaccounting_any\x18\x13 \x01(\bR\raccountingAnyJ\x04\b\a\x10\b2\xcf\x01\n" +
 	"\vUserService\x12M\n" +
-	"\x05GetMe\x12\x1e.cashflow.user.v1.GetMeRequest\x1a\x1f.cashflow.user.v1.GetMeResponse\"\x03\x90\x02\x01B\xc9\x01\n" +
+	"\x05GetMe\x12\x1e.cashflow.user.v1.GetMeRequest\x1a\x1f.cashflow.user.v1.GetMeResponse\"\x03\x90\x02\x01\x12q\n" +
+	"\x11UpdateBankDetails\x12*.cashflow.user.v1.UpdateBankDetailsRequest\x1a+.cashflow.user.v1.UpdateBankDetailsResponse\"\x03\x90\x02\x02B\xc9\x01\n" +
 	"\x14com.cashflow.user.v1B\tUserProtoP\x01ZDgithub.com/datasektionen/cashflow/server/gen/cashflow/user/v1;userv1\xa2\x02\x03CUX\xaa\x02\x10Cashflow.User.V1\xca\x02\x10Cashflow\\User\\V1\xe2\x02\x1cCashflow\\User\\V1\\GPBMetadata\xea\x02\x12Cashflow::User::V1b\x06proto3"
 
 var (
@@ -413,23 +547,28 @@ func file_cashflow_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_cashflow_user_v1_user_proto_rawDescData
 }
 
-var file_cashflow_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_cashflow_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_cashflow_user_v1_user_proto_goTypes = []any{
-	(*GetMeRequest)(nil),  // 0: cashflow.user.v1.GetMeRequest
-	(*GetMeResponse)(nil), // 1: cashflow.user.v1.GetMeResponse
-	(*User)(nil),          // 2: cashflow.user.v1.User
-	(*Capabilities)(nil),  // 3: cashflow.user.v1.Capabilities
+	(*GetMeRequest)(nil),              // 0: cashflow.user.v1.GetMeRequest
+	(*GetMeResponse)(nil),             // 1: cashflow.user.v1.GetMeResponse
+	(*UpdateBankDetailsRequest)(nil),  // 2: cashflow.user.v1.UpdateBankDetailsRequest
+	(*UpdateBankDetailsResponse)(nil), // 3: cashflow.user.v1.UpdateBankDetailsResponse
+	(*User)(nil),                      // 4: cashflow.user.v1.User
+	(*Capabilities)(nil),              // 5: cashflow.user.v1.Capabilities
 }
 var file_cashflow_user_v1_user_proto_depIdxs = []int32{
-	2, // 0: cashflow.user.v1.GetMeResponse.user:type_name -> cashflow.user.v1.User
-	3, // 1: cashflow.user.v1.GetMeResponse.capabilities:type_name -> cashflow.user.v1.Capabilities
-	0, // 2: cashflow.user.v1.UserService.GetMe:input_type -> cashflow.user.v1.GetMeRequest
-	1, // 3: cashflow.user.v1.UserService.GetMe:output_type -> cashflow.user.v1.GetMeResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: cashflow.user.v1.GetMeResponse.user:type_name -> cashflow.user.v1.User
+	5, // 1: cashflow.user.v1.GetMeResponse.capabilities:type_name -> cashflow.user.v1.Capabilities
+	4, // 2: cashflow.user.v1.UpdateBankDetailsResponse.user:type_name -> cashflow.user.v1.User
+	0, // 3: cashflow.user.v1.UserService.GetMe:input_type -> cashflow.user.v1.GetMeRequest
+	2, // 4: cashflow.user.v1.UserService.UpdateBankDetails:input_type -> cashflow.user.v1.UpdateBankDetailsRequest
+	1, // 5: cashflow.user.v1.UserService.GetMe:output_type -> cashflow.user.v1.GetMeResponse
+	3, // 6: cashflow.user.v1.UserService.UpdateBankDetails:output_type -> cashflow.user.v1.UpdateBankDetailsResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_cashflow_user_v1_user_proto_init() }
@@ -443,7 +582,7 @@ func file_cashflow_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cashflow_user_v1_user_proto_rawDesc), len(file_cashflow_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

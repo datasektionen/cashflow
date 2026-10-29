@@ -9,11 +9,19 @@ type ButtonAnchorProps = Omit<ComponentProps<typeof Button>, "render" | "nativeB
 const ButtonAnchor = forwardRef<HTMLAnchorElement, ButtonAnchorProps>(function ButtonAnchor(props, ref) {
   const { variant, size, className, ...anchorProps } = props;
   return (
-    <Button variant={variant} size={size} className={className} nativeButton={false} render={<a ref={ref} {...anchorProps} />} />
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      nativeButton={false}
+      render={<a ref={ref} {...anchorProps} />}
+    />
   );
 });
 
 const CreatedButtonLink = createLink(ButtonAnchor);
 
 /** A type-safe router link styled as a Button. */
-export const ButtonLink: LinkComponent<typeof ButtonAnchor> = (props) => <CreatedButtonLink preload="intent" {...props} />;
+export const ButtonLink: LinkComponent<typeof ButtonAnchor> = (props) => (
+  <CreatedButtonLink preload="intent" {...props} />
+);

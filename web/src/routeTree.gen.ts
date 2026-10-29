@@ -18,6 +18,7 @@ import { Route as AppConfirmRouteImport } from './routes/_app/confirm'
 import { Route as AppFortnoxRouteImport } from './routes/_app/fortnox'
 import { Route as AppPayRouteImport } from './routes/_app/pay'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
+import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
 import { Route as AppExpensesNewRouteImport } from './routes/_app/expenses/new'
 import { Route as AppInvoicesNewRouteImport } from './routes/_app/invoices/new'
@@ -66,6 +67,11 @@ const AppPaymentsRoute = AppPaymentsRouteImport.update({
   path: '/payments',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStatsRoute = AppStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/fortnox': typeof AppFortnoxRoute
   '/pay': typeof AppPayRoute
   '/payments': typeof AppPaymentsRoute
+  '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
   '/expenses/new': typeof AppExpensesNewRoute
   '/invoices/new': typeof AppInvoicesNewRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/fortnox': typeof AppFortnoxRoute
   '/pay': typeof AppPayRoute
   '/payments': typeof AppPaymentsRoute
+  '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
   '/': typeof AppIndexRoute
   '/expenses/new': typeof AppExpensesNewRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_app/fortnox': typeof AppFortnoxRoute
   '/_app/pay': typeof AppPayRoute
   '/_app/payments': typeof AppPaymentsRoute
+  '/_app/profile': typeof AppProfileRoute
   '/_app/stats': typeof AppStatsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/expenses/new': typeof AppExpensesNewRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/fortnox'
     | '/pay'
     | '/payments'
+    | '/profile'
     | '/stats'
     | '/expenses/new'
     | '/invoices/new'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/fortnox'
     | '/pay'
     | '/payments'
+    | '/profile'
     | '/stats'
     | '/'
     | '/expenses/new'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_app/fortnox'
     | '/_app/pay'
     | '/_app/payments'
+    | '/_app/profile'
     | '/_app/stats'
     | '/_app/'
     | '/_app/expenses/new'
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/stats': {
       id: '/_app/stats'
       path: '/stats'
@@ -267,6 +286,7 @@ interface AppRouteChildren {
   AppFortnoxRoute: typeof AppFortnoxRoute
   AppPayRoute: typeof AppPayRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
+  AppProfileRoute: typeof AppProfileRoute
   AppStatsRoute: typeof AppStatsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppExpensesNewRoute: typeof AppExpensesNewRoute
@@ -281,6 +301,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFortnoxRoute: AppFortnoxRoute,
   AppPayRoute: AppPayRoute,
   AppPaymentsRoute: AppPaymentsRoute,
+  AppProfileRoute: AppProfileRoute,
   AppStatsRoute: AppStatsRoute,
   AppIndexRoute: AppIndexRoute,
   AppExpensesNewRoute: AppExpensesNewRoute,
