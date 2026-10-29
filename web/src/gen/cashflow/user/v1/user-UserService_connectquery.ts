@@ -12,6 +12,22 @@ import { UserService } from "./user_pb";
 export const getMe = UserService.method.getMe;
 
 /**
+ * ListUsers searches users by name or username. For those who pay or view
+ * everything.
+ *
+ * @generated from rpc cashflow.user.v1.UserService.ListUsers
+ */
+export const listUsers = UserService.method.listUsers;
+
+/**
+ * GetUser is one user with their bank details. For those who pay or view
+ * everything.
+ *
+ * @generated from rpc cashflow.user.v1.UserService.GetUser
+ */
+export const getUser = UserService.method.getUser;
+
+/**
  * GetProfilePictures returns rfinger picture URLs for the given users;
  * users without one are left out and show their initials.
  *

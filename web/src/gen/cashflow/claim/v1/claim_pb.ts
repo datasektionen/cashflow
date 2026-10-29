@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/claim/v1/claim.proto.
  */
 export const file_cashflow_claim_v1_claim: GenFile = /*@__PURE__*/
-  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzIqYCChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUSEQoJYWNjb3VudGVkGAogASgIEhYKDnZvdWNoZXJfc2VyaWVzGAsgASgJIlQKEkxpc3RDbGFpbXNSZXNwb25zZRIvCgZjbGFpbXMYASADKAsyHy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVN1bW1hcnkSDQoFdG90YWwYAiABKAUiTQoPR2V0Q2xhaW1SZXF1ZXN0EioKBGtpbmQYASABKA4yHC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbUtpbmQSDgoGbnVtYmVyGAIgASgDIkYKCENsYWltUmVmEioKBGtpbmQYASABKA4yHC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbUtpbmQSDgoGbnVtYmVyGAIgASgDIrsBCgdBY3Rpb25zEhcKD2F0dGVzdF9wYXJ0X2lkcxgBIAMoAxIZChF1bmF0dGVzdF9wYXJ0X2lkcxgCIAMoAxIPCgdjb25maXJtGAMgASgIEhEKCXVuY29uZmlybRgEIAEoCBIMCgRmbGFnGAUgASgIEg4KBnVuZmxhZxgGIAEoCBILCgNwYXkYByABKAgSDgoGZGVsZXRlGAggASgIEgwKBGVkaXQYCSABKAgSDwoHYWNjb3VudBgKIAEoCCK0AQoEUGFydBIKCgJpZBgBIAEoAxITCgtjb3N0X2NlbnRyZRgCIAEoCRIdChVzZWNvbmRhcnlfY29zdF9jZW50cmUYAyABKAkSEwoLYnVkZ2V0X2xpbmUYBCABKAkSEgoKYW1vdW50X29yZRgFIAEoAxIuCgthdHRlc3RlZF9ieRgGIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhITCgthdHRlc3RlZF9hdBgHIAEoCSJDCgRGaWxlEgoKAmlkGAEgASgDEgwKBG5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEgsKA3VybBgEIAEoCSJyCgdDb21tZW50EikKBmF1dGhvchgBIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIMCgRib2R5GAIgASgJEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIloKB1BheW1lbnQSCgoCaWQYASABKAMSCwoDdGFnGAIgASgJEigKBXBheWVyGAMgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEgwKBGRhdGUYBCABKAkivwMKBUNsYWltEjAKB3N1bW1hcnkYASABKAsyHy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVN1bW1hcnkSJgoFcGFydHMYAiADKAsyFy5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0EiYKBWZpbGVzGAMgAygLMhcuY2FzaGZsb3cuY2xhaW0udjEuRmlsZRIsCghjb21tZW50cxgEIAMoCzIaLmNhc2hmbG93LmNsYWltLnYxLkNvbW1lbnQSLwoMY29uZmlybWVkX2J5GAUgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEhQKDGNvbmZpcm1lZF9hdBgGIAEoCRIrCgdwYXltZW50GAcgASgLMhouY2FzaGZsb3cuY2xhaW0udjEuUGF5bWVudBIWCg5pbnZvaWNlX251bWJlchgIIAEoCRIQCghkdWVfZGF0ZRgJIAEoCRIqCgdwYWlkX2J5GAogASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEg8KB3BhaWRfYXQYCyABKAkSKwoHYWN0aW9ucxgMIAEoCzIaLmNhc2hmbG93LmNsYWltLnYxLkFjdGlvbnMiOwoQR2V0Q2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIhcKFUdldFF1ZXVlQ291bnRzUmVxdWVzdCJECgpRdWV1ZUNvdW50EicKBXF1ZXVlGAEgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSDQoFY291bnQYAiABKAUiRwoWR2V0UXVldWVDb3VudHNSZXNwb25zZRItCgZjb3VudHMYASADKAsyHS5jYXNoZmxvdy5jbGFpbS52MS5RdWV1ZUNvdW50IhQKEkdldE92ZXJ2aWV3UmVxdWVzdCJsChNHZXRPdmVydmlld1Jlc3BvbnNlEhsKE2F3YWl0aW5nX2F0dGVzdF9vcmUYASABKAMSHAoUYXdhaXRpbmdfcGF5bWVudF9vcmUYAiABKAMSGgoScGFpZF90aGlzX3llYXJfb3JlGAMgASgDIk0KEUFkZENvbW1lbnRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDAoEYm9keRgCIAEoCSI9ChJBZGRDb21tZW50UmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJnChZTZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDwoHcGFydF9pZBgCIAEoAxIQCghhdHRlc3RlZBgDIAEoCCJCChdTZXRQYXJ0QXR0ZXN0ZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjgKE1NldENvbmZpcm1lZFJlcXVlc3QSDgoGbnVtYmVyGAEgASgDEhEKCWNvbmZpcm1lZBgCIAEoCCI/ChRTZXRDb25maXJtZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjQKEVNldEZsYWdnZWRSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAxIPCgdmbGFnZ2VkGAIgASgIIj0KElNldEZsYWdnZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIiMKEVBheUludm9pY2VSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAyI9ChJQYXlJbnZvaWNlUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJAChJEZWxldGVDbGFpbVJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZiIVChNEZWxldGVDbGFpbVJlc3BvbnNlIoYBCgpDbGFpbUlucHV0EhMKC2Rlc2NyaXB0aW9uGAEgASgJEgwKBGRhdGUYAiABKAkSFgoOaW52b2ljZV9udW1iZXIYAyABKAkSEAoIZHVlX2RhdGUYBCABKAkSKwoFcGFydHMYBSADKAsyHC5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0SW5wdXQiaAoJUGFydElucHV0EhMKC2Nvc3RfY2VudHJlGAEgASgJEh0KFXNlY29uZGFyeV9jb3N0X2NlbnRyZRgCIAEoCRITCgtidWRnZXRfbGluZRgDIAEoCRISCgphbW91bnRfb3JlGAQgASgDIoIBChJDcmVhdGVDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIsCgVjbGFpbRgCIAEoCzIdLmNhc2hmbG93LmNsYWltLnYxLkNsYWltSW5wdXQSEgoKdXBsb2FkX2lkcxgDIAMoCSI+ChNDcmVhdGVDbGFpbVJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0imQEKElVwZGF0ZUNsYWltUmVxdWVzdBIoCgNyZWYYASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZhIsCgVjbGFpbRgCIAEoCzIdLmNhc2hmbG93LmNsYWltLnYxLkNsYWltSW5wdXQSEgoKdXBsb2FkX2lkcxgDIAMoCRIXCg9yZW1vdmVfZmlsZV9pZHMYBCADKAMiPgoTVXBkYXRlQ2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltKlcKCUNsYWltS2luZBIaChZDTEFJTV9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSQ0xBSU1fS0lORF9FWFBFTlNFEAESFgoSQ0xBSU1fS0lORF9JTlZPSUNFEAIqZQoFUXVldWUSFQoRUVVFVUVfVU5TUEVDSUZJRUQQABIQCgxRVUVVRV9BVFRFU1QQARIRCg1RVUVVRV9DT05GSVJNEAISEQoNUVVFVUVfQUNDT1VOVBADEg0KCVFVRVVFX1BBWRAEKoEBCgVTdGFnZRIVChFTVEFHRV9VTlNQRUNJRklFRBAAEhMKD1NUQUdFX1NVQk1JVFRFRBABEhIKDlNUQUdFX0FUVEVTVEVEEAISEwoPU1RBR0VfQ09ORklSTUVEEAMSDgoKU1RBR0VfUEFJRBAEEhMKD1NUQUdFX0FDQ09VTlRFRBAFKp0BCglTb3J0RmllbGQSGgoWU09SVF9GSUVMRF9VTlNQRUNJRklFRBAAEhMKD1NPUlRfRklFTERfREFURRABEhUKEVNPUlRfRklFTERfQU1PVU5UEAISGgoWU09SVF9GSUVMRF9ERVNDUklQVElPThADEhQKEFNPUlRfRklFTERfT1dORVIQBBIWChJTT1JUX0ZJRUxEX0NSRUFURUQQBTKcCQoMQ2xhaW1TZXJ2aWNlEl4KCkxpc3RDbGFpbXMSJC5jYXNoZmxvdy5jbGFpbS52MS5MaXN0Q2xhaW1zUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkxpc3RDbGFpbXNSZXNwb25zZSIDkAIBElgKCEdldENsYWltEiIuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXF1ZXN0GiMuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXNwb25zZSIDkAIBEmoKDkdldFF1ZXVlQ291bnRzEiguY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXF1ZXN0GikuY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXNwb25zZSIDkAIBEmEKC0dldE92ZXJ2aWV3EiUuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXNwb25zZSIDkAIBElkKCkFkZENvbW1lbnQSJC5jYXNoZmxvdy5jbGFpbS52MS5BZGRDb21tZW50UmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkFkZENvbW1lbnRSZXNwb25zZRJtCg9TZXRQYXJ0QXR0ZXN0ZWQSKS5jYXNoZmxvdy5jbGFpbS52MS5TZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0GiouY2FzaGZsb3cuY2xhaW0udjEuU2V0UGFydEF0dGVzdGVkUmVzcG9uc2UiA5ACAhJkCgxTZXRDb25maXJtZWQSJi5jYXNoZmxvdy5jbGFpbS52MS5TZXRDb25maXJtZWRSZXF1ZXN0GicuY2FzaGZsb3cuY2xhaW0udjEuU2V0Q29uZmlybWVkUmVzcG9uc2UiA5ACAhJeCgpTZXRGbGFnZ2VkEiQuY2FzaGZsb3cuY2xhaW0udjEuU2V0RmxhZ2dlZFJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5TZXRGbGFnZ2VkUmVzcG9uc2UiA5ACAhJZCgpQYXlJbnZvaWNlEiQuY2FzaGZsb3cuY2xhaW0udjEuUGF5SW52b2ljZVJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5QYXlJbnZvaWNlUmVzcG9uc2USXAoLRGVsZXRlQ2xhaW0SJS5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlc3BvbnNlElwKC0NyZWF0ZUNsYWltEiUuY2FzaGZsb3cuY2xhaW0udjEuQ3JlYXRlQ2xhaW1SZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuQ3JlYXRlQ2xhaW1SZXNwb25zZRJcCgtVcGRhdGVDbGFpbRIlLmNhc2hmbG93LmNsYWltLnYxLlVwZGF0ZUNsYWltUmVxdWVzdBomLmNhc2hmbG93LmNsYWltLnYxLlVwZGF0ZUNsYWltUmVzcG9uc2VC0QEKFWNvbS5jYXNoZmxvdy5jbGFpbS52MUIKQ2xhaW1Qcm90b1ABWkZnaXRodWIuY29tL2RhdGFzZWt0aW9uZW4vY2FzaGZsb3cvc2VydmVyL2dlbi9jYXNoZmxvdy9jbGFpbS92MTtjbGFpbXYxogIDQ0NYqgIRQ2FzaGZsb3cuQ2xhaW0uVjHKAhFDYXNoZmxvd1xDbGFpbVxWMeICHUNhc2hmbG93XENsYWltXFYxXEdQQk1ldGFkYXRh6gITQ2FzaGZsb3c6OkNsYWltOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzItkCChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUSEQoJYWNjb3VudGVkGAogASgIEhYKDnZvdWNoZXJfc2VyaWVzGAsgASgJEjEKBmZpbHRlchgMIAEoCzIhLmNhc2hmbG93LmNsYWltLnYxLkFkdmFuY2VkRmlsdGVyIucCCg5BZHZhbmNlZEZpbHRlchIdChVzZWNvbmRhcnlfY29zdF9jZW50cmUYASABKAkSEwoLYnVkZ2V0X2xpbmUYAiABKAkSEQoJZnJvbV9kYXRlGAMgASgJEg8KB3RvX2RhdGUYBCABKAkSDQoFb3duZXIYBSABKAkSFgoOaW52b2ljZV9udW1iZXIYBiABKAkSFAoMdmVyaWZpY2F0aW9uGAcgASgJEhIKCnBheW1lbnRfaWQYCCABKAMSFQoIYXR0ZXN0ZWQYCSABKAhIAIgBARIWCgljb25maXJtZWQYCiABKAhIAYgBARIRCgRwYWlkGAsgASgISAKIAQESFgoJYWNjb3VudGVkGAwgASgISAOIAQESFAoHZmxhZ2dlZBgNIAEoCEgEiAEBQgsKCV9hdHRlc3RlZEIMCgpfY29uZmlybWVkQgcKBV9wYWlkQgwKCl9hY2NvdW50ZWRCCgoIX2ZsYWdnZWQiVAoSTGlzdENsYWltc1Jlc3BvbnNlEi8KBmNsYWltcxgBIAMoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRINCgV0b3RhbBgCIAEoBSJNCg9HZXRDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiRgoIQ2xhaW1SZWYSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiuwEKB0FjdGlvbnMSFwoPYXR0ZXN0X3BhcnRfaWRzGAEgAygDEhkKEXVuYXR0ZXN0X3BhcnRfaWRzGAIgAygDEg8KB2NvbmZpcm0YAyABKAgSEQoJdW5jb25maXJtGAQgASgIEgwKBGZsYWcYBSABKAgSDgoGdW5mbGFnGAYgASgIEgsKA3BheRgHIAEoCBIOCgZkZWxldGUYCCABKAgSDAoEZWRpdBgJIAEoCBIPCgdhY2NvdW50GAogASgIIrQBCgRQYXJ0EgoKAmlkGAEgASgDEhMKC2Nvc3RfY2VudHJlGAIgASgJEh0KFXNlY29uZGFyeV9jb3N0X2NlbnRyZRgDIAEoCRITCgtidWRnZXRfbGluZRgEIAEoCRISCgphbW91bnRfb3JlGAUgASgDEi4KC2F0dGVzdGVkX2J5GAYgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEhMKC2F0dGVzdGVkX2F0GAcgASgJIkMKBEZpbGUSCgoCaWQYASABKAMSDAoEbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSCwoDdXJsGAQgASgJInIKB0NvbW1lbnQSKQoGYXV0aG9yGAEgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEgwKBGJvZHkYAiABKAkSLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiWgoHUGF5bWVudBIKCgJpZBgBIAEoAxILCgN0YWcYAiABKAkSKAoFcGF5ZXIYAyABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SDAoEZGF0ZRgEIAEoCSK/AwoFQ2xhaW0SMAoHc3VtbWFyeRgBIAEoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRImCgVwYXJ0cxgCIAMoCzIXLmNhc2hmbG93LmNsYWltLnYxLlBhcnQSJgoFZmlsZXMYAyADKAsyFy5jYXNoZmxvdy5jbGFpbS52MS5GaWxlEiwKCGNvbW1lbnRzGAQgAygLMhouY2FzaGZsb3cuY2xhaW0udjEuQ29tbWVudBIvCgxjb25maXJtZWRfYnkYBSABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SFAoMY29uZmlybWVkX2F0GAYgASgJEisKB3BheW1lbnQYByABKAsyGi5jYXNoZmxvdy5jbGFpbS52MS5QYXltZW50EhYKDmludm9pY2VfbnVtYmVyGAggASgJEhAKCGR1ZV9kYXRlGAkgASgJEioKB3BhaWRfYnkYCiABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SDwoHcGFpZF9hdBgLIAEoCRIrCgdhY3Rpb25zGAwgASgLMhouY2FzaGZsb3cuY2xhaW0udjEuQWN0aW9ucyI7ChBHZXRDbGFpbVJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0iFwoVR2V0UXVldWVDb3VudHNSZXF1ZXN0IkQKClF1ZXVlQ291bnQSJwoFcXVldWUYASABKA4yGC5jYXNoZmxvdy5jbGFpbS52MS5RdWV1ZRINCgVjb3VudBgCIAEoBSJHChZHZXRRdWV1ZUNvdW50c1Jlc3BvbnNlEi0KBmNvdW50cxgBIAMoCzIdLmNhc2hmbG93LmNsYWltLnYxLlF1ZXVlQ291bnQiFAoSR2V0T3ZlcnZpZXdSZXF1ZXN0ImwKE0dldE92ZXJ2aWV3UmVzcG9uc2USGwoTYXdhaXRpbmdfYXR0ZXN0X29yZRgBIAEoAxIcChRhd2FpdGluZ19wYXltZW50X29yZRgCIAEoAxIaChJwYWlkX3RoaXNfeWVhcl9vcmUYAyABKAMiGAoWR2V0V29ya092ZXJ2aWV3UmVxdWVzdCI3CgpHcm91cENvdW50EgsKA2tleRgBIAEoCRINCgVsYWJlbBgCIAEoCRINCgVjb3VudBgDIAEoBSJ3Cg5RdWV1ZUJyZWFrZG93bhInCgVxdWV1ZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlF1ZXVlEg0KBXRvdGFsGAIgASgFEi0KBmdyb3VwcxgDIAMoCzIdLmNhc2hmbG93LmNsYWltLnYxLkdyb3VwQ291bnQiTAoXR2V0V29ya092ZXJ2aWV3UmVzcG9uc2USMQoGcXVldWVzGAEgAygLMiEuY2FzaGZsb3cuY2xhaW0udjEuUXVldWVCcmVha2Rvd24iTQoRQWRkQ29tbWVudFJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZhIMCgRib2R5GAIgASgJIj0KEkFkZENvbW1lbnRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltImcKFlNldFBhcnRBdHRlc3RlZFJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZhIPCgdwYXJ0X2lkGAIgASgDEhAKCGF0dGVzdGVkGAMgASgIIkIKF1NldFBhcnRBdHRlc3RlZFJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0iOAoTU2V0Q29uZmlybWVkUmVxdWVzdBIOCgZudW1iZXIYASABKAMSEQoJY29uZmlybWVkGAIgASgIIj8KFFNldENvbmZpcm1lZFJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0iNAoRU2V0RmxhZ2dlZFJlcXVlc3QSDgoGbnVtYmVyGAEgASgDEg8KB2ZsYWdnZWQYAiABKAgiPQoSU2V0RmxhZ2dlZFJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0iIwoRUGF5SW52b2ljZVJlcXVlc3QSDgoGbnVtYmVyGAEgASgDIj0KElBheUludm9pY2VSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIkAKEkRlbGV0ZUNsYWltUmVxdWVzdBIqCgVjbGFpbRgBIAEoCzIbLmNhc2hmbG93LmNsYWltLnYxLkNsYWltUmVmIhUKE0RlbGV0ZUNsYWltUmVzcG9uc2UihgEKCkNsYWltSW5wdXQSEwoLZGVzY3JpcHRpb24YASABKAkSDAoEZGF0ZRgCIAEoCRIWCg5pbnZvaWNlX251bWJlchgDIAEoCRIQCghkdWVfZGF0ZRgEIAEoCRIrCgVwYXJ0cxgFIAMoCzIcLmNhc2hmbG93LmNsYWltLnYxLlBhcnRJbnB1dCJoCglQYXJ0SW5wdXQSEwoLY29zdF9jZW50cmUYASABKAkSHQoVc2Vjb25kYXJ5X2Nvc3RfY2VudHJlGAIgASgJEhMKC2J1ZGdldF9saW5lGAMgASgJEhIKCmFtb3VudF9vcmUYBCABKAMiggEKEkNyZWF0ZUNsYWltUmVxdWVzdBIqCgRraW5kGAEgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1LaW5kEiwKBWNsYWltGAIgASgLMh0uY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1JbnB1dBISCgp1cGxvYWRfaWRzGAMgAygJIj4KE0NyZWF0ZUNsYWltUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSKZAQoSVXBkYXRlQ2xhaW1SZXF1ZXN0EigKA3JlZhgBIAEoCzIbLmNhc2hmbG93LmNsYWltLnYxLkNsYWltUmVmEiwKBWNsYWltGAIgASgLMh0uY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1JbnB1dBISCgp1cGxvYWRfaWRzGAMgAygJEhcKD3JlbW92ZV9maWxlX2lkcxgEIAMoAyI+ChNVcGRhdGVDbGFpbVJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0qVwoJQ2xhaW1LaW5kEhoKFkNMQUlNX0tJTkRfVU5TUEVDSUZJRUQQABIWChJDTEFJTV9LSU5EX0VYUEVOU0UQARIWChJDTEFJTV9LSU5EX0lOVk9JQ0UQAiplCgVRdWV1ZRIVChFRVUVVRV9VTlNQRUNJRklFRBAAEhAKDFFVRVVFX0FUVEVTVBABEhEKDVFVRVVFX0NPTkZJUk0QAhIRCg1RVUVVRV9BQ0NPVU5UEAMSDQoJUVVFVUVfUEFZEAQqgQEKBVN0YWdlEhUKEVNUQUdFX1VOU1BFQ0lGSUVEEAASEwoPU1RBR0VfU1VCTUlUVEVEEAESEgoOU1RBR0VfQVRURVNURUQQAhITCg9TVEFHRV9DT05GSVJNRUQQAxIOCgpTVEFHRV9QQUlEEAQSEwoPU1RBR0VfQUNDT1VOVEVEEAUqnQEKCVNvcnRGaWVsZBIaChZTT1JUX0ZJRUxEX1VOU1BFQ0lGSUVEEAASEwoPU09SVF9GSUVMRF9EQVRFEAESFQoRU09SVF9GSUVMRF9BTU9VTlQQAhIaChZTT1JUX0ZJRUxEX0RFU0NSSVBUSU9OEAMSFAoQU09SVF9GSUVMRF9PV05FUhAEEhYKElNPUlRfRklFTERfQ1JFQVRFRBAFMosKCgxDbGFpbVNlcnZpY2USXgoKTGlzdENsYWltcxIkLmNhc2hmbG93LmNsYWltLnYxLkxpc3RDbGFpbXNSZXF1ZXN0GiUuY2FzaGZsb3cuY2xhaW0udjEuTGlzdENsYWltc1Jlc3BvbnNlIgOQAgESWAoIR2V0Q2xhaW0SIi5jYXNoZmxvdy5jbGFpbS52MS5HZXRDbGFpbVJlcXVlc3QaIy5jYXNoZmxvdy5jbGFpbS52MS5HZXRDbGFpbVJlc3BvbnNlIgOQAgESagoOR2V0UXVldWVDb3VudHMSKC5jYXNoZmxvdy5jbGFpbS52MS5HZXRRdWV1ZUNvdW50c1JlcXVlc3QaKS5jYXNoZmxvdy5jbGFpbS52MS5HZXRRdWV1ZUNvdW50c1Jlc3BvbnNlIgOQAgESYQoLR2V0T3ZlcnZpZXcSJS5jYXNoZmxvdy5jbGFpbS52MS5HZXRPdmVydmlld1JlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5HZXRPdmVydmlld1Jlc3BvbnNlIgOQAgESbQoPR2V0V29ya092ZXJ2aWV3EikuY2FzaGZsb3cuY2xhaW0udjEuR2V0V29ya092ZXJ2aWV3UmVxdWVzdBoqLmNhc2hmbG93LmNsYWltLnYxLkdldFdvcmtPdmVydmlld1Jlc3BvbnNlIgOQAgESWQoKQWRkQ29tbWVudBIkLmNhc2hmbG93LmNsYWltLnYxLkFkZENvbW1lbnRSZXF1ZXN0GiUuY2FzaGZsb3cuY2xhaW0udjEuQWRkQ29tbWVudFJlc3BvbnNlEm0KD1NldFBhcnRBdHRlc3RlZBIpLmNhc2hmbG93LmNsYWltLnYxLlNldFBhcnRBdHRlc3RlZFJlcXVlc3QaKi5jYXNoZmxvdy5jbGFpbS52MS5TZXRQYXJ0QXR0ZXN0ZWRSZXNwb25zZSIDkAICEmQKDFNldENvbmZpcm1lZBImLmNhc2hmbG93LmNsYWltLnYxLlNldENvbmZpcm1lZFJlcXVlc3QaJy5jYXNoZmxvdy5jbGFpbS52MS5TZXRDb25maXJtZWRSZXNwb25zZSIDkAICEl4KClNldEZsYWdnZWQSJC5jYXNoZmxvdy5jbGFpbS52MS5TZXRGbGFnZ2VkUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLlNldEZsYWdnZWRSZXNwb25zZSIDkAICElkKClBheUludm9pY2USJC5jYXNoZmxvdy5jbGFpbS52MS5QYXlJbnZvaWNlUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLlBheUludm9pY2VSZXNwb25zZRJcCgtEZWxldGVDbGFpbRIlLmNhc2hmbG93LmNsYWltLnYxLkRlbGV0ZUNsYWltUmVxdWVzdBomLmNhc2hmbG93LmNsYWltLnYxLkRlbGV0ZUNsYWltUmVzcG9uc2USXAoLQ3JlYXRlQ2xhaW0SJS5jYXNoZmxvdy5jbGFpbS52MS5DcmVhdGVDbGFpbVJlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5DcmVhdGVDbGFpbVJlc3BvbnNlElwKC1VwZGF0ZUNsYWltEiUuY2FzaGZsb3cuY2xhaW0udjEuVXBkYXRlQ2xhaW1SZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuVXBkYXRlQ2xhaW1SZXNwb25zZULRAQoVY29tLmNhc2hmbG93LmNsYWltLnYxQgpDbGFpbVByb3RvUAFaRmdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L2NsYWltL3YxO2NsYWltdjGiAgNDQ1iqAhFDYXNoZmxvdy5DbGFpbS5WMcoCEUNhc2hmbG93XENsYWltXFYx4gIdQ2FzaGZsb3dcQ2xhaW1cVjFcR1BCTWV0YWRhdGHqAhNDYXNoZmxvdzo6Q2xhaW06OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message cashflow.claim.v1.Person
@@ -326,6 +326,11 @@ export type ListClaimsRequest = Message<"cashflow.claim.v1.ListClaimsRequest"> &
    * @generated from field: string voucher_series = 11;
    */
   voucherSeries: string;
+
+  /**
+   * @generated from field: cashflow.claim.v1.AdvancedFilter filter = 12;
+   */
+  filter?: AdvancedFilter | undefined;
 };
 
 /**
@@ -397,6 +402,11 @@ export type ListClaimsRequestJson = {
    * @generated from field: string voucher_series = 11;
    */
   voucherSeries?: string;
+
+  /**
+   * @generated from field: cashflow.claim.v1.AdvancedFilter filter = 12;
+   */
+  filter?: AdvancedFilterJson;
 };
 
 /**
@@ -405,6 +415,179 @@ export type ListClaimsRequestJson = {
  */
 export const ListClaimsRequestSchema: GenMessage<ListClaimsRequest, {jsonType: ListClaimsRequestJson}> = /*@__PURE__*/
   messageDesc(file_cashflow_claim_v1_claim, 3);
+
+/**
+ * AdvancedFilter is the filter panel's. Names match case-insensitively; the
+ * tristates do not filter when unset.
+ *
+ * @generated from message cashflow.claim.v1.AdvancedFilter
+ */
+export type AdvancedFilter = Message<"cashflow.claim.v1.AdvancedFilter"> & {
+  /**
+   * @generated from field: string secondary_cost_centre = 1;
+   */
+  secondaryCostCentre: string;
+
+  /**
+   * @generated from field: string budget_line = 2;
+   */
+  budgetLine: string;
+
+  /**
+   * YYYY-MM-DD, inclusive, on the claim's date.
+   *
+   * @generated from field: string from_date = 3;
+   */
+  fromDate: string;
+
+  /**
+   * @generated from field: string to_date = 4;
+   */
+  toDate: string;
+
+  /**
+   * The owner's username.
+   *
+   * @generated from field: string owner = 5;
+   */
+  owner: string;
+
+  /**
+   * Part of an invoice number.
+   *
+   * @generated from field: string invoice_number = 6;
+   */
+  invoiceNumber: string;
+
+  /**
+   * An exact voucher number, e.g. "E12".
+   *
+   * @generated from field: string verification = 7;
+   */
+  verification: string;
+
+  /**
+   * A payout's id; its reference is "Data" + id.
+   *
+   * @generated from field: int64 payment_id = 8;
+   */
+  paymentId: bigint;
+
+  /**
+   * @generated from field: optional bool attested = 9;
+   */
+  attested?: boolean | undefined;
+
+  /**
+   * @generated from field: optional bool confirmed = 10;
+   */
+  confirmed?: boolean | undefined;
+
+  /**
+   * @generated from field: optional bool paid = 11;
+   */
+  paid?: boolean | undefined;
+
+  /**
+   * @generated from field: optional bool accounted = 12;
+   */
+  accounted?: boolean | undefined;
+
+  /**
+   * @generated from field: optional bool flagged = 13;
+   */
+  flagged?: boolean | undefined;
+};
+
+/**
+ * AdvancedFilter is the filter panel's. Names match case-insensitively; the
+ * tristates do not filter when unset.
+ *
+ * @generated from message cashflow.claim.v1.AdvancedFilter
+ */
+export type AdvancedFilterJson = {
+  /**
+   * @generated from field: string secondary_cost_centre = 1;
+   */
+  secondaryCostCentre?: string;
+
+  /**
+   * @generated from field: string budget_line = 2;
+   */
+  budgetLine?: string;
+
+  /**
+   * YYYY-MM-DD, inclusive, on the claim's date.
+   *
+   * @generated from field: string from_date = 3;
+   */
+  fromDate?: string;
+
+  /**
+   * @generated from field: string to_date = 4;
+   */
+  toDate?: string;
+
+  /**
+   * The owner's username.
+   *
+   * @generated from field: string owner = 5;
+   */
+  owner?: string;
+
+  /**
+   * Part of an invoice number.
+   *
+   * @generated from field: string invoice_number = 6;
+   */
+  invoiceNumber?: string;
+
+  /**
+   * An exact voucher number, e.g. "E12".
+   *
+   * @generated from field: string verification = 7;
+   */
+  verification?: string;
+
+  /**
+   * A payout's id; its reference is "Data" + id.
+   *
+   * @generated from field: int64 payment_id = 8;
+   */
+  paymentId?: string;
+
+  /**
+   * @generated from field: optional bool attested = 9;
+   */
+  attested?: boolean;
+
+  /**
+   * @generated from field: optional bool confirmed = 10;
+   */
+  confirmed?: boolean;
+
+  /**
+   * @generated from field: optional bool paid = 11;
+   */
+  paid?: boolean;
+
+  /**
+   * @generated from field: optional bool accounted = 12;
+   */
+  accounted?: boolean;
+
+  /**
+   * @generated from field: optional bool flagged = 13;
+   */
+  flagged?: boolean;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.AdvancedFilter.
+ * Use `create(AdvancedFilterSchema)` to create a new message.
+ */
+export const AdvancedFilterSchema: GenMessage<AdvancedFilter, {jsonType: AdvancedFilterJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 4);
 
 /**
  * @generated from message cashflow.claim.v1.ListClaimsResponse
@@ -445,7 +628,7 @@ export type ListClaimsResponseJson = {
  * Use `create(ListClaimsResponseSchema)` to create a new message.
  */
 export const ListClaimsResponseSchema: GenMessage<ListClaimsResponse, {jsonType: ListClaimsResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 4);
+  messageDesc(file_cashflow_claim_v1_claim, 5);
 
 /**
  * @generated from message cashflow.claim.v1.GetClaimRequest
@@ -482,7 +665,7 @@ export type GetClaimRequestJson = {
  * Use `create(GetClaimRequestSchema)` to create a new message.
  */
 export const GetClaimRequestSchema: GenMessage<GetClaimRequest, {jsonType: GetClaimRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 5);
+  messageDesc(file_cashflow_claim_v1_claim, 6);
 
 /**
  * ClaimRef points at one claim.
@@ -523,7 +706,7 @@ export type ClaimRefJson = {
  * Use `create(ClaimRefSchema)` to create a new message.
  */
 export const ClaimRefSchema: GenMessage<ClaimRef, {jsonType: ClaimRefJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 6);
+  messageDesc(file_cashflow_claim_v1_claim, 7);
 
 /**
  * What the caller may do with a claim right now.
@@ -644,7 +827,7 @@ export type ActionsJson = {
  * Use `create(ActionsSchema)` to create a new message.
  */
 export const ActionsSchema: GenMessage<Actions, {jsonType: ActionsJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 7);
+  messageDesc(file_cashflow_claim_v1_claim, 8);
 
 /**
  * @generated from message cashflow.claim.v1.Part
@@ -735,7 +918,7 @@ export type PartJson = {
  * Use `create(PartSchema)` to create a new message.
  */
 export const PartSchema: GenMessage<Part, {jsonType: PartJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 8);
+  messageDesc(file_cashflow_claim_v1_claim, 9);
 
 /**
  * @generated from message cashflow.claim.v1.File
@@ -796,7 +979,7 @@ export type FileJson = {
  * Use `create(FileSchema)` to create a new message.
  */
 export const FileSchema: GenMessage<File, {jsonType: FileJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 9);
+  messageDesc(file_cashflow_claim_v1_claim, 10);
 
 /**
  * @generated from message cashflow.claim.v1.Comment
@@ -843,7 +1026,7 @@ export type CommentJson = {
  * Use `create(CommentSchema)` to create a new message.
  */
 export const CommentSchema: GenMessage<Comment, {jsonType: CommentJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 10);
+  messageDesc(file_cashflow_claim_v1_claim, 11);
 
 /**
  * @generated from message cashflow.claim.v1.Payment
@@ -908,7 +1091,7 @@ export type PaymentJson = {
  * Use `create(PaymentSchema)` to create a new message.
  */
 export const PaymentSchema: GenMessage<Payment, {jsonType: PaymentJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 11);
+  messageDesc(file_cashflow_claim_v1_claim, 12);
 
 /**
  * @generated from message cashflow.claim.v1.Claim
@@ -1053,7 +1236,7 @@ export type ClaimJson = {
  * Use `create(ClaimSchema)` to create a new message.
  */
 export const ClaimSchema: GenMessage<Claim, {jsonType: ClaimJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 12);
+  messageDesc(file_cashflow_claim_v1_claim, 13);
 
 /**
  * @generated from message cashflow.claim.v1.GetClaimResponse
@@ -1080,7 +1263,7 @@ export type GetClaimResponseJson = {
  * Use `create(GetClaimResponseSchema)` to create a new message.
  */
 export const GetClaimResponseSchema: GenMessage<GetClaimResponse, {jsonType: GetClaimResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 13);
+  messageDesc(file_cashflow_claim_v1_claim, 14);
 
 /**
  * @generated from message cashflow.claim.v1.GetQueueCountsRequest
@@ -1099,7 +1282,7 @@ export type GetQueueCountsRequestJson = {
  * Use `create(GetQueueCountsRequestSchema)` to create a new message.
  */
 export const GetQueueCountsRequestSchema: GenMessage<GetQueueCountsRequest, {jsonType: GetQueueCountsRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 14);
+  messageDesc(file_cashflow_claim_v1_claim, 15);
 
 /**
  * @generated from message cashflow.claim.v1.QueueCount
@@ -1136,7 +1319,7 @@ export type QueueCountJson = {
  * Use `create(QueueCountSchema)` to create a new message.
  */
 export const QueueCountSchema: GenMessage<QueueCount, {jsonType: QueueCountJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 15);
+  messageDesc(file_cashflow_claim_v1_claim, 16);
 
 /**
  * @generated from message cashflow.claim.v1.GetQueueCountsResponse
@@ -1167,7 +1350,7 @@ export type GetQueueCountsResponseJson = {
  * Use `create(GetQueueCountsResponseSchema)` to create a new message.
  */
 export const GetQueueCountsResponseSchema: GenMessage<GetQueueCountsResponse, {jsonType: GetQueueCountsResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 16);
+  messageDesc(file_cashflow_claim_v1_claim, 17);
 
 /**
  * @generated from message cashflow.claim.v1.GetOverviewRequest
@@ -1186,7 +1369,7 @@ export type GetOverviewRequestJson = {
  * Use `create(GetOverviewRequestSchema)` to create a new message.
  */
 export const GetOverviewRequestSchema: GenMessage<GetOverviewRequest, {jsonType: GetOverviewRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 17);
+  messageDesc(file_cashflow_claim_v1_claim, 18);
 
 /**
  * @generated from message cashflow.claim.v1.GetOverviewResponse
@@ -1245,7 +1428,155 @@ export type GetOverviewResponseJson = {
  * Use `create(GetOverviewResponseSchema)` to create a new message.
  */
 export const GetOverviewResponseSchema: GenMessage<GetOverviewResponse, {jsonType: GetOverviewResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 18);
+  messageDesc(file_cashflow_claim_v1_claim, 19);
+
+/**
+ * @generated from message cashflow.claim.v1.GetWorkOverviewRequest
+ */
+export type GetWorkOverviewRequest = Message<"cashflow.claim.v1.GetWorkOverviewRequest"> & {
+};
+
+/**
+ * @generated from message cashflow.claim.v1.GetWorkOverviewRequest
+ */
+export type GetWorkOverviewRequestJson = {
+};
+
+/**
+ * Describes the message cashflow.claim.v1.GetWorkOverviewRequest.
+ * Use `create(GetWorkOverviewRequestSchema)` to create a new message.
+ */
+export const GetWorkOverviewRequestSchema: GenMessage<GetWorkOverviewRequest, {jsonType: GetWorkOverviewRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 20);
+
+/**
+ * @generated from message cashflow.claim.v1.GroupCount
+ */
+export type GroupCount = Message<"cashflow.claim.v1.GroupCount"> & {
+  /**
+   * A cost centre, or for the pay queue an owner's username.
+   *
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * What to show: the cost centre, or the owner's name.
+   *
+   * @generated from field: string label = 2;
+   */
+  label: string;
+
+  /**
+   * @generated from field: int32 count = 3;
+   */
+  count: number;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.GroupCount
+ */
+export type GroupCountJson = {
+  /**
+   * A cost centre, or for the pay queue an owner's username.
+   *
+   * @generated from field: string key = 1;
+   */
+  key?: string;
+
+  /**
+   * What to show: the cost centre, or the owner's name.
+   *
+   * @generated from field: string label = 2;
+   */
+  label?: string;
+
+  /**
+   * @generated from field: int32 count = 3;
+   */
+  count?: number;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.GroupCount.
+ * Use `create(GroupCountSchema)` to create a new message.
+ */
+export const GroupCountSchema: GenMessage<GroupCount, {jsonType: GroupCountJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 21);
+
+/**
+ * @generated from message cashflow.claim.v1.QueueBreakdown
+ */
+export type QueueBreakdown = Message<"cashflow.claim.v1.QueueBreakdown"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Queue queue = 1;
+   */
+  queue: Queue;
+
+  /**
+   * @generated from field: int32 total = 2;
+   */
+  total: number;
+
+  /**
+   * @generated from field: repeated cashflow.claim.v1.GroupCount groups = 3;
+   */
+  groups: GroupCount[];
+};
+
+/**
+ * @generated from message cashflow.claim.v1.QueueBreakdown
+ */
+export type QueueBreakdownJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Queue queue = 1;
+   */
+  queue?: QueueJson;
+
+  /**
+   * @generated from field: int32 total = 2;
+   */
+  total?: number;
+
+  /**
+   * @generated from field: repeated cashflow.claim.v1.GroupCount groups = 3;
+   */
+  groups?: GroupCountJson[];
+};
+
+/**
+ * Describes the message cashflow.claim.v1.QueueBreakdown.
+ * Use `create(QueueBreakdownSchema)` to create a new message.
+ */
+export const QueueBreakdownSchema: GenMessage<QueueBreakdown, {jsonType: QueueBreakdownJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 22);
+
+/**
+ * @generated from message cashflow.claim.v1.GetWorkOverviewResponse
+ */
+export type GetWorkOverviewResponse = Message<"cashflow.claim.v1.GetWorkOverviewResponse"> & {
+  /**
+   * @generated from field: repeated cashflow.claim.v1.QueueBreakdown queues = 1;
+   */
+  queues: QueueBreakdown[];
+};
+
+/**
+ * @generated from message cashflow.claim.v1.GetWorkOverviewResponse
+ */
+export type GetWorkOverviewResponseJson = {
+  /**
+   * @generated from field: repeated cashflow.claim.v1.QueueBreakdown queues = 1;
+   */
+  queues?: QueueBreakdownJson[];
+};
+
+/**
+ * Describes the message cashflow.claim.v1.GetWorkOverviewResponse.
+ * Use `create(GetWorkOverviewResponseSchema)` to create a new message.
+ */
+export const GetWorkOverviewResponseSchema: GenMessage<GetWorkOverviewResponse, {jsonType: GetWorkOverviewResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 23);
 
 /**
  * @generated from message cashflow.claim.v1.AddCommentRequest
@@ -1282,7 +1613,7 @@ export type AddCommentRequestJson = {
  * Use `create(AddCommentRequestSchema)` to create a new message.
  */
 export const AddCommentRequestSchema: GenMessage<AddCommentRequest, {jsonType: AddCommentRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 19);
+  messageDesc(file_cashflow_claim_v1_claim, 24);
 
 /**
  * @generated from message cashflow.claim.v1.AddCommentResponse
@@ -1309,7 +1640,7 @@ export type AddCommentResponseJson = {
  * Use `create(AddCommentResponseSchema)` to create a new message.
  */
 export const AddCommentResponseSchema: GenMessage<AddCommentResponse, {jsonType: AddCommentResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 20);
+  messageDesc(file_cashflow_claim_v1_claim, 25);
 
 /**
  * @generated from message cashflow.claim.v1.SetPartAttestedRequest
@@ -1356,7 +1687,7 @@ export type SetPartAttestedRequestJson = {
  * Use `create(SetPartAttestedRequestSchema)` to create a new message.
  */
 export const SetPartAttestedRequestSchema: GenMessage<SetPartAttestedRequest, {jsonType: SetPartAttestedRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 21);
+  messageDesc(file_cashflow_claim_v1_claim, 26);
 
 /**
  * @generated from message cashflow.claim.v1.SetPartAttestedResponse
@@ -1383,7 +1714,7 @@ export type SetPartAttestedResponseJson = {
  * Use `create(SetPartAttestedResponseSchema)` to create a new message.
  */
 export const SetPartAttestedResponseSchema: GenMessage<SetPartAttestedResponse, {jsonType: SetPartAttestedResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 22);
+  messageDesc(file_cashflow_claim_v1_claim, 27);
 
 /**
  * @generated from message cashflow.claim.v1.SetConfirmedRequest
@@ -1424,7 +1755,7 @@ export type SetConfirmedRequestJson = {
  * Use `create(SetConfirmedRequestSchema)` to create a new message.
  */
 export const SetConfirmedRequestSchema: GenMessage<SetConfirmedRequest, {jsonType: SetConfirmedRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 23);
+  messageDesc(file_cashflow_claim_v1_claim, 28);
 
 /**
  * @generated from message cashflow.claim.v1.SetConfirmedResponse
@@ -1451,7 +1782,7 @@ export type SetConfirmedResponseJson = {
  * Use `create(SetConfirmedResponseSchema)` to create a new message.
  */
 export const SetConfirmedResponseSchema: GenMessage<SetConfirmedResponse, {jsonType: SetConfirmedResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 24);
+  messageDesc(file_cashflow_claim_v1_claim, 29);
 
 /**
  * @generated from message cashflow.claim.v1.SetFlaggedRequest
@@ -1492,7 +1823,7 @@ export type SetFlaggedRequestJson = {
  * Use `create(SetFlaggedRequestSchema)` to create a new message.
  */
 export const SetFlaggedRequestSchema: GenMessage<SetFlaggedRequest, {jsonType: SetFlaggedRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 25);
+  messageDesc(file_cashflow_claim_v1_claim, 30);
 
 /**
  * @generated from message cashflow.claim.v1.SetFlaggedResponse
@@ -1519,7 +1850,7 @@ export type SetFlaggedResponseJson = {
  * Use `create(SetFlaggedResponseSchema)` to create a new message.
  */
 export const SetFlaggedResponseSchema: GenMessage<SetFlaggedResponse, {jsonType: SetFlaggedResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 26);
+  messageDesc(file_cashflow_claim_v1_claim, 31);
 
 /**
  * @generated from message cashflow.claim.v1.PayInvoiceRequest
@@ -1550,7 +1881,7 @@ export type PayInvoiceRequestJson = {
  * Use `create(PayInvoiceRequestSchema)` to create a new message.
  */
 export const PayInvoiceRequestSchema: GenMessage<PayInvoiceRequest, {jsonType: PayInvoiceRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 27);
+  messageDesc(file_cashflow_claim_v1_claim, 32);
 
 /**
  * @generated from message cashflow.claim.v1.PayInvoiceResponse
@@ -1577,7 +1908,7 @@ export type PayInvoiceResponseJson = {
  * Use `create(PayInvoiceResponseSchema)` to create a new message.
  */
 export const PayInvoiceResponseSchema: GenMessage<PayInvoiceResponse, {jsonType: PayInvoiceResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 28);
+  messageDesc(file_cashflow_claim_v1_claim, 33);
 
 /**
  * @generated from message cashflow.claim.v1.DeleteClaimRequest
@@ -1604,7 +1935,7 @@ export type DeleteClaimRequestJson = {
  * Use `create(DeleteClaimRequestSchema)` to create a new message.
  */
 export const DeleteClaimRequestSchema: GenMessage<DeleteClaimRequest, {jsonType: DeleteClaimRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 29);
+  messageDesc(file_cashflow_claim_v1_claim, 34);
 
 /**
  * @generated from message cashflow.claim.v1.DeleteClaimResponse
@@ -1623,7 +1954,7 @@ export type DeleteClaimResponseJson = {
  * Use `create(DeleteClaimResponseSchema)` to create a new message.
  */
 export const DeleteClaimResponseSchema: GenMessage<DeleteClaimResponse, {jsonType: DeleteClaimResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 30);
+  messageDesc(file_cashflow_claim_v1_claim, 35);
 
 /**
  * ClaimInput is a claim as the create and edit forms send it.
@@ -1702,7 +2033,7 @@ export type ClaimInputJson = {
  * Use `create(ClaimInputSchema)` to create a new message.
  */
 export const ClaimInputSchema: GenMessage<ClaimInput, {jsonType: ClaimInputJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 31);
+  messageDesc(file_cashflow_claim_v1_claim, 36);
 
 /**
  * @generated from message cashflow.claim.v1.PartInput
@@ -1759,7 +2090,7 @@ export type PartInputJson = {
  * Use `create(PartInputSchema)` to create a new message.
  */
 export const PartInputSchema: GenMessage<PartInput, {jsonType: PartInputJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 32);
+  messageDesc(file_cashflow_claim_v1_claim, 37);
 
 /**
  * @generated from message cashflow.claim.v1.CreateClaimRequest
@@ -1810,7 +2141,7 @@ export type CreateClaimRequestJson = {
  * Use `create(CreateClaimRequestSchema)` to create a new message.
  */
 export const CreateClaimRequestSchema: GenMessage<CreateClaimRequest, {jsonType: CreateClaimRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 33);
+  messageDesc(file_cashflow_claim_v1_claim, 38);
 
 /**
  * @generated from message cashflow.claim.v1.CreateClaimResponse
@@ -1837,7 +2168,7 @@ export type CreateClaimResponseJson = {
  * Use `create(CreateClaimResponseSchema)` to create a new message.
  */
 export const CreateClaimResponseSchema: GenMessage<CreateClaimResponse, {jsonType: CreateClaimResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 34);
+  messageDesc(file_cashflow_claim_v1_claim, 39);
 
 /**
  * @generated from message cashflow.claim.v1.UpdateClaimRequest
@@ -1902,7 +2233,7 @@ export type UpdateClaimRequestJson = {
  * Use `create(UpdateClaimRequestSchema)` to create a new message.
  */
 export const UpdateClaimRequestSchema: GenMessage<UpdateClaimRequest, {jsonType: UpdateClaimRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 35);
+  messageDesc(file_cashflow_claim_v1_claim, 40);
 
 /**
  * @generated from message cashflow.claim.v1.UpdateClaimResponse
@@ -1929,7 +2260,7 @@ export type UpdateClaimResponseJson = {
  * Use `create(UpdateClaimResponseSchema)` to create a new message.
  */
 export const UpdateClaimResponseSchema: GenMessage<UpdateClaimResponse, {jsonType: UpdateClaimResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_claim_v1_claim, 36);
+  messageDesc(file_cashflow_claim_v1_claim, 41);
 
 /**
  * @generated from enum cashflow.claim.v1.ClaimKind
@@ -2161,6 +2492,17 @@ export const ClaimService: GenService<{
     methodKind: "unary";
     input: typeof GetOverviewRequestSchema;
     output: typeof GetOverviewResponseSchema;
+  },
+  /**
+   * GetWorkOverview breaks down the caller's queues: by cost centre, and the
+   * pay queue by person. Only queues the caller may see are included.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.GetWorkOverview
+   */
+  getWorkOverview: {
+    methodKind: "unary";
+    input: typeof GetWorkOverviewRequestSchema;
+    output: typeof GetWorkOverviewResponseSchema;
   },
   /**
    * AddComment comments on a claim; the owner is emailed unless they wrote it.

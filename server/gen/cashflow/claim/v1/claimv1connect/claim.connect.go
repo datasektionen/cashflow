@@ -43,6 +43,9 @@ const (
 	// ClaimServiceGetOverviewProcedure is the fully-qualified name of the ClaimService's GetOverview
 	// RPC.
 	ClaimServiceGetOverviewProcedure = "/cashflow.claim.v1.ClaimService/GetOverview"
+	// ClaimServiceGetWorkOverviewProcedure is the fully-qualified name of the ClaimService's
+	// GetWorkOverview RPC.
+	ClaimServiceGetWorkOverviewProcedure = "/cashflow.claim.v1.ClaimService/GetWorkOverview"
 	// ClaimServiceAddCommentProcedure is the fully-qualified name of the ClaimService's AddComment RPC.
 	ClaimServiceAddCommentProcedure = "/cashflow.claim.v1.ClaimService/AddComment"
 	// ClaimServiceSetPartAttestedProcedure is the fully-qualified name of the ClaimService's
@@ -78,6 +81,9 @@ type ClaimServiceClient interface {
 	GetQueueCounts(context.Context, *connect.Request[v1.GetQueueCountsRequest]) (*connect.Response[v1.GetQueueCountsResponse], error)
 	// GetOverview summarises the caller's own claims.
 	GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error)
+	// GetWorkOverview breaks down the caller's queues: by cost centre, and the
+	// pay queue by person. Only queues the caller may see are included.
+	GetWorkOverview(context.Context, *connect.Request[v1.GetWorkOverviewRequest]) (*connect.Response[v1.GetWorkOverviewResponse], error)
 	// AddComment comments on a claim; the owner is emailed unless they wrote it.
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	// SetPartAttested attests or unattests one part.
@@ -135,6 +141,13 @@ func NewClaimServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+ClaimServiceGetOverviewProcedure,
 			connect.WithSchema(claimServiceMethods.ByName("GetOverview")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
+		getWorkOverview: connect.NewClient[v1.GetWorkOverviewRequest, v1.GetWorkOverviewResponse](
+			httpClient,
+			baseURL+ClaimServiceGetWorkOverviewProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("GetWorkOverview")),
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
@@ -198,6 +211,7 @@ type claimServiceClient struct {
 	getClaim        *connect.Client[v1.GetClaimRequest, v1.GetClaimResponse]
 	getQueueCounts  *connect.Client[v1.GetQueueCountsRequest, v1.GetQueueCountsResponse]
 	getOverview     *connect.Client[v1.GetOverviewRequest, v1.GetOverviewResponse]
+	getWorkOverview *connect.Client[v1.GetWorkOverviewRequest, v1.GetWorkOverviewResponse]
 	addComment      *connect.Client[v1.AddCommentRequest, v1.AddCommentResponse]
 	setPartAttested *connect.Client[v1.SetPartAttestedRequest, v1.SetPartAttestedResponse]
 	setConfirmed    *connect.Client[v1.SetConfirmedRequest, v1.SetConfirmedResponse]
@@ -226,6 +240,11 @@ func (c *claimServiceClient) GetQueueCounts(ctx context.Context, req *connect.Re
 // GetOverview calls cashflow.claim.v1.ClaimService.GetOverview.
 func (c *claimServiceClient) GetOverview(ctx context.Context, req *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error) {
 	return c.getOverview.CallUnary(ctx, req)
+}
+
+// GetWorkOverview calls cashflow.claim.v1.ClaimService.GetWorkOverview.
+func (c *claimServiceClient) GetWorkOverview(ctx context.Context, req *connect.Request[v1.GetWorkOverviewRequest]) (*connect.Response[v1.GetWorkOverviewResponse], error) {
+	return c.getWorkOverview.CallUnary(ctx, req)
 }
 
 // AddComment calls cashflow.claim.v1.ClaimService.AddComment.
@@ -280,6 +299,9 @@ type ClaimServiceHandler interface {
 	GetQueueCounts(context.Context, *connect.Request[v1.GetQueueCountsRequest]) (*connect.Response[v1.GetQueueCountsResponse], error)
 	// GetOverview summarises the caller's own claims.
 	GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error)
+	// GetWorkOverview breaks down the caller's queues: by cost centre, and the
+	// pay queue by person. Only queues the caller may see are included.
+	GetWorkOverview(context.Context, *connect.Request[v1.GetWorkOverviewRequest]) (*connect.Response[v1.GetWorkOverviewResponse], error)
 	// AddComment comments on a claim; the owner is emailed unless they wrote it.
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	// SetPartAttested attests or unattests one part.
@@ -333,6 +355,13 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 		ClaimServiceGetOverviewProcedure,
 		svc.GetOverview,
 		connect.WithSchema(claimServiceMethods.ByName("GetOverview")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceGetWorkOverviewHandler := connect.NewUnaryHandler(
+		ClaimServiceGetWorkOverviewProcedure,
+		svc.GetWorkOverview,
+		connect.WithSchema(claimServiceMethods.ByName("GetWorkOverview")),
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
@@ -397,6 +426,8 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 			claimServiceGetQueueCountsHandler.ServeHTTP(w, r)
 		case ClaimServiceGetOverviewProcedure:
 			claimServiceGetOverviewHandler.ServeHTTP(w, r)
+		case ClaimServiceGetWorkOverviewProcedure:
+			claimServiceGetWorkOverviewHandler.ServeHTTP(w, r)
 		case ClaimServiceAddCommentProcedure:
 			claimServiceAddCommentHandler.ServeHTTP(w, r)
 		case ClaimServiceSetPartAttestedProcedure:
@@ -436,6 +467,10 @@ func (UnimplementedClaimServiceHandler) GetQueueCounts(context.Context, *connect
 
 func (UnimplementedClaimServiceHandler) GetOverview(context.Context, *connect.Request[v1.GetOverviewRequest]) (*connect.Response[v1.GetOverviewResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.GetOverview is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) GetWorkOverview(context.Context, *connect.Request[v1.GetWorkOverviewRequest]) (*connect.Response[v1.GetWorkOverviewResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.GetWorkOverview is not implemented"))
 }
 
 func (UnimplementedClaimServiceHandler) AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error) {

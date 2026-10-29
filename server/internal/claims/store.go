@@ -56,7 +56,12 @@ SELECT
 	parts.part_count,
 	parts.unattested_count,
 	parts.lower_ccs,
-	parts.unattested_ccs
+	parts.unattested_ccs,
+	-- For the advanced filters.
+	parts.lower_sccs,
+	parts.lower_lines,
+	COALESCE(i.invoice_number, '') AS invoice_number,
+	e.reimbursement_id AS payment_id
 FROM core_claim c
 JOIN core_profile op ON op.id = c.owner_id
 JOIN auth_user u ON u.id = op.user_id
@@ -69,7 +74,9 @@ CROSS JOIN LATERAL (
 		count(*) FILTER (WHERE p.attested_by_id IS NULL) AS unattested_count,
 		COALESCE(array_agg(DISTINCT p.cost_centre ORDER BY p.cost_centre) FILTER (WHERE p.cost_centre <> ''), '{}') AS cost_centres,
 		COALESCE(array_agg(lower(p.cost_centre)), '{}') AS lower_ccs,
-		COALESCE(array_agg(lower(p.cost_centre)) FILTER (WHERE p.attested_by_id IS NULL), '{}') AS unattested_ccs
+		COALESCE(array_agg(lower(p.cost_centre)) FILTER (WHERE p.attested_by_id IS NULL), '{}') AS unattested_ccs,
+		COALESCE(array_agg(lower(p.secondary_cost_centre)), '{}') AS lower_sccs,
+		COALESCE(array_agg(lower(p.budget_line)), '{}') AS lower_lines
 	FROM core_claimpart p
 	WHERE p.claim_id = c.id
 ) parts`
@@ -106,6 +113,7 @@ func where(v Viewer, f Filter) (clause string, args pgx.NamedArgs, ok bool) {
 	if f.Accounted {
 		conds = append(conds, "verification <> ''")
 	}
+	conds = append(conds, advancedConditions(f.Advanced, args)...)
 	if f.VoucherSeries != "" {
 		conds = append(conds, "upper(left(verification, 1)) = upper(@voucher_series)")
 		args["voucher_series"] = f.VoucherSeries
@@ -132,6 +140,57 @@ func where(v Viewer, f Filter) (clause string, args pgx.NamedArgs, ok bool) {
 		return "", args, true
 	}
 	return "WHERE " + strings.Join(conds, " AND "), args, true
+}
+
+// advancedConditions are the filter panel's: each narrows the list further.
+// Names match case-insensitively, as everywhere else claims meet budget names.
+func advancedConditions(a Advanced, args pgx.NamedArgs) []string {
+	var conds []string
+	add := func(cond, name string, value any) {
+		conds = append(conds, cond)
+		args[name] = value
+	}
+	if a.SecondaryCostCentre != "" {
+		add("lower(@scc) = ANY(lower_sccs)", "scc", a.SecondaryCostCentre)
+	}
+	if a.BudgetLine != "" {
+		add("lower(@budget_line) = ANY(lower_lines)", "budget_line", a.BudgetLine)
+	}
+	if a.From != nil {
+		add("date >= @from_date", "from_date", *a.From)
+	}
+	if a.To != nil {
+		add("date <= @to_date", "to_date", *a.To)
+	}
+	if a.Owner != "" {
+		add("owner_username = @owner", "owner", a.Owner)
+	}
+	if a.InvoiceNumber != "" {
+		add("invoice_number ILIKE @invoice_number ESCAPE '\\'", "invoice_number", "%"+escapeLike(a.InvoiceNumber)+"%")
+	}
+	if a.Verification != "" {
+		add("upper(verification) = upper(@verification)", "verification", a.Verification)
+	}
+	if a.PaymentID != 0 {
+		add("payment_id = @payment_id", "payment_id", a.PaymentID)
+	}
+	for _, flag := range []struct {
+		value  *bool
+		column string
+	}{
+		{a.Attested, "attested"}, {a.Confirmed, "confirmed"}, {a.Paid, "paid"},
+		{a.Accounted, "verification <> ''"}, {a.Flagged, "flagged"},
+	} {
+		if flag.value == nil {
+			continue
+		}
+		if *flag.value {
+			conds = append(conds, "("+flag.column+")")
+		} else {
+			conds = append(conds, "NOT ("+flag.column+")")
+		}
+	}
+	return conds
 }
 
 // queueCondition ports ClaimQuerySet's *_for methods. MaySeeQueue has
@@ -273,4 +332,35 @@ func claimNumber(q string) (int64, bool) {
 
 func escapeLike(s string) string {
 	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
+}
+
+// Count is how many claims share a value, e.g. a cost centre.
+type Count struct {
+	Key   string // cost centre name, or owner username
+	Label string // owner name; the cost centre again
+	N     int
+}
+
+// Breakdown counts the claims in q by cost centre, or for the pay queue by
+// owner, most first: Cashflow 3's action overview. A claim with parts in two
+// cost centres counts in both.
+func (s *Store) Breakdown(ctx context.Context, v Viewer, q Queue) ([]Count, error) {
+	clause, args, ok := where(v, Filter{Queue: q})
+	if !ok {
+		return nil, ErrForbiddenQueue
+	}
+	sql := "SELECT cc, cc, count(*) FROM (" + claimRows + ") claims CROSS JOIN LATERAL unnest(cost_centres) cc " +
+		clause + " GROUP BY cc ORDER BY count(*) DESC, cc"
+	if q == QueuePay {
+		sql = "SELECT owner_username, owner_name, count(*) FROM (" + claimRows + ") claims " +
+			clause + " GROUP BY 1, 2 ORDER BY count(*) DESC, 2"
+	}
+	rows, err := s.pool.Query(ctx, sql, args)
+	if err != nil {
+		return nil, fmt.Errorf("breakdown: %w", err)
+	}
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (Count, error) {
+		var c Count
+		return c, row.Scan(&c.Key, &c.Label, &c.N)
+	})
 }

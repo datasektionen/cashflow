@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -23,7 +24,12 @@ type ClaimService struct {
 
 func (s *ClaimService) ListClaims(ctx context.Context, req *connect.Request[claimv1.ListClaimsRequest]) (*connect.Response[claimv1.ListClaimsResponse], error) {
 	m := req.Msg
+	advanced, err := fromProtoFilter(m.Filter)
+	if err != nil {
+		return nil, err
+	}
 	f := claims.Filter{
+		Advanced:   advanced,
 		Mine:       m.Mine,
 		Queue:      queueFromProto[m.Queue],
 		Kind:       kindFromProto[m.Kind],
@@ -163,6 +169,63 @@ func (s *ClaimService) GetQueueCounts(ctx context.Context, _ *connect.Request[cl
 			return nil, err
 		}
 		res.Counts = append(res.Counts, &claimv1.QueueCount{Queue: queueToProto[q], Count: int32(n)})
+	}
+	return connect.NewResponse(res), nil
+}
+
+// fromProtoFilter reads the filter panel's filters; bad dates are field violations.
+func fromProtoFilter(m *claimv1.AdvancedFilter) (claims.Advanced, error) {
+	a := claims.Advanced{
+		SecondaryCostCentre: strings.TrimSpace(m.GetSecondaryCostCentre()),
+		BudgetLine:          strings.TrimSpace(m.GetBudgetLine()),
+		Owner:               strings.TrimSpace(m.GetOwner()),
+		InvoiceNumber:       strings.TrimSpace(m.GetInvoiceNumber()),
+		Verification:        strings.TrimSpace(m.GetVerification()),
+		PaymentID:           m.GetPaymentId(),
+	}
+	if m == nil {
+		return a, nil
+	}
+	a.Attested, a.Confirmed, a.Paid, a.Accounted, a.Flagged = m.Attested, m.Confirmed, m.Paid, m.Accounted, m.Flagged
+	var v violations
+	for _, d := range []struct {
+		field string
+		value string
+		into  **time.Time
+	}{{"filter.from_date", m.FromDate, &a.From}, {"filter.to_date", m.ToDate, &a.To}} {
+		if d.value == "" {
+			continue
+		}
+		t, err := time.Parse(time.DateOnly, d.value)
+		if err != nil {
+			v.add(d.field, "date.invalid")
+			continue
+		}
+		*d.into = &t
+	}
+	return a, v.err()
+}
+
+func (s *ClaimService) GetWorkOverview(ctx context.Context, _ *connect.Request[claimv1.GetWorkOverviewRequest]) (*connect.Response[claimv1.GetWorkOverviewResponse], error) {
+	viewer := callerFrom(ctx).viewer
+	res := &claimv1.GetWorkOverviewResponse{}
+	for _, q := range claims.Queues {
+		if !viewer.MaySeeQueue(q) {
+			continue
+		}
+		total, err := s.Store.Count(ctx, viewer, q)
+		if err != nil {
+			return nil, err
+		}
+		groups, err := s.Store.Breakdown(ctx, viewer, q)
+		if err != nil {
+			return nil, err
+		}
+		b := &claimv1.QueueBreakdown{Queue: queueToProto[q], Total: int32(total)}
+		for _, g := range groups {
+			b.Groups = append(b.Groups, &claimv1.GroupCount{Key: g.Key, Label: g.Label, Count: int32(g.N)})
+		}
+		res.Queues = append(res.Queues, b)
 	}
 	return connect.NewResponse(res), nil
 }

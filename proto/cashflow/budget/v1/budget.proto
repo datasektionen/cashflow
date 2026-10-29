@@ -17,6 +17,8 @@ service BudgetService {
 message GetBudgetRequest {
   // Leave this claim out of the usage, e.g. the one being edited.
   cashflow.claim.v1.ClaimRef exclude = 1;
+  // The year amounts are counted for; defaults to this year.
+  int32 year = 2;
 }
 
 message GetBudgetResponse {
@@ -31,6 +33,8 @@ message CostCentre {
   // committee, partition, project, projectX or other.
   string type = 3;
   repeated SecondaryCostCentre secondary = 4;
+  // Whether a budget line in it is blown.
+  bool contains_blown = 5;
 }
 
 message SecondaryCostCentre {
@@ -49,4 +53,9 @@ message BudgetLine {
   string comment = 6;
   // Claimed on the line this year (by expense or invoice date).
   int64 used_ore = 7;
+  // Of that, attested and paid.
+  int64 attested_ore = 8;
+  int64 paid_ore = 9;
+  // More was claimed than the line's expense budget.
+  bool blown = 10;
 }

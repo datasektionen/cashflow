@@ -9,6 +9,18 @@ service UserService {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
 
+  // ListUsers searches users by name or username. For those who pay or view
+  // everything.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // GetUser is one user with their bank details. For those who pay or view
+  // everything.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
   // GetProfilePictures returns rfinger picture URLs for the given users;
   // users without one are left out and show their initials.
   rpc GetProfilePictures(GetProfilePicturesRequest) returns (GetProfilePicturesResponse) {
@@ -22,6 +34,23 @@ service UserService {
 }
 
 message GetMeRequest {}
+
+message ListUsersRequest {
+  string query = 1;
+}
+
+message ListUsersResponse {
+  // At most 50.
+  repeated User users = 1;
+}
+
+message GetUserRequest {
+  string username = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
 
 message GetMeResponse {
   User user = 1;

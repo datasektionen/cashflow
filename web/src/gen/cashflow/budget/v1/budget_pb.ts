@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/budget/v1/budget.proto.
  */
 export const file_cashflow_budget_v1_budget: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jYXNoZmxvdy9idWRnZXQvdjEvYnVkZ2V0LnByb3RvEhJjYXNoZmxvdy5idWRnZXQudjEiQAoQR2V0QnVkZ2V0UmVxdWVzdBIsCgdleGNsdWRlGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYiVwoRR2V0QnVkZ2V0UmVzcG9uc2USNAoMY29zdF9jZW50cmVzGAEgAygLMh4uY2FzaGZsb3cuYnVkZ2V0LnYxLkNvc3RDZW50cmUSDAoEeWVhchgCIAEoBSJwCgpDb3N0Q2VudHJlEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSDAoEdHlwZRgDIAEoCRI6CglzZWNvbmRhcnkYBCADKAsyJy5jYXNoZmxvdy5idWRnZXQudjEuU2Vjb25kYXJ5Q29zdENlbnRyZSJeChNTZWNvbmRhcnlDb3N0Q2VudHJlEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSLQoFbGluZXMYAyADKAsyHi5jYXNoZmxvdy5idWRnZXQudjEuQnVkZ2V0TGluZSKEAQoKQnVkZ2V0TGluZRIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEhAKCGFjY291bnRzGAMgAygFEhMKC2V4cGVuc2Vfb3JlGAQgASgDEhIKCmluY29tZV9vcmUYBSABKAMSDwoHY29tbWVudBgGIAEoCRIQCgh1c2VkX29yZRgHIAEoAzJuCg1CdWRnZXRTZXJ2aWNlEl0KCUdldEJ1ZGdldBIkLmNhc2hmbG93LmJ1ZGdldC52MS5HZXRCdWRnZXRSZXF1ZXN0GiUuY2FzaGZsb3cuYnVkZ2V0LnYxLkdldEJ1ZGdldFJlc3BvbnNlIgOQAgFC2QEKFmNvbS5jYXNoZmxvdy5idWRnZXQudjFCC0J1ZGdldFByb3RvUAFaSGdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L2J1ZGdldC92MTtidWRnZXR2MaICA0NCWKoCEkNhc2hmbG93LkJ1ZGdldC5WMcoCEkNhc2hmbG93XEJ1ZGdldFxWMeICHkNhc2hmbG93XEJ1ZGdldFxWMVxHUEJNZXRhZGF0YeoCFENhc2hmbG93OjpCdWRnZXQ6OlYxYgZwcm90bzM", [file_cashflow_claim_v1_claim]);
+  fileDesc("Ch9jYXNoZmxvdy9idWRnZXQvdjEvYnVkZ2V0LnByb3RvEhJjYXNoZmxvdy5idWRnZXQudjEiTgoQR2V0QnVkZ2V0UmVxdWVzdBIsCgdleGNsdWRlGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDAoEeWVhchgCIAEoBSJXChFHZXRCdWRnZXRSZXNwb25zZRI0Cgxjb3N0X2NlbnRyZXMYASADKAsyHi5jYXNoZmxvdy5idWRnZXQudjEuQ29zdENlbnRyZRIMCgR5ZWFyGAIgASgFIogBCgpDb3N0Q2VudHJlEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSDAoEdHlwZRgDIAEoCRI6CglzZWNvbmRhcnkYBCADKAsyJy5jYXNoZmxvdy5idWRnZXQudjEuU2Vjb25kYXJ5Q29zdENlbnRyZRIWCg5jb250YWluc19ibG93bhgFIAEoCCJeChNTZWNvbmRhcnlDb3N0Q2VudHJlEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSLQoFbGluZXMYAyADKAsyHi5jYXNoZmxvdy5idWRnZXQudjEuQnVkZ2V0TGluZSK7AQoKQnVkZ2V0TGluZRIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEhAKCGFjY291bnRzGAMgAygFEhMKC2V4cGVuc2Vfb3JlGAQgASgDEhIKCmluY29tZV9vcmUYBSABKAMSDwoHY29tbWVudBgGIAEoCRIQCgh1c2VkX29yZRgHIAEoAxIUCgxhdHRlc3RlZF9vcmUYCCABKAMSEAoIcGFpZF9vcmUYCSABKAMSDQoFYmxvd24YCiABKAgybgoNQnVkZ2V0U2VydmljZRJdCglHZXRCdWRnZXQSJC5jYXNoZmxvdy5idWRnZXQudjEuR2V0QnVkZ2V0UmVxdWVzdBolLmNhc2hmbG93LmJ1ZGdldC52MS5HZXRCdWRnZXRSZXNwb25zZSIDkAIBQtkBChZjb20uY2FzaGZsb3cuYnVkZ2V0LnYxQgtCdWRnZXRQcm90b1ABWkhnaXRodWIuY29tL2RhdGFzZWt0aW9uZW4vY2FzaGZsb3cvc2VydmVyL2dlbi9jYXNoZmxvdy9idWRnZXQvdjE7YnVkZ2V0djGiAgNDQliqAhJDYXNoZmxvdy5CdWRnZXQuVjHKAhJDYXNoZmxvd1xCdWRnZXRcVjHiAh5DYXNoZmxvd1xCdWRnZXRcVjFcR1BCTWV0YWRhdGHqAhRDYXNoZmxvdzo6QnVkZ2V0OjpWMWIGcHJvdG8z", [file_cashflow_claim_v1_claim]);
 
 /**
  * @generated from message cashflow.budget.v1.GetBudgetRequest
@@ -24,6 +24,13 @@ export type GetBudgetRequest = Message<"cashflow.budget.v1.GetBudgetRequest"> & 
    * @generated from field: cashflow.claim.v1.ClaimRef exclude = 1;
    */
   exclude?: ClaimRef | undefined;
+
+  /**
+   * The year amounts are counted for; defaults to this year.
+   *
+   * @generated from field: int32 year = 2;
+   */
+  year: number;
 };
 
 /**
@@ -36,6 +43,13 @@ export type GetBudgetRequestJson = {
    * @generated from field: cashflow.claim.v1.ClaimRef exclude = 1;
    */
   exclude?: ClaimRefJson;
+
+  /**
+   * The year amounts are counted for; defaults to this year.
+   *
+   * @generated from field: int32 year = 2;
+   */
+  year?: number;
 };
 
 /**
@@ -111,6 +125,13 @@ export type CostCentre = Message<"cashflow.budget.v1.CostCentre"> & {
    * @generated from field: repeated cashflow.budget.v1.SecondaryCostCentre secondary = 4;
    */
   secondary: SecondaryCostCentre[];
+
+  /**
+   * Whether a budget line in it is blown.
+   *
+   * @generated from field: bool contains_blown = 5;
+   */
+  containsBlown: boolean;
 };
 
 /**
@@ -138,6 +159,13 @@ export type CostCentreJson = {
    * @generated from field: repeated cashflow.budget.v1.SecondaryCostCentre secondary = 4;
    */
   secondary?: SecondaryCostCentreJson[];
+
+  /**
+   * Whether a budget line in it is blown.
+   *
+   * @generated from field: bool contains_blown = 5;
+   */
+  containsBlown?: boolean;
 };
 
 /**
@@ -236,6 +264,25 @@ export type BudgetLine = Message<"cashflow.budget.v1.BudgetLine"> & {
    * @generated from field: int64 used_ore = 7;
    */
   usedOre: bigint;
+
+  /**
+   * Of that, attested and paid.
+   *
+   * @generated from field: int64 attested_ore = 8;
+   */
+  attestedOre: bigint;
+
+  /**
+   * @generated from field: int64 paid_ore = 9;
+   */
+  paidOre: bigint;
+
+  /**
+   * More was claimed than the line's expense budget.
+   *
+   * @generated from field: bool blown = 10;
+   */
+  blown: boolean;
 };
 
 /**
@@ -280,6 +327,25 @@ export type BudgetLineJson = {
    * @generated from field: int64 used_ore = 7;
    */
   usedOre?: string;
+
+  /**
+   * Of that, attested and paid.
+   *
+   * @generated from field: int64 attested_ore = 8;
+   */
+  attestedOre?: string;
+
+  /**
+   * @generated from field: int64 paid_ore = 9;
+   */
+  paidOre?: string;
+
+  /**
+   * More was claimed than the line's expense budget.
+   *
+   * @generated from field: bool blown = 10;
+   */
+  blown?: boolean;
 };
 
 /**

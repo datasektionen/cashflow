@@ -135,6 +135,7 @@ type Filter struct {
 	// Accounted keeps only claims with a voucher, optionally in one series.
 	Accounted     bool
 	VoucherSeries string
+	Advanced      Advanced
 	Sort          Sort
 	Descending    bool
 	Page          int // 1-based
@@ -143,6 +144,19 @@ type Filter struct {
 	// Exact lookups, for the detail page and file access.
 	ID     int64
 	Number int64
+}
+
+// Advanced holds the filter panel's filters; zero values do not filter.
+type Advanced struct {
+	SecondaryCostCentre string
+	BudgetLine          string
+	From, To            *time.Time
+	Owner               string // username
+	InvoiceNumber       string
+	Verification        string // exact voucher number, e.g. "E12"
+	PaymentID           int64
+	// Tristates: nil does not filter.
+	Attested, Confirmed, Paid, Accounted, Flagged *bool
 }
 
 const (

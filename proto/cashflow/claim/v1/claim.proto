@@ -29,6 +29,12 @@ service ClaimService {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
 
+  // GetWorkOverview breaks down the caller's queues: by cost centre, and the
+  // pay queue by person. Only queues the caller may see are included.
+  rpc GetWorkOverview(GetWorkOverviewRequest) returns (GetWorkOverviewResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
   // Workflow actions. Each returns the claim as it is afterwards, and fails
   // with a cashflow.common.v1.Problem when a rule forbids it; Claim.actions
   // says beforehand which are allowed.
@@ -156,6 +162,30 @@ message ListClaimsRequest {
   // Only claims with a voucher; voucher_series narrows to one series ("E").
   bool accounted = 10;
   string voucher_series = 11;
+  AdvancedFilter filter = 12;
+}
+
+// AdvancedFilter is the filter panel's. Names match case-insensitively; the
+// tristates do not filter when unset.
+message AdvancedFilter {
+  string secondary_cost_centre = 1;
+  string budget_line = 2;
+  // YYYY-MM-DD, inclusive, on the claim's date.
+  string from_date = 3;
+  string to_date = 4;
+  // The owner's username.
+  string owner = 5;
+  // Part of an invoice number.
+  string invoice_number = 6;
+  // An exact voucher number, e.g. "E12".
+  string verification = 7;
+  // A payout's id; its reference is "Data" + id.
+  int64 payment_id = 8;
+  optional bool attested = 9;
+  optional bool confirmed = 10;
+  optional bool paid = 11;
+  optional bool accounted = 12;
+  optional bool flagged = 13;
 }
 
 message ListClaimsResponse {
@@ -268,6 +298,26 @@ message GetOverviewResponse {
   int64 awaiting_payment_ore = 2;
   // Paid out this calendar year.
   int64 paid_this_year_ore = 3;
+}
+
+message GetWorkOverviewRequest {}
+
+message GroupCount {
+  // A cost centre, or for the pay queue an owner's username.
+  string key = 1;
+  // What to show: the cost centre, or the owner's name.
+  string label = 2;
+  int32 count = 3;
+}
+
+message QueueBreakdown {
+  Queue queue = 1;
+  int32 total = 2;
+  repeated GroupCount groups = 3;
+}
+
+message GetWorkOverviewResponse {
+  repeated QueueBreakdown queues = 1;
 }
 
 message AddCommentRequest {

@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package cashflow.stats.v1;
+
+import "cashflow/claim/v1/claim.proto";
+
+// StatsService answers Cashflow 3's statistics: totals per month and the
+// expense leaderboards. Everyone may see them.
+service StatsService {
+  // GetYear returns all twelve months of a year, empty months included.
+  rpc GetYear(GetYearRequest) returns (GetYearResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // GetLeaderboard ranks people by their expenses. Expenses of 10 000 kr or
+  // more count towards the number but not the total.
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // GetPersonalStats is one person's totals and places on the leaderboards;
+  // the caller's own when username is empty.
+  rpc GetPersonalStats(GetPersonalStatsRequest) returns (GetPersonalStatsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+enum Period {
+  PERIOD_UNSPECIFIED = 0;
+  PERIOD_ALL_TIME = 1;
+  // Since 1 January.
+  PERIOD_YEAR = 2;
+  // Since the 1st of this month.
+  PERIOD_MONTH = 3;
+}
+
+message GetYearRequest {
+  // Defaults to this year.
+  int32 year = 1;
+}
+
+message Month {
+  int32 month = 1;
+  int32 expense_count = 2;
+  int64 expense_total_ore = 3;
+  int32 invoice_count = 4;
+  int64 invoice_total_ore = 5;
+}
+
+message GetYearResponse {
+  int32 year = 1;
+  repeated Month months = 2;
+}
+
+enum Ranking {
+  RANKING_UNSPECIFIED = 0;
+  RANKING_TOTAL = 1;
+  RANKING_COUNT = 2;
+}
+
+message GetLeaderboardRequest {
+  Period period = 1;
+  // Defaults to the total.
+  Ranking ranking = 2;
+}
+
+message LeaderboardEntry {
+  int32 rank = 1;
+  cashflow.claim.v1.Person person = 2;
+  int64 total_ore = 3;
+  int32 count = 4;
+}
+
+message GetLeaderboardResponse {
+  // The top 20.
+  repeated LeaderboardEntry entries = 1;
+}
+
+message GetPersonalStatsRequest {
+  string username = 1;
+  Period period = 2;
+}
+
+message GetPersonalStatsResponse {
+  // Every expense in the period, large ones included.
+  int64 total_ore = 1;
+  int32 count = 2;
+  // Places on the leaderboards; 0 without expenses in the period.
+  int32 total_rank = 3;
+  int32 count_rank = 4;
+  // How many people are on the leaderboards.
+  int32 people = 5;
+}

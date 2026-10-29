@@ -35,6 +35,14 @@ export const getQueueCounts = ClaimService.method.getQueueCounts;
 export const getOverview = ClaimService.method.getOverview;
 
 /**
+ * GetWorkOverview breaks down the caller's queues: by cost centre, and the
+ * pay queue by person. Only queues the caller may see are included.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.GetWorkOverview
+ */
+export const getWorkOverview = ClaimService.method.getWorkOverview;
+
+/**
  * AddComment comments on a claim; the owner is emailed unless they wrote it.
  *
  * @generated from rpc cashflow.claim.v1.ClaimService.AddComment

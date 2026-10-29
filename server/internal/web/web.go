@@ -18,6 +18,7 @@ import (
 	"github.com/datasektionen/cashflow/server/gen/cashflow/budget/v1/budgetv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/claim/v1/claimv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/payment/v1/paymentv1connect"
+	"github.com/datasektionen/cashflow/server/gen/cashflow/stats/v1/statsv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/user/v1/userv1connect"
 	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/claims"
@@ -72,6 +73,7 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	api.Handle(claimv1connect.NewClaimServiceHandler(claimService, opts))
 	api.Handle(paymentv1connect.NewPaymentServiceHandler(&rpc.PaymentService{Store: claimStore}, opts))
 	api.Handle(budgetv1connect.NewBudgetServiceHandler(&rpc.BudgetService{Budget: deps.Budget, Store: claimStore}, opts))
+	api.Handle(statsv1connect.NewStatsServiceHandler(&rpc.StatsService{Queries: queries}, opts))
 	api.Handle(accountingv1connect.NewAccountingServiceHandler(&rpc.AccountingService{
 		Store: claimStore, Claims: claimService, Fortnox: deps.Fortnox, Budget: deps.Budget,
 	}, opts))

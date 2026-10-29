@@ -25,7 +25,9 @@ const (
 type GetBudgetRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Leave this claim out of the usage, e.g. the one being edited.
-	Exclude       *v1.ClaimRef `protobuf:"bytes,1,opt,name=exclude,proto3" json:"exclude,omitempty"`
+	Exclude *v1.ClaimRef `protobuf:"bytes,1,opt,name=exclude,proto3" json:"exclude,omitempty"`
+	// The year amounts are counted for; defaults to this year.
+	Year          int32 `protobuf:"varint,2,opt,name=year,proto3" json:"year,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -65,6 +67,13 @@ func (x *GetBudgetRequest) GetExclude() *v1.ClaimRef {
 		return x.Exclude
 	}
 	return nil
+}
+
+func (x *GetBudgetRequest) GetYear() int32 {
+	if x != nil {
+		return x.Year
+	}
+	return 0
 }
 
 type GetBudgetResponse struct {
@@ -125,8 +134,10 @@ type CostCentre struct {
 	Id    int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// committee, partition, project, projectX or other.
-	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	Secondary     []*SecondaryCostCentre `protobuf:"bytes,4,rep,name=secondary,proto3" json:"secondary,omitempty"`
+	Type      string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Secondary []*SecondaryCostCentre `protobuf:"bytes,4,rep,name=secondary,proto3" json:"secondary,omitempty"`
+	// Whether a budget line in it is blown.
+	ContainsBlown bool `protobuf:"varint,5,opt,name=contains_blown,json=containsBlown,proto3" json:"contains_blown,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,6 +198,13 @@ func (x *CostCentre) GetSecondary() []*SecondaryCostCentre {
 		return x.Secondary
 	}
 	return nil
+}
+
+func (x *CostCentre) GetContainsBlown() bool {
+	if x != nil {
+		return x.ContainsBlown
+	}
+	return false
 }
 
 type SecondaryCostCentre struct {
@@ -259,7 +277,12 @@ type BudgetLine struct {
 	IncomeOre  int64  `protobuf:"varint,5,opt,name=income_ore,json=incomeOre,proto3" json:"income_ore,omitempty"`
 	Comment    string `protobuf:"bytes,6,opt,name=comment,proto3" json:"comment,omitempty"`
 	// Claimed on the line this year (by expense or invoice date).
-	UsedOre       int64 `protobuf:"varint,7,opt,name=used_ore,json=usedOre,proto3" json:"used_ore,omitempty"`
+	UsedOre int64 `protobuf:"varint,7,opt,name=used_ore,json=usedOre,proto3" json:"used_ore,omitempty"`
+	// Of that, attested and paid.
+	AttestedOre int64 `protobuf:"varint,8,opt,name=attested_ore,json=attestedOre,proto3" json:"attested_ore,omitempty"`
+	PaidOre     int64 `protobuf:"varint,9,opt,name=paid_ore,json=paidOre,proto3" json:"paid_ore,omitempty"`
+	// More was claimed than the line's expense budget.
+	Blown         bool `protobuf:"varint,10,opt,name=blown,proto3" json:"blown,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -343,26 +366,49 @@ func (x *BudgetLine) GetUsedOre() int64 {
 	return 0
 }
 
+func (x *BudgetLine) GetAttestedOre() int64 {
+	if x != nil {
+		return x.AttestedOre
+	}
+	return 0
+}
+
+func (x *BudgetLine) GetPaidOre() int64 {
+	if x != nil {
+		return x.PaidOre
+	}
+	return 0
+}
+
+func (x *BudgetLine) GetBlown() bool {
+	if x != nil {
+		return x.Blown
+	}
+	return false
+}
+
 var File_cashflow_budget_v1_budget_proto protoreflect.FileDescriptor
 
 const file_cashflow_budget_v1_budget_proto_rawDesc = "" +
 	"\n" +
-	"\x1fcashflow/budget/v1/budget.proto\x12\x12cashflow.budget.v1\x1a\x1dcashflow/claim/v1/claim.proto\"I\n" +
+	"\x1fcashflow/budget/v1/budget.proto\x12\x12cashflow.budget.v1\x1a\x1dcashflow/claim/v1/claim.proto\"]\n" +
 	"\x10GetBudgetRequest\x125\n" +
-	"\aexclude\x18\x01 \x01(\v2\x1b.cashflow.claim.v1.ClaimRefR\aexclude\"j\n" +
+	"\aexclude\x18\x01 \x01(\v2\x1b.cashflow.claim.v1.ClaimRefR\aexclude\x12\x12\n" +
+	"\x04year\x18\x02 \x01(\x05R\x04year\"j\n" +
 	"\x11GetBudgetResponse\x12A\n" +
 	"\fcost_centres\x18\x01 \x03(\v2\x1e.cashflow.budget.v1.CostCentreR\vcostCentres\x12\x12\n" +
-	"\x04year\x18\x02 \x01(\x05R\x04year\"\x8b\x01\n" +
+	"\x04year\x18\x02 \x01(\x05R\x04year\"\xb2\x01\n" +
 	"\n" +
 	"CostCentre\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x03 \x01(\tR\x04type\x12E\n" +
-	"\tsecondary\x18\x04 \x03(\v2'.cashflow.budget.v1.SecondaryCostCentreR\tsecondary\"o\n" +
+	"\tsecondary\x18\x04 \x03(\v2'.cashflow.budget.v1.SecondaryCostCentreR\tsecondary\x12%\n" +
+	"\x0econtains_blown\x18\x05 \x01(\bR\rcontainsBlown\"o\n" +
 	"\x13SecondaryCostCentre\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x124\n" +
-	"\x05lines\x18\x03 \x03(\v2\x1e.cashflow.budget.v1.BudgetLineR\x05lines\"\xc1\x01\n" +
+	"\x05lines\x18\x03 \x03(\v2\x1e.cashflow.budget.v1.BudgetLineR\x05lines\"\x95\x02\n" +
 	"\n" +
 	"BudgetLine\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
@@ -373,7 +419,11 @@ const file_cashflow_budget_v1_budget_proto_rawDesc = "" +
 	"\n" +
 	"income_ore\x18\x05 \x01(\x03R\tincomeOre\x12\x18\n" +
 	"\acomment\x18\x06 \x01(\tR\acomment\x12\x19\n" +
-	"\bused_ore\x18\a \x01(\x03R\ausedOre2n\n" +
+	"\bused_ore\x18\a \x01(\x03R\ausedOre\x12!\n" +
+	"\fattested_ore\x18\b \x01(\x03R\vattestedOre\x12\x19\n" +
+	"\bpaid_ore\x18\t \x01(\x03R\apaidOre\x12\x14\n" +
+	"\x05blown\x18\n" +
+	" \x01(\bR\x05blown2n\n" +
 	"\rBudgetService\x12]\n" +
 	"\tGetBudget\x12$.cashflow.budget.v1.GetBudgetRequest\x1a%.cashflow.budget.v1.GetBudgetResponse\"\x03\x90\x02\x01B\xd9\x01\n" +
 	"\x16com.cashflow.budget.v1B\vBudgetProtoP\x01ZHgithub.com/datasektionen/cashflow/server/gen/cashflow/budget/v1;budgetv1\xa2\x02\x03CBX\xaa\x02\x12Cashflow.Budget.V1\xca\x02\x12Cashflow\\Budget\\V1\xe2\x02\x1eCashflow\\Budget\\V1\\GPBMetadata\xea\x02\x14Cashflow::Budget::V1b\x06proto3"

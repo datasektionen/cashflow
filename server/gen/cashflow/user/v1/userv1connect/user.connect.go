@@ -35,6 +35,10 @@ const (
 const (
 	// UserServiceGetMeProcedure is the fully-qualified name of the UserService's GetMe RPC.
 	UserServiceGetMeProcedure = "/cashflow.user.v1.UserService/GetMe"
+	// UserServiceListUsersProcedure is the fully-qualified name of the UserService's ListUsers RPC.
+	UserServiceListUsersProcedure = "/cashflow.user.v1.UserService/ListUsers"
+	// UserServiceGetUserProcedure is the fully-qualified name of the UserService's GetUser RPC.
+	UserServiceGetUserProcedure = "/cashflow.user.v1.UserService/GetUser"
 	// UserServiceGetProfilePicturesProcedure is the fully-qualified name of the UserService's
 	// GetProfilePictures RPC.
 	UserServiceGetProfilePicturesProcedure = "/cashflow.user.v1.UserService/GetProfilePictures"
@@ -47,6 +51,12 @@ const (
 type UserServiceClient interface {
 	// GetMe returns the logged-in user, their bank details and capabilities.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// ListUsers searches users by name or username. For those who pay or view
+	// everything.
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
+	// GetUser is one user with their bank details. For those who pay or view
+	// everything.
+	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
 	// GetProfilePictures returns rfinger picture URLs for the given users;
 	// users without one are left out and show their initials.
 	GetProfilePictures(context.Context, *connect.Request[v1.GetProfilePicturesRequest]) (*connect.Response[v1.GetProfilePicturesResponse], error)
@@ -72,6 +82,20 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
+		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
+			httpClient,
+			baseURL+UserServiceListUsersProcedure,
+			connect.WithSchema(userServiceMethods.ByName("ListUsers")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
+		getUser: connect.NewClient[v1.GetUserRequest, v1.GetUserResponse](
+			httpClient,
+			baseURL+UserServiceGetUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("GetUser")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
 		getProfilePictures: connect.NewClient[v1.GetProfilePicturesRequest, v1.GetProfilePicturesResponse](
 			httpClient,
 			baseURL+UserServiceGetProfilePicturesProcedure,
@@ -92,6 +116,8 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
 	getMe              *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	listUsers          *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	getUser            *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
 	getProfilePictures *connect.Client[v1.GetProfilePicturesRequest, v1.GetProfilePicturesResponse]
 	updateBankDetails  *connect.Client[v1.UpdateBankDetailsRequest, v1.UpdateBankDetailsResponse]
 }
@@ -99,6 +125,16 @@ type userServiceClient struct {
 // GetMe calls cashflow.user.v1.UserService.GetMe.
 func (c *userServiceClient) GetMe(ctx context.Context, req *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
 	return c.getMe.CallUnary(ctx, req)
+}
+
+// ListUsers calls cashflow.user.v1.UserService.ListUsers.
+func (c *userServiceClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return c.listUsers.CallUnary(ctx, req)
+}
+
+// GetUser calls cashflow.user.v1.UserService.GetUser.
+func (c *userServiceClient) GetUser(ctx context.Context, req *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
+	return c.getUser.CallUnary(ctx, req)
 }
 
 // GetProfilePictures calls cashflow.user.v1.UserService.GetProfilePictures.
@@ -115,6 +151,12 @@ func (c *userServiceClient) UpdateBankDetails(ctx context.Context, req *connect.
 type UserServiceHandler interface {
 	// GetMe returns the logged-in user, their bank details and capabilities.
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	// ListUsers searches users by name or username. For those who pay or view
+	// everything.
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
+	// GetUser is one user with their bank details. For those who pay or view
+	// everything.
+	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
 	// GetProfilePictures returns rfinger picture URLs for the given users;
 	// users without one are left out and show their initials.
 	GetProfilePictures(context.Context, *connect.Request[v1.GetProfilePicturesRequest]) (*connect.Response[v1.GetProfilePicturesResponse], error)
@@ -136,6 +178,20 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceListUsersHandler := connect.NewUnaryHandler(
+		UserServiceListUsersProcedure,
+		svc.ListUsers,
+		connect.WithSchema(userServiceMethods.ByName("ListUsers")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceGetUserHandler := connect.NewUnaryHandler(
+		UserServiceGetUserProcedure,
+		svc.GetUser,
+		connect.WithSchema(userServiceMethods.ByName("GetUser")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
 	userServiceGetProfilePicturesHandler := connect.NewUnaryHandler(
 		UserServiceGetProfilePicturesProcedure,
 		svc.GetProfilePictures,
@@ -154,6 +210,10 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		switch r.URL.Path {
 		case UserServiceGetMeProcedure:
 			userServiceGetMeHandler.ServeHTTP(w, r)
+		case UserServiceListUsersProcedure:
+			userServiceListUsersHandler.ServeHTTP(w, r)
+		case UserServiceGetUserProcedure:
+			userServiceGetUserHandler.ServeHTTP(w, r)
 		case UserServiceGetProfilePicturesProcedure:
 			userServiceGetProfilePicturesHandler.ServeHTTP(w, r)
 		case UserServiceUpdateBankDetailsProcedure:
@@ -169,6 +229,14 @@ type UnimplementedUserServiceHandler struct{}
 
 func (UnimplementedUserServiceHandler) GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.user.v1.UserService.GetMe is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.user.v1.UserService.ListUsers is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.user.v1.UserService.GetUser is not implemented"))
 }
 
 func (UnimplementedUserServiceHandler) GetProfilePictures(context.Context, *connect.Request[v1.GetProfilePicturesRequest]) (*connect.Response[v1.GetProfilePicturesResponse], error) {

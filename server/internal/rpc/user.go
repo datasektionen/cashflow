@@ -175,3 +175,34 @@ func (s *UserService) GetProfilePictures(ctx context.Context, req *connect.Reque
 	}
 	return connect.NewResponse(&userv1.GetProfilePicturesResponse{Urls: urls}), nil
 }
+
+// mayLookUpUsers: Cashflow 3's user list and detail, for payers and view-all.
+func mayLookUpUsers(c caller) bool { return c.perms.MayPay() || c.perms.MayViewAll() }
+
+func (s *UserService) ListUsers(ctx context.Context, req *connect.Request[userv1.ListUsersRequest]) (*connect.Response[userv1.ListUsersResponse], error) {
+	if !mayLookUpUsers(callerFrom(ctx)) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("only payers and admins may list users"))
+	}
+	rows, err := s.Queries.SearchUsers(ctx, strings.TrimSpace(req.Msg.Query))
+	if err != nil {
+		return nil, err
+	}
+	res := &userv1.ListUsersResponse{}
+	for _, u := range rows {
+		res.Users = append(res.Users, &userv1.User{Username: u.Username, Name: u.Name, Email: u.Email})
+	}
+	return connect.NewResponse(res), nil
+}
+
+func (s *UserService) GetUser(ctx context.Context, req *connect.Request[userv1.GetUserRequest]) (*connect.Response[userv1.GetUserResponse], error) {
+	if !mayLookUpUsers(callerFrom(ctx)) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("only payers and admins may see other users"))
+	}
+	u, err := s.Queries.GetUser(ctx, req.Msg.Username)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no such user"))
+	} else if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&userv1.GetUserResponse{User: toProtoUser(u)}), nil
+}

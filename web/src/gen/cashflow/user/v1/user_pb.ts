@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/user/v1/user.proto.
  */
 export const file_cashflow_user_v1_user: GenFile = /*@__PURE__*/
-  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0IpkBCg1HZXRNZVJlc3BvbnNlEiQKBHVzZXIYASABKAsyFi5jYXNoZmxvdy51c2VyLnYxLlVzZXISNAoMY2FwYWJpbGl0aWVzGAIgASgLMh4uY2FzaGZsb3cudXNlci52MS5DYXBhYmlsaXRpZXMSLAoIZmVhdHVyZXMYAyABKAsyGi5jYXNoZmxvdy51c2VyLnYxLkZlYXR1cmVzIhsKCEZlYXR1cmVzEg8KB2ZvcnRub3gYASABKAgiXAoYVXBkYXRlQmFua0RldGFpbHNSZXF1ZXN0EhcKD2NsZWFyaW5nX251bWJlchgBIAEoCRIUCgxiYW5rX2FjY291bnQYAiABKAkSEQoJYmFua19uYW1lGAMgASgJIkEKGVVwZGF0ZUJhbmtEZXRhaWxzUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlciJ3CgRVc2VyEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFZW1haWwYAyABKAkSFAoMYmFua19hY2NvdW50GAQgASgJEhcKD2NsZWFyaW5nX251bWJlchgFIAEoCRIRCgliYW5rX25hbWUYBiABKAkiqAMKDENhcGFiaWxpdGllcxIQCgh2aWV3X2FsbBgBIAEoCBIZChF2aWV3X2FsbF9wYXltZW50cxgCIAEoCBISCgphdHRlc3RfYWxsGAMgASgIEhsKE2F0dGVzdF9jb3N0X2NlbnRyZXMYBCADKAkSEAoIdW5hdHRlc3QYBSABKAgSDwoHY29uZmlybRgGIAEoCBIWCg5hY2NvdW50aW5nX2FsbBgIIAEoCBIfChdhY2NvdW50aW5nX2Nvc3RfY2VudHJlcxgJIAMoCRILCgNwYXkYCiABKAgSDgoGZGVsZXRlGAsgASgIEhQKDGVkaXRfaW52b2ljZRgMIAEoCBIZChFtb2RlcmF0ZV9jb21tZW50cxgNIAEoCBIWCg5tYW5hZ2VfZm9ydG5veBgOIAEoCBIVCg1maXJtYXRlY2tuYXJlGA8gASgIEhQKDHZpZXdfYWNjb3VudBgQIAEoCBIZChF2aWV3X2Nvc3RfY2VudHJlcxgRIAMoCRISCgphdHRlc3RfYW55GBIgASgIEhYKDmFjY291bnRpbmdfYW55GBMgASgISgQIBxAIIi4KGUdldFByb2ZpbGVQaWN0dXJlc1JlcXVlc3QSEQoJdXNlcm5hbWVzGAEgAygJIo8BChpHZXRQcm9maWxlUGljdHVyZXNSZXNwb25zZRJECgR1cmxzGAEgAygLMjYuY2FzaGZsb3cudXNlci52MS5HZXRQcm9maWxlUGljdHVyZXNSZXNwb25zZS5VcmxzRW50cnkaKwoJVXJsc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEyxQIKC1VzZXJTZXJ2aWNlEk0KBUdldE1lEh4uY2FzaGZsb3cudXNlci52MS5HZXRNZVJlcXVlc3QaHy5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVzcG9uc2UiA5ACARJ0ChJHZXRQcm9maWxlUGljdHVyZXMSKy5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1JlcXVlc3QaLC5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlIgOQAgEScQoRVXBkYXRlQmFua0RldGFpbHMSKi5jYXNoZmxvdy51c2VyLnYxLlVwZGF0ZUJhbmtEZXRhaWxzUmVxdWVzdBorLmNhc2hmbG93LnVzZXIudjEuVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZSIDkAICQskBChRjb20uY2FzaGZsb3cudXNlci52MUIJVXNlclByb3RvUAFaRGdpdGh1Yi5jb20vZGF0YXNla3Rpb25lbi9jYXNoZmxvdy9zZXJ2ZXIvZ2VuL2Nhc2hmbG93L3VzZXIvdjE7dXNlcnYxogIDQ1VYqgIQQ2FzaGZsb3cuVXNlci5WMcoCEENhc2hmbG93XFVzZXJcVjHiAhxDYXNoZmxvd1xVc2VyXFYxXEdQQk1ldGFkYXRh6gISQ2FzaGZsb3c6OlVzZXI6OlYxYgZwcm90bzM");
+  fileDesc("ChtjYXNoZmxvdy91c2VyL3YxL3VzZXIucHJvdG8SEGNhc2hmbG93LnVzZXIudjEiDgoMR2V0TWVSZXF1ZXN0IiEKEExpc3RVc2Vyc1JlcXVlc3QSDQoFcXVlcnkYASABKAkiOgoRTGlzdFVzZXJzUmVzcG9uc2USJQoFdXNlcnMYASADKAsyFi5jYXNoZmxvdy51c2VyLnYxLlVzZXIiIgoOR2V0VXNlclJlcXVlc3QSEAoIdXNlcm5hbWUYASABKAkiNwoPR2V0VXNlclJlc3BvbnNlEiQKBHVzZXIYASABKAsyFi5jYXNoZmxvdy51c2VyLnYxLlVzZXIimQEKDUdldE1lUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLmNhc2hmbG93LnVzZXIudjEuVXNlchI0CgxjYXBhYmlsaXRpZXMYAiABKAsyHi5jYXNoZmxvdy51c2VyLnYxLkNhcGFiaWxpdGllcxIsCghmZWF0dXJlcxgDIAEoCzIaLmNhc2hmbG93LnVzZXIudjEuRmVhdHVyZXMiGwoIRmVhdHVyZXMSDwoHZm9ydG5veBgBIAEoCCJcChhVcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QSFwoPY2xlYXJpbmdfbnVtYmVyGAEgASgJEhQKDGJhbmtfYWNjb3VudBgCIAEoCRIRCgliYW5rX25hbWUYAyABKAkiQQoZVXBkYXRlQmFua0RldGFpbHNSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuY2FzaGZsb3cudXNlci52MS5Vc2VyIncKBFVzZXISEAoIdXNlcm5hbWUYASABKAkSDAoEbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIUCgxiYW5rX2FjY291bnQYBCABKAkSFwoPY2xlYXJpbmdfbnVtYmVyGAUgASgJEhEKCWJhbmtfbmFtZRgGIAEoCSKoAwoMQ2FwYWJpbGl0aWVzEhAKCHZpZXdfYWxsGAEgASgIEhkKEXZpZXdfYWxsX3BheW1lbnRzGAIgASgIEhIKCmF0dGVzdF9hbGwYAyABKAgSGwoTYXR0ZXN0X2Nvc3RfY2VudHJlcxgEIAMoCRIQCgh1bmF0dGVzdBgFIAEoCBIPCgdjb25maXJtGAYgASgIEhYKDmFjY291bnRpbmdfYWxsGAggASgIEh8KF2FjY291bnRpbmdfY29zdF9jZW50cmVzGAkgAygJEgsKA3BheRgKIAEoCBIOCgZkZWxldGUYCyABKAgSFAoMZWRpdF9pbnZvaWNlGAwgASgIEhkKEW1vZGVyYXRlX2NvbW1lbnRzGA0gASgIEhYKDm1hbmFnZV9mb3J0bm94GA4gASgIEhUKDWZpcm1hdGVja25hcmUYDyABKAgSFAoMdmlld19hY2NvdW50GBAgASgIEhkKEXZpZXdfY29zdF9jZW50cmVzGBEgAygJEhIKCmF0dGVzdF9hbnkYEiABKAgSFgoOYWNjb3VudGluZ19hbnkYEyABKAhKBAgHEAgiLgoZR2V0UHJvZmlsZVBpY3R1cmVzUmVxdWVzdBIRCgl1c2VybmFtZXMYASADKAkijwEKGkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlEkQKBHVybHMYASADKAsyNi5jYXNoZmxvdy51c2VyLnYxLkdldFByb2ZpbGVQaWN0dXJlc1Jlc3BvbnNlLlVybHNFbnRyeRorCglVcmxzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ATL1AwoLVXNlclNlcnZpY2USTQoFR2V0TWUSHi5jYXNoZmxvdy51c2VyLnYxLkdldE1lUmVxdWVzdBofLmNhc2hmbG93LnVzZXIudjEuR2V0TWVSZXNwb25zZSIDkAIBElkKCUxpc3RVc2VycxIiLmNhc2hmbG93LnVzZXIudjEuTGlzdFVzZXJzUmVxdWVzdBojLmNhc2hmbG93LnVzZXIudjEuTGlzdFVzZXJzUmVzcG9uc2UiA5ACARJTCgdHZXRVc2VyEiAuY2FzaGZsb3cudXNlci52MS5HZXRVc2VyUmVxdWVzdBohLmNhc2hmbG93LnVzZXIudjEuR2V0VXNlclJlc3BvbnNlIgOQAgESdAoSR2V0UHJvZmlsZVBpY3R1cmVzEisuY2FzaGZsb3cudXNlci52MS5HZXRQcm9maWxlUGljdHVyZXNSZXF1ZXN0GiwuY2FzaGZsb3cudXNlci52MS5HZXRQcm9maWxlUGljdHVyZXNSZXNwb25zZSIDkAIBEnEKEVVwZGF0ZUJhbmtEZXRhaWxzEiouY2FzaGZsb3cudXNlci52MS5VcGRhdGVCYW5rRGV0YWlsc1JlcXVlc3QaKy5jYXNoZmxvdy51c2VyLnYxLlVwZGF0ZUJhbmtEZXRhaWxzUmVzcG9uc2UiA5ACAkLJAQoUY29tLmNhc2hmbG93LnVzZXIudjFCCVVzZXJQcm90b1ABWkRnaXRodWIuY29tL2RhdGFzZWt0aW9uZW4vY2FzaGZsb3cvc2VydmVyL2dlbi9jYXNoZmxvdy91c2VyL3YxO3VzZXJ2MaICA0NVWKoCEENhc2hmbG93LlVzZXIuVjHKAhBDYXNoZmxvd1xVc2VyXFYx4gIcQ2FzaGZsb3dcVXNlclxWMVxHUEJNZXRhZGF0YeoCEkNhc2hmbG93OjpVc2VyOjpWMWIGcHJvdG8z");
 
 /**
  * @generated from message cashflow.user.v1.GetMeRequest
@@ -30,6 +30,118 @@ export type GetMeRequestJson = {
  */
 export const GetMeRequestSchema: GenMessage<GetMeRequest, {jsonType: GetMeRequestJson}> = /*@__PURE__*/
   messageDesc(file_cashflow_user_v1_user, 0);
+
+/**
+ * @generated from message cashflow.user.v1.ListUsersRequest
+ */
+export type ListUsersRequest = Message<"cashflow.user.v1.ListUsersRequest"> & {
+  /**
+   * @generated from field: string query = 1;
+   */
+  query: string;
+};
+
+/**
+ * @generated from message cashflow.user.v1.ListUsersRequest
+ */
+export type ListUsersRequestJson = {
+  /**
+   * @generated from field: string query = 1;
+   */
+  query?: string;
+};
+
+/**
+ * Describes the message cashflow.user.v1.ListUsersRequest.
+ * Use `create(ListUsersRequestSchema)` to create a new message.
+ */
+export const ListUsersRequestSchema: GenMessage<ListUsersRequest, {jsonType: ListUsersRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 1);
+
+/**
+ * @generated from message cashflow.user.v1.ListUsersResponse
+ */
+export type ListUsersResponse = Message<"cashflow.user.v1.ListUsersResponse"> & {
+  /**
+   * At most 50.
+   *
+   * @generated from field: repeated cashflow.user.v1.User users = 1;
+   */
+  users: User[];
+};
+
+/**
+ * @generated from message cashflow.user.v1.ListUsersResponse
+ */
+export type ListUsersResponseJson = {
+  /**
+   * At most 50.
+   *
+   * @generated from field: repeated cashflow.user.v1.User users = 1;
+   */
+  users?: UserJson[];
+};
+
+/**
+ * Describes the message cashflow.user.v1.ListUsersResponse.
+ * Use `create(ListUsersResponseSchema)` to create a new message.
+ */
+export const ListUsersResponseSchema: GenMessage<ListUsersResponse, {jsonType: ListUsersResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 2);
+
+/**
+ * @generated from message cashflow.user.v1.GetUserRequest
+ */
+export type GetUserRequest = Message<"cashflow.user.v1.GetUserRequest"> & {
+  /**
+   * @generated from field: string username = 1;
+   */
+  username: string;
+};
+
+/**
+ * @generated from message cashflow.user.v1.GetUserRequest
+ */
+export type GetUserRequestJson = {
+  /**
+   * @generated from field: string username = 1;
+   */
+  username?: string;
+};
+
+/**
+ * Describes the message cashflow.user.v1.GetUserRequest.
+ * Use `create(GetUserRequestSchema)` to create a new message.
+ */
+export const GetUserRequestSchema: GenMessage<GetUserRequest, {jsonType: GetUserRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 3);
+
+/**
+ * @generated from message cashflow.user.v1.GetUserResponse
+ */
+export type GetUserResponse = Message<"cashflow.user.v1.GetUserResponse"> & {
+  /**
+   * @generated from field: cashflow.user.v1.User user = 1;
+   */
+  user?: User | undefined;
+};
+
+/**
+ * @generated from message cashflow.user.v1.GetUserResponse
+ */
+export type GetUserResponseJson = {
+  /**
+   * @generated from field: cashflow.user.v1.User user = 1;
+   */
+  user?: UserJson;
+};
+
+/**
+ * Describes the message cashflow.user.v1.GetUserResponse.
+ * Use `create(GetUserResponseSchema)` to create a new message.
+ */
+export const GetUserResponseSchema: GenMessage<GetUserResponse, {jsonType: GetUserResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_user_v1_user, 4);
 
 /**
  * @generated from message cashflow.user.v1.GetMeResponse
@@ -76,7 +188,7 @@ export type GetMeResponseJson = {
  * Use `create(GetMeResponseSchema)` to create a new message.
  */
 export const GetMeResponseSchema: GenMessage<GetMeResponse, {jsonType: GetMeResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 1);
+  messageDesc(file_cashflow_user_v1_user, 5);
 
 /**
  * Features are parts of Cashflow the server has switched on.
@@ -111,7 +223,7 @@ export type FeaturesJson = {
  * Use `create(FeaturesSchema)` to create a new message.
  */
 export const FeaturesSchema: GenMessage<Features, {jsonType: FeaturesJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 2);
+  messageDesc(file_cashflow_user_v1_user, 6);
 
 /**
  * @generated from message cashflow.user.v1.UpdateBankDetailsRequest
@@ -166,7 +278,7 @@ export type UpdateBankDetailsRequestJson = {
  * Use `create(UpdateBankDetailsRequestSchema)` to create a new message.
  */
 export const UpdateBankDetailsRequestSchema: GenMessage<UpdateBankDetailsRequest, {jsonType: UpdateBankDetailsRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 3);
+  messageDesc(file_cashflow_user_v1_user, 7);
 
 /**
  * @generated from message cashflow.user.v1.UpdateBankDetailsResponse
@@ -193,7 +305,7 @@ export type UpdateBankDetailsResponseJson = {
  * Use `create(UpdateBankDetailsResponseSchema)` to create a new message.
  */
 export const UpdateBankDetailsResponseSchema: GenMessage<UpdateBankDetailsResponse, {jsonType: UpdateBankDetailsResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 4);
+  messageDesc(file_cashflow_user_v1_user, 8);
 
 /**
  * @generated from message cashflow.user.v1.User
@@ -274,7 +386,7 @@ export type UserJson = {
  * Use `create(UserSchema)` to create a new message.
  */
 export const UserSchema: GenMessage<User, {jsonType: UserJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 5);
+  messageDesc(file_cashflow_user_v1_user, 9);
 
 /**
  * Capabilities are resolved from Hive on the server, so the frontend only
@@ -489,7 +601,7 @@ export type CapabilitiesJson = {
  * Use `create(CapabilitiesSchema)` to create a new message.
  */
 export const CapabilitiesSchema: GenMessage<Capabilities, {jsonType: CapabilitiesJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 6);
+  messageDesc(file_cashflow_user_v1_user, 10);
 
 /**
  * @generated from message cashflow.user.v1.GetProfilePicturesRequest
@@ -516,7 +628,7 @@ export type GetProfilePicturesRequestJson = {
  * Use `create(GetProfilePicturesRequestSchema)` to create a new message.
  */
 export const GetProfilePicturesRequestSchema: GenMessage<GetProfilePicturesRequest, {jsonType: GetProfilePicturesRequestJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 7);
+  messageDesc(file_cashflow_user_v1_user, 11);
 
 /**
  * @generated from message cashflow.user.v1.GetProfilePicturesResponse
@@ -543,7 +655,7 @@ export type GetProfilePicturesResponseJson = {
  * Use `create(GetProfilePicturesResponseSchema)` to create a new message.
  */
 export const GetProfilePicturesResponseSchema: GenMessage<GetProfilePicturesResponse, {jsonType: GetProfilePicturesResponseJson}> = /*@__PURE__*/
-  messageDesc(file_cashflow_user_v1_user, 8);
+  messageDesc(file_cashflow_user_v1_user, 12);
 
 /**
  * UserService exposes the logged-in user and what they may do.
@@ -560,6 +672,28 @@ export const UserService: GenService<{
     methodKind: "unary";
     input: typeof GetMeRequestSchema;
     output: typeof GetMeResponseSchema;
+  },
+  /**
+   * ListUsers searches users by name or username. For those who pay or view
+   * everything.
+   *
+   * @generated from rpc cashflow.user.v1.UserService.ListUsers
+   */
+  listUsers: {
+    methodKind: "unary";
+    input: typeof ListUsersRequestSchema;
+    output: typeof ListUsersResponseSchema;
+  },
+  /**
+   * GetUser is one user with their bank details. For those who pay or view
+   * everything.
+   *
+   * @generated from rpc cashflow.user.v1.UserService.GetUser
+   */
+  getUser: {
+    methodKind: "unary";
+    input: typeof GetUserRequestSchema;
+    output: typeof GetUserResponseSchema;
   },
   /**
    * GetProfilePictures returns rfinger picture URLs for the given users;

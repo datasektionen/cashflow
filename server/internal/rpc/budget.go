@@ -40,6 +40,9 @@ func (s *BudgetService) GetBudget(ctx context.Context, req *connect.Request[budg
 		}
 	}
 	year := time.Now().In(stockholm).Year()
+	if y := int(req.Msg.Year); y >= 2000 && y <= year+1 {
+		year = y
+	}
 	usage, err := s.Store.Queries.BudgetUsage(ctx, db.BudgetUsageParams{
 		FromDate:       pgtype.Date{Time: time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), Valid: true},
 		ToDate:         pgtype.Date{Time: time.Date(year+1, 1, 1, 0, 0, 0, 0, time.UTC), Valid: true},
@@ -48,9 +51,9 @@ func (s *BudgetService) GetBudget(ctx context.Context, req *connect.Request[budg
 	if err != nil {
 		return nil, err
 	}
-	used := map[[3]string]int64{}
+	used := map[[3]string]db.BudgetUsageRow{}
 	for _, u := range usage {
-		used[[3]string{u.CostCentre, u.SecondaryCostCentre, u.BudgetLine}] = u.UploadedOre
+		used[[3]string{u.CostCentre, u.SecondaryCostCentre, u.BudgetLine}] = u
 	}
 
 	res := &budgetv1.GetBudgetResponse{Year: int32(year)}
@@ -63,9 +66,13 @@ func (s *BudgetService) GetBudget(ctx context.Context, req *connect.Request[budg
 				for i, a := range l.Accounts {
 					accounts[i] = int32(a)
 				}
+				u := used[[3]string{normaliseName(cc.Name), normaliseName(scc.Name), normaliseName(l.Name)}]
+				// Cashflow 3's _is_blown: lines without an expense budget can't be.
+				blown := l.ExpenseOre > 0 && u.UploadedOre > l.ExpenseOre
+				pcc.ContainsBlown = pcc.ContainsBlown || blown
 				pscc.Lines = append(pscc.Lines, &budgetv1.BudgetLine{
 					Id: int32(l.ID), Name: l.Name, Accounts: accounts, ExpenseOre: l.ExpenseOre, IncomeOre: l.IncomeOre,
-					Comment: l.Comment, UsedOre: used[[3]string{normaliseName(cc.Name), normaliseName(scc.Name), normaliseName(l.Name)}],
+					Comment: l.Comment, UsedOre: u.UploadedOre, AttestedOre: u.AttestedOre, PaidOre: u.PaidOre, Blown: blown,
 				})
 			}
 			pcc.Secondary = append(pcc.Secondary, pscc)
