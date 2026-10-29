@@ -211,49 +211,18 @@ func (q *Queries) ListPartStates(ctx context.Context, claimID int64) ([]ListPart
 	return items, nil
 }
 
-const lockClaim = `-- name: LockClaim :one
-SELECT c.id, c.type, c.description, c.verification, c.expense_data_id, c.invoice_data_id, c.owner_id,
-       e.is_flagged, e.confirmed_by_id, e.reimbursement_id, i.paid_by_id, i.paid_at
-FROM core_claim c
-LEFT JOIN expenses_expensedata e ON e.id = c.expense_data_id
-LEFT JOIN invoices_invoicedata i ON i.id = c.invoice_data_id
-WHERE c.id = $1
-FOR UPDATE OF c
+const lockClaimRow = `-- name: LockClaimRow :exec
+SELECT id FROM core_claim WHERE id = $1 FOR UPDATE
 `
 
-type LockClaimRow struct {
-	ID              int64
-	Type            pgtype.Text
-	Description     string
-	Verification    string
-	ExpenseDataID   pgtype.Int8
-	InvoiceDataID   pgtype.Int8
-	OwnerID         int64
-	IsFlagged       pgtype.Bool
-	ConfirmedByID   pgtype.Int4
-	ReimbursementID pgtype.Int8
-	PaidByID        pgtype.Int8
-	PaidAt          pgtype.Date
-}
-
-func (q *Queries) LockClaim(ctx context.Context, id int64) (LockClaimRow, error) {
-	row := q.db.QueryRow(ctx, lockClaim, id)
-	var i LockClaimRow
-	err := row.Scan(
-		&i.ID,
-		&i.Type,
-		&i.Description,
-		&i.Verification,
-		&i.ExpenseDataID,
-		&i.InvoiceDataID,
-		&i.OwnerID,
-		&i.IsFlagged,
-		&i.ConfirmedByID,
-		&i.ReimbursementID,
-		&i.PaidByID,
-		&i.PaidAt,
-	)
-	return i, err
+// Every workflow change locks the claim row first. Its state is then read
+// by ReadClaim in a statement of its own: a statement that waited for the
+// lock would otherwise see the expense and invoice rows as they were before
+// the other transaction committed (Postgres only re-reads the locked row),
+// and two payouts of one expense could both succeed.
+func (q *Queries) LockClaimRow(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, lockClaimRow, id)
+	return err
 }
 
 const lockPart = `-- name: LockPart :one
@@ -308,6 +277,50 @@ UPDATE cashflow4_outbox SET sent_at = now(), attempts = attempts + 1 WHERE id = 
 func (q *Queries) MarkEmailSent(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, markEmailSent, id)
 	return err
+}
+
+const readClaim = `-- name: ReadClaim :one
+SELECT c.id, c.type, c.description, c.verification, c.expense_data_id, c.invoice_data_id, c.owner_id,
+       e.is_flagged, e.confirmed_by_id, e.reimbursement_id, i.paid_by_id, i.paid_at
+FROM core_claim c
+LEFT JOIN expenses_expensedata e ON e.id = c.expense_data_id
+LEFT JOIN invoices_invoicedata i ON i.id = c.invoice_data_id
+WHERE c.id = $1
+`
+
+type ReadClaimRow struct {
+	ID              int64
+	Type            pgtype.Text
+	Description     string
+	Verification    string
+	ExpenseDataID   pgtype.Int8
+	InvoiceDataID   pgtype.Int8
+	OwnerID         int64
+	IsFlagged       pgtype.Bool
+	ConfirmedByID   pgtype.Int4
+	ReimbursementID pgtype.Int8
+	PaidByID        pgtype.Int8
+	PaidAt          pgtype.Date
+}
+
+func (q *Queries) ReadClaim(ctx context.Context, id int64) (ReadClaimRow, error) {
+	row := q.db.QueryRow(ctx, readClaim, id)
+	var i ReadClaimRow
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Description,
+		&i.Verification,
+		&i.ExpenseDataID,
+		&i.InvoiceDataID,
+		&i.OwnerID,
+		&i.IsFlagged,
+		&i.ConfirmedByID,
+		&i.ReimbursementID,
+		&i.PaidByID,
+		&i.PaidAt,
+	)
+	return i, err
 }
 
 const setConfirmation = `-- name: SetConfirmation :exec

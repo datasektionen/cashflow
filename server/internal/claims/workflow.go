@@ -33,7 +33,7 @@ func today() pgtype.Date {
 // change is one workflow transaction on a locked claim.
 type change struct {
 	q      *db.Queries
-	claim  db.LockClaimRow
+	claim  db.ReadClaimRow
 	state  State
 	viewer Viewer
 	actor  db.GetActorRow
@@ -58,9 +58,12 @@ func (s *Store) withClaim(ctx context.Context, v Viewer, kind Kind, number int64
 // lock locks a claim the viewer may see inside a transaction and reads the
 // state the rules need.
 func lock(ctx context.Context, q *db.Queries, v Viewer, summary Summary) (*change, error) {
-	claim, err := q.LockClaim(ctx, summary.ID)
-	if err != nil {
+	if err := q.LockClaimRow(ctx, summary.ID); err != nil {
 		return nil, fmt.Errorf("lock claim: %w", err)
+	}
+	claim, err := q.ReadClaim(ctx, summary.ID)
+	if err != nil {
+		return nil, fmt.Errorf("read claim: %w", err)
 	}
 	actor, err := q.GetActor(ctx, v.Username)
 	if err != nil {
@@ -251,7 +254,7 @@ func (s *Store) comment(ctx context.Context, c *change, body string) error {
 	return c.q.EnqueueEmail(ctx, payload)
 }
 
-func number(c db.LockClaimRow) int64 {
+func number(c db.ReadClaimRow) int64 {
 	if c.ExpenseDataID.Valid {
 		return c.ExpenseDataID.Int64
 	}

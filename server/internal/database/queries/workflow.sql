@@ -7,14 +7,21 @@ SELECT p.id AS profile_id, u.id AS user_id
 FROM auth_user u JOIN core_profile p ON p.user_id = u.id
 WHERE u.username = @username;
 
--- name: LockClaim :one
+-- name: LockClaimRow :exec
+-- Every workflow change locks the claim row first. Its state is then read
+-- by ReadClaim in a statement of its own: a statement that waited for the
+-- lock would otherwise see the expense and invoice rows as they were before
+-- the other transaction committed (Postgres only re-reads the locked row),
+-- and two payouts of one expense could both succeed.
+SELECT id FROM core_claim WHERE id = @id FOR UPDATE;
+
+-- name: ReadClaim :one
 SELECT c.id, c.type, c.description, c.verification, c.expense_data_id, c.invoice_data_id, c.owner_id,
        e.is_flagged, e.confirmed_by_id, e.reimbursement_id, i.paid_by_id, i.paid_at
 FROM core_claim c
 LEFT JOIN expenses_expensedata e ON e.id = c.expense_data_id
 LEFT JOIN invoices_invoicedata i ON i.id = c.invoice_data_id
-WHERE c.id = @id
-FOR UPDATE OF c;
+WHERE c.id = @id;
 
 -- name: LockPart :one
 SELECT id, claim_id, cost_centre, budget_line, (amount * 100)::bigint AS amount_ore, attested_by_id
