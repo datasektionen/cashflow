@@ -115,7 +115,7 @@ function BankDetailsCard({ user }: { user: User }) {
         </CardContent>
         <CardFooter className="mt-6 justify-end">
           <form.AppForm>
-            <form.SubmitButton>{t.profile.save}</form.SubmitButton>
+            <form.SubmitButton requireChanges>{t.profile.save}</form.SubmitButton>
           </form.AppForm>
         </CardFooter>
       </form>

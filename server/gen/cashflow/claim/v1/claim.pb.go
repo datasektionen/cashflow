@@ -2143,6 +2143,372 @@ func (*DeleteClaimResponse) Descriptor() ([]byte, []int) {
 	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{30}
 }
 
+// ClaimInput is a claim as the create and edit forms send it.
+type ClaimInput struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Description string                 `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
+	// YYYY-MM-DD: the expense date (required), or the invoice date (optional).
+	Date string `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
+	// Invoices only.
+	InvoiceNumber string       `protobuf:"bytes,3,opt,name=invoice_number,json=invoiceNumber,proto3" json:"invoice_number,omitempty"`
+	DueDate       string       `protobuf:"bytes,4,opt,name=due_date,json=dueDate,proto3" json:"due_date,omitempty"`
+	Parts         []*PartInput `protobuf:"bytes,5,rep,name=parts,proto3" json:"parts,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimInput) Reset() {
+	*x = ClaimInput{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimInput) ProtoMessage() {}
+
+func (x *ClaimInput) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimInput.ProtoReflect.Descriptor instead.
+func (*ClaimInput) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *ClaimInput) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *ClaimInput) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *ClaimInput) GetInvoiceNumber() string {
+	if x != nil {
+		return x.InvoiceNumber
+	}
+	return ""
+}
+
+func (x *ClaimInput) GetDueDate() string {
+	if x != nil {
+		return x.DueDate
+	}
+	return ""
+}
+
+func (x *ClaimInput) GetParts() []*PartInput {
+	if x != nil {
+		return x.Parts
+	}
+	return nil
+}
+
+type PartInput struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	CostCentre          string                 `protobuf:"bytes,1,opt,name=cost_centre,json=costCentre,proto3" json:"cost_centre,omitempty"`
+	SecondaryCostCentre string                 `protobuf:"bytes,2,opt,name=secondary_cost_centre,json=secondaryCostCentre,proto3" json:"secondary_cost_centre,omitempty"`
+	BudgetLine          string                 `protobuf:"bytes,3,opt,name=budget_line,json=budgetLine,proto3" json:"budget_line,omitempty"`
+	AmountOre           int64                  `protobuf:"varint,4,opt,name=amount_ore,json=amountOre,proto3" json:"amount_ore,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *PartInput) Reset() {
+	*x = PartInput{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PartInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PartInput) ProtoMessage() {}
+
+func (x *PartInput) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PartInput.ProtoReflect.Descriptor instead.
+func (*PartInput) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *PartInput) GetCostCentre() string {
+	if x != nil {
+		return x.CostCentre
+	}
+	return ""
+}
+
+func (x *PartInput) GetSecondaryCostCentre() string {
+	if x != nil {
+		return x.SecondaryCostCentre
+	}
+	return ""
+}
+
+func (x *PartInput) GetBudgetLine() string {
+	if x != nil {
+		return x.BudgetLine
+	}
+	return ""
+}
+
+func (x *PartInput) GetAmountOre() int64 {
+	if x != nil {
+		return x.AmountOre
+	}
+	return 0
+}
+
+type CreateClaimRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Kind  ClaimKind              `protobuf:"varint,1,opt,name=kind,proto3,enum=cashflow.claim.v1.ClaimKind" json:"kind,omitempty"`
+	Claim *ClaimInput            `protobuf:"bytes,2,opt,name=claim,proto3" json:"claim,omitempty"`
+	// At least one, from POST /files.
+	UploadIds     []string `protobuf:"bytes,3,rep,name=upload_ids,json=uploadIds,proto3" json:"upload_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateClaimRequest) Reset() {
+	*x = CreateClaimRequest{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateClaimRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClaimRequest) ProtoMessage() {}
+
+func (x *CreateClaimRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClaimRequest.ProtoReflect.Descriptor instead.
+func (*CreateClaimRequest) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *CreateClaimRequest) GetKind() ClaimKind {
+	if x != nil {
+		return x.Kind
+	}
+	return ClaimKind_CLAIM_KIND_UNSPECIFIED
+}
+
+func (x *CreateClaimRequest) GetClaim() *ClaimInput {
+	if x != nil {
+		return x.Claim
+	}
+	return nil
+}
+
+func (x *CreateClaimRequest) GetUploadIds() []string {
+	if x != nil {
+		return x.UploadIds
+	}
+	return nil
+}
+
+type CreateClaimResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Claim         *Claim                 `protobuf:"bytes,1,opt,name=claim,proto3" json:"claim,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateClaimResponse) Reset() {
+	*x = CreateClaimResponse{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateClaimResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClaimResponse) ProtoMessage() {}
+
+func (x *CreateClaimResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClaimResponse.ProtoReflect.Descriptor instead.
+func (*CreateClaimResponse) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *CreateClaimResponse) GetClaim() *Claim {
+	if x != nil {
+		return x.Claim
+	}
+	return nil
+}
+
+type UpdateClaimRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Ref   *ClaimRef              `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	Claim *ClaimInput            `protobuf:"bytes,2,opt,name=claim,proto3" json:"claim,omitempty"`
+	// Files to add, from POST /files.
+	UploadIds []string `protobuf:"bytes,3,rep,name=upload_ids,json=uploadIds,proto3" json:"upload_ids,omitempty"`
+	// Attached files to remove (File.id).
+	RemoveFileIds []int64 `protobuf:"varint,4,rep,packed,name=remove_file_ids,json=removeFileIds,proto3" json:"remove_file_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateClaimRequest) Reset() {
+	*x = UpdateClaimRequest{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateClaimRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateClaimRequest) ProtoMessage() {}
+
+func (x *UpdateClaimRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateClaimRequest.ProtoReflect.Descriptor instead.
+func (*UpdateClaimRequest) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *UpdateClaimRequest) GetRef() *ClaimRef {
+	if x != nil {
+		return x.Ref
+	}
+	return nil
+}
+
+func (x *UpdateClaimRequest) GetClaim() *ClaimInput {
+	if x != nil {
+		return x.Claim
+	}
+	return nil
+}
+
+func (x *UpdateClaimRequest) GetUploadIds() []string {
+	if x != nil {
+		return x.UploadIds
+	}
+	return nil
+}
+
+func (x *UpdateClaimRequest) GetRemoveFileIds() []int64 {
+	if x != nil {
+		return x.RemoveFileIds
+	}
+	return nil
+}
+
+type UpdateClaimResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Claim         *Claim                 `protobuf:"bytes,1,opt,name=claim,proto3" json:"claim,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateClaimResponse) Reset() {
+	*x = UpdateClaimResponse{}
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateClaimResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateClaimResponse) ProtoMessage() {}
+
+func (x *UpdateClaimResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cashflow_claim_v1_claim_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateClaimResponse.ProtoReflect.Descriptor instead.
+func (*UpdateClaimResponse) Descriptor() ([]byte, []int) {
+	return file_cashflow_claim_v1_claim_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *UpdateClaimResponse) GetClaim() *Claim {
+	if x != nil {
+		return x.Claim
+	}
+	return nil
+}
+
 var File_cashflow_claim_v1_claim_proto protoreflect.FileDescriptor
 
 const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
@@ -2284,7 +2650,37 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"\x05claim\x18\x01 \x01(\v2\x18.cashflow.claim.v1.ClaimR\x05claim\"G\n" +
 	"\x12DeleteClaimRequest\x121\n" +
 	"\x05claim\x18\x01 \x01(\v2\x1b.cashflow.claim.v1.ClaimRefR\x05claim\"\x15\n" +
-	"\x13DeleteClaimResponse*W\n" +
+	"\x13DeleteClaimResponse\"\xb8\x01\n" +
+	"\n" +
+	"ClaimInput\x12 \n" +
+	"\vdescription\x18\x01 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04date\x18\x02 \x01(\tR\x04date\x12%\n" +
+	"\x0einvoice_number\x18\x03 \x01(\tR\rinvoiceNumber\x12\x19\n" +
+	"\bdue_date\x18\x04 \x01(\tR\adueDate\x122\n" +
+	"\x05parts\x18\x05 \x03(\v2\x1c.cashflow.claim.v1.PartInputR\x05parts\"\xa0\x01\n" +
+	"\tPartInput\x12\x1f\n" +
+	"\vcost_centre\x18\x01 \x01(\tR\n" +
+	"costCentre\x122\n" +
+	"\x15secondary_cost_centre\x18\x02 \x01(\tR\x13secondaryCostCentre\x12\x1f\n" +
+	"\vbudget_line\x18\x03 \x01(\tR\n" +
+	"budgetLine\x12\x1d\n" +
+	"\n" +
+	"amount_ore\x18\x04 \x01(\x03R\tamountOre\"\x9a\x01\n" +
+	"\x12CreateClaimRequest\x120\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x1c.cashflow.claim.v1.ClaimKindR\x04kind\x123\n" +
+	"\x05claim\x18\x02 \x01(\v2\x1d.cashflow.claim.v1.ClaimInputR\x05claim\x12\x1d\n" +
+	"\n" +
+	"upload_ids\x18\x03 \x03(\tR\tuploadIds\"E\n" +
+	"\x13CreateClaimResponse\x12.\n" +
+	"\x05claim\x18\x01 \x01(\v2\x18.cashflow.claim.v1.ClaimR\x05claim\"\xbf\x01\n" +
+	"\x12UpdateClaimRequest\x12-\n" +
+	"\x03ref\x18\x01 \x01(\v2\x1b.cashflow.claim.v1.ClaimRefR\x03ref\x123\n" +
+	"\x05claim\x18\x02 \x01(\v2\x1d.cashflow.claim.v1.ClaimInputR\x05claim\x12\x1d\n" +
+	"\n" +
+	"upload_ids\x18\x03 \x03(\tR\tuploadIds\x12&\n" +
+	"\x0fremove_file_ids\x18\x04 \x03(\x03R\rremoveFileIds\"E\n" +
+	"\x13UpdateClaimResponse\x12.\n" +
+	"\x05claim\x18\x01 \x01(\v2\x18.cashflow.claim.v1.ClaimR\x05claim*W\n" +
 	"\tClaimKind\x12\x1a\n" +
 	"\x16CLAIM_KIND_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12CLAIM_KIND_EXPENSE\x10\x01\x12\x16\n" +
@@ -2309,7 +2705,7 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"\x11SORT_FIELD_AMOUNT\x10\x02\x12\x1a\n" +
 	"\x16SORT_FIELD_DESCRIPTION\x10\x03\x12\x14\n" +
 	"\x10SORT_FIELD_OWNER\x10\x04\x12\x16\n" +
-	"\x12SORT_FIELD_CREATED\x10\x052\xe0\a\n" +
+	"\x12SORT_FIELD_CREATED\x10\x052\x9c\t\n" +
 	"\fClaimService\x12^\n" +
 	"\n" +
 	"ListClaims\x12$.cashflow.claim.v1.ListClaimsRequest\x1a%.cashflow.claim.v1.ListClaimsResponse\"\x03\x90\x02\x01\x12X\n" +
@@ -2324,7 +2720,9 @@ const file_cashflow_claim_v1_claim_proto_rawDesc = "" +
 	"SetFlagged\x12$.cashflow.claim.v1.SetFlaggedRequest\x1a%.cashflow.claim.v1.SetFlaggedResponse\"\x03\x90\x02\x02\x12Y\n" +
 	"\n" +
 	"PayInvoice\x12$.cashflow.claim.v1.PayInvoiceRequest\x1a%.cashflow.claim.v1.PayInvoiceResponse\x12\\\n" +
-	"\vDeleteClaim\x12%.cashflow.claim.v1.DeleteClaimRequest\x1a&.cashflow.claim.v1.DeleteClaimResponseB\xd1\x01\n" +
+	"\vDeleteClaim\x12%.cashflow.claim.v1.DeleteClaimRequest\x1a&.cashflow.claim.v1.DeleteClaimResponse\x12\\\n" +
+	"\vCreateClaim\x12%.cashflow.claim.v1.CreateClaimRequest\x1a&.cashflow.claim.v1.CreateClaimResponse\x12\\\n" +
+	"\vUpdateClaim\x12%.cashflow.claim.v1.UpdateClaimRequest\x1a&.cashflow.claim.v1.UpdateClaimResponseB\xd1\x01\n" +
 	"\x15com.cashflow.claim.v1B\n" +
 	"ClaimProtoP\x01ZFgithub.com/datasektionen/cashflow/server/gen/cashflow/claim/v1;claimv1\xa2\x02\x03CCX\xaa\x02\x11Cashflow.Claim.V1\xca\x02\x11Cashflow\\Claim\\V1\xe2\x02\x1dCashflow\\Claim\\V1\\GPBMetadata\xea\x02\x13Cashflow::Claim::V1b\x06proto3"
 
@@ -2341,7 +2739,7 @@ func file_cashflow_claim_v1_claim_proto_rawDescGZIP() []byte {
 }
 
 var file_cashflow_claim_v1_claim_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_cashflow_claim_v1_claim_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_cashflow_claim_v1_claim_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_cashflow_claim_v1_claim_proto_goTypes = []any{
 	(ClaimKind)(0),                  // 0: cashflow.claim.v1.ClaimKind
 	(Queue)(0),                      // 1: cashflow.claim.v1.Queue
@@ -2378,7 +2776,13 @@ var file_cashflow_claim_v1_claim_proto_goTypes = []any{
 	(*PayInvoiceResponse)(nil),      // 32: cashflow.claim.v1.PayInvoiceResponse
 	(*DeleteClaimRequest)(nil),      // 33: cashflow.claim.v1.DeleteClaimRequest
 	(*DeleteClaimResponse)(nil),     // 34: cashflow.claim.v1.DeleteClaimResponse
-	(*timestamppb.Timestamp)(nil),   // 35: google.protobuf.Timestamp
+	(*ClaimInput)(nil),              // 35: cashflow.claim.v1.ClaimInput
+	(*PartInput)(nil),               // 36: cashflow.claim.v1.PartInput
+	(*CreateClaimRequest)(nil),      // 37: cashflow.claim.v1.CreateClaimRequest
+	(*CreateClaimResponse)(nil),     // 38: cashflow.claim.v1.CreateClaimResponse
+	(*UpdateClaimRequest)(nil),      // 39: cashflow.claim.v1.UpdateClaimRequest
+	(*UpdateClaimResponse)(nil),     // 40: cashflow.claim.v1.UpdateClaimResponse
+	(*timestamppb.Timestamp)(nil),   // 41: google.protobuf.Timestamp
 }
 var file_cashflow_claim_v1_claim_proto_depIdxs = []int32{
 	2,  // 0: cashflow.claim.v1.Status.stage:type_name -> cashflow.claim.v1.Stage
@@ -2393,7 +2797,7 @@ var file_cashflow_claim_v1_claim_proto_depIdxs = []int32{
 	0,  // 9: cashflow.claim.v1.ClaimRef.kind:type_name -> cashflow.claim.v1.ClaimKind
 	4,  // 10: cashflow.claim.v1.Part.attested_by:type_name -> cashflow.claim.v1.Person
 	4,  // 11: cashflow.claim.v1.Comment.author:type_name -> cashflow.claim.v1.Person
-	35, // 12: cashflow.claim.v1.Comment.created_at:type_name -> google.protobuf.Timestamp
+	41, // 12: cashflow.claim.v1.Comment.created_at:type_name -> google.protobuf.Timestamp
 	4,  // 13: cashflow.claim.v1.Payment.payer:type_name -> cashflow.claim.v1.Person
 	6,  // 14: cashflow.claim.v1.Claim.summary:type_name -> cashflow.claim.v1.ClaimSummary
 	12, // 15: cashflow.claim.v1.Claim.parts:type_name -> cashflow.claim.v1.Part
@@ -2414,31 +2818,42 @@ var file_cashflow_claim_v1_claim_proto_depIdxs = []int32{
 	16, // 30: cashflow.claim.v1.SetFlaggedResponse.claim:type_name -> cashflow.claim.v1.Claim
 	16, // 31: cashflow.claim.v1.PayInvoiceResponse.claim:type_name -> cashflow.claim.v1.Claim
 	10, // 32: cashflow.claim.v1.DeleteClaimRequest.claim:type_name -> cashflow.claim.v1.ClaimRef
-	7,  // 33: cashflow.claim.v1.ClaimService.ListClaims:input_type -> cashflow.claim.v1.ListClaimsRequest
-	9,  // 34: cashflow.claim.v1.ClaimService.GetClaim:input_type -> cashflow.claim.v1.GetClaimRequest
-	18, // 35: cashflow.claim.v1.ClaimService.GetQueueCounts:input_type -> cashflow.claim.v1.GetQueueCountsRequest
-	21, // 36: cashflow.claim.v1.ClaimService.GetOverview:input_type -> cashflow.claim.v1.GetOverviewRequest
-	23, // 37: cashflow.claim.v1.ClaimService.AddComment:input_type -> cashflow.claim.v1.AddCommentRequest
-	25, // 38: cashflow.claim.v1.ClaimService.SetPartAttested:input_type -> cashflow.claim.v1.SetPartAttestedRequest
-	27, // 39: cashflow.claim.v1.ClaimService.SetConfirmed:input_type -> cashflow.claim.v1.SetConfirmedRequest
-	29, // 40: cashflow.claim.v1.ClaimService.SetFlagged:input_type -> cashflow.claim.v1.SetFlaggedRequest
-	31, // 41: cashflow.claim.v1.ClaimService.PayInvoice:input_type -> cashflow.claim.v1.PayInvoiceRequest
-	33, // 42: cashflow.claim.v1.ClaimService.DeleteClaim:input_type -> cashflow.claim.v1.DeleteClaimRequest
-	8,  // 43: cashflow.claim.v1.ClaimService.ListClaims:output_type -> cashflow.claim.v1.ListClaimsResponse
-	17, // 44: cashflow.claim.v1.ClaimService.GetClaim:output_type -> cashflow.claim.v1.GetClaimResponse
-	20, // 45: cashflow.claim.v1.ClaimService.GetQueueCounts:output_type -> cashflow.claim.v1.GetQueueCountsResponse
-	22, // 46: cashflow.claim.v1.ClaimService.GetOverview:output_type -> cashflow.claim.v1.GetOverviewResponse
-	24, // 47: cashflow.claim.v1.ClaimService.AddComment:output_type -> cashflow.claim.v1.AddCommentResponse
-	26, // 48: cashflow.claim.v1.ClaimService.SetPartAttested:output_type -> cashflow.claim.v1.SetPartAttestedResponse
-	28, // 49: cashflow.claim.v1.ClaimService.SetConfirmed:output_type -> cashflow.claim.v1.SetConfirmedResponse
-	30, // 50: cashflow.claim.v1.ClaimService.SetFlagged:output_type -> cashflow.claim.v1.SetFlaggedResponse
-	32, // 51: cashflow.claim.v1.ClaimService.PayInvoice:output_type -> cashflow.claim.v1.PayInvoiceResponse
-	34, // 52: cashflow.claim.v1.ClaimService.DeleteClaim:output_type -> cashflow.claim.v1.DeleteClaimResponse
-	43, // [43:53] is the sub-list for method output_type
-	33, // [33:43] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	36, // 33: cashflow.claim.v1.ClaimInput.parts:type_name -> cashflow.claim.v1.PartInput
+	0,  // 34: cashflow.claim.v1.CreateClaimRequest.kind:type_name -> cashflow.claim.v1.ClaimKind
+	35, // 35: cashflow.claim.v1.CreateClaimRequest.claim:type_name -> cashflow.claim.v1.ClaimInput
+	16, // 36: cashflow.claim.v1.CreateClaimResponse.claim:type_name -> cashflow.claim.v1.Claim
+	10, // 37: cashflow.claim.v1.UpdateClaimRequest.ref:type_name -> cashflow.claim.v1.ClaimRef
+	35, // 38: cashflow.claim.v1.UpdateClaimRequest.claim:type_name -> cashflow.claim.v1.ClaimInput
+	16, // 39: cashflow.claim.v1.UpdateClaimResponse.claim:type_name -> cashflow.claim.v1.Claim
+	7,  // 40: cashflow.claim.v1.ClaimService.ListClaims:input_type -> cashflow.claim.v1.ListClaimsRequest
+	9,  // 41: cashflow.claim.v1.ClaimService.GetClaim:input_type -> cashflow.claim.v1.GetClaimRequest
+	18, // 42: cashflow.claim.v1.ClaimService.GetQueueCounts:input_type -> cashflow.claim.v1.GetQueueCountsRequest
+	21, // 43: cashflow.claim.v1.ClaimService.GetOverview:input_type -> cashflow.claim.v1.GetOverviewRequest
+	23, // 44: cashflow.claim.v1.ClaimService.AddComment:input_type -> cashflow.claim.v1.AddCommentRequest
+	25, // 45: cashflow.claim.v1.ClaimService.SetPartAttested:input_type -> cashflow.claim.v1.SetPartAttestedRequest
+	27, // 46: cashflow.claim.v1.ClaimService.SetConfirmed:input_type -> cashflow.claim.v1.SetConfirmedRequest
+	29, // 47: cashflow.claim.v1.ClaimService.SetFlagged:input_type -> cashflow.claim.v1.SetFlaggedRequest
+	31, // 48: cashflow.claim.v1.ClaimService.PayInvoice:input_type -> cashflow.claim.v1.PayInvoiceRequest
+	33, // 49: cashflow.claim.v1.ClaimService.DeleteClaim:input_type -> cashflow.claim.v1.DeleteClaimRequest
+	37, // 50: cashflow.claim.v1.ClaimService.CreateClaim:input_type -> cashflow.claim.v1.CreateClaimRequest
+	39, // 51: cashflow.claim.v1.ClaimService.UpdateClaim:input_type -> cashflow.claim.v1.UpdateClaimRequest
+	8,  // 52: cashflow.claim.v1.ClaimService.ListClaims:output_type -> cashflow.claim.v1.ListClaimsResponse
+	17, // 53: cashflow.claim.v1.ClaimService.GetClaim:output_type -> cashflow.claim.v1.GetClaimResponse
+	20, // 54: cashflow.claim.v1.ClaimService.GetQueueCounts:output_type -> cashflow.claim.v1.GetQueueCountsResponse
+	22, // 55: cashflow.claim.v1.ClaimService.GetOverview:output_type -> cashflow.claim.v1.GetOverviewResponse
+	24, // 56: cashflow.claim.v1.ClaimService.AddComment:output_type -> cashflow.claim.v1.AddCommentResponse
+	26, // 57: cashflow.claim.v1.ClaimService.SetPartAttested:output_type -> cashflow.claim.v1.SetPartAttestedResponse
+	28, // 58: cashflow.claim.v1.ClaimService.SetConfirmed:output_type -> cashflow.claim.v1.SetConfirmedResponse
+	30, // 59: cashflow.claim.v1.ClaimService.SetFlagged:output_type -> cashflow.claim.v1.SetFlaggedResponse
+	32, // 60: cashflow.claim.v1.ClaimService.PayInvoice:output_type -> cashflow.claim.v1.PayInvoiceResponse
+	34, // 61: cashflow.claim.v1.ClaimService.DeleteClaim:output_type -> cashflow.claim.v1.DeleteClaimResponse
+	38, // 62: cashflow.claim.v1.ClaimService.CreateClaim:output_type -> cashflow.claim.v1.CreateClaimResponse
+	40, // 63: cashflow.claim.v1.ClaimService.UpdateClaim:output_type -> cashflow.claim.v1.UpdateClaimResponse
+	52, // [52:64] is the sub-list for method output_type
+	40, // [40:52] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_cashflow_claim_v1_claim_proto_init() }
@@ -2452,7 +2867,7 @@ func file_cashflow_claim_v1_claim_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cashflow_claim_v1_claim_proto_rawDesc), len(file_cashflow_claim_v1_claim_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   31,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

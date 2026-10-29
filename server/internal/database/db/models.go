@@ -62,6 +62,17 @@ type Cashflow4Outbox struct {
 	SentAt    pgtype.Timestamptz
 }
 
+type Cashflow4Upload struct {
+	ID          string
+	Uploader    string
+	StorageKey  string
+	Filename    string
+	ContentType string
+	SizeBytes   int64
+	CreatedAt   pgtype.Timestamptz
+	AttachedAt  pgtype.Timestamptz
+}
+
 type CoreClaim struct {
 	ID            int64
 	Description   string

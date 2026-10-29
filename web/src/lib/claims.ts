@@ -22,6 +22,13 @@ export function claimLink(kind: ClaimKind, number: bigint, queue?: QueueSlug) {
     : ({ to: "/expenses/$number", params: { number }, search } as const);
 }
 
+/** The edit form of a claim. */
+export function claimEditLink(kind: ClaimKind, number: bigint) {
+  return kind === ClaimKind.INVOICE
+    ? ({ to: "/invoices/$number/edit", params: { number } } as const)
+    : ({ to: "/expenses/$number/edit", params: { number } } as const);
+}
+
 /** The detail page's search params. */
 export function validateClaimPageSearch(raw: Record<string, unknown>): { queue?: QueueSlug } {
   return { queue: QUEUES.find((q) => q === raw.queue) };

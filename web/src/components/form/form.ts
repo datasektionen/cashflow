@@ -1,5 +1,8 @@
 import { createFormHook } from "@tanstack/react-form";
+import { AmountField } from "./amount-field";
+import { ComboboxField } from "./combobox-field";
 import { fieldContext, formContext } from "./context";
+import { FilesField } from "./files-field";
 import { SubmitButton } from "./submit-button";
 import { TextField } from "./text-field";
 
@@ -10,6 +13,6 @@ import { TextField } from "./text-field";
 export const { useAppForm, withForm } = createFormHook({
   fieldContext,
   formContext,
-  fieldComponents: { TextField },
+  fieldComponents: { TextField, AmountField, ComboboxField, FilesField },
   formComponents: { SubmitButton },
 });

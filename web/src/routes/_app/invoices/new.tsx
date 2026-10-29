@@ -1,17 +1,12 @@
+import { createQueryOptions } from "@connectrpc/connect-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Page } from "#/components/layout/page";
-import { ComingSoon } from "#/components/layout/states";
-import { useT } from "#/lib/i18n";
+import { ClaimForm } from "#/components/claim-form/claim-form";
+import { getBudget } from "#/gen/cashflow/budget/v1/budget-BudgetService_connectquery";
+import { ClaimKind } from "#/gen/cashflow/claim/v1/claim_pb";
+import { transport } from "#/lib/rpc";
 
 export const Route = createFileRoute("/_app/invoices/new")({
-  component: InvoicesNewPage,
+  // The budget pickers' data starts loading before the form shows.
+  loader: ({ context }) => void context.queryClient.prefetchQuery(createQueryOptions(getBudget, {}, { transport })),
+  component: () => <ClaimForm kind={ClaimKind.INVOICE} />,
 });
-
-function InvoicesNewPage() {
-  const t = useT();
-  return (
-    <Page title={t.nav.newInvoice}>
-      <ComingSoon />
-    </Page>
-  );
-}

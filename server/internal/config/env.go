@@ -47,6 +47,8 @@ type Env struct {
 	HiveSecret  string
 	S3          storage.Config
 	Outbox      outbox.Config
+	// BudgetURL is GOrdian, which also serves development: its API is public.
+	BudgetURL string
 }
 
 func FromEnv() (Env, error) {
@@ -56,6 +58,7 @@ func FromEnv() (Env, error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		HiveURL:     strings.TrimSuffix(getenv("HIVE_URL", "https://hive.datasektionen.se"), "/"),
 		HiveSecret:  os.Getenv("HIVE_SECRET"),
+		BudgetURL:   getenv("BUDGET_URL", "https://budget.datasektionen.se"),
 		// The same variables as Cashflow 3, plus S3_ENDPOINT for development.
 		S3: storage.Config{
 			Bucket:          os.Getenv("S3_BUCKET_NAME"),

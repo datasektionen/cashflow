@@ -58,6 +58,12 @@ const (
 	// ClaimServiceDeleteClaimProcedure is the fully-qualified name of the ClaimService's DeleteClaim
 	// RPC.
 	ClaimServiceDeleteClaimProcedure = "/cashflow.claim.v1.ClaimService/DeleteClaim"
+	// ClaimServiceCreateClaimProcedure is the fully-qualified name of the ClaimService's CreateClaim
+	// RPC.
+	ClaimServiceCreateClaimProcedure = "/cashflow.claim.v1.ClaimService/CreateClaim"
+	// ClaimServiceUpdateClaimProcedure is the fully-qualified name of the ClaimService's UpdateClaim
+	// RPC.
+	ClaimServiceUpdateClaimProcedure = "/cashflow.claim.v1.ClaimService/UpdateClaim"
 )
 
 // ClaimServiceClient is a client for the cashflow.claim.v1.ClaimService service.
@@ -84,6 +90,13 @@ type ClaimServiceClient interface {
 	PayInvoice(context.Context, *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error)
 	// DeleteClaim deletes an unpaid claim.
 	DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error)
+	// CreateClaim submits a new expense or invoice owned by the caller. Files
+	// are uploaded first (POST /files) and referenced by upload id. Invalid
+	// input fails with cashflow.common.v1.FieldViolations.
+	CreateClaim(context.Context, *connect.Request[v1.CreateClaimRequest]) (*connect.Response[v1.CreateClaimResponse], error)
+	// UpdateClaim edits the caller's own unpaid claim. Changing parts or files
+	// voids the receipt's confirmation; editing an expense clears its flag.
+	UpdateClaim(context.Context, *connect.Request[v1.UpdateClaimRequest]) (*connect.Response[v1.UpdateClaimResponse], error)
 }
 
 // NewClaimServiceClient constructs a client for the cashflow.claim.v1.ClaimService service. By
@@ -164,6 +177,18 @@ func NewClaimServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(claimServiceMethods.ByName("DeleteClaim")),
 			connect.WithClientOptions(opts...),
 		),
+		createClaim: connect.NewClient[v1.CreateClaimRequest, v1.CreateClaimResponse](
+			httpClient,
+			baseURL+ClaimServiceCreateClaimProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("CreateClaim")),
+			connect.WithClientOptions(opts...),
+		),
+		updateClaim: connect.NewClient[v1.UpdateClaimRequest, v1.UpdateClaimResponse](
+			httpClient,
+			baseURL+ClaimServiceUpdateClaimProcedure,
+			connect.WithSchema(claimServiceMethods.ByName("UpdateClaim")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -179,6 +204,8 @@ type claimServiceClient struct {
 	setFlagged      *connect.Client[v1.SetFlaggedRequest, v1.SetFlaggedResponse]
 	payInvoice      *connect.Client[v1.PayInvoiceRequest, v1.PayInvoiceResponse]
 	deleteClaim     *connect.Client[v1.DeleteClaimRequest, v1.DeleteClaimResponse]
+	createClaim     *connect.Client[v1.CreateClaimRequest, v1.CreateClaimResponse]
+	updateClaim     *connect.Client[v1.UpdateClaimRequest, v1.UpdateClaimResponse]
 }
 
 // ListClaims calls cashflow.claim.v1.ClaimService.ListClaims.
@@ -231,6 +258,16 @@ func (c *claimServiceClient) DeleteClaim(ctx context.Context, req *connect.Reque
 	return c.deleteClaim.CallUnary(ctx, req)
 }
 
+// CreateClaim calls cashflow.claim.v1.ClaimService.CreateClaim.
+func (c *claimServiceClient) CreateClaim(ctx context.Context, req *connect.Request[v1.CreateClaimRequest]) (*connect.Response[v1.CreateClaimResponse], error) {
+	return c.createClaim.CallUnary(ctx, req)
+}
+
+// UpdateClaim calls cashflow.claim.v1.ClaimService.UpdateClaim.
+func (c *claimServiceClient) UpdateClaim(ctx context.Context, req *connect.Request[v1.UpdateClaimRequest]) (*connect.Response[v1.UpdateClaimResponse], error) {
+	return c.updateClaim.CallUnary(ctx, req)
+}
+
 // ClaimServiceHandler is an implementation of the cashflow.claim.v1.ClaimService service.
 type ClaimServiceHandler interface {
 	// ListClaims lists claims, optionally narrowed to one work queue.
@@ -255,6 +292,13 @@ type ClaimServiceHandler interface {
 	PayInvoice(context.Context, *connect.Request[v1.PayInvoiceRequest]) (*connect.Response[v1.PayInvoiceResponse], error)
 	// DeleteClaim deletes an unpaid claim.
 	DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error)
+	// CreateClaim submits a new expense or invoice owned by the caller. Files
+	// are uploaded first (POST /files) and referenced by upload id. Invalid
+	// input fails with cashflow.common.v1.FieldViolations.
+	CreateClaim(context.Context, *connect.Request[v1.CreateClaimRequest]) (*connect.Response[v1.CreateClaimResponse], error)
+	// UpdateClaim edits the caller's own unpaid claim. Changing parts or files
+	// voids the receipt's confirmation; editing an expense clears its flag.
+	UpdateClaim(context.Context, *connect.Request[v1.UpdateClaimRequest]) (*connect.Response[v1.UpdateClaimResponse], error)
 }
 
 // NewClaimServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -331,6 +375,18 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(claimServiceMethods.ByName("DeleteClaim")),
 		connect.WithHandlerOptions(opts...),
 	)
+	claimServiceCreateClaimHandler := connect.NewUnaryHandler(
+		ClaimServiceCreateClaimProcedure,
+		svc.CreateClaim,
+		connect.WithSchema(claimServiceMethods.ByName("CreateClaim")),
+		connect.WithHandlerOptions(opts...),
+	)
+	claimServiceUpdateClaimHandler := connect.NewUnaryHandler(
+		ClaimServiceUpdateClaimProcedure,
+		svc.UpdateClaim,
+		connect.WithSchema(claimServiceMethods.ByName("UpdateClaim")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/cashflow.claim.v1.ClaimService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ClaimServiceListClaimsProcedure:
@@ -353,6 +409,10 @@ func NewClaimServiceHandler(svc ClaimServiceHandler, opts ...connect.HandlerOpti
 			claimServicePayInvoiceHandler.ServeHTTP(w, r)
 		case ClaimServiceDeleteClaimProcedure:
 			claimServiceDeleteClaimHandler.ServeHTTP(w, r)
+		case ClaimServiceCreateClaimProcedure:
+			claimServiceCreateClaimHandler.ServeHTTP(w, r)
+		case ClaimServiceUpdateClaimProcedure:
+			claimServiceUpdateClaimHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -400,4 +460,12 @@ func (UnimplementedClaimServiceHandler) PayInvoice(context.Context, *connect.Req
 
 func (UnimplementedClaimServiceHandler) DeleteClaim(context.Context, *connect.Request[v1.DeleteClaimRequest]) (*connect.Response[v1.DeleteClaimResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.DeleteClaim is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) CreateClaim(context.Context, *connect.Request[v1.CreateClaimRequest]) (*connect.Response[v1.CreateClaimResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.CreateClaim is not implemented"))
+}
+
+func (UnimplementedClaimServiceHandler) UpdateClaim(context.Context, *connect.Request[v1.UpdateClaimRequest]) (*connect.Response[v1.UpdateClaimResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("cashflow.claim.v1.ClaimService.UpdateClaim is not implemented"))
 }

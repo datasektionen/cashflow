@@ -25,6 +25,8 @@ import { Route as AppExpensesNumberRouteImport } from './routes/_app/expenses/$n
 import { Route as AppExpensesNewRouteImport } from './routes/_app/expenses/new'
 import { Route as AppInvoicesNumberRouteImport } from './routes/_app/invoices/$number'
 import { Route as AppInvoicesNewRouteImport } from './routes/_app/invoices/new'
+import { Route as AppExpensesNumberEditRouteImport } from './routes/_app/expenses/$number_.edit'
+import { Route as AppInvoicesNumberEditRouteImport } from './routes/_app/invoices/$number_.edit'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -105,6 +107,16 @@ const AppInvoicesNewRoute = AppInvoicesNewRouteImport.update({
   path: '/invoices/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExpensesNumberEditRoute = AppExpensesNumberEditRouteImport.update({
+  id: '/expenses/$number_/edit',
+  path: '/expenses/$number/edit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvoicesNumberEditRoute = AppInvoicesNumberEditRouteImport.update({
+  id: '/invoices/$number_/edit',
+  path: '/invoices/$number/edit',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -122,6 +134,8 @@ export interface FileRoutesByFullPath {
   '/expenses/new': typeof AppExpensesNewRoute
   '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
+  '/expenses/$number/edit': typeof AppExpensesNumberEditRoute
+  '/invoices/$number/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRoutesByTo {
   '/account': typeof AppAccountRoute
@@ -139,6 +153,8 @@ export interface FileRoutesByTo {
   '/expenses/new': typeof AppExpensesNewRoute
   '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
+  '/expenses/$number/edit': typeof AppExpensesNumberEditRoute
+  '/invoices/$number/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,6 +174,8 @@ export interface FileRoutesById {
   '/_app/expenses/new': typeof AppExpensesNewRoute
   '/_app/invoices/$number': typeof AppInvoicesNumberRoute
   '/_app/invoices/new': typeof AppInvoicesNewRoute
+  '/_app/expenses/$number_/edit': typeof AppExpensesNumberEditRoute
+  '/_app/invoices/$number_/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +195,8 @@ export interface FileRouteTypes {
     | '/expenses/new'
     | '/invoices/$number'
     | '/invoices/new'
+    | '/expenses/$number/edit'
+    | '/invoices/$number/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account'
@@ -194,6 +214,8 @@ export interface FileRouteTypes {
     | '/expenses/new'
     | '/invoices/$number'
     | '/invoices/new'
+    | '/expenses/$number/edit'
+    | '/invoices/$number/edit'
   id:
     | '__root__'
     | '/_app'
@@ -212,6 +234,8 @@ export interface FileRouteTypes {
     | '/_app/expenses/new'
     | '/_app/invoices/$number'
     | '/_app/invoices/new'
+    | '/_app/expenses/$number_/edit'
+    | '/_app/invoices/$number_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -332,6 +356,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvoicesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/expenses/$number_/edit': {
+      id: '/_app/expenses/$number_/edit'
+      path: '/expenses/$number/edit'
+      fullPath: '/expenses/$number/edit'
+      preLoaderRoute: typeof AppExpensesNumberEditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/invoices/$number_/edit': {
+      id: '/_app/invoices/$number_/edit'
+      path: '/invoices/$number/edit'
+      fullPath: '/invoices/$number/edit'
+      preLoaderRoute: typeof AppInvoicesNumberEditRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -351,6 +389,8 @@ interface AppRouteChildren {
   AppExpensesNewRoute: typeof AppExpensesNewRoute
   AppInvoicesNumberRoute: typeof AppInvoicesNumberRoute
   AppInvoicesNewRoute: typeof AppInvoicesNewRoute
+  AppExpensesNumberEditRoute: typeof AppExpensesNumberEditRoute
+  AppInvoicesNumberEditRoute: typeof AppInvoicesNumberEditRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -369,6 +409,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppExpensesNewRoute: AppExpensesNewRoute,
   AppInvoicesNumberRoute: AppInvoicesNumberRoute,
   AppInvoicesNewRoute: AppInvoicesNewRoute,
+  AppExpensesNumberEditRoute: AppExpensesNumberEditRoute,
+  AppInvoicesNumberEditRoute: AppInvoicesNumberEditRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

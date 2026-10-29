@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file cashflow/claim/v1/claim.proto.
  */
 export const file_cashflow_claim_v1_claim: GenFile = /*@__PURE__*/
-  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzIvsBChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUiVAoSTGlzdENsYWltc1Jlc3BvbnNlEi8KBmNsYWltcxgBIAMoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRINCgV0b3RhbBgCIAEoBSJNCg9HZXRDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiRgoIQ2xhaW1SZWYSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiqgEKB0FjdGlvbnMSFwoPYXR0ZXN0X3BhcnRfaWRzGAEgAygDEhkKEXVuYXR0ZXN0X3BhcnRfaWRzGAIgAygDEg8KB2NvbmZpcm0YAyABKAgSEQoJdW5jb25maXJtGAQgASgIEgwKBGZsYWcYBSABKAgSDgoGdW5mbGFnGAYgASgIEgsKA3BheRgHIAEoCBIOCgZkZWxldGUYCCABKAgSDAoEZWRpdBgJIAEoCCK0AQoEUGFydBIKCgJpZBgBIAEoAxITCgtjb3N0X2NlbnRyZRgCIAEoCRIdChVzZWNvbmRhcnlfY29zdF9jZW50cmUYAyABKAkSEwoLYnVkZ2V0X2xpbmUYBCABKAkSEgoKYW1vdW50X29yZRgFIAEoAxIuCgthdHRlc3RlZF9ieRgGIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhITCgthdHRlc3RlZF9hdBgHIAEoCSJDCgRGaWxlEgoKAmlkGAEgASgDEgwKBG5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEgsKA3VybBgEIAEoCSJyCgdDb21tZW50EikKBmF1dGhvchgBIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIMCgRib2R5GAIgASgJEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIloKB1BheW1lbnQSCgoCaWQYASABKAMSCwoDdGFnGAIgASgJEigKBXBheWVyGAMgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEgwKBGRhdGUYBCABKAkivwMKBUNsYWltEjAKB3N1bW1hcnkYASABKAsyHy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVN1bW1hcnkSJgoFcGFydHMYAiADKAsyFy5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0EiYKBWZpbGVzGAMgAygLMhcuY2FzaGZsb3cuY2xhaW0udjEuRmlsZRIsCghjb21tZW50cxgEIAMoCzIaLmNhc2hmbG93LmNsYWltLnYxLkNvbW1lbnQSLwoMY29uZmlybWVkX2J5GAUgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEhQKDGNvbmZpcm1lZF9hdBgGIAEoCRIrCgdwYXltZW50GAcgASgLMhouY2FzaGZsb3cuY2xhaW0udjEuUGF5bWVudBIWCg5pbnZvaWNlX251bWJlchgIIAEoCRIQCghkdWVfZGF0ZRgJIAEoCRIqCgdwYWlkX2J5GAogASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEg8KB3BhaWRfYXQYCyABKAkSKwoHYWN0aW9ucxgMIAEoCzIaLmNhc2hmbG93LmNsYWltLnYxLkFjdGlvbnMiOwoQR2V0Q2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIhcKFUdldFF1ZXVlQ291bnRzUmVxdWVzdCJECgpRdWV1ZUNvdW50EicKBXF1ZXVlGAEgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSDQoFY291bnQYAiABKAUiRwoWR2V0UXVldWVDb3VudHNSZXNwb25zZRItCgZjb3VudHMYASADKAsyHS5jYXNoZmxvdy5jbGFpbS52MS5RdWV1ZUNvdW50IhQKEkdldE92ZXJ2aWV3UmVxdWVzdCJsChNHZXRPdmVydmlld1Jlc3BvbnNlEhsKE2F3YWl0aW5nX2F0dGVzdF9vcmUYASABKAMSHAoUYXdhaXRpbmdfcGF5bWVudF9vcmUYAiABKAMSGgoScGFpZF90aGlzX3llYXJfb3JlGAMgASgDIk0KEUFkZENvbW1lbnRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDAoEYm9keRgCIAEoCSI9ChJBZGRDb21tZW50UmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJnChZTZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDwoHcGFydF9pZBgCIAEoAxIQCghhdHRlc3RlZBgDIAEoCCJCChdTZXRQYXJ0QXR0ZXN0ZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjgKE1NldENvbmZpcm1lZFJlcXVlc3QSDgoGbnVtYmVyGAEgASgDEhEKCWNvbmZpcm1lZBgCIAEoCCI/ChRTZXRDb25maXJtZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjQKEVNldEZsYWdnZWRSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAxIPCgdmbGFnZ2VkGAIgASgIIj0KElNldEZsYWdnZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIiMKEVBheUludm9pY2VSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAyI9ChJQYXlJbnZvaWNlUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJAChJEZWxldGVDbGFpbVJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZiIVChNEZWxldGVDbGFpbVJlc3BvbnNlKlcKCUNsYWltS2luZBIaChZDTEFJTV9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSQ0xBSU1fS0lORF9FWFBFTlNFEAESFgoSQ0xBSU1fS0lORF9JTlZPSUNFEAIqZQoFUXVldWUSFQoRUVVFVUVfVU5TUEVDSUZJRUQQABIQCgxRVUVVRV9BVFRFU1QQARIRCg1RVUVVRV9DT05GSVJNEAISEQoNUVVFVUVfQUNDT1VOVBADEg0KCVFVRVVFX1BBWRAEKoEBCgVTdGFnZRIVChFTVEFHRV9VTlNQRUNJRklFRBAAEhMKD1NUQUdFX1NVQk1JVFRFRBABEhIKDlNUQUdFX0FUVEVTVEVEEAISEwoPU1RBR0VfQ09ORklSTUVEEAMSDgoKU1RBR0VfUEFJRBAEEhMKD1NUQUdFX0FDQ09VTlRFRBAFKp0BCglTb3J0RmllbGQSGgoWU09SVF9GSUVMRF9VTlNQRUNJRklFRBAAEhMKD1NPUlRfRklFTERfREFURRABEhUKEVNPUlRfRklFTERfQU1PVU5UEAISGgoWU09SVF9GSUVMRF9ERVNDUklQVElPThADEhQKEFNPUlRfRklFTERfT1dORVIQBBIWChJTT1JUX0ZJRUxEX0NSRUFURUQQBTLgBwoMQ2xhaW1TZXJ2aWNlEl4KCkxpc3RDbGFpbXMSJC5jYXNoZmxvdy5jbGFpbS52MS5MaXN0Q2xhaW1zUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkxpc3RDbGFpbXNSZXNwb25zZSIDkAIBElgKCEdldENsYWltEiIuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXF1ZXN0GiMuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXNwb25zZSIDkAIBEmoKDkdldFF1ZXVlQ291bnRzEiguY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXF1ZXN0GikuY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXNwb25zZSIDkAIBEmEKC0dldE92ZXJ2aWV3EiUuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXNwb25zZSIDkAIBElkKCkFkZENvbW1lbnQSJC5jYXNoZmxvdy5jbGFpbS52MS5BZGRDb21tZW50UmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkFkZENvbW1lbnRSZXNwb25zZRJtCg9TZXRQYXJ0QXR0ZXN0ZWQSKS5jYXNoZmxvdy5jbGFpbS52MS5TZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0GiouY2FzaGZsb3cuY2xhaW0udjEuU2V0UGFydEF0dGVzdGVkUmVzcG9uc2UiA5ACAhJkCgxTZXRDb25maXJtZWQSJi5jYXNoZmxvdy5jbGFpbS52MS5TZXRDb25maXJtZWRSZXF1ZXN0GicuY2FzaGZsb3cuY2xhaW0udjEuU2V0Q29uZmlybWVkUmVzcG9uc2UiA5ACAhJeCgpTZXRGbGFnZ2VkEiQuY2FzaGZsb3cuY2xhaW0udjEuU2V0RmxhZ2dlZFJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5TZXRGbGFnZ2VkUmVzcG9uc2UiA5ACAhJZCgpQYXlJbnZvaWNlEiQuY2FzaGZsb3cuY2xhaW0udjEuUGF5SW52b2ljZVJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5QYXlJbnZvaWNlUmVzcG9uc2USXAoLRGVsZXRlQ2xhaW0SJS5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlc3BvbnNlQtEBChVjb20uY2FzaGZsb3cuY2xhaW0udjFCCkNsYWltUHJvdG9QAVpGZ2l0aHViLmNvbS9kYXRhc2VrdGlvbmVuL2Nhc2hmbG93L3NlcnZlci9nZW4vY2FzaGZsb3cvY2xhaW0vdjE7Y2xhaW12MaICA0NDWKoCEUNhc2hmbG93LkNsYWltLlYxygIRQ2FzaGZsb3dcQ2xhaW1cVjHiAh1DYXNoZmxvd1xDbGFpbVxWMVxHUEJNZXRhZGF0YeoCE0Nhc2hmbG93OjpDbGFpbTo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("Ch1jYXNoZmxvdy9jbGFpbS92MS9jbGFpbS5wcm90bxIRY2FzaGZsb3cuY2xhaW0udjEiKAoGUGVyc29uEhAKCHVzZXJuYW1lGAEgASgJEgwKBG5hbWUYAiABKAkiiwEKBlN0YXR1cxInCgVzdGFnZRgBIAEoDjIYLmNhc2hmbG93LmNsYWltLnYxLlN0YWdlEhAKCGF0dGVzdGVkGAIgASgIEhEKCWNvbmZpcm1lZBgDIAEoCBIMCgRwYWlkGAQgASgIEhQKDHZlcmlmaWNhdGlvbhgFIAEoCRIPCgdmbGFnZ2VkGAYgASgIIoICCgxDbGFpbVN1bW1hcnkSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMSEwoLZGVzY3JpcHRpb24YAyABKAkSKAoFb3duZXIYBCABKAsyGS5jYXNoZmxvdy5jbGFpbS52MS5QZXJzb24SEgoKYW1vdW50X29yZRgFIAEoAxIMCgRkYXRlGAYgASgJEhQKDGNyZWF0ZWRfZGF0ZRgHIAEoCRIUCgxjb3N0X2NlbnRyZXMYCCADKAkSKQoGc3RhdHVzGAkgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuU3RhdHVzIvsBChFMaXN0Q2xhaW1zUmVxdWVzdBIMCgRtaW5lGAEgASgIEicKBXF1ZXVlGAIgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSKgoEa2luZBgDIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBINCgVxdWVyeRgEIAEoCRITCgtjb3N0X2NlbnRyZRgFIAEoCRIqCgRzb3J0GAYgASgOMhwuY2FzaGZsb3cuY2xhaW0udjEuU29ydEZpZWxkEhIKCmRlc2NlbmRpbmcYByABKAgSDAoEcGFnZRgIIAEoBRIRCglwYWdlX3NpemUYCSABKAUiVAoSTGlzdENsYWltc1Jlc3BvbnNlEi8KBmNsYWltcxgBIAMoCzIfLmNhc2hmbG93LmNsYWltLnYxLkNsYWltU3VtbWFyeRINCgV0b3RhbBgCIAEoBSJNCg9HZXRDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiRgoIQ2xhaW1SZWYSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIOCgZudW1iZXIYAiABKAMiqgEKB0FjdGlvbnMSFwoPYXR0ZXN0X3BhcnRfaWRzGAEgAygDEhkKEXVuYXR0ZXN0X3BhcnRfaWRzGAIgAygDEg8KB2NvbmZpcm0YAyABKAgSEQoJdW5jb25maXJtGAQgASgIEgwKBGZsYWcYBSABKAgSDgoGdW5mbGFnGAYgASgIEgsKA3BheRgHIAEoCBIOCgZkZWxldGUYCCABKAgSDAoEZWRpdBgJIAEoCCK0AQoEUGFydBIKCgJpZBgBIAEoAxITCgtjb3N0X2NlbnRyZRgCIAEoCRIdChVzZWNvbmRhcnlfY29zdF9jZW50cmUYAyABKAkSEwoLYnVkZ2V0X2xpbmUYBCABKAkSEgoKYW1vdW50X29yZRgFIAEoAxIuCgthdHRlc3RlZF9ieRgGIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhITCgthdHRlc3RlZF9hdBgHIAEoCSJDCgRGaWxlEgoKAmlkGAEgASgDEgwKBG5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEgsKA3VybBgEIAEoCSJyCgdDb21tZW50EikKBmF1dGhvchgBIAEoCzIZLmNhc2hmbG93LmNsYWltLnYxLlBlcnNvbhIMCgRib2R5GAIgASgJEi4KCmNyZWF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIloKB1BheW1lbnQSCgoCaWQYASABKAMSCwoDdGFnGAIgASgJEigKBXBheWVyGAMgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEgwKBGRhdGUYBCABKAkivwMKBUNsYWltEjAKB3N1bW1hcnkYASABKAsyHy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVN1bW1hcnkSJgoFcGFydHMYAiADKAsyFy5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0EiYKBWZpbGVzGAMgAygLMhcuY2FzaGZsb3cuY2xhaW0udjEuRmlsZRIsCghjb21tZW50cxgEIAMoCzIaLmNhc2hmbG93LmNsYWltLnYxLkNvbW1lbnQSLwoMY29uZmlybWVkX2J5GAUgASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEhQKDGNvbmZpcm1lZF9hdBgGIAEoCRIrCgdwYXltZW50GAcgASgLMhouY2FzaGZsb3cuY2xhaW0udjEuUGF5bWVudBIWCg5pbnZvaWNlX251bWJlchgIIAEoCRIQCghkdWVfZGF0ZRgJIAEoCRIqCgdwYWlkX2J5GAogASgLMhkuY2FzaGZsb3cuY2xhaW0udjEuUGVyc29uEg8KB3BhaWRfYXQYCyABKAkSKwoHYWN0aW9ucxgMIAEoCzIaLmNhc2hmbG93LmNsYWltLnYxLkFjdGlvbnMiOwoQR2V0Q2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIhcKFUdldFF1ZXVlQ291bnRzUmVxdWVzdCJECgpRdWV1ZUNvdW50EicKBXF1ZXVlGAEgASgOMhguY2FzaGZsb3cuY2xhaW0udjEuUXVldWUSDQoFY291bnQYAiABKAUiRwoWR2V0UXVldWVDb3VudHNSZXNwb25zZRItCgZjb3VudHMYASADKAsyHS5jYXNoZmxvdy5jbGFpbS52MS5RdWV1ZUNvdW50IhQKEkdldE92ZXJ2aWV3UmVxdWVzdCJsChNHZXRPdmVydmlld1Jlc3BvbnNlEhsKE2F3YWl0aW5nX2F0dGVzdF9vcmUYASABKAMSHAoUYXdhaXRpbmdfcGF5bWVudF9vcmUYAiABKAMSGgoScGFpZF90aGlzX3llYXJfb3JlGAMgASgDIk0KEUFkZENvbW1lbnRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDAoEYm9keRgCIAEoCSI9ChJBZGRDb21tZW50UmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJnChZTZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0EioKBWNsYWltGAEgASgLMhsuY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW1SZWYSDwoHcGFydF9pZBgCIAEoAxIQCghhdHRlc3RlZBgDIAEoCCJCChdTZXRQYXJ0QXR0ZXN0ZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjgKE1NldENvbmZpcm1lZFJlcXVlc3QSDgoGbnVtYmVyGAEgASgDEhEKCWNvbmZpcm1lZBgCIAEoCCI/ChRTZXRDb25maXJtZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIjQKEVNldEZsYWdnZWRSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAxIPCgdmbGFnZ2VkGAIgASgIIj0KElNldEZsYWdnZWRSZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltIiMKEVBheUludm9pY2VSZXF1ZXN0Eg4KBm51bWJlchgBIAEoAyI9ChJQYXlJbnZvaWNlUmVzcG9uc2USJwoFY2xhaW0YASABKAsyGC5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbSJAChJEZWxldGVDbGFpbVJlcXVlc3QSKgoFY2xhaW0YASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZiIVChNEZWxldGVDbGFpbVJlc3BvbnNlIoYBCgpDbGFpbUlucHV0EhMKC2Rlc2NyaXB0aW9uGAEgASgJEgwKBGRhdGUYAiABKAkSFgoOaW52b2ljZV9udW1iZXIYAyABKAkSEAoIZHVlX2RhdGUYBCABKAkSKwoFcGFydHMYBSADKAsyHC5jYXNoZmxvdy5jbGFpbS52MS5QYXJ0SW5wdXQiaAoJUGFydElucHV0EhMKC2Nvc3RfY2VudHJlGAEgASgJEh0KFXNlY29uZGFyeV9jb3N0X2NlbnRyZRgCIAEoCRITCgtidWRnZXRfbGluZRgDIAEoCRISCgphbW91bnRfb3JlGAQgASgDIoIBChJDcmVhdGVDbGFpbVJlcXVlc3QSKgoEa2luZBgBIAEoDjIcLmNhc2hmbG93LmNsYWltLnYxLkNsYWltS2luZBIsCgVjbGFpbRgCIAEoCzIdLmNhc2hmbG93LmNsYWltLnYxLkNsYWltSW5wdXQSEgoKdXBsb2FkX2lkcxgDIAMoCSI+ChNDcmVhdGVDbGFpbVJlc3BvbnNlEicKBWNsYWltGAEgASgLMhguY2FzaGZsb3cuY2xhaW0udjEuQ2xhaW0imQEKElVwZGF0ZUNsYWltUmVxdWVzdBIoCgNyZWYYASABKAsyGy5jYXNoZmxvdy5jbGFpbS52MS5DbGFpbVJlZhIsCgVjbGFpbRgCIAEoCzIdLmNhc2hmbG93LmNsYWltLnYxLkNsYWltSW5wdXQSEgoKdXBsb2FkX2lkcxgDIAMoCRIXCg9yZW1vdmVfZmlsZV9pZHMYBCADKAMiPgoTVXBkYXRlQ2xhaW1SZXNwb25zZRInCgVjbGFpbRgBIAEoCzIYLmNhc2hmbG93LmNsYWltLnYxLkNsYWltKlcKCUNsYWltS2luZBIaChZDTEFJTV9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSQ0xBSU1fS0lORF9FWFBFTlNFEAESFgoSQ0xBSU1fS0lORF9JTlZPSUNFEAIqZQoFUXVldWUSFQoRUVVFVUVfVU5TUEVDSUZJRUQQABIQCgxRVUVVRV9BVFRFU1QQARIRCg1RVUVVRV9DT05GSVJNEAISEQoNUVVFVUVfQUNDT1VOVBADEg0KCVFVRVVFX1BBWRAEKoEBCgVTdGFnZRIVChFTVEFHRV9VTlNQRUNJRklFRBAAEhMKD1NUQUdFX1NVQk1JVFRFRBABEhIKDlNUQUdFX0FUVEVTVEVEEAISEwoPU1RBR0VfQ09ORklSTUVEEAMSDgoKU1RBR0VfUEFJRBAEEhMKD1NUQUdFX0FDQ09VTlRFRBAFKp0BCglTb3J0RmllbGQSGgoWU09SVF9GSUVMRF9VTlNQRUNJRklFRBAAEhMKD1NPUlRfRklFTERfREFURRABEhUKEVNPUlRfRklFTERfQU1PVU5UEAISGgoWU09SVF9GSUVMRF9ERVNDUklQVElPThADEhQKEFNPUlRfRklFTERfT1dORVIQBBIWChJTT1JUX0ZJRUxEX0NSRUFURUQQBTKcCQoMQ2xhaW1TZXJ2aWNlEl4KCkxpc3RDbGFpbXMSJC5jYXNoZmxvdy5jbGFpbS52MS5MaXN0Q2xhaW1zUmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkxpc3RDbGFpbXNSZXNwb25zZSIDkAIBElgKCEdldENsYWltEiIuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXF1ZXN0GiMuY2FzaGZsb3cuY2xhaW0udjEuR2V0Q2xhaW1SZXNwb25zZSIDkAIBEmoKDkdldFF1ZXVlQ291bnRzEiguY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXF1ZXN0GikuY2FzaGZsb3cuY2xhaW0udjEuR2V0UXVldWVDb3VudHNSZXNwb25zZSIDkAIBEmEKC0dldE92ZXJ2aWV3EiUuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuR2V0T3ZlcnZpZXdSZXNwb25zZSIDkAIBElkKCkFkZENvbW1lbnQSJC5jYXNoZmxvdy5jbGFpbS52MS5BZGRDb21tZW50UmVxdWVzdBolLmNhc2hmbG93LmNsYWltLnYxLkFkZENvbW1lbnRSZXNwb25zZRJtCg9TZXRQYXJ0QXR0ZXN0ZWQSKS5jYXNoZmxvdy5jbGFpbS52MS5TZXRQYXJ0QXR0ZXN0ZWRSZXF1ZXN0GiouY2FzaGZsb3cuY2xhaW0udjEuU2V0UGFydEF0dGVzdGVkUmVzcG9uc2UiA5ACAhJkCgxTZXRDb25maXJtZWQSJi5jYXNoZmxvdy5jbGFpbS52MS5TZXRDb25maXJtZWRSZXF1ZXN0GicuY2FzaGZsb3cuY2xhaW0udjEuU2V0Q29uZmlybWVkUmVzcG9uc2UiA5ACAhJeCgpTZXRGbGFnZ2VkEiQuY2FzaGZsb3cuY2xhaW0udjEuU2V0RmxhZ2dlZFJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5TZXRGbGFnZ2VkUmVzcG9uc2UiA5ACAhJZCgpQYXlJbnZvaWNlEiQuY2FzaGZsb3cuY2xhaW0udjEuUGF5SW52b2ljZVJlcXVlc3QaJS5jYXNoZmxvdy5jbGFpbS52MS5QYXlJbnZvaWNlUmVzcG9uc2USXAoLRGVsZXRlQ2xhaW0SJS5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlcXVlc3QaJi5jYXNoZmxvdy5jbGFpbS52MS5EZWxldGVDbGFpbVJlc3BvbnNlElwKC0NyZWF0ZUNsYWltEiUuY2FzaGZsb3cuY2xhaW0udjEuQ3JlYXRlQ2xhaW1SZXF1ZXN0GiYuY2FzaGZsb3cuY2xhaW0udjEuQ3JlYXRlQ2xhaW1SZXNwb25zZRJcCgtVcGRhdGVDbGFpbRIlLmNhc2hmbG93LmNsYWltLnYxLlVwZGF0ZUNsYWltUmVxdWVzdBomLmNhc2hmbG93LmNsYWltLnYxLlVwZGF0ZUNsYWltUmVzcG9uc2VC0QEKFWNvbS5jYXNoZmxvdy5jbGFpbS52MUIKQ2xhaW1Qcm90b1ABWkZnaXRodWIuY29tL2RhdGFzZWt0aW9uZW4vY2FzaGZsb3cvc2VydmVyL2dlbi9jYXNoZmxvdy9jbGFpbS92MTtjbGFpbXYxogIDQ0NYqgIRQ2FzaGZsb3cuQ2xhaW0uVjHKAhFDYXNoZmxvd1xDbGFpbVxWMeICHUNhc2hmbG93XENsYWltXFYxXEdQQk1ldGFkYXRh6gITQ2FzaGZsb3c6OkNsYWltOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message cashflow.claim.v1.Person
@@ -1590,6 +1590,312 @@ export const DeleteClaimResponseSchema: GenMessage<DeleteClaimResponse, {jsonTyp
   messageDesc(file_cashflow_claim_v1_claim, 30);
 
 /**
+ * ClaimInput is a claim as the create and edit forms send it.
+ *
+ * @generated from message cashflow.claim.v1.ClaimInput
+ */
+export type ClaimInput = Message<"cashflow.claim.v1.ClaimInput"> & {
+  /**
+   * @generated from field: string description = 1;
+   */
+  description: string;
+
+  /**
+   * YYYY-MM-DD: the expense date (required), or the invoice date (optional).
+   *
+   * @generated from field: string date = 2;
+   */
+  date: string;
+
+  /**
+   * Invoices only.
+   *
+   * @generated from field: string invoice_number = 3;
+   */
+  invoiceNumber: string;
+
+  /**
+   * @generated from field: string due_date = 4;
+   */
+  dueDate: string;
+
+  /**
+   * @generated from field: repeated cashflow.claim.v1.PartInput parts = 5;
+   */
+  parts: PartInput[];
+};
+
+/**
+ * ClaimInput is a claim as the create and edit forms send it.
+ *
+ * @generated from message cashflow.claim.v1.ClaimInput
+ */
+export type ClaimInputJson = {
+  /**
+   * @generated from field: string description = 1;
+   */
+  description?: string;
+
+  /**
+   * YYYY-MM-DD: the expense date (required), or the invoice date (optional).
+   *
+   * @generated from field: string date = 2;
+   */
+  date?: string;
+
+  /**
+   * Invoices only.
+   *
+   * @generated from field: string invoice_number = 3;
+   */
+  invoiceNumber?: string;
+
+  /**
+   * @generated from field: string due_date = 4;
+   */
+  dueDate?: string;
+
+  /**
+   * @generated from field: repeated cashflow.claim.v1.PartInput parts = 5;
+   */
+  parts?: PartInputJson[];
+};
+
+/**
+ * Describes the message cashflow.claim.v1.ClaimInput.
+ * Use `create(ClaimInputSchema)` to create a new message.
+ */
+export const ClaimInputSchema: GenMessage<ClaimInput, {jsonType: ClaimInputJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 31);
+
+/**
+ * @generated from message cashflow.claim.v1.PartInput
+ */
+export type PartInput = Message<"cashflow.claim.v1.PartInput"> & {
+  /**
+   * @generated from field: string cost_centre = 1;
+   */
+  costCentre: string;
+
+  /**
+   * @generated from field: string secondary_cost_centre = 2;
+   */
+  secondaryCostCentre: string;
+
+  /**
+   * @generated from field: string budget_line = 3;
+   */
+  budgetLine: string;
+
+  /**
+   * @generated from field: int64 amount_ore = 4;
+   */
+  amountOre: bigint;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.PartInput
+ */
+export type PartInputJson = {
+  /**
+   * @generated from field: string cost_centre = 1;
+   */
+  costCentre?: string;
+
+  /**
+   * @generated from field: string secondary_cost_centre = 2;
+   */
+  secondaryCostCentre?: string;
+
+  /**
+   * @generated from field: string budget_line = 3;
+   */
+  budgetLine?: string;
+
+  /**
+   * @generated from field: int64 amount_ore = 4;
+   */
+  amountOre?: string;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.PartInput.
+ * Use `create(PartInputSchema)` to create a new message.
+ */
+export const PartInputSchema: GenMessage<PartInput, {jsonType: PartInputJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 32);
+
+/**
+ * @generated from message cashflow.claim.v1.CreateClaimRequest
+ */
+export type CreateClaimRequest = Message<"cashflow.claim.v1.CreateClaimRequest"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimKind kind = 1;
+   */
+  kind: ClaimKind;
+
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimInput claim = 2;
+   */
+  claim?: ClaimInput | undefined;
+
+  /**
+   * At least one, from POST /files.
+   *
+   * @generated from field: repeated string upload_ids = 3;
+   */
+  uploadIds: string[];
+};
+
+/**
+ * @generated from message cashflow.claim.v1.CreateClaimRequest
+ */
+export type CreateClaimRequestJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimKind kind = 1;
+   */
+  kind?: ClaimKindJson;
+
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimInput claim = 2;
+   */
+  claim?: ClaimInputJson;
+
+  /**
+   * At least one, from POST /files.
+   *
+   * @generated from field: repeated string upload_ids = 3;
+   */
+  uploadIds?: string[];
+};
+
+/**
+ * Describes the message cashflow.claim.v1.CreateClaimRequest.
+ * Use `create(CreateClaimRequestSchema)` to create a new message.
+ */
+export const CreateClaimRequestSchema: GenMessage<CreateClaimRequest, {jsonType: CreateClaimRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 33);
+
+/**
+ * @generated from message cashflow.claim.v1.CreateClaimResponse
+ */
+export type CreateClaimResponse = Message<"cashflow.claim.v1.CreateClaimResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.CreateClaimResponse
+ */
+export type CreateClaimResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.CreateClaimResponse.
+ * Use `create(CreateClaimResponseSchema)` to create a new message.
+ */
+export const CreateClaimResponseSchema: GenMessage<CreateClaimResponse, {jsonType: CreateClaimResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 34);
+
+/**
+ * @generated from message cashflow.claim.v1.UpdateClaimRequest
+ */
+export type UpdateClaimRequest = Message<"cashflow.claim.v1.UpdateClaimRequest"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef ref = 1;
+   */
+  ref?: ClaimRef | undefined;
+
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimInput claim = 2;
+   */
+  claim?: ClaimInput | undefined;
+
+  /**
+   * Files to add, from POST /files.
+   *
+   * @generated from field: repeated string upload_ids = 3;
+   */
+  uploadIds: string[];
+
+  /**
+   * Attached files to remove (File.id).
+   *
+   * @generated from field: repeated int64 remove_file_ids = 4;
+   */
+  removeFileIds: bigint[];
+};
+
+/**
+ * @generated from message cashflow.claim.v1.UpdateClaimRequest
+ */
+export type UpdateClaimRequestJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimRef ref = 1;
+   */
+  ref?: ClaimRefJson;
+
+  /**
+   * @generated from field: cashflow.claim.v1.ClaimInput claim = 2;
+   */
+  claim?: ClaimInputJson;
+
+  /**
+   * Files to add, from POST /files.
+   *
+   * @generated from field: repeated string upload_ids = 3;
+   */
+  uploadIds?: string[];
+
+  /**
+   * Attached files to remove (File.id).
+   *
+   * @generated from field: repeated int64 remove_file_ids = 4;
+   */
+  removeFileIds?: string[];
+};
+
+/**
+ * Describes the message cashflow.claim.v1.UpdateClaimRequest.
+ * Use `create(UpdateClaimRequestSchema)` to create a new message.
+ */
+export const UpdateClaimRequestSchema: GenMessage<UpdateClaimRequest, {jsonType: UpdateClaimRequestJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 35);
+
+/**
+ * @generated from message cashflow.claim.v1.UpdateClaimResponse
+ */
+export type UpdateClaimResponse = Message<"cashflow.claim.v1.UpdateClaimResponse"> & {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: Claim | undefined;
+};
+
+/**
+ * @generated from message cashflow.claim.v1.UpdateClaimResponse
+ */
+export type UpdateClaimResponseJson = {
+  /**
+   * @generated from field: cashflow.claim.v1.Claim claim = 1;
+   */
+  claim?: ClaimJson;
+};
+
+/**
+ * Describes the message cashflow.claim.v1.UpdateClaimResponse.
+ * Use `create(UpdateClaimResponseSchema)` to create a new message.
+ */
+export const UpdateClaimResponseSchema: GenMessage<UpdateClaimResponse, {jsonType: UpdateClaimResponseJson}> = /*@__PURE__*/
+  messageDesc(file_cashflow_claim_v1_claim, 36);
+
+/**
  * @generated from enum cashflow.claim.v1.ClaimKind
  */
 export enum ClaimKind {
@@ -1879,6 +2185,29 @@ export const ClaimService: GenService<{
     methodKind: "unary";
     input: typeof DeleteClaimRequestSchema;
     output: typeof DeleteClaimResponseSchema;
+  },
+  /**
+   * CreateClaim submits a new expense or invoice owned by the caller. Files
+   * are uploaded first (POST /files) and referenced by upload id. Invalid
+   * input fails with cashflow.common.v1.FieldViolations.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.CreateClaim
+   */
+  createClaim: {
+    methodKind: "unary";
+    input: typeof CreateClaimRequestSchema;
+    output: typeof CreateClaimResponseSchema;
+  },
+  /**
+   * UpdateClaim edits the caller's own unpaid claim. Changing parts or files
+   * voids the receipt's confirmation; editing an expense clears its flag.
+   *
+   * @generated from rpc cashflow.claim.v1.ClaimService.UpdateClaim
+   */
+  updateClaim: {
+    methodKind: "unary";
+    input: typeof UpdateClaimRequestSchema;
+    output: typeof UpdateClaimResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_cashflow_claim_v1_claim, 0);

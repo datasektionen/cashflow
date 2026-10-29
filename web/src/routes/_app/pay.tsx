@@ -9,8 +9,8 @@ import { Page } from "#/components/layout/page";
 import { StateCard } from "#/components/layout/states";
 import { PayoutCard, PayoutReceipt } from "#/components/payments/payout-card";
 import { Skeleton } from "#/components/ui/skeleton";
-import { listPendingPayouts } from "#/gen/cashflow/payment/v1/payment-PaymentService_connectquery";
 import type { CreatePayoutResponse } from "#/gen/cashflow/payment/v1/payment_pb";
+import { listPendingPayouts } from "#/gen/cashflow/payment/v1/payment-PaymentService_connectquery";
 import { useT } from "#/lib/i18n";
 
 export const Route = createFileRoute("/_app/pay")({

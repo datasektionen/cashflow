@@ -13,9 +13,11 @@ import (
 	auth "github.com/datasektionen/GO-auth-yourself"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/datasektionen/cashflow/server/gen/cashflow/budget/v1/budgetv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/claim/v1/claimv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/payment/v1/paymentv1connect"
 	"github.com/datasektionen/cashflow/server/gen/cashflow/user/v1/userv1connect"
+	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/claims"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
 	"github.com/datasektionen/cashflow/server/internal/hive"
@@ -28,6 +30,7 @@ import (
 type Deps struct {
 	Pool      *pgxpool.Pool
 	PublicURL string
+	Budget    *budget.Client
 	Hive      *hive.Client
 	Files     *storage.Store
 }
@@ -61,12 +64,14 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	api.Handle(userv1connect.NewUserServiceHandler(&rpc.UserService{Queries: queries}, opts))
 	api.Handle(claimv1connect.NewClaimServiceHandler(&rpc.ClaimService{Store: claimStore}, opts))
 	api.Handle(paymentv1connect.NewPaymentServiceHandler(&rpc.PaymentService{Store: claimStore}, opts))
+	api.Handle(budgetv1connect.NewBudgetServiceHandler(&rpc.BudgetService{Budget: deps.Budget, Store: claimStore}, opts))
 	// The frontend reaches the services at /api/<service>/<method>.
 	// Connect uses POST, and GET for side-effect-free calls.
 	mux.Handle("POST /api/", http.StripPrefix("/api", api))
 	mux.Handle("GET /api/", http.StripPrefix("/api", api))
 
 	mux.Handle("GET /files/{id}", filesHandler(claimStore, deps.Files, deps.Hive))
+	mux.Handle("POST /files", uploadHandler(queries, deps.Files, deps.Hive))
 
 	// Everything else is the frontend; more specific routes above win.
 	mux.Handle("GET /", spa.Handler(spa.Dist()))

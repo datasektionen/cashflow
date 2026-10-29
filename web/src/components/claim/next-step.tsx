@@ -11,6 +11,7 @@ import {
   FlagOff,
   Hourglass,
   Loader2,
+  Pencil,
   Stamp,
   Trash2,
   Undo2,
@@ -39,7 +40,7 @@ import { type Claim, ClaimKind } from "#/gen/cashflow/claim/v1/claim_pb";
 import { listClaims } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
 import type { Capabilities } from "#/gen/cashflow/user/v1/user_pb";
 import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
-import { claimLink, formatDate, type QueueSlug, queueToProto } from "#/lib/claims";
+import { claimEditLink, claimLink, formatDate, type QueueSlug, queueToProto } from "#/lib/claims";
 import { type Messages, useLocale, useT } from "#/lib/i18n";
 import { cn } from "#/lib/utils";
 import { useClaimAction } from "./use-claim-action";
@@ -180,6 +181,12 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
             {pending === "confirm" ? <Loader2 className="animate-spin" /> : <BadgeCheck />}
             {act.confirm}
           </Button>
+        )}
+        {a.edit && (
+          // Fixing a flagged expense is the owner's next step, so it leads then.
+          <ButtonLink variant={s.status?.flagged ? "default" : "outline"} {...claimEditLink(s.kind, s.number)}>
+            <Pencil /> {s.status?.flagged ? act.fix : act.edit}
+          </ButtonLink>
         )}
         {a.pay && (
           <Button

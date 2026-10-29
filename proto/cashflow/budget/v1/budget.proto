@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package cashflow.budget.v1;
+
+import "cashflow/claim/v1/claim.proto";
+
+// BudgetService serves Datasektionen's budget from GOrdian, with how much of
+// each budget line claims have used this year.
+service BudgetService {
+  // GetBudget returns every cost centre with its secondary cost centres and
+  // budget lines. Unavailable until GOrdian has answered once.
+  rpc GetBudget(GetBudgetRequest) returns (GetBudgetResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+message GetBudgetRequest {
+  // Leave this claim out of the usage, e.g. the one being edited.
+  cashflow.claim.v1.ClaimRef exclude = 1;
+}
+
+message GetBudgetResponse {
+  repeated CostCentre cost_centres = 1;
+  // The year the usage counts.
+  int32 year = 2;
+}
+
+message CostCentre {
+  int32 id = 1;
+  string name = 2;
+  // committee, partition, project, projectX or other.
+  string type = 3;
+  repeated SecondaryCostCentre secondary = 4;
+}
+
+message SecondaryCostCentre {
+  int32 id = 1;
+  string name = 2;
+  repeated BudgetLine lines = 3;
+}
+
+message BudgetLine {
+  int32 id = 1;
+  string name = 2;
+  repeated int32 accounts = 3;
+  // The line's expense budget in öre; 0 means no expense budget.
+  int64 expense_ore = 4;
+  int64 income_ore = 5;
+  string comment = 6;
+  // Claimed on the line this year (by expense or invoice date).
+  int64 used_ore = 7;
+}

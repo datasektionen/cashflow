@@ -56,6 +56,15 @@ service ClaimService {
 
   // DeleteClaim deletes an unpaid claim.
   rpc DeleteClaim(DeleteClaimRequest) returns (DeleteClaimResponse);
+
+  // CreateClaim submits a new expense or invoice owned by the caller. Files
+  // are uploaded first (POST /files) and referenced by upload id. Invalid
+  // input fails with cashflow.common.v1.FieldViolations.
+  rpc CreateClaim(CreateClaimRequest) returns (CreateClaimResponse);
+
+  // UpdateClaim edits the caller's own unpaid claim. Changing parts or files
+  // voids the receipt's confirmation; editing an expense clears its flag.
+  rpc UpdateClaim(UpdateClaimRequest) returns (UpdateClaimResponse);
 }
 
 enum ClaimKind {
@@ -309,3 +318,45 @@ message DeleteClaimRequest {
 }
 
 message DeleteClaimResponse {}
+
+// ClaimInput is a claim as the create and edit forms send it.
+message ClaimInput {
+  string description = 1;
+  // YYYY-MM-DD: the expense date (required), or the invoice date (optional).
+  string date = 2;
+  // Invoices only.
+  string invoice_number = 3;
+  string due_date = 4;
+  repeated PartInput parts = 5;
+}
+
+message PartInput {
+  string cost_centre = 1;
+  string secondary_cost_centre = 2;
+  string budget_line = 3;
+  int64 amount_ore = 4;
+}
+
+message CreateClaimRequest {
+  ClaimKind kind = 1;
+  ClaimInput claim = 2;
+  // At least one, from POST /files.
+  repeated string upload_ids = 3;
+}
+
+message CreateClaimResponse {
+  Claim claim = 1;
+}
+
+message UpdateClaimRequest {
+  ClaimRef ref = 1;
+  ClaimInput claim = 2;
+  // Files to add, from POST /files.
+  repeated string upload_ids = 3;
+  // Attached files to remove (File.id).
+  repeated int64 remove_file_ids = 4;
+}
+
+message UpdateClaimResponse {
+  Claim claim = 1;
+}

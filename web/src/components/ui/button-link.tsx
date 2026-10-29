@@ -1,22 +1,19 @@
 import { createLink, type LinkComponent } from "@tanstack/react-router";
+import type { VariantProps } from "class-variance-authority";
 import { type ComponentProps, forwardRef } from "react";
-import { Button } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button";
+import { cn } from "#/lib/utils";
 
-type ButtonAnchorProps = Omit<ComponentProps<typeof Button>, "render" | "nativeButton"> & ComponentProps<"a">;
+type ButtonAnchorProps = ComponentProps<"a"> & VariantProps<typeof buttonVariants>;
 
-// A Button that navigates. Base UI needs nativeButton={false} when a button
-// renders as <a>, so links keep link semantics instead of fake button ones.
-const ButtonAnchor = forwardRef<HTMLAnchorElement, ButtonAnchorProps>(function ButtonAnchor(props, ref) {
-  const { variant, size, className, ...anchorProps } = props;
-  return (
-    <Button
-      variant={variant}
-      size={size}
-      className={className}
-      nativeButton={false}
-      render={<a ref={ref} {...anchorProps} />}
-    />
-  );
+// A link that looks like a Button. It renders a plain <a> with the button's
+// styles rather than Base UI's Button, which would add role="button": links
+// should stay links for screen readers, middle-click and "open in new tab".
+const ButtonAnchor = forwardRef<HTMLAnchorElement, ButtonAnchorProps>(function ButtonAnchor(
+  { variant, size, className, ...props },
+  ref,
+) {
+  return <a ref={ref} data-slot="button" className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 });
 
 const CreatedButtonLink = createLink(ButtonAnchor);

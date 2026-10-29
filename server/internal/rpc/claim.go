@@ -353,3 +353,81 @@ func (s *ClaimService) DeleteClaim(ctx context.Context, req *connect.Request[cla
 	}
 	return connect.NewResponse(&claimv1.DeleteClaimResponse{}), nil
 }
+
+func fromProtoInput(m *claimv1.ClaimInput) (claims.Input, error) {
+	in := claims.Input{Description: m.GetDescription(), InvoiceNumber: m.GetInvoiceNumber()}
+	var v violations
+	parse := func(field, value string) *time.Time {
+		if value == "" {
+			return nil
+		}
+		d, err := time.Parse(time.DateOnly, value)
+		if err != nil {
+			v.add(field, field+".invalid")
+			return nil
+		}
+		return &d
+	}
+	in.Date = parse("date", m.GetDate())
+	in.DueDate = parse("due_date", m.GetDueDate())
+	for _, p := range m.GetParts() {
+		in.Parts = append(in.Parts, claims.PartInput{
+			CostCentre: p.CostCentre, SecondaryCostCentre: p.SecondaryCostCentre, BudgetLine: p.BudgetLine, AmountOre: p.AmountOre,
+		})
+	}
+	return in, v.err()
+}
+
+// inputError reports invalid input as field violations; other errors as usual.
+func inputError(err error) error {
+	var invalid *claims.InvalidInput
+	if errors.As(err, &invalid) {
+		var v violations
+		for _, violation := range invalid.Violations {
+			v.add(violation.Field, violation.Code)
+		}
+		return v.err()
+	}
+	return claimError(err)
+}
+
+func (s *ClaimService) CreateClaim(ctx context.Context, req *connect.Request[claimv1.CreateClaimRequest]) (*connect.Response[claimv1.CreateClaimResponse], error) {
+	kind := kindFromProto[req.Msg.Kind]
+	if kind == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("a claim kind is required"))
+	}
+	in, err := fromProtoInput(req.Msg.Claim)
+	if err != nil {
+		return nil, err
+	}
+	in.UploadIDs = req.Msg.UploadIds
+	number, err := s.Store.Create(ctx, callerFrom(ctx).viewer, kind, in)
+	if err != nil {
+		return nil, inputError(err)
+	}
+	claim, err := s.load(ctx, kind, number)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.CreateClaimResponse{Claim: claim}), nil
+}
+
+func (s *ClaimService) UpdateClaim(ctx context.Context, req *connect.Request[claimv1.UpdateClaimRequest]) (*connect.Response[claimv1.UpdateClaimResponse], error) {
+	kind, number, err := ref(req.Msg.Ref)
+	if err != nil {
+		return nil, err
+	}
+	in, err := fromProtoInput(req.Msg.Claim)
+	if err != nil {
+		return nil, err
+	}
+	in.UploadIDs, in.RemoveFileIDs = req.Msg.UploadIds, req.Msg.RemoveFileIds
+	if err := s.Store.Update(ctx, callerFrom(ctx).viewer, kind, number, in); err != nil {
+		return nil, inputError(err)
+	}
+	claim, err := s.load(ctx, kind, number)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&claimv1.UpdateClaimResponse{Claim: claim}), nil
+}

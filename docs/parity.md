@@ -28,13 +28,13 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 
 | Feature | Cashflow 4 |
 |---|---|
-| Create expense: description, date, parts (cost centre / secondary / budget line / amount), receipts (required) | 🔜 2 |
-| Create invoice: description, invoice number, invoice date, due date, parts, files (required) | 🔜 2 |
-| Part pickers from GOrdian (active + inactive names from existing parts) | 🔜 2 |
-| Budget-line usage warning when a part would exceed the line's budget | 🔜 2 |
-| HEIC/HEIF uploads converted to JPEG | 🔜 2 (in the browser) |
-| PDF page count shown on upload (`RegisterPageCount`) | 🔜 2 |
-| Edit own unpaid claim: fields, replace parts, add/remove files; editing parts or files voids the confirmation; editing unflags | 🔜 2 |
+| Create expense: description, date, parts (cost centre / secondary / budget line / amount), receipts (required) | ✅ all problems shown at once, next to their fields |
+| Create invoice: description, invoice number, invoice date, due date, parts, files (required) | ✅ |
+| Part pickers from GOrdian (active + inactive names from existing parts) | ✅ narrowing step by step; an old name stays, marked "no longer in the budget" |
+| Budget-line usage warning when a part would exceed the line's budget | ✅ also shows what is left, counting the claim's other parts |
+| HEIC/HEIF uploads converted to JPEG | ✅ in the browser (heic-to, loaded only when needed) |
+| PDF page count shown on upload (`RegisterPageCount`) | ✅ |
+| Edit own unpaid claim: fields, replace parts, add/remove files; editing parts or files voids the confirmation; editing unflags | ✅ better: unchanged parts keep their attestations |
 | Delete claim: owner or `delete` permission, not once paid | ✅ behind a confirmation dialog |
 | Comment on a claim | ✅ Ctrl/⌘+Enter sends |
 | Attest / unattest a part (scoped; never one's own expense; not while flagged) | ✅ |
@@ -52,6 +52,9 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 |---|---|
 | "Next step" panel on every claim: where it stands, who acts next, the viewer's action, and why an expected action is unavailable | Nothing should be confusing |
 | "Next in queue" (N) after opening a claim from a queue | Work through a queue without going back to the list |
+| Files upload while the form is filled in, with progress, retry and a camera button on phones | Submitting is instant; fewer lost receipts |
+| Uploads are checked by content (JPEG, PNG, WebP, PDF) and served same-origin with a permission check | Cashflow 3 accepted any file and handed out presigned S3 links |
+| GOrdian account ranges include their last account ("3021-3025") | Cashflow 3 dropped the last one |
 
 ## Notifications
 
@@ -78,7 +81,7 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 |---|---|
 | Budget page: cost centres from GOrdian, "blown" filter (`/budget`) | 🔜 4 |
 | Cost centre detail: budget lines with uploaded / attested / paid vs budget (`/budget/[id]`) | 🔜 4 |
-| GOrdian cache warm-up (`warm_gordian_cache`) | 🔜 2, in-process cache refreshed in the background |
+| GOrdian cache warm-up (`warm_gordian_cache`) | ✅ in memory, loaded at start and refreshed every 12 hours |
 | Statistics: monthly, yearly, leaderboard by total and count (`/stats`) | 🔜 4 |
 | Personal stats on one's claims page (totals, rank) | 🔜 4 |
 | Admin user page: a user's claims and bank details (`/admin/users/[user]`, pay or view-all) | 🔜 4 |

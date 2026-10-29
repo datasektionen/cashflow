@@ -75,3 +75,20 @@ export const payInvoice = ClaimService.method.payInvoice;
  * @generated from rpc cashflow.claim.v1.ClaimService.DeleteClaim
  */
 export const deleteClaim = ClaimService.method.deleteClaim;
+
+/**
+ * CreateClaim submits a new expense or invoice owned by the caller. Files
+ * are uploaded first (POST /files) and referenced by upload id. Invalid
+ * input fails with cashflow.common.v1.FieldViolations.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.CreateClaim
+ */
+export const createClaim = ClaimService.method.createClaim;
+
+/**
+ * UpdateClaim edits the caller's own unpaid claim. Changing parts or files
+ * voids the receipt's confirmation; editing an expense clears its flag.
+ *
+ * @generated from rpc cashflow.claim.v1.ClaimService.UpdateClaim
+ */
+export const updateClaim = ClaimService.method.updateClaim;

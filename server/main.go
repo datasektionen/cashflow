@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/config"
 	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/hive"
@@ -52,10 +53,14 @@ func run(ctx context.Context) error {
 
 	// Sends emails queued by workflow changes; stops with the server.
 	go outbox.NewWorker(pool, env.Outbox).Run(ctx)
+	// Keeps GOrdian's budget in memory, refreshed in the background.
+	budgetClient := budget.NewClient(env.BudgetURL)
+	go budgetClient.Run(ctx)
 
 	handler, err := web.NewHandler(ctx, web.Deps{
 		Pool:      pool,
 		PublicURL: env.PublicURL,
+		Budget:    budgetClient,
 		Hive:      hive.NewClient(env.HiveURL, env.HiveSecret),
 		Files:     files,
 	})
