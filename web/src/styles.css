@@ -1,0 +1,233 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/bricolage-grotesque";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Cashflow palette. The brand is a money green; neutrals carry a trace of its
+   hue (160) so greys sit beside it instead of reading blue. Datasektionen's
+   cerise appears only as a small accent (the delta mark, focus of attention),
+   never as a second brand colour. Success shares the green family, so success
+   states always carry an icon or a word, not colour alone. */
+:root {
+  color-scheme: light;
+  --background: oklch(0.985 0.003 160);
+  --foreground: oklch(0.2 0.012 165);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.012 165);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.012 165);
+  --primary: oklch(0.5 0.13 158);
+  --primary-foreground: oklch(0.99 0.01 158);
+  /* Text on a primary wash (bg-primary/10): the fill itself is too light to read there. */
+  --primary-ink: oklch(0.42 0.11 158);
+  --secondary: oklch(0.955 0.006 160);
+  --secondary-foreground: oklch(0.26 0.012 165);
+  --muted: oklch(0.962 0.005 160);
+  --muted-foreground: oklch(0.5 0.014 165);
+  --accent: oklch(0.95 0.025 158);
+  --accent-foreground: oklch(0.3 0.07 160);
+  --destructive: oklch(0.57 0.21 25);
+  --destructive-ink: oklch(0.47 0.17 25);
+  --success: oklch(0.6 0.14 152);
+  --success-ink: oklch(0.43 0.11 152);
+  --warning: oklch(0.77 0.15 80);
+  --warning-ink: oklch(0.47 0.11 70);
+  --info: oklch(0.56 0.14 245);
+  --info-ink: oklch(0.45 0.12 245);
+  --cerise: oklch(0.63 0.22 2);
+  --border: oklch(0.915 0.006 160);
+  --input: oklch(0.895 0.008 160);
+  --ring: oklch(0.5 0.13 158);
+  --chart-1: oklch(0.5 0.13 158);
+  --chart-2: oklch(0.45 0.03 250);
+  --chart-3: oklch(0.76 0.14 80);
+  --chart-4: oklch(0.63 0.22 2);
+  --chart-5: oklch(0.7 0.1 190);
+  --radius: 0.7rem;
+  /* The app frame is a deep forest green in both themes; pages sit on it as an
+     inset sheet, so Cashflow reads as itself and not as a stock dashboard. */
+  --sidebar: oklch(0.225 0.04 165);
+  --sidebar-foreground: oklch(0.86 0.02 160);
+  --sidebar-primary: oklch(0.78 0.15 155);
+  --sidebar-primary-foreground: oklch(0.2 0.04 165);
+  --sidebar-accent: oklch(1 0 0 / 8%);
+  --sidebar-accent-foreground: oklch(0.98 0.01 160);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.78 0.15 155);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.17 0.008 165);
+  --foreground: oklch(0.95 0.005 160);
+  --card: oklch(0.2 0.009 165);
+  --card-foreground: oklch(0.95 0.005 160);
+  --popover: oklch(0.215 0.009 165);
+  --popover-foreground: oklch(0.95 0.005 160);
+  --primary: oklch(0.7 0.15 156);
+  --primary-foreground: oklch(0.18 0.04 165);
+  --primary-ink: oklch(0.78 0.13 156);
+  --secondary: oklch(0.25 0.009 165);
+  --secondary-foreground: oklch(0.95 0.005 160);
+  --muted: oklch(0.235 0.008 165);
+  --muted-foreground: oklch(0.68 0.012 160);
+  --accent: oklch(0.27 0.03 160);
+  --accent-foreground: oklch(0.95 0.005 160);
+  --destructive: oklch(0.66 0.2 25);
+  --destructive-ink: oklch(0.74 0.15 25);
+  --success: oklch(0.7 0.14 152);
+  --success-ink: oklch(0.78 0.12 152);
+  --warning: oklch(0.8 0.14 82);
+  --warning-ink: oklch(0.84 0.12 82);
+  --info: oklch(0.7 0.13 245);
+  --info-ink: oklch(0.78 0.11 245);
+  --cerise: oklch(0.7 0.19 2);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.7 0.15 156);
+  --chart-1: oklch(0.7 0.15 156);
+  --chart-2: oklch(0.72 0.03 250);
+  --chart-3: oklch(0.8 0.13 80);
+  --chart-4: oklch(0.7 0.19 2);
+  --chart-5: oklch(0.74 0.1 190);
+  --sidebar: oklch(0.145 0.025 165);
+  --sidebar-foreground: oklch(0.84 0.015 160);
+  --sidebar-primary: oklch(0.76 0.15 155);
+  --sidebar-primary-foreground: oklch(0.18 0.04 165);
+  --sidebar-accent: oklch(1 0 0 / 7%);
+  --sidebar-accent-foreground: oklch(0.97 0.005 160);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.76 0.15 155);
+}
+
+@theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  /* Page titles and headline figures only. */
+  --font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-ink: var(--primary-ink);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
+  --color-success: var(--success);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-info: var(--info);
+  --color-info-ink: var(--info-ink);
+  --color-cerise: var(--cerise);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-sidebar font-sans text-foreground antialiased;
+  }
+}
+
+/* Amounts: monospaced, tabular figures, so columns of kronor line up. */
+@utility amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: -0.01em;
+}
+
+/* The torn bottom edge of a till receipt, for receipt-like cards (claim
+   summaries, payment slips). Pure mask, so it works on any background. */
+@utility receipt-edge {
+  --tooth: 10px;
+  padding-bottom: calc(var(--tooth) + 0.5rem);
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2)
+      var(--tooth) repeat-x;
+}
+
+/* A rubber stamp, for the moment a workflow step lands (ATTESTERAD, BETALD).
+   Decorative only: the same state is always shown as text elsewhere. */
+@utility stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.15em 0.6em;
+  border: 2px solid currentColor;
+  border-radius: 0.35rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  &:is(.dark *) {
+    mix-blend-mode: screen;
+  }
+}
+
+/* Faint ledger rules behind empty states and the login panel. */
+@utility ledger {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 27px,
+    color-mix(in oklch, currentColor 7%, transparent) 27px 28px
+  );
+}
+
+@keyframes stamp-in {
+  from {
+    transform: rotate(-12deg) scale(1.6);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-4deg) scale(1);
+    opacity: 0.9;
+  }
+}
+
+@utility animate-stamp {
+  animation: stamp-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

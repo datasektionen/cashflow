@@ -1,0 +1,167 @@
+# Development services for Cashflow 4 (server/ + web/). Run the server and the
+# web app on the host:
+#
+#   docker compose -f compose.next.yaml up -d
+#   cd server && go run .          # http://localhost:3000
+#   cd web && bun run dev          # http://localhost:5173, proxies to the server
+#
+# Copy server/.env.example to server/.env first.
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: cashflow
+      POSTGRES_PASSWORD: cashflow
+      POSTGRES_DB: cashflow
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cashflow"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+
+  # Mock SSO (7003) and Hive (7004)
+  nyckeln:
+    image: ghcr.io/datasektionen/nyckeln-under-dorrmattan
+    configs:
+      - source: nyckeln.yaml
+        target: /config.yaml
+    ports:
+      - 7003:7003
+      - 7004:7004
+
+  # Mock rfinger and spam
+  dock:
+    image: ghcr.io/datasektionen/dock:latest
+    configs:
+      - source: dock.yaml
+        target: /config.yaml
+    ports:
+      - 9003:9003
+
+configs:
+  dock.yaml:
+    content: |
+      rfinger:
+        default: http://localhost:9003
+        pictures:
+          turetek:
+            regular: https://thskth.se/wp-content/uploads/2023/06/ths-logo-bla-01-300x294-1.png
+            small: https://thskth.se/wp-content/uploads/2019/12/ths-logo-svart-01.png
+          diadat:
+            regular: https://dsekt-assets.s3.amazonaws.com/logotyp
+            small: https://dsekt-assets.s3.amazonaws.com/logotyp
+          marmed:
+            regular: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
+            small: https://storage.googleapis.com/medieteknik-static/static/logos/logo.webp
+
+  nyckeln.yaml:
+    content: |
+      clients:
+        - id: "client-id"
+          secret: "client-secret"
+          redirect_uris:
+            - http://localhost:5173/auth/callback
+
+      users:
+        - ug_kth_id: some-id
+          kth_id: turetek
+          email: turetek@kth.se
+          first_name: Ture
+          family_name: Teknolog
+        - ug_kth_id: some-other-id
+          kth_id: diadat
+          email: diadat@kth.se
+          first_name: Diana
+          family_name: Datalog
+          year_tag: D-83
+        - ug_kth_id: yet-anouther-id
+          kth_id: marmed
+          email: marmed@kth.se
+          first_name: Martin
+          family_name: Median
+          year_tag: Me-00
+        - ug_kth_id: yet-another-other-id
+          kth_id: jobjav
+          email: jobjav@kth.se
+          first_name: Jobbig
+          family_name: "\"Speciell\" Jävel"
+          year_tag: B-99
+        - ug_kth_id: the-one-ring-id
+          kth_id: sauron
+          email: sauron@kth.se
+          first_name: Sauron
+          family_name: Mordor
+        - ug_kth_id: the-accountant-id
+          kth_id: bilbek
+          email: bilbek@kth.se
+          first_name: Bilbo
+          family_name: Baggins
+
+
+      hive:
+        tokens:
+          - secret: spam-secrect
+            permissions:
+            - id: send
+          - secret: rfinger-secrect
+            permissions:
+            - id: get
+        groups:
+          - name: Kassör
+            id: kassor
+            domain: example.com
+            members:
+              - turetek
+            permissions: 
+              - id: accounting
+                scope: "*"
+              - id: attest
+                scope: "*"
+              - id: confirm
+                scope: "*"
+              - id: delete
+                scope: "*"
+              - id: edit-invoice
+                scope: "*"
+              - id: moderate-comments
+              - id: pay
+                scope: "*"
+              - id: unattest
+                scope: "*"
+              - id: unconfirm
+              - id: view-all-payments
+                scope: "*"
+              - id: attest-firmatecknare
+                scope: "*"
+              - id: manage-fortnox
+                scope: "*"
+              - id: view-expenses
+                scope: "*"
+          - name: Konglig Lokalchef
+            id: lokalchef
+            domain: example.com
+            members:
+              - diadat
+            permissions:
+              - id: attest
+                scope: Sektionslokalsgruppen
+              - id: accounting
+                scope: "*"
+          - name: Mottagningen
+            id: mottagningen
+            domain: example.com
+            members:
+              - bilbek
+            permissions:
+              - id: accounting
+                scope: "Mottagningen 2026"
+          - name: Allseeing Eye
+            id: allseeing
+            domain: example.com
+            members:
+              - sauron
+            permissions:
+              - id: view-all

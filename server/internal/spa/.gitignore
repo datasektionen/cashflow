@@ -1,0 +1,3 @@
+# Filled from web/dist/client at build time.
+dist/*
+!dist/.gitkeep

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package cashflow.user.v1;
+
+// UserService exposes the logged-in user and what they may do.
+service UserService {
+  // GetMe returns the logged-in user, their bank details and capabilities.
+  rpc GetMe(GetMeRequest) returns (GetMeResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  User user = 1;
+  Capabilities capabilities = 2;
+}
+
+message User {
+  // KTH ID, e.g. "turetek".
+  string username = 1;
+  string name = 2;
+  string email = 3;
+  string bank_account = 4;
+  string clearing_number = 5;
+  string bank_name = 6;
+}
+
+// Capabilities are resolved from Hive on the server, so the frontend only
+// decides what to show. Every action is checked again on the server.
+message Capabilities {
+  bool view_all = 1;
+  bool view_all_payments = 2;
+  // Cost centres the user may attest; attest_all means every cost centre.
+  bool attest_all = 3;
+  repeated string attest_cost_centres = 4;
+  bool unattest = 5;
+  // Also covers unconfirming.
+  bool confirm = 6;
+  reserved 7;
+  bool accounting_all = 8;
+  repeated string accounting_cost_centres = 9;
+  bool pay = 10;
+  bool delete = 11;
+  bool edit_invoice = 12;
+  bool moderate_comments = 13;
+  bool manage_fortnox = 14;
+  bool firmatecknare = 15;
+  bool view_account = 16;
+  repeated string view_cost_centres = 17;
+}

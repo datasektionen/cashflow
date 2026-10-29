@@ -1,0 +1,21 @@
+version: v2
+
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/datasektionen/cashflow/server/gen
+
+plugins:
+  - local: [go, -C, ../server, tool, protoc-gen-go]
+    out: ../server/gen
+    opt: [paths=source_relative]
+  - local: [go, -C, ../server, tool, protoc-gen-connect-go]
+    out: ../server/gen
+    opt: [paths=source_relative]
+  - local: [bun, ../web/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es]
+    out: ../web/src/gen
+    opt: [target=ts, import_extension=none, json_types=true]
+  - local: [bun, ../web/node_modules/@connectrpc/protoc-gen-connect-query/bin/protoc-gen-connect-query]
+    out: ../web/src/gen
+    opt: [target=ts, import_extension=none]
