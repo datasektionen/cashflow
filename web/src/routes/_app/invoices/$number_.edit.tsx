@@ -19,5 +19,6 @@ export const Route = createFileRoute("/_app/invoices/$number_/edit")({
 
 function EditInvoicePage() {
   const { number } = Route.useParams();
-  return <EditClaim kind={ClaimKind.INVOICE} number={number} />;
+  // Keyed by number: the next claim starts fresh, so nothing typed carries over.
+  return <EditClaim key={number.toString()} kind={ClaimKind.INVOICE} number={number} />;
 }

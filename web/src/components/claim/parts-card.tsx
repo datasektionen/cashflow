@@ -35,8 +35,8 @@ export function PartsCard({ claim }: { claim: Claim }) {
       <CardContent className="px-0">
         <ul className="divide-y">
           {parts.map((part) => (
-            <li key={part.id.toString()} className="flex items-start justify-between gap-4 px-6 py-3">
-              <div className="flex min-w-0 flex-col gap-1">
+            <li key={part.id.toString()} className="flex items-center justify-between gap-3 px-4 py-2">
+              <div className="flex min-w-0 flex-col gap-0.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <CostCentreChip name={part.costCentre || "–"} />
                   <span className="truncate text-sm">
@@ -55,11 +55,11 @@ export function PartsCard({ claim }: { claim: Claim }) {
                   </span>
                 )}
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
-                <Amount ore={part.amountOre} className="pt-0.5" />
+              <div className="flex shrink-0 flex-row-reverse items-center gap-2">
+                <Amount ore={part.amountOre} />
                 {canAttest.has(part.id) && (
                   <Button
-                    size="sm"
+                    size="xs"
                     variant="outline"
                     disabled={pending !== undefined}
                     onClick={() => setAttested(part.id, true)}
@@ -84,7 +84,7 @@ export function PartsCard({ claim }: { claim: Claim }) {
           ))}
         </ul>
         {parts.length > 1 && (
-          <div className="flex justify-between border-t bg-muted/50 px-6 py-3 font-medium text-sm">
+          <div className="flex justify-between border-t bg-muted/50 px-4 py-2 font-medium text-sm">
             <span>{t.claim.total}</span>
             <Amount ore={total} />
           </div>

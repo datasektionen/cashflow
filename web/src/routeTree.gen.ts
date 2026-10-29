@@ -21,11 +21,14 @@ import { Route as AppPayRouteImport } from './routes/_app/pay'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
+import { Route as AppVouchersRouteImport } from './routes/_app/vouchers'
 import { Route as AppExpensesNumberRouteImport } from './routes/_app/expenses/$number'
 import { Route as AppExpensesNewRouteImport } from './routes/_app/expenses/new'
 import { Route as AppInvoicesNumberRouteImport } from './routes/_app/invoices/$number'
 import { Route as AppInvoicesNewRouteImport } from './routes/_app/invoices/new'
+import { Route as AppExpensesNumberAccountRouteImport } from './routes/_app/expenses/$number_.account'
 import { Route as AppExpensesNumberEditRouteImport } from './routes/_app/expenses/$number_.edit'
+import { Route as AppInvoicesNumberAccountRouteImport } from './routes/_app/invoices/$number_.account'
 import { Route as AppInvoicesNumberEditRouteImport } from './routes/_app/invoices/$number_.edit'
 
 const AppRoute = AppRouteImport.update({
@@ -87,6 +90,11 @@ const AppStatsRoute = AppStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AppRoute,
 } as any)
+const AppVouchersRoute = AppVouchersRouteImport.update({
+  id: '/vouchers',
+  path: '/vouchers',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExpensesNumberRoute = AppExpensesNumberRouteImport.update({
   id: '/expenses/$number',
   path: '/expenses/$number',
@@ -107,11 +115,23 @@ const AppInvoicesNewRoute = AppInvoicesNewRouteImport.update({
   path: '/invoices/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExpensesNumberAccountRoute =
+  AppExpensesNumberAccountRouteImport.update({
+    id: '/expenses/$number_/account',
+    path: '/expenses/$number/account',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppExpensesNumberEditRoute = AppExpensesNumberEditRouteImport.update({
   id: '/expenses/$number_/edit',
   path: '/expenses/$number/edit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInvoicesNumberAccountRoute =
+  AppInvoicesNumberAccountRouteImport.update({
+    id: '/invoices/$number_/account',
+    path: '/invoices/$number/account',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppInvoicesNumberEditRoute = AppInvoicesNumberEditRouteImport.update({
   id: '/invoices/$number_/edit',
   path: '/invoices/$number/edit',
@@ -130,11 +150,14 @@ export interface FileRoutesByFullPath {
   '/payments': typeof AppPaymentsRoute
   '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
+  '/vouchers': typeof AppVouchersRoute
   '/expenses/$number': typeof AppExpensesNumberRoute
   '/expenses/new': typeof AppExpensesNewRoute
   '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
+  '/expenses/$number/account': typeof AppExpensesNumberAccountRoute
   '/expenses/$number/edit': typeof AppExpensesNumberEditRoute
+  '/invoices/$number/account': typeof AppInvoicesNumberAccountRoute
   '/invoices/$number/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRoutesByTo {
@@ -148,12 +171,15 @@ export interface FileRoutesByTo {
   '/payments': typeof AppPaymentsRoute
   '/profile': typeof AppProfileRoute
   '/stats': typeof AppStatsRoute
+  '/vouchers': typeof AppVouchersRoute
   '/': typeof AppIndexRoute
   '/expenses/$number': typeof AppExpensesNumberRoute
   '/expenses/new': typeof AppExpensesNewRoute
   '/invoices/$number': typeof AppInvoicesNumberRoute
   '/invoices/new': typeof AppInvoicesNewRoute
+  '/expenses/$number/account': typeof AppExpensesNumberAccountRoute
   '/expenses/$number/edit': typeof AppExpensesNumberEditRoute
+  '/invoices/$number/account': typeof AppInvoicesNumberAccountRoute
   '/invoices/$number/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRoutesById {
@@ -169,12 +195,15 @@ export interface FileRoutesById {
   '/_app/payments': typeof AppPaymentsRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/stats': typeof AppStatsRoute
+  '/_app/vouchers': typeof AppVouchersRoute
   '/_app/': typeof AppIndexRoute
   '/_app/expenses/$number': typeof AppExpensesNumberRoute
   '/_app/expenses/new': typeof AppExpensesNewRoute
   '/_app/invoices/$number': typeof AppInvoicesNumberRoute
   '/_app/invoices/new': typeof AppInvoicesNewRoute
+  '/_app/expenses/$number_/account': typeof AppExpensesNumberAccountRoute
   '/_app/expenses/$number_/edit': typeof AppExpensesNumberEditRoute
+  '/_app/invoices/$number_/account': typeof AppInvoicesNumberAccountRoute
   '/_app/invoices/$number_/edit': typeof AppInvoicesNumberEditRoute
 }
 export interface FileRouteTypes {
@@ -191,11 +220,14 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/stats'
+    | '/vouchers'
     | '/expenses/$number'
     | '/expenses/new'
     | '/invoices/$number'
     | '/invoices/new'
+    | '/expenses/$number/account'
     | '/expenses/$number/edit'
+    | '/invoices/$number/account'
     | '/invoices/$number/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,12 +241,15 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/stats'
+    | '/vouchers'
     | '/'
     | '/expenses/$number'
     | '/expenses/new'
     | '/invoices/$number'
     | '/invoices/new'
+    | '/expenses/$number/account'
     | '/expenses/$number/edit'
+    | '/invoices/$number/account'
     | '/invoices/$number/edit'
   id:
     | '__root__'
@@ -229,12 +264,15 @@ export interface FileRouteTypes {
     | '/_app/payments'
     | '/_app/profile'
     | '/_app/stats'
+    | '/_app/vouchers'
     | '/_app/'
     | '/_app/expenses/$number'
     | '/_app/expenses/new'
     | '/_app/invoices/$number'
     | '/_app/invoices/new'
+    | '/_app/expenses/$number_/account'
     | '/_app/expenses/$number_/edit'
+    | '/_app/invoices/$number_/account'
     | '/_app/invoices/$number_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -328,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStatsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/vouchers': {
+      id: '/_app/vouchers'
+      path: '/vouchers'
+      fullPath: '/vouchers'
+      preLoaderRoute: typeof AppVouchersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/expenses/$number': {
       id: '/_app/expenses/$number'
       path: '/expenses/$number'
@@ -356,11 +401,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvoicesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/expenses/$number_/account': {
+      id: '/_app/expenses/$number_/account'
+      path: '/expenses/$number/account'
+      fullPath: '/expenses/$number/account'
+      preLoaderRoute: typeof AppExpensesNumberAccountRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/expenses/$number_/edit': {
       id: '/_app/expenses/$number_/edit'
       path: '/expenses/$number/edit'
       fullPath: '/expenses/$number/edit'
       preLoaderRoute: typeof AppExpensesNumberEditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/invoices/$number_/account': {
+      id: '/_app/invoices/$number_/account'
+      path: '/invoices/$number/account'
+      fullPath: '/invoices/$number/account'
+      preLoaderRoute: typeof AppInvoicesNumberAccountRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/invoices/$number_/edit': {
@@ -384,12 +443,15 @@ interface AppRouteChildren {
   AppPaymentsRoute: typeof AppPaymentsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppStatsRoute: typeof AppStatsRoute
+  AppVouchersRoute: typeof AppVouchersRoute
   AppIndexRoute: typeof AppIndexRoute
   AppExpensesNumberRoute: typeof AppExpensesNumberRoute
   AppExpensesNewRoute: typeof AppExpensesNewRoute
   AppInvoicesNumberRoute: typeof AppInvoicesNumberRoute
   AppInvoicesNewRoute: typeof AppInvoicesNewRoute
+  AppExpensesNumberAccountRoute: typeof AppExpensesNumberAccountRoute
   AppExpensesNumberEditRoute: typeof AppExpensesNumberEditRoute
+  AppInvoicesNumberAccountRoute: typeof AppInvoicesNumberAccountRoute
   AppInvoicesNumberEditRoute: typeof AppInvoicesNumberEditRoute
 }
 
@@ -404,12 +466,15 @@ const AppRouteChildren: AppRouteChildren = {
   AppPaymentsRoute: AppPaymentsRoute,
   AppProfileRoute: AppProfileRoute,
   AppStatsRoute: AppStatsRoute,
+  AppVouchersRoute: AppVouchersRoute,
   AppIndexRoute: AppIndexRoute,
   AppExpensesNumberRoute: AppExpensesNumberRoute,
   AppExpensesNewRoute: AppExpensesNewRoute,
   AppInvoicesNumberRoute: AppInvoicesNumberRoute,
   AppInvoicesNewRoute: AppInvoicesNewRoute,
+  AppExpensesNumberAccountRoute: AppExpensesNumberAccountRoute,
   AppExpensesNumberEditRoute: AppExpensesNumberEditRoute,
+  AppInvoicesNumberAccountRoute: AppInvoicesNumberAccountRoute,
   AppInvoicesNumberEditRoute: AppInvoicesNumberEditRoute,
 }
 

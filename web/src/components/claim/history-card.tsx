@@ -47,7 +47,7 @@ export function HistoryCard({ claim }: { claim: Claim }) {
         {comments.length === 0 ? (
           <p className="text-muted-foreground text-sm">{t.claim.noComments}</p>
         ) : (
-          <ol className="flex flex-col gap-5">
+          <ol className="flex flex-col gap-3">
             {comments.map((comment, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: comments have no id and never reorder
               <li key={i} className="flex gap-3">

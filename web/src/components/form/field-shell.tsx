@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Field, FieldDescription, FieldError, FieldLabel } from "#/components/ui/field";
+import { cn } from "#/lib/utils";
 import { useFieldContext } from "./context";
 
 /**
@@ -27,6 +28,7 @@ export function FieldShell({
   children,
   className,
   disabled = false,
+  cell = false,
 }: {
   label: ReactNode;
   description?: ReactNode;
@@ -35,15 +37,19 @@ export function FieldShell({
   className?: string;
   /** A field the user can't use yet shows its hint, never an error they can't act on. */
   disabled?: boolean;
+  /** In a table cell: the column header is the visible label, and errors are small. */
+  cell?: boolean;
 }) {
   const { field, errors } = useVisibleErrors();
   const invalid = errors.length > 0 && !disabled;
   return (
-    <Field data-invalid={invalid || undefined} className={className}>
-      <FieldLabel htmlFor={htmlFor ?? field.name}>{label}</FieldLabel>
+    <Field data-invalid={invalid || undefined} className={cn(cell && "gap-1", className)}>
+      <FieldLabel htmlFor={htmlFor ?? field.name} className={cn(cell && "sr-only")}>
+        {label}
+      </FieldLabel>
       {children}
-      {description && !invalid && <FieldDescription>{description}</FieldDescription>}
-      {invalid && <FieldError errors={errors} />}
+      {description && !invalid && !cell && <FieldDescription>{description}</FieldDescription>}
+      {invalid && <FieldError errors={errors} className={cn(cell && "text-xs")} />}
     </Field>
   );
 }

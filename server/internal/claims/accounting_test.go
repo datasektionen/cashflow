@@ -171,8 +171,14 @@ func TestFortnoxTokens(t *testing.T) {
 	var refresh string
 	f.pool.QueryRow(ctx, `SELECT refresh_token FROM fortnox_serviceaccount`).Scan(&refresh)
 
+	// A revoked access token is refreshed and the call retried.
+	f.pool.Exec(ctx, `UPDATE fortnox_serviceaccount SET access_token = 'revoked'`)
+	if _, err := fx.VoucherSeries(ctx); err != nil || fake.Refreshes != 2 {
+		t.Errorf("revoked access token: %v, %d refreshes", err, fake.Refreshes)
+	}
+
 	// A spent refresh token means Fortnox is disconnected.
-	f.pool.Exec(ctx, `UPDATE fortnox_serviceaccount SET expires_at = now() - interval '1 minute', refresh_token = 'spent'`)
+	f.pool.Exec(ctx, `UPDATE fortnox_serviceaccount SET access_token = 'revoked', refresh_token = 'spent'`)
 	if _, err := fx.VoucherSeries(ctx); !errors.Is(err, fortnox.ErrNotConnected) {
 		t.Errorf("spent refresh token: %v", err)
 	}
@@ -201,10 +207,10 @@ func TestBuildDraft(t *testing.T) {
 		t.Errorf("draft %+v", d)
 	}
 	want := []DraftRow{
-		{Account: 5460, CostCentre: "ADA", Label: "Fika", DebitOre: 150},
-		{Account: 5410, CostCentre: "ADA", Label: "Spel", DebitOre: 25},
-		{Account: 0, CostCentre: "MOTTPH", Label: "Tröjor", DebitOre: 10},
-		{Account: 0, CostCentre: "", Label: "", DebitOre: 5},
+		{Account: 5460, CostCentre: "ADA", Label: "Ada › Kärnverksamhet › Fika", DebitOre: 150},
+		{Account: 5410, CostCentre: "ADA", Label: "Ada › Kärnverksamhet › Spel", DebitOre: 25},
+		{Account: 0, CostCentre: "MOTTPH", Label: "Mottagningen › Phaderiet › Tröjor", DebitOre: 10},
+		{Account: 0, CostCentre: "", Label: "Okänd", DebitOre: 5},
 		{Account: 2820, CreditOre: 190, Balancing: true},
 	}
 	if !slices.Equal(d.Rows, want) {

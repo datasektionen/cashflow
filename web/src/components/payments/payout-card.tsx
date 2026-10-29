@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "#/components/ui/card";
+import { Card, CardContent, CardHeader } from "#/components/ui/card";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CopyButton } from "#/components/ui/copy-button";
 import type { BankDetails, CreatePayoutResponse, PendingPayout } from "#/gen/cashflow/payment/v1/payment_pb";
@@ -71,7 +71,7 @@ export function PayoutCard({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="flex flex-wrap items-center gap-3 border-b py-4">
+      <CardHeader className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b py-2.5">
         <UserAvatar
           name={name}
           username={payout.receiver?.username}
@@ -88,6 +88,15 @@ export function PayoutCard({
             <TriangleAlert className="size-4" /> {t.pay.missingBank}
           </span>
         )}
+        <Button
+          size="sm"
+          disabled={selected.size === 0 || !hasBank || create.isPending}
+          title={selected.size === 0 ? t.pay.nothingSelected : !hasBank ? t.pay.missingBank : undefined}
+          onClick={() => setConfirming(true)}
+        >
+          {create.isPending ? <Loader2 className="animate-spin" /> : <Banknote />}
+          {t.pay.create(totalText)}
+        </Button>
       </CardHeader>
 
       <CardContent className="px-0">
@@ -96,7 +105,7 @@ export function PayoutCard({
             const flagged = Boolean(e.status?.flagged);
             const id = `payout-${e.number}`;
             return (
-              <li key={id} className="flex items-center gap-3 px-6 py-2.5">
+              <li key={id} className="flex items-center gap-3 px-4 py-1.5">
                 <Checkbox
                   id={id}
                   checked={!flagged && selected.has(e.number)}
@@ -127,17 +136,6 @@ export function PayoutCard({
           })}
         </ul>
       </CardContent>
-
-      <CardFooter className="justify-end gap-3 border-t py-3">
-        <Button
-          disabled={selected.size === 0 || !hasBank || create.isPending}
-          title={selected.size === 0 ? t.pay.nothingSelected : !hasBank ? t.pay.missingBank : undefined}
-          onClick={() => setConfirming(true)}
-        >
-          {create.isPending ? <Loader2 className="animate-spin" /> : <Banknote />}
-          {t.pay.create(totalText)}
-        </Button>
-      </CardFooter>
 
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
         <AlertDialogContent>

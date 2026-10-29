@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -296,44 +297,67 @@ func (c *Client) KeepAlive(ctx context.Context) {
 
 // ---- REST API ----
 
+// forceRefresh as a token's minimum validity always refreshes it.
+const forceRefresh = time.Duration(math.MaxInt64)
+
+// do calls the API. A refused access token is refreshed and the call tried
+// once more: Fortnox may revoke tokens early, and a refused refresh then
+// disconnects for real rather than leaving a connection that never works.
 func (c *Client) do(ctx context.Context, method, path string, body, into any) error {
+	var payload []byte
+	if body != nil {
+		var err error
+		if payload, err = json.Marshal(body); err != nil {
+			return err
+		}
+	}
 	access, err := c.token(ctx, time.Minute)
 	if err != nil {
 		return err
 	}
-	var reader io.Reader
-	if body != nil {
-		b, err := json.Marshal(body)
-		if err != nil {
+	status, raw, err := c.send(ctx, method, path, payload, access)
+	if err == nil && status == http.StatusUnauthorized {
+		if access, err = c.token(ctx, forceRefresh); err != nil {
 			return err
 		}
-		reader = bytes.NewReader(b)
+		status, raw, err = c.send(ctx, method, path, payload, access)
 	}
-	req, err := http.NewRequestWithContext(ctx, method, c.cfg.APIURL+path, reader)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", "Bearer "+access)
-	req.Header.Set("Accept", "application/json")
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	res, err := c.http.Do(req)
-	if err != nil {
-		return fmt.Errorf("fortnox: %w", err)
-	}
-	defer res.Body.Close()
-	raw, err := io.ReadAll(io.LimitReader(res.Body, 16<<20))
-	if err != nil {
-		return fmt.Errorf("fortnox: %w", err)
-	}
-	if res.StatusCode >= 300 {
-		return parseError(res.StatusCode, raw)
+	if status >= 300 {
+		return parseError(status, raw)
 	}
 	if err := json.Unmarshal(raw, into); err != nil {
 		return fmt.Errorf("fortnox: %s %s: %w", method, path, err)
 	}
 	return nil
+}
+
+func (c *Client) send(ctx context.Context, method, path string, payload []byte, access string) (int, []byte, error) {
+	var reader io.Reader
+	if payload != nil {
+		reader = bytes.NewReader(payload)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.cfg.APIURL+path, reader)
+	if err != nil {
+		return 0, nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+access)
+	req.Header.Set("Accept", "application/json")
+	if payload != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	res, err := c.http.Do(req)
+	if err != nil {
+		return 0, nil, fmt.Errorf("fortnox: %w", err)
+	}
+	defer res.Body.Close()
+	raw, err := io.ReadAll(io.LimitReader(res.Body, 16<<20))
+	if err != nil {
+		return 0, nil, fmt.Errorf("fortnox: %w", err)
+	}
+	return res.StatusCode, raw, nil
 }
 
 // parseError reads Fortnox's ErrorInformation, whose keys come in either

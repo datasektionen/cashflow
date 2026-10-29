@@ -272,7 +272,7 @@ func BuildDraft(kind Kind, number int64, description, date string, parts []Draft
 		row := DraftRow{
 			Account:    firstAccount(tree, p),
 			CostCentre: MatchCostCentre(costCentres, p.CostCentre, p.SecondaryCostCentre),
-			Label:      p.BudgetLine,
+			Label:      partLabel(p),
 			DebitOre:   p.AmountOre,
 		}
 		d.TotalOre += p.AmountOre
@@ -288,6 +288,17 @@ func BuildDraft(kind Kind, number int64, description, date string, parts []Draft
 	}
 	d.Rows = append(d.Rows, DraftRow{Account: CreditAccount(kind), Label: "", CreditOre: d.TotalOre, Balancing: true})
 	return d
+}
+
+// partLabel names a part's budget line in full, e.g. "Ada › Kärnverksamhet › Fika".
+func partLabel(p DraftPart) string {
+	var names []string
+	for _, name := range []string{p.CostCentre, p.SecondaryCostCentre, p.BudgetLine} {
+		if name = strings.TrimSpace(name); name != "" {
+			names = append(names, name)
+		}
+	}
+	return strings.Join(names, " › ")
 }
 
 func firstAccount(tree []budget.CostCentre, p DraftPart) int {

@@ -32,9 +32,9 @@ function PayPage() {
 
   return (
     <Page title={t.queues.pay.title}>
-      <section aria-labelledby="payouts" className="flex flex-col gap-4">
-        <div>
-          <h2 id="payouts" className="font-display font-semibold text-xl">
+      <section aria-labelledby="payouts" className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-baseline gap-x-3">
+          <h2 id="payouts" className="font-display font-semibold text-lg">
             {t.pay.expensesTitle}
           </h2>
           <p className="text-muted-foreground text-sm">{t.pay.expensesHelp}</p>
@@ -61,8 +61,8 @@ function PayPage() {
         )}
       </section>
 
-      <section aria-labelledby="invoices" className="mt-12 flex flex-col gap-4">
-        <h2 id="invoices" className="font-display font-semibold text-xl">
+      <section aria-labelledby="invoices" className="mt-8 flex flex-col gap-3">
+        <h2 id="invoices" className="font-display font-semibold text-lg">
           {t.pay.invoicesTitle}
         </h2>
         <ClaimsList

@@ -14,12 +14,25 @@ export function kindSlug(kind: ClaimKind): KindSlug {
   return kind === ClaimKind.INVOICE ? "invoice" : "expense";
 }
 
-/** The detail page of a claim; opened from a queue, it offers the next claim in it. */
+/**
+ * The detail page of a claim; opened from a queue, it offers the next claim
+ * in it. The bookkeeping queue opens the booking page instead, where
+ * everything an accountant needs is on one screen.
+ */
 export function claimLink(kind: ClaimKind, number: bigint, queue?: QueueSlug) {
+  if (queue === "account") return claimAccountLink(kind, number, queue);
   const search = queue ? { queue } : {};
   return kind === ClaimKind.INVOICE
     ? ({ to: "/invoices/$number", params: { number }, search } as const)
     : ({ to: "/expenses/$number", params: { number }, search } as const);
+}
+
+/** Booking a claim; opened from the bookkeeping queue, it moves on to the next one. */
+export function claimAccountLink(kind: ClaimKind, number: bigint, queue?: QueueSlug) {
+  const search = queue ? { queue } : {};
+  return kind === ClaimKind.INVOICE
+    ? ({ to: "/invoices/$number/account", params: { number }, search } as const)
+    : ({ to: "/expenses/$number/account", params: { number }, search } as const);
 }
 
 /** The edit form of a claim. */

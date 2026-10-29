@@ -27,6 +27,8 @@ type Props = {
   activeIndex: number;
   /** The queue the list shows, carried to claim pages for "next in queue". */
   queue?: QueueSlug;
+  /** The voucher number instead of the status, for lists of accounted claims. */
+  showVoucher?: boolean;
 };
 
 /**
@@ -34,13 +36,22 @@ type Props = {
  * renders and reports clicks. Each row's description is a real link stretched
  * over the row, so middle-click and cmd-click open new tabs.
  */
-export function ClaimsTable({ claims, showOwner, sort, onSortChange, onCostCentre, activeIndex, queue }: Props) {
+export function ClaimsTable({
+  claims,
+  showOwner,
+  sort,
+  onSortChange,
+  onCostCentre,
+  activeIndex,
+  queue,
+  showVoucher = false,
+}: Props) {
   const t = useT();
   const locale = useLocale();
 
   const columns = useMemo(
-    () => buildColumns(t, locale, showOwner, onCostCentre, queue),
-    [t, locale, showOwner, onCostCentre, queue],
+    () => buildColumns(t, locale, showOwner, onCostCentre, queue, showVoucher),
+    [t, locale, showOwner, onCostCentre, queue, showVoucher],
   );
   const sorting: SortingState = [{ id: sort.sort, desc: sort.desc }];
 
@@ -72,7 +83,7 @@ export function ClaimsTable({ claims, showOwner, sort, onSortChange, onCostCentr
                   key={header.id}
                   scope="col"
                   aria-sort={direction ? (direction === "desc" ? "descending" : "ascending") : undefined}
-                  className={cn("h-10 px-3 font-medium text-xs", meta?.className)}
+                  className={cn("h-9 px-3 font-medium text-xs", meta?.className)}
                 >
                   {canSort ? (
                     <button
@@ -113,7 +124,7 @@ export function ClaimsTable({ claims, showOwner, sort, onSortChange, onCostCentr
             {row.getAllCells().map((cell) => {
               const meta = cell.column.columnDef.meta as ColumnMeta | undefined;
               return (
-                <td key={cell.id} className={cn("h-14 px-3 align-middle", meta?.className)}>
+                <td key={cell.id} className={cn("h-10 px-3 py-1.5 align-middle", meta?.className)}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               );
@@ -132,7 +143,8 @@ function buildColumns(
   locale: ReturnType<typeof useLocale>,
   showOwner: boolean,
   onCostCentre: (cc: string) => void,
-  queue?: QueueSlug,
+  queue: QueueSlug | undefined,
+  showVoucher: boolean,
 ) {
   const c = t.claims.columns;
   return column.columns([
@@ -180,19 +192,27 @@ function buildColumns(
       header: c.costCentres,
       enableSorting: false,
       meta: { className: "hidden w-48 xl:table-cell" } satisfies ColumnMeta,
-      cell: ({ getValue }) => (
-        // Above the row link, so a chip filters instead of opening the claim.
-        <div className="relative z-10 flex flex-wrap gap-1">
-          {getValue().map((cc) => (
+      cell: ({ getValue }) => {
+        // One chip keeps every row one line high; the rest are named on hover.
+        const [first, ...rest] = getValue();
+        if (!first) return null;
+        return (
+          // Above the row link, so a chip filters instead of opening the claim.
+          <div className="relative z-10 flex min-w-0 items-center gap-1">
             <CostCentreChip
-              key={cc}
-              name={cc}
-              title={t.claims.filterByCostCentre(cc)}
-              onClick={() => onCostCentre(cc)}
+              name={first}
+              className="min-w-0 truncate"
+              title={t.claims.filterByCostCentre(first)}
+              onClick={() => onCostCentre(first)}
             />
-          ))}
-        </div>
-      ),
+            {rest.length > 0 && (
+              <span className="shrink-0 text-muted-foreground text-xs" title={rest.join(", ")}>
+                +{rest.length}
+              </span>
+            )}
+          </div>
+        );
+      },
     }),
     column.accessor("date", {
       id: "date",
@@ -206,12 +226,20 @@ function buildColumns(
       meta: { className: "w-32 text-right", align: "right" } satisfies ColumnMeta,
       cell: ({ getValue }) => <Amount ore={getValue()} />,
     }),
-    column.accessor("status", {
-      id: "status",
-      header: c.status,
-      enableSorting: false,
-      meta: { className: "w-36 pl-6" } satisfies ColumnMeta,
-      cell: ({ getValue }) => <StageBadge status={getValue()} />,
-    }),
+    showVoucher
+      ? column.accessor((claim) => claim.status?.verification ?? "", {
+          id: "voucher",
+          header: c.voucher,
+          enableSorting: false,
+          meta: { className: "w-28 pl-6" } satisfies ColumnMeta,
+          cell: ({ getValue }) => <span className="amount font-medium">{getValue()}</span>,
+        })
+      : column.accessor("status", {
+          id: "status",
+          header: c.status,
+          enableSorting: false,
+          meta: { className: "w-36 pl-6" } satisfies ColumnMeta,
+          cell: ({ getValue }) => <StageBadge status={getValue()} />,
+        }),
   ]);
 }

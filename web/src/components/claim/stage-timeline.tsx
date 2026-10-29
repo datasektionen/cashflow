@@ -51,21 +51,21 @@ export function StageTimeline({ claim }: { claim: Claim }) {
         return (
           <li
             key={step.stage}
-            className="relative flex flex-1 gap-3 pb-4 last:pb-0 sm:flex-col sm:gap-1.5 sm:pr-3 sm:pb-0"
+            className="relative flex flex-1 gap-3 pb-3 last:pb-0 sm:flex-col sm:gap-1 sm:pr-2 sm:pb-0"
           >
             <div className="flex flex-col items-center sm:flex-row">
               <span
                 className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                   step.done && "border-primary bg-primary text-primary-foreground",
                   !step.done && i === next && "border-primary bg-card",
                   !step.done && i !== next && "border-border bg-card",
                 )}
               >
                 {step.done ? (
-                  <Check className="size-3.5" strokeWidth={3} />
+                  <Check className="size-3" strokeWidth={3} />
                 ) : (
-                  i === next && <span className="size-2 animate-pulse rounded-full bg-primary" />
+                  i === next && <span className="size-1.5 animate-pulse rounded-full bg-primary" />
                 )}
               </span>
               {!last && (
@@ -79,7 +79,7 @@ export function StageTimeline({ claim }: { claim: Claim }) {
               )}
             </div>
             <div className="flex flex-col gap-0.5 pt-0.5 sm:pt-0">
-              <span className={cn("font-medium text-sm", !step.done && "text-muted-foreground")}>
+              <span className={cn("font-medium text-xs", !step.done && "text-muted-foreground")}>
                 {t.claim.step[step.stage]}
               </span>
               <span className="text-muted-foreground text-xs">

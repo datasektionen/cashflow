@@ -19,5 +19,6 @@ export const Route = createFileRoute("/_app/expenses/$number_/edit")({
 
 function EditExpensePage() {
   const { number } = Route.useParams();
-  return <EditClaim kind={ClaimKind.EXPENSE} number={number} />;
+  // Keyed by number: the next claim starts fresh, so nothing typed carries over.
+  return <EditClaim key={number.toString()} kind={ClaimKind.EXPENSE} number={number} />;
 }

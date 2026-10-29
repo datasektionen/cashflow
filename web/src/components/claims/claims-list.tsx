@@ -29,6 +29,9 @@ type Props = {
   empty: { icon: ReactNode; title: string; body: string; action?: ReactNode };
   /** Shows only this kind, without the kind filter. */
   kind?: KindSlug;
+  /** More filters, after the built-in ones. */
+  toolbar?: ReactNode;
+  searchPlaceholder?: string;
 };
 
 /**
@@ -36,7 +39,7 @@ type Props = {
  * in the URL. Changing a filter keeps the old rows on screen until the new
  * ones arrive, so the list never flashes.
  */
-export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: Props) {
+export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind, toolbar, searchPlaceholder }: Props) {
   const t = useT();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -46,7 +49,7 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: 
   const claims = query.data?.claims ?? [];
   const total = query.data?.total ?? 0;
   const page = search.page ?? 1;
-  const hasFilters = Boolean(search.q || (!kind && search.kind) || search.cc);
+  const hasFilters = Boolean(search.q || (!kind && search.kind) || search.cc || search.series);
   const showOwner = !scope.mine;
 
   // Keyboard navigation: J/K move, Enter opens, / searches.
@@ -80,7 +83,12 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <SearchBox value={search.q ?? ""} onChange={(q) => onSearch({ q: q || undefined })} inputRef={searchRef} />
+        <SearchBox
+          value={search.q ?? ""}
+          onChange={(q) => onSearch({ q: q || undefined })}
+          inputRef={searchRef}
+          placeholder={searchPlaceholder ?? t.claims.search}
+        />
         {!kind && (
           <ToggleGroup
             variant="outline"
@@ -103,6 +111,7 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: 
             <X />
           </Button>
         )}
+        {toolbar}
       </div>
 
       <Card className="relative gap-0 overflow-hidden p-0">
@@ -130,7 +139,10 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: 
               title={t.claims.noMatchesTitle}
               description={t.claims.noMatchesBody}
               action={
-                <Button variant="outline" onClick={() => onSearch({ q: undefined, kind: undefined, cc: undefined })}>
+                <Button
+                  variant="outline"
+                  onClick={() => onSearch({ q: undefined, kind: undefined, cc: undefined, series: undefined })}
+                >
                   {t.claims.clearFilters}
                 </Button>
               }
@@ -149,6 +161,7 @@ export function ClaimsList({ scope, search: urlSearch, onSearch, empty, kind }: 
             onCostCentre={filterByCostCentre}
             activeIndex={activeIndex}
             queue={scope.queue}
+            showVoucher={scope.accounted}
           />
         )}
       </Card>
@@ -199,12 +212,13 @@ function SearchBox({
   value,
   onChange,
   inputRef,
+  placeholder,
 }: {
   value: string;
   onChange: (q: string) => void;
   inputRef: React.Ref<HTMLInputElement>;
+  placeholder: string;
 }) {
-  const t = useT();
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
   const commit = useDebouncedCallback(onChange, { wait: 250 });
@@ -216,8 +230,8 @@ function SearchBox({
         ref={inputRef}
         type="search"
         value={text}
-        placeholder={t.claims.search}
-        aria-label={t.claims.search}
+        placeholder={placeholder}
+        aria-label={placeholder}
         className="pl-8"
         onChange={(event) => {
           setText(event.target.value);
@@ -236,7 +250,7 @@ function ListSkeleton() {
     <div className="flex flex-col divide-y" aria-busy="true">
       {Array.from({ length: 6 }, (_, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
-        <div key={i} className="flex h-14 items-center gap-4 px-4">
+        <div key={i} className="flex h-10 items-center gap-4 px-4">
           <Skeleton className="h-4 w-10" />
           <Skeleton className="h-4 flex-1" />
           <Skeleton className="hidden h-4 w-24 md:block" />

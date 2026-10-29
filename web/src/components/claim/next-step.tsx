@@ -1,10 +1,11 @@
 import { useQuery } from "@connectrpc/connect-query";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   ArrowRight,
   BadgeCheck,
   Banknote,
+  BookOpenCheck,
   CircleCheckBig,
   Ellipsis,
   Flag,
@@ -40,7 +41,7 @@ import { type Claim, ClaimKind } from "#/gen/cashflow/claim/v1/claim_pb";
 import { listClaims } from "#/gen/cashflow/claim/v1/claim-ClaimService_connectquery";
 import type { Capabilities } from "#/gen/cashflow/user/v1/user_pb";
 import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
-import { claimEditLink, claimLink, formatDate, type QueueSlug, queueToProto } from "#/lib/claims";
+import { claimAccountLink, claimEditLink, claimLink, formatDate, type QueueSlug, queueToProto } from "#/lib/claims";
 import { type Messages, useLocale, useT } from "#/lib/i18n";
 import { cn } from "#/lib/utils";
 import { useClaimAction } from "./use-claim-action";
@@ -136,14 +137,17 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
 
   // With one part, undoing its attestation lives here; several parts have their own buttons.
   const unattestSingle = claim.parts.length === 1 ? a.unattestPartIds[0] : undefined;
-  const hasMore = unattestSingle !== undefined || a.unconfirm || a.flag || a.unflag || a.delete;
+  // Booking leads once the claim is paid; before that it is possible but rare.
+  const accountNow = a.account && Boolean(s.status?.paid);
+  const accountEarly = a.account && !accountNow;
+  const hasMore = unattestSingle !== undefined || a.unconfirm || a.flag || a.unflag || a.delete || accountEarly;
 
   return (
     <section
       aria-labelledby="next-step"
-      className={cn("flex flex-col gap-4 rounded-xl border p-4 md:flex-row md:items-center", toneStyle[tone].box)}
+      className={cn("flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-xl border px-4 py-3", toneStyle[tone].box)}
     >
-      <div className="flex min-w-0 flex-1 gap-3">
+      <div className="flex min-w-0 flex-1 basis-80 gap-3">
         <ToneIcon
           aria-hidden
           className={cn("mt-0.5 size-5 shrink-0", tone === "warning" ? "text-destructive" : "text-primary")}
@@ -198,6 +202,12 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
           </Button>
         )}
 
+        {accountNow && (
+          <ButtonLink {...claimAccountLink(s.kind, s.number, queue)}>
+            <BookOpenCheck /> {act.account}
+          </ButtonLink>
+        )}
+
         {hasMore && (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -208,6 +218,14 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
               }
             />
             <DropdownMenuContent align="end" className="min-w-52">
+              {accountEarly && (
+                <DropdownMenuItem
+                  title={t.claim.nextStep.accountUnpaid}
+                  render={<Link {...claimAccountLink(s.kind, s.number)} />}
+                >
+                  <BookOpenCheck /> {act.account}
+                </DropdownMenuItem>
+              )}
               {unattestSingle !== undefined && (
                 <DropdownMenuItem
                   onClick={() =>
@@ -263,7 +281,9 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
               )}
               {a.delete && (
                 <>
-                  {(unattestSingle !== undefined || a.unconfirm || a.flag || a.unflag) && <DropdownMenuSeparator />}
+                  {(unattestSingle !== undefined || a.unconfirm || a.flag || a.unflag || accountEarly) && (
+                    <DropdownMenuSeparator />
+                  )}
                   <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
                     <Trash2 /> {act.delete}
                   </DropdownMenuItem>
@@ -311,7 +331,17 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
  * The next claim in the queue the user came from, so a queue can be worked
  * through without going back to the list. N jumps there too.
  */
-function NextInQueue({ queue, current, kind }: { queue: QueueSlug; current: bigint; kind: ClaimKind }) {
+export function NextInQueue({
+  queue,
+  current,
+  kind,
+  size,
+}: {
+  queue: QueueSlug;
+  current: bigint;
+  kind: ClaimKind;
+  size?: "sm";
+}) {
   const t = useT();
   const navigate = useNavigate();
   const { data } = useQuery(listClaims, { queue: queueToProto[queue], pageSize: 5 });
@@ -327,7 +357,7 @@ function NextInQueue({ queue, current, kind }: { queue: QueueSlug; current: bigi
     );
   }
   return (
-    <ButtonLink variant="outline" {...link}>
+    <ButtonLink variant="outline" size={size} {...link}>
       {t.claim.actions.next} <ArrowRight />
     </ButtonLink>
   );

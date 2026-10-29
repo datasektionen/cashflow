@@ -74,7 +74,11 @@ merge the claim tables, store öre, encrypt the Fortnox tokens, drop Django's au
    comments and emails through an outbox; payouts per person and the payments list; creating and editing claims with
    GOrdian budget pickers and usage warnings, uploads (HEIC converted in the browser); rfinger profile pictures.
    Every Cashflow 3 feature and where it lands: [parity.md](parity.md).
-3. **Fortnox**: OAuth, accounting views, voucher creation, with parity tests against the Python implementation.
+3. **Fortnox** (done): connecting the service account (OAuth; tokens stay in Django's `fortnox_serviceaccount` and
+   are refreshed under the same row lock, kept alive in the background), the booking page (voucher rows suggested
+   from GOrdian accounts and Fortnox cost centres, balancing credit row, or an existing voucher number), the vouchers
+   page with series filter, and a fake Fortnox (`cmd/fakefortnox`) for development and tests. Also a compactness
+   pass: the main flows fit a 1366×768 laptop screen without scrolling.
 4. **Stats, admin, polish**: stats/charts, user admin, i18n, accessibility, mobile.
 5. **Cutover**: staging on `cashflow-next` against a production copy, then against the production database next to
    Cashflow 3; move users over page by page; switch Traefik; Go takes over the schema and starts the cleanup.

@@ -145,20 +145,22 @@ export function ClaimForm({ kind, claim }: { kind: ClaimKind; claim?: Claim }) {
   const title = editing ? (isExpense ? f.editExpense : f.editInvoice) : isExpense ? f.newExpense : f.newInvoice;
 
   return (
-    <main className="mx-auto w-full max-w-6xl p-6 md:p-10">
-      <h1 className="font-display font-semibold text-3xl tracking-tight md:text-4xl">{title}</h1>
-      <p className="mt-1 text-muted-foreground">{isExpense ? f.expenseIntro : f.invoiceIntro}</p>
+    <main className="mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-6">
+      <div className="flex flex-wrap items-baseline gap-x-3">
+        <h1 className="font-display font-semibold text-2xl tracking-tight">{title}</h1>
+        <p className="text-muted-foreground text-sm">{isExpense ? f.expenseIntro : f.invoiceIntro}</p>
+      </div>
 
       <form
         noValidate
-        className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+        className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]"
         onSubmit={(event) => {
           event.preventDefault();
           void form.handleSubmit();
         }}
       >
         {/* Files first on phones; beside the form on large screens. */}
-        <Card className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <Card className="lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <CardContent>
             <form.AppField name="files">
               {(field) => <field.FilesField label={isExpense ? f.files : f.filesInvoice} description={f.filesHint} />}
@@ -166,28 +168,36 @@ export function ClaimForm({ kind, claim }: { kind: ClaimKind; claim?: Claim }) {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
+        <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <Card>
             <CardContent>
-              <FieldGroup>
-                <form.AppField name="description">
-                  {(field) => (
-                    <field.TextField label={f.description} description={f.descriptionHint} autoFocus={!editing} />
-                  )}
-                </form.AppField>
+              <FieldGroup className="gap-4">
                 {isExpense ? (
-                  <form.AppField name="date">
+                  <div className="grid items-start gap-4 sm:grid-cols-[minmax(0,1fr)_11rem]">
+                    <form.AppField name="description">
+                      {(field) => (
+                        <field.TextField label={f.description} description={f.descriptionHint} autoFocus={!editing} />
+                      )}
+                    </form.AppField>
+                    <form.AppField name="date">
+                      {(field) => (
+                        <field.TextField
+                          type="date"
+                          label={f.expenseDate}
+                          description={f.expenseDateHint}
+                          max={todayIso()}
+                        />
+                      )}
+                    </form.AppField>
+                  </div>
+                ) : (
+                  <form.AppField name="description">
                     {(field) => (
-                      <field.TextField
-                        type="date"
-                        label={f.expenseDate}
-                        description={f.expenseDateHint}
-                        max={todayIso()}
-                        className="w-48"
-                      />
+                      <field.TextField label={f.description} description={f.descriptionHint} autoFocus={!editing} />
                     )}
                   </form.AppField>
-                ) : (
+                )}
+                {!isExpense && (
                   <div className="grid gap-4 sm:grid-cols-3">
                     <form.AppField name="invoiceNumber">
                       {(field) => <field.TextField label={f.invoiceNumber} />}

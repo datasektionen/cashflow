@@ -10,8 +10,14 @@ import { type Messages, useT } from "#/lib/i18n";
 
 /** The translated message for a failed claim action. */
 export function problemMessage(error: unknown, t: Messages): string {
-  const code = ConnectError.from(error).findDetails(ProblemSchema)[0]?.code;
-  return (code && t.problems[code]) || t.problems.unknown;
+  const problem = ConnectError.from(error).findDetails(ProblemSchema)[0];
+  switch (problem?.code) {
+    case "voucher_exists":
+      return t.accounting.voucherExists(problem.detail);
+    case "fortnox_refused":
+      return t.accounting.fortnoxRefused(problem.fortnoxMessage);
+  }
+  return (problem?.code && t.problems[problem.code]) || t.problems.unknown;
 }
 
 type Action = {

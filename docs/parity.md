@@ -21,7 +21,7 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 | Sorting: date, total, description, owner, created | ✅ |
 | Sorting: type, flagged, cost centre | ➖ queues keep flagged last automatically; type is a filter |
 | Claim detail: parts, files, comments, confirmed by, payment, invoice fields | ✅ |
-| Row context menu: open in new tab, copy link, view owner, account | ✅ real links (new tab, copy) · 🔜 4 view owner · 🔜 3 account |
+| Row context menu: open in new tab, copy link, view owner, account | ✅ real links (new tab, copy) · 🔜 4 view owner · ✅ account: rows in the bookkeeping queue open the booking page |
 | Profile pictures (rfinger, `api/users/profile-pictures/`) | ✅ cached 12 h on the server; one batched request per page (TanStack Pacer) |
 
 ## Claims: writing
@@ -67,13 +67,14 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 
 | Feature | Cashflow 4 |
 |---|---|
-| Account a claim with an existing voucher number | 🔜 3 |
-| Account via Fortnox: voucher rows, totals must match, duplicate checks (`AlreadyAccounted`, `CashflowVerificationMissing`, `FortnoxRecordMissing`) | 🔜 3 |
-| Recommended accounts from GOrdian budget lines; credit accounts 2820 / 2440 | 🔜 3 |
-| Fortnox OAuth connect / status / disconnect, token refresh (`refresh_fortnox_token`) | 🔜 3 |
-| Fortnox accounts and cost centres lists (cached) | 🔜 3 |
-| Voucher series list (Fortnox + seen in claims) and vouchers page (`/admin/vouchers`) | 🔜 3 |
-| Feature flag `fortnox` (`api/features/`) | 🔜 3 |
+| Account a claim with an existing voucher number | ✅ with copyable text, date and amount for booking by hand; the number must look like `E123` |
+| Account via Fortnox: voucher rows, totals must match, duplicate checks (`AlreadyAccounted`, `CashflowVerificationMissing`, `FortnoxRecordMissing`) | ✅ plus balanced debit/credit and known accounts and cost centres checked before Fortnox is called; an unrecorded voucher is reported with its number (`voucher_exists`) so it can be recorded instead of booked twice. The voucher lookup uses the series' sublist, not every voucher |
+| Recommended accounts from GOrdian budget lines; credit accounts 2820 / 2440 | ✅ drafted on the server (`GetVoucherDraft`), rows for the same line merged; the credit row always balances the rest |
+| Recommended Fortnox cost centre (exact name, or fuzzy "cost centre - secondary") | ✅ edit-distance similarity ≥ 0.9 instead of rapidfuzz |
+| Fortnox OAuth connect / status / disconnect, token refresh (`refresh_fortnox_token`) | ✅ `/fortnox/auth`; refreshed in the background instead of by cron; a revoked access token is refreshed and retried, a refused refresh disconnects. "Connected" means a token row exists, not that the 1-hour access token is fresh (Cashflow 3 showed "disconnected" an hour after connecting) |
+| Fortnox accounts and cost centres lists (cached) | ✅ 6 h in memory (Cashflow 3: accounts 24 h, cost centres 24 min) |
+| Voucher series list (Fortnox + seen in claims) and vouchers page (`/admin/vouchers`) | ✅ `/vouchers`, searchable by voucher number, filtered by series |
+| Feature flag `fortnox` (`api/features/`) | ✅ `GetMe.features.fortnox`, on when `FORTNOX_CLIENT_ID` is set |
 
 ## Budget, statistics and users
 

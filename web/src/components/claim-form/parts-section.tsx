@@ -45,10 +45,10 @@ export const PartsSection = withForm({
             <>
               {partsField.state.value.map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: parts are addressed by index in the form
-                <div key={i} className="flex flex-col gap-3 rounded-xl border p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-muted-foreground text-sm">{f.part(i + 1)}</span>
-                    {partsField.state.value.length > 1 && (
+                <div key={i} className="flex flex-col gap-3 rounded-xl border p-3">
+                  {partsField.state.value.length > 1 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-muted-foreground text-sm">{f.part(i + 1)}</span>
                       <Button
                         type="button"
                         variant="ghost"
@@ -59,8 +59,8 @@ export const PartsSection = withForm({
                       >
                         <X />
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <form.Subscribe selector={(state) => state.values.parts[i]}>
                     {(part) => {
                       const cc = tree?.find((c) => sameName(c.name, part?.costCentre ?? ""));

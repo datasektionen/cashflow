@@ -13,7 +13,12 @@ $ (cd web && bun install)
 $ make services      # Postgres, mock SSO + Hive (nyckeln), mock rfinger + spam (dock)
 $ make dev-server    # terminal 1: http://localhost:3000
 $ make dev-web       # terminal 2: http://localhost:5173  <- open this one
+$ make dev-fortnox   # terminal 3, optional: a fake Fortnox on :9004
 ```
+
+The fake Fortnox keeps vouchers in memory and approves connecting at once: open Fortnox in the sidebar as `turetek`
+and press "Anslut Fortnox". Without it (or without `FORTNOX_*` in `server/.env`) claims are booked by entering
+voucher numbers.
 
 Fill the database with claims at every stage, with receipts in the S3 mock:
 

@@ -22,5 +22,6 @@ export const Route = createFileRoute("/_app/invoices/$number")({
 function InvoicePage() {
   const { number } = Route.useParams();
   const { queue } = Route.useSearch();
-  return <ClaimDetail kind={ClaimKind.INVOICE} number={number} queue={queue} />;
+  // Keyed by number: the next claim starts fresh, so nothing typed carries over.
+  return <ClaimDetail key={number.toString()} kind={ClaimKind.INVOICE} number={number} queue={queue} />;
 }

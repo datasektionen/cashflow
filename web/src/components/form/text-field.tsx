@@ -6,15 +6,17 @@ import { FieldShell, useClearServerError, useVisibleErrors } from "./field-shell
 type Props = Omit<ComponentProps<typeof Input>, "id" | "name" | "value" | "onChange" | "onBlur"> & {
   label: ReactNode;
   description?: ReactNode;
+  /** Label for screen readers only, for compact inline forms. */
+  cell?: boolean;
 };
 
 /** A labelled text input bound to the surrounding form field. */
-export function TextField({ label, description, className, ...inputProps }: Props) {
+export function TextField({ label, description, className, cell, ...inputProps }: Props) {
   const field = useFieldContext<string>();
   const { errors } = useVisibleErrors();
   const clearServerError = useClearServerError();
   return (
-    <FieldShell label={label} description={description}>
+    <FieldShell label={label} description={description} cell={cell}>
       <Input
         id={field.name}
         name={field.name}

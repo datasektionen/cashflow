@@ -76,18 +76,23 @@ export function FilesViewer({ files }: { files: File[] }) {
 
       <div className="flex min-h-80 items-center justify-center bg-muted/40">
         {isImage(file) ? (
-          <a href={file.url} target="_blank" rel="noreferrer" className="block max-h-[70vh] overflow-auto p-4">
+          <a
+            href={file.url}
+            target="_blank"
+            rel="noreferrer"
+            className="block max-h-[calc(100dvh-8.5rem)] overflow-auto p-3"
+          >
             <img
               src={file.url}
               alt={file.name}
-              className="mx-auto max-h-[65vh] w-auto rounded shadow-sm ring-1 ring-black/5"
+              className="mx-auto max-h-[calc(100dvh-10rem)] w-auto rounded shadow-sm ring-1 ring-black/5"
             />
           </a>
         ) : isPdf(file) ? (
           <iframe
             src={`${file.url}#navpanes=0&view=FitH`}
             title={file.name}
-            className="h-[70vh] w-full border-0 bg-white"
+            className="h-[calc(100dvh-8.5rem)] min-h-96 w-full border-0 bg-white"
           />
         ) : (
           <div className="flex flex-col items-center gap-3 p-10 text-muted-foreground text-sm">

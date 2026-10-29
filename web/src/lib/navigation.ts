@@ -12,6 +12,7 @@ import {
   type LucideIcon,
   PiggyBank,
   Receipt,
+  ScrollText,
   Stamp,
   UserRound,
   Wallet,
@@ -94,6 +95,7 @@ export const navigation: NavGroup[] = [
         // As the server's claims.Viewer.MaySeePayments.
         show: (c) => c.pay || c.viewAll || c.viewAllPayments,
       },
+      { to: "/vouchers", label: (t) => t.nav.vouchers, icon: ScrollText, key: "V", show: canAccount },
     ],
   },
   {
@@ -101,7 +103,14 @@ export const navigation: NavGroup[] = [
     items: [
       { to: "/budget", label: (t) => t.nav.budget, icon: PiggyBank, key: "B" },
       { to: "/stats", label: (t) => t.nav.stats, icon: BarChart3, key: "S" },
-      { to: "/fortnox", label: (t) => t.nav.fortnox, icon: Landmark, key: "F", show: (c) => c.manageFortnox },
+      {
+        to: "/fortnox",
+        label: (t) => t.nav.fortnox,
+        icon: Landmark,
+        key: "F",
+        // As the server's GetFortnoxStatus.
+        show: (c) => c.manageFortnox || c.viewAll,
+      },
     ],
   },
 ];

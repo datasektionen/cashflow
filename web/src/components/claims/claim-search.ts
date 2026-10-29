@@ -22,6 +22,8 @@ export type ClaimSearch = {
   sort?: SortSlug;
   desc?: boolean;
   page?: number;
+  /** A voucher series, e.g. "E", on lists of accounted claims. */
+  series?: string;
 };
 
 const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
@@ -38,11 +40,12 @@ export function validateClaimSearch(raw: Record<string, unknown>): ClaimSearch {
     sort: oneOf(SORTS, raw.sort),
     desc: raw.desc === true ? true : undefined,
     page,
+    series: typeof raw.series === "string" && /^[A-Z]$/.test(raw.series) ? raw.series : undefined,
   };
 }
 
 /** Which claims a list shows: the caller's own, a work queue, or everything visible. */
-export type ClaimScope = { mine?: boolean; queue?: QueueSlug };
+export type ClaimScope = { mine?: boolean; queue?: QueueSlug; accounted?: boolean };
 
 export const PAGE_SIZE = 25;
 
@@ -65,6 +68,8 @@ export function listRequest(scope: ClaimScope, search: ClaimSearch): MessageInit
     descending: Boolean(search.desc),
     page: search.page ?? 1,
     pageSize: PAGE_SIZE,
+    accounted: Boolean(scope.accounted),
+    voucherSeries: search.series,
   };
 }
 
