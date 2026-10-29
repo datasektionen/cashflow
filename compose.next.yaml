@@ -25,6 +25,15 @@ services:
       timeout: 2s
       retries: 3
 
+  # S3 for claim attachments; the bucket exists on start.
+  s3:
+    image: adobe/s3mock:latest
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: cashflow
+      COM_ADOBE_TESTING_S3MOCK_STORE_REGION: eu-west-1
+    ports:
+      - 9091:9090
+
   # Mock SSO (7003) and Hive (7004)
   nyckeln:
     image: ghcr.io/datasektionen/nyckeln-under-dorrmattan

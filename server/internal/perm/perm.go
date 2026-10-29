@@ -95,3 +95,57 @@ func Filter(all []string, allowed func(string) bool) []string {
 	}
 	return out
 }
+
+// CostCentres is a set of cost centres in the form SQL filters need: either
+// all of them, or a list of lowercased names (Hive scopes are lowercased).
+type CostCentres struct {
+	All   bool
+	Names []string
+}
+
+func (c CostCentres) union(other CostCentres) CostCentres {
+	if c.All || other.All {
+		return CostCentres{All: true}
+	}
+	return CostCentres{Names: append(append([]string{}, c.Names...), other.Names...)}
+}
+
+func (s Set) grant(perm string) CostCentres {
+	g := s.perms.Grant(perm)
+	return CostCentres{All: g.All, Names: append([]string{}, g.Scopes...)}
+}
+
+// ViewableCostCentres are the cost centres whose claims the user may see, on
+// top of their own claims. As Cashflow 3's ClaimQuerySet.viewable_by: viewing
+// everything, paying or confirming shows all claims; otherwise the cost
+// centres the user may view, account or attest.
+func (s Set) ViewableCostCentres() CostCentres {
+	if s.MayViewAll() || s.MayPay() || s.MayConfirm() {
+		return CostCentres{All: true}
+	}
+	return s.grant(ViewExpenses).union(s.grant(Accounting)).union(s.grant(Attest))
+}
+
+// AttestQueueCostCentres decide which unattested parts land in the user's
+// attest queue. View-all users see every unattested part, as in Cashflow 3.
+func (s Set) AttestQueueCostCentres() CostCentres {
+	if s.MayViewAll() {
+		return CostCentres{All: true}
+	}
+	return s.grant(Attest)
+}
+
+// AccountQueueCostCentres decide which paid claims land in the user's
+// accounting queue.
+func (s Set) AccountQueueCostCentres() CostCentres {
+	if s.MayViewAll() {
+		return CostCentres{All: true}
+	}
+	return s.grant(Accounting)
+}
+
+// Who sees each work queue: those who can act in it, and view-all admins.
+func (s Set) MaySeeConfirmQueue() bool { return s.MayConfirm() || s.MayViewAll() }
+func (s Set) MaySeePayQueue() bool     { return s.MayPay() || s.MayViewAll() }
+func (s Set) MaySeeAttestQueue() bool  { return s.MayAttestSome() || s.MayViewAll() }
+func (s Set) MaySeeAccountQueue() bool { return s.MayAccountSome() || s.MayViewAll() }

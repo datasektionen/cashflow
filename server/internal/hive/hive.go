@@ -35,6 +35,11 @@ func (p Permissions) HasAny(perm string) bool {
 	return ok
 }
 
+// Grant returns the grant for perm; the zero Grant means none.
+func (p Permissions) Grant(perm string) Grant {
+	return p[perm]
+}
+
 // HasScope reports whether the user holds perm for scope, case-insensitively.
 func (p Permissions) HasScope(perm, scope string) bool {
 	g, ok := p[perm]

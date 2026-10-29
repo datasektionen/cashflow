@@ -22,7 +22,7 @@ gen:
 ## Everything CI runs, except the image build.
 check:
 	cd proto && ../web/node_modules/.bin/buf lint
-	cd server && test -z "$$(gofmt -l .)" && go vet ./... && go tool staticcheck ./... && go test ./...
+	cd server && test -z "$$(gofmt -l .)" && go vet ./... && go tool staticcheck ./... && TEST_DATABASE_URL=postgres://cashflow:cashflow@localhost:5433/cashflow go test ./...
 	cd web && bunx biome ci . && bunx tsc --noEmit && bunx vitest run
 
 ## Format and apply safe lint fixes.

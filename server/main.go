@@ -13,6 +13,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/config"
 	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/hive"
+	"github.com/datasektionen/cashflow/server/internal/storage"
 	"github.com/datasektionen/cashflow/server/internal/web"
 )
 
@@ -43,7 +44,16 @@ func run(ctx context.Context) error {
 	}
 	defer pool.Close()
 
-	handler, err := web.NewHandler(ctx, pool, hive.NewClient(env.HiveURL, env.HiveSecret))
+	files, err := storage.New(ctx, env.S3)
+	if err != nil {
+		return err
+	}
+
+	handler, err := web.NewHandler(ctx, web.Deps{
+		Pool:  pool,
+		Hive:  hive.NewClient(env.HiveURL, env.HiveSecret),
+		Files: files,
+	})
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/datasektionen/cashflow/server/internal/hive"
@@ -82,5 +83,32 @@ func TestUnscopedOnly(t *testing.T) {
 	}
 	if !s.MayConfirm() {
 		t.Error("unscoped confirm should allow confirming")
+	}
+}
+
+func TestViewableCostCentres(t *testing.T) {
+	if !permsFrom(t, `[{"id":"pay","scope":null}]`).ViewableCostCentres().All {
+		t.Error("payers see every claim")
+	}
+	got := permsFrom(t, `[{"id":"attest","scope":"Ada"},{"id":"accounting","scope":"dsys"},{"id":"view-expenses","scope":"Mottagningen"}]`).ViewableCostCentres()
+	if got.All || !slices.Equal(slices.Sorted(slices.Values(got.Names)), []string{"ada", "dsys", "mottagningen"}) {
+		t.Errorf("want the union of scopes, got %+v", got)
+	}
+	if !permsFrom(t, `[{"id":"attest","scope":"Ada"},{"id":"accounting","scope":"*"}]`).ViewableCostCentres().All {
+		t.Error("an unscoped grant among them means all")
+	}
+}
+
+func TestQueueCostCentres(t *testing.T) {
+	viewAll := permsFrom(t, `[{"id":"view-all","scope":null}]`)
+	if !viewAll.AttestQueueCostCentres().All || !viewAll.AccountQueueCostCentres().All || !viewAll.MaySeePayQueue() {
+		t.Error("view-all admins see every queue in full")
+	}
+	attester := permsFrom(t, `[{"id":"attest","scope":"Ada"}]`)
+	if got := attester.AttestQueueCostCentres(); got.All || !slices.Equal(got.Names, []string{"ada"}) {
+		t.Errorf("got %+v", got)
+	}
+	if attester.MaySeeConfirmQueue() || attester.MaySeePayQueue() || attester.MaySeeAccountQueue() {
+		t.Error("an attester sees only the attest queue")
 	}
 }

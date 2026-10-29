@@ -6,7 +6,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
+
+	"github.com/datasektionen/cashflow/server/internal/storage"
 )
 
 // LoadDotEnv sets variables from path that are not already set. It is for local
@@ -39,6 +42,7 @@ type Env struct {
 	DatabaseURL string
 	HiveURL     string
 	HiveSecret  string
+	S3          storage.Config
 }
 
 func FromEnv() (Env, error) {
@@ -47,6 +51,14 @@ func FromEnv() (Env, error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		HiveURL:     strings.TrimSuffix(getenv("HIVE_URL", "https://hive.datasektionen.se"), "/"),
 		HiveSecret:  os.Getenv("HIVE_SECRET"),
+		// The same variables as Cashflow 3, plus S3_ENDPOINT for development.
+		S3: storage.Config{
+			Bucket:          os.Getenv("S3_BUCKET_NAME"),
+			Region:          getenv("S3_REGION", "eu-north-1"),
+			AccessKeyID:     os.Getenv("S3_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("S3_SECRET_ACCESS_KEY"),
+			Endpoint:        os.Getenv("S3_ENDPOINT"),
+		},
 	}
 	var missing []string
 	if env.DatabaseURL == "" {
@@ -55,7 +67,17 @@ func FromEnv() (Env, error) {
 	if env.HiveSecret == "" {
 		missing = append(missing, "HIVE_SECRET")
 	}
+	for name, value := range map[string]string{
+		"S3_BUCKET_NAME":       env.S3.Bucket,
+		"S3_ACCESS_KEY_ID":     env.S3.AccessKeyID,
+		"S3_SECRET_ACCESS_KEY": env.S3.SecretAccessKey,
+	} {
+		if value == "" {
+			missing = append(missing, name)
+		}
+	}
 	if len(missing) > 0 {
+		slices.Sort(missing)
 		return Env{}, fmt.Errorf("missing environment variables: %s", strings.Join(missing, ", "))
 	}
 	return env, nil

@@ -34,6 +34,18 @@ jobs:
     defaults:
       run:
         working-directory: server
+    # The claims tests need Postgres; each run creates its own database.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: cashflow
+          POSTGRES_PASSWORD: cashflow
+          POSTGRES_DB: cashflow
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://cashflow:cashflow@localhost:5432/cashflow
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
