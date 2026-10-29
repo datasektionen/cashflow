@@ -15,11 +15,16 @@ var dist embed.FS
 
 const shell = "_shell.html"
 
+// Dist is the embedded frontend build.
+func Dist() fs.FS {
+	files, _ := fs.Sub(dist, "dist")
+	return files
+}
+
 // Handler serves built files, and the app shell for every other path so the
 // client-side router can take over. Hashed assets are cached forever; the
 // shell never is, so a deploy reaches users on their next navigation.
-func Handler() http.Handler {
-	files, _ := fs.Sub(dist, "dist")
+func Handler(files fs.FS) http.Handler {
 	fileServer := http.FileServerFS(files)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -51,7 +51,7 @@ func NewHandler(ctx context.Context, pool *pgxpool.Pool, hiveClient *hive.Client
 	mux.Handle("GET /api/", http.StripPrefix("/api", api))
 
 	// Everything else is the frontend; more specific routes above win.
-	mux.Handle("GET /", spa.Handler())
+	mux.Handle("GET /", spa.Handler(spa.Dist()))
 
 	handler := authenticator.SessionMiddleware(mux)
 	return http.NewCrossOriginProtection().Handler(handler), nil

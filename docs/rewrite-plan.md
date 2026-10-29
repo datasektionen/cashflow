@@ -70,12 +70,14 @@ verifies row counts and amount totals per claim, and runs repeatedly against a p
 
 ## Phases
 
-0. **Scaffold**: `server/` from OG-template, auth, Hive permission client, Connect wiring with `UserService.Me`, schema
-   migration, compose (Postgres, nyckeln, dock, minio, mailpit), CI. `web/` SPA shell with login redirect on 401 and
-   design tokens; Go serves the built SPA.
+0. **Scaffold** (done): `server/` from OG-template, auth, Hive permission client, Connect wiring, schema migration,
+   compose (Postgres, nyckeln, dock), CI, `Dockerfile.next`, `job.next.nomad.hcl`. `web/` SPA shell with design
+   tokens, i18n, the form kit, hotkeys and devtools; the profile/bank details page as the first full slice. See
+   [cashflow4.md](cashflow4.md).
 1. **Read path**: claims list/detail, files, budget lookups, the action queues (attest, confirm, account, pay).
+   Brings the shared TanStack Table setup and Pacer (debounced search).
 2. **Write path**: create/edit expenses and invoices, uploads (HEIC → JPEG), comments, attest/confirm/pay with undo,
-   emails through the outbox.
+   emails through the outbox. Brings minio and mailpit into `compose.next.yaml`.
 3. **Fortnox**: OAuth, accounting views, voucher creation, with parity tests against the Python implementation.
 4. **Stats, admin, polish**: stats/charts, user admin, i18n, accessibility, mobile.
 5. **Migration and cutover**: script hardened against production dumps, staging on `cashflow-next`, freeze, migrate,
