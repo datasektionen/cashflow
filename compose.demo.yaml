@@ -64,6 +64,9 @@ services:
       retries: 20
   s3:
     image: adobe/s3mock:latest
+    # New Docker volumes are root-owned; this mock needs to create its bucket.
+    user: "0:0"
+    mem_limit: 512m
     environment:
       initialBuckets: cashflow
       COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: cashflow
