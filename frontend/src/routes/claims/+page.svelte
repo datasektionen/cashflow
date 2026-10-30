@@ -12,7 +12,6 @@
 	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
 	import { formatDineroAmount } from '$lib/money';
 	import { api } from '$lib/api';
-	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
 
 	let { data }: PageProps = $props();
 
@@ -49,6 +48,15 @@
 		goto(url, { keepFocus: true, noScroll: true });
 	}
 
+	function onSortChange(v: string) {
+		const url = new URL(page.url);
+		url.searchParams.set('sorting', v);
+		if (v === '') {
+			url.searchParams.delete('sorting');
+		}
+		goto(url, { keepFocus: true, noScroll: true });
+	}
+
 	const rowProps: TableRowProps<Claim> = {
 		href: (claim) =>
 			data.user
@@ -64,31 +72,36 @@
 					id: 'type',
 					header: $_('claims_type'),
 					render: (row) => $_(row.type),
-					width: 'w-24'
+					width: 'w-24',
+					sorting: ['-type', 'type']
 				},
 				{
 					id: 'description',
 					header: $_('admin_invoices.columns.description'),
 					render: (row) => row.description,
-					width: ''
+					width: '',
+					sorting: ['-description', 'description']
 				},
 				{
 					id: 'cost_centres',
 					header: $_('admin_expenses.columns.cost_centres'),
 					renderSnippet: costCentres,
-					width: 'w-48'
+					width: 'w-48',
+					sorting: ['-cost_centre', 'cost_centre']
 				},
 				{
 					id: 'created_date',
 					header: $_('expense_created_at'),
 					render: (row) => row.created_date,
-					width: 'w-28'
+					width: 'w-28',
+					sorting: ['-created_date', 'created_date']
 				},
 				{
 					id: 'total',
 					header: $_('admin_expenses.columns.total'),
 					renderSnippet: totalCell,
-					width: 'w-28'
+					width: 'w-28',
+					sorting: ['-total', 'total']
 				},
 				{
 					id: 'status',
@@ -214,4 +227,5 @@
 	onPageChange={handlePageChange}
 	onPerPageChange={handlePerPageChange}
 	{rowProps}
+	{onSortChange}
 />
