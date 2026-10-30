@@ -1,11 +1,17 @@
 import { createQueryOptions, useSuspenseQuery } from "@connectrpc/connect-query";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { Lock } from "lucide-react";
 import { useState } from "react";
 import { AppSidebar } from "#/components/layout/app-sidebar";
 import { Logo } from "#/components/layout/logo";
+import { Page } from "#/components/layout/page";
 import { GlobalHotkeys, ShortcutsDialog } from "#/components/layout/shortcuts";
+import { StateCard } from "#/components/layout/states";
+import { ButtonLink } from "#/components/ui/button-link";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "#/components/ui/sidebar";
 import { getMe } from "#/gen/cashflow/user/v1/user-UserService_connectquery";
+import { useT } from "#/lib/i18n";
+import { type NavItem, restrictedItem } from "#/lib/navigation";
 import { transport } from "#/lib/rpc";
 
 // Every page needs a session; GetMe also creates the user's row on first login.
@@ -32,10 +38,32 @@ function AppLayout() {
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
           <Logo />
         </header>
-        <Outlet />
+        <Guarded capabilities={capabilities} />
       </SidebarInset>
       <GlobalHotkeys capabilities={capabilities} onShowShortcuts={showShortcuts} />
       <ShortcutsDialog capabilities={capabilities} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </SidebarProvider>
+  );
+}
+
+/**
+ * Pages for some people only (attesting, paying, people…) explain that they
+ * are, instead of loading something the server will refuse.
+ */
+function Guarded({ capabilities }: { capabilities: Parameters<NonNullable<NavItem["show"]>>[0] }) {
+  const t = useT();
+  const { pathname } = useLocation();
+  const blocked = restrictedItem(pathname, capabilities);
+  if (!blocked) return <Outlet />;
+  return (
+    <Page title={blocked.label(t)}>
+      <StateCard
+        icon={<Lock />}
+        title={t.forbidden.title}
+        description={t.forbidden.body(blocked.label(t))}
+        action={<ButtonLink to="/">{t.errors.home}</ButtonLink>}
+        className="max-w-3xl"
+      />
+    </Page>
   );
 }

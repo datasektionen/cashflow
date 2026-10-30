@@ -38,6 +38,11 @@ func (s *AccountingService) GetFortnoxStatus(ctx context.Context, _ *connect.Req
 	if !res.Enabled {
 		return connect.NewResponse(res), nil
 	}
+	// A stored connection is not proof that Fortnox still accepts it (it can
+	// be revoked there), so ask Fortnox; a refused one is forgotten.
+	if err := s.Fortnox.Check(ctx); err != nil && !errors.Is(err, fortnox.ErrNotConnected) {
+		slog.Warn("fortnox check failed", "error", err)
+	}
 	conn, err := s.Fortnox.Connection(ctx)
 	if err != nil {
 		return nil, err

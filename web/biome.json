@@ -1,7 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
   "files": {
-    "includes": ["src/**", "scripts/**", "vite.config.ts", "!src/gen", "!src/routeTree.gen.ts", "!src/styles.css"]
+    "includes": [
+      "src/**",
+      "scripts/**",
+      "e2e/**",
+      "vite.config.ts",
+      "playwright.config.ts",
+      "!src/gen",
+      "!src/routeTree.gen.ts",
+      "!src/styles.css"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
@@ -28,6 +37,19 @@
       "includes": ["src/components/ui/**"],
       "linter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["e2e/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noEmptyPattern": "off"
+          },
+          "performance": {
+            "useDomNodeTextContent": "off"
+          }
+        }
       }
     }
   ]

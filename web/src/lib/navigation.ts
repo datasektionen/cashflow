@@ -128,3 +128,16 @@ export function visibleNavigation(capabilities: Capabilities): NavGroup[] {
     .map((group) => ({ ...group, items: group.items.filter((item) => !item.show || item.show(capabilities)) }))
     .filter((group) => group.items.length > 0);
 }
+
+/** The page at pathname, when the user may not see it; undefined otherwise. */
+export function restrictedItem(pathname: string, capabilities: Capabilities): NavItem | undefined {
+  return navigation
+    .flatMap((group) => group.items)
+    .find(
+      (item) =>
+        item.show &&
+        item.to !== "/" &&
+        (pathname === item.to || pathname.startsWith(`${item.to}/`)) &&
+        !item.show(capabilities),
+    );
+}

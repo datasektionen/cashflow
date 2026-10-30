@@ -373,6 +373,7 @@ export const en: Messages = {
     fortnoxHelp:
       "The rows are suggested from the budget lines' accounts. Check account and cost centre against the receipt.",
     columns: { account: "Account", costCentre: "Cost centre", debit: "Debit", credit: "Credit" },
+    notInFortnox: "Fortnox has no active account with this number. Choose another.",
     chooseAccount: "Choose account…",
     noCostCentre: "None",
     balancingExpense: "Owed to the person who paid",
@@ -536,6 +537,11 @@ export const en: Messages = {
       flagged: "Flagged",
     },
     done: "Show",
+  },
+  forbidden: {
+    title: "You don't have access here",
+    body: (page) =>
+      `${page} is only for those with permission for it in Hive. Ask whoever is responsible if you need it.`,
   },
   problems: {
     not_permitted: "You don't have permission to do that.",

@@ -1,6 +1,6 @@
 # Cashflow 4 (server/, web/, proto/). Cashflow 3 still runs from compose.yaml.
 
-.PHONY: dev services dev-server dev-fortnox dev-web gen check fix build django-schema coexistence parity
+.PHONY: dev services dev-server dev-fortnox dev-web gen check fix build django-schema coexistence parity e2e
 
 ## Everything at once: services, fake Fortnox, server and web app (SEED=1 to fill the database first).
 dev:
@@ -57,3 +57,8 @@ coexistence:
 parity:
 	docker build -q --target base -t cashflow3-base . >/dev/null
 	python3 scripts/parity/compare.py
+
+## Browser tests (web/e2e) against make dev; reseeds the database first.
+## Uses an installed Chromium when Playwright's own is missing.
+e2e:
+	cd web && CHROMIUM_PATH=$${CHROMIUM_PATH:-$$(ls -d $$HOME/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | tail -1)} bunx playwright test $(ARGS)

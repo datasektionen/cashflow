@@ -374,6 +374,7 @@ export const sv = {
     fortnoxTitle: "Ny verifikation i Fortnox",
     fortnoxHelp: "Raderna är ett förslag från budgetposternas konton. Kolla konto och kostnadsställe mot underlaget.",
     columns: { account: "Konto", costCentre: "Kostnadsställe", debit: "Debet", credit: "Kredit" },
+    notInFortnox: "Kontot finns inte bland Fortnox aktiva konton. Välj ett annat.",
     chooseAccount: "Välj konto…",
     noCostCentre: "Inget",
     balancingExpense: "Skulden till den som lade ut",
@@ -537,6 +538,11 @@ export const sv = {
       flagged: "Flaggat",
     },
     done: "Visa",
+  },
+  forbidden: {
+    title: "Du har inte tillgång hit",
+    body: (page: string) =>
+      `${page} är bara för dem som har behörighet till det i Hive. Fråga ansvarig om du behöver det.`,
   },
   problems: {
     not_permitted: "Du har inte behörighet att göra det.",

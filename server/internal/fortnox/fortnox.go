@@ -239,6 +239,14 @@ func (c *Client) Connection(ctx context.Context) (*Connection, error) {
 	return &Connection{Username: row.Username, Name: row.Name, ConnectedAt: row.CreatedAt.Time}, nil
 }
 
+// Check asks Fortnox whether the connection works, with a cheap call. A
+// connection Fortnox no longer accepts is forgotten on the way (see token),
+// so Connection reports it gone afterwards.
+func (c *Client) Check(ctx context.Context) error {
+	_, err := c.VoucherSeries(ctx)
+	return err
+}
+
 // token returns a valid access token, refreshing it under the row lock when
 // it is about to expire, as Cashflow 3's retrieve_or_refresh_token. A
 // refused refresh means the connection is gone and the row is deleted.

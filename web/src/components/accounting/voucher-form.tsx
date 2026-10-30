@@ -134,9 +134,16 @@ export function VoucherForm({ kind, number, draft, accounts, costCentres, onBook
                             />
                           )}
                         </form.AppField>
-                        <span className="truncate px-1 text-muted-foreground text-xs" title={row.label}>
-                          {row.balancing ? balancingLabel : row.label}
-                        </span>
+                        {row.account && !accountOptions.includes(row.account) ? (
+                          // A suggestion Fortnox doesn't have: say so before booking fails.
+                          <span className="flex items-center gap-1 px-1 text-warning-ink text-xs">
+                            <TriangleAlert className="size-3 shrink-0" /> {a.notInFortnox}
+                          </span>
+                        ) : (
+                          <span className="truncate px-1 text-muted-foreground text-xs" title={row.label}>
+                            {row.balancing ? balancingLabel : row.label}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="pl-2">

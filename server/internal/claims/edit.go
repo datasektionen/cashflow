@@ -76,7 +76,9 @@ func (in *Input) validate(kind Kind, creating bool, now time.Time) error {
 	case Expense:
 		if in.Date == nil {
 			add("date", "date.required")
-		} else if in.Date.After(now) {
+		} else if in.Date.Format(time.DateOnly) > now.Format(time.DateOnly) {
+			// Calendar days, both in Swedish time: comparing the date's
+			// midnight with the clock refused today's date just after midnight.
 			add("date", "date.future")
 		}
 	case Invoice:

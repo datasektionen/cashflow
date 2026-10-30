@@ -3,3 +3,4 @@ node_modules
 .nitro
 .tanstack
 dist
+test-results/

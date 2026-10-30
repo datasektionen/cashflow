@@ -42,7 +42,7 @@ export function AppSidebar({ user, capabilities, onShowShortcuts }: Props) {
       <SidebarContent>
         {visibleNavigation(capabilities).map((group) => (
           <SidebarGroup key={group.label(t)}>
-            <SidebarGroupLabel className="text-sidebar-foreground/50">{group.label(t)}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-sidebar-foreground/75">{group.label(t)}</SidebarGroupLabel>
             <SidebarMenu>
               {group.items.map((item) => (
                 <SidebarMenuItem key={item.to}>

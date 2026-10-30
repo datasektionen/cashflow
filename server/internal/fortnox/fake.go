@@ -36,6 +36,22 @@ type FakeVoucher struct {
 // NewFake returns a fake with a small chart of accounts and cost centres
 // that match the seed data.
 func NewFake() *Fake {
+	f := newFake()
+	// The rest of the BAS income and cost accounts, so GOrdian's suggested
+	// accounts exist as they do in the real chart of accounts.
+	known := map[int]bool{}
+	for _, a := range f.Accounts {
+		known[a.Number] = true
+	}
+	for n := 3000; n <= 8999; n++ {
+		if !known[n] {
+			f.Accounts = append(f.Accounts, Account{n, fmt.Sprintf("Konto %d", n)})
+		}
+	}
+	return f
+}
+
+func newFake() *Fake {
 	return &Fake{
 		codes: map[string]bool{}, access: map[string]bool{}, refresh: map[string]bool{},
 		Accounts: []Account{

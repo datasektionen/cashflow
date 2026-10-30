@@ -60,6 +60,10 @@ function ComboboxInput({
             size="icon-xs"
             variant="ghost"
             render={<ComboboxTrigger />}
+            // The input is the control (typing or arrow keys open the list);
+            // the chevron is for the mouse only, so screen readers skip it.
+            aria-hidden
+            tabIndex={-1}
             data-slot="input-group-button"
             className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
             disabled={disabled}

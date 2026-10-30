@@ -163,3 +163,23 @@ func TestBudgetUsage(t *testing.T) {
 		t.Errorf("usage %+v", rows)
 	}
 }
+
+// Just after midnight in Stockholm, today's date is still today: dates are
+// calendar days, not instants (the form's default date was refused before).
+func TestTodayIsNotInTheFuture(t *testing.T) {
+	now := time.Date(2026, 10, 30, 0, 30, 0, 0, stockholm)
+	for _, c := range []struct {
+		date   time.Time
+		future bool
+	}{
+		{time.Date(2026, 10, 30, 0, 0, 0, 0, time.UTC), false},
+		{time.Date(2026, 10, 29, 0, 0, 0, 0, time.UTC), false},
+		{time.Date(2026, 10, 31, 0, 0, 0, 0, time.UTC), true},
+	} {
+		in := Input{Description: "x", Date: &c.date, Parts: []PartInput{{"Ada", "A", "B", 100}}}
+		err := in.validate(Expense, false, now)
+		if got := slices.Contains(codes(err), "date:date.future"); got != c.future {
+			t.Errorf("%s at %s: future %v, want %v", c.date.Format(time.DateOnly), now, got, c.future)
+		}
+	}
+}
