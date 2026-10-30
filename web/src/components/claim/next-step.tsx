@@ -53,7 +53,7 @@ type Tone = "warning" | "waiting" | "ready" | "done";
  * what they can do now, or who everyone is waiting for, and why an action
  * they might expect is not available.
  */
-function describe(
+function explain(
   claim: Claim,
   me: string,
   caps: Capabilities | undefined,
@@ -115,7 +115,7 @@ export function NextStep({ claim, queue }: { claim: Claim; queue?: QueueSlug }) 
   const router = useRouter();
   if (!s || !a) return null;
 
-  const { tone, lines } = describe(claim, me.data?.user?.username ?? "", me.data?.capabilities, t, locale);
+  const { tone, lines } = explain(claim, me.data?.user?.username ?? "", me.data?.capabilities, t, locale);
   const ToneIcon = toneStyle[tone].icon;
   const ref = { kind: s.kind, number: s.number };
   const act = t.claim.actions;

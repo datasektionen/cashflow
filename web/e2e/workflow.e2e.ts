@@ -8,7 +8,10 @@ async function choose(page: Page, label: string | RegExp, text: string) {
   const box = page.getByRole("combobox", { name: label, exact: true });
   await box.click();
   await box.fill(text);
-  await page.getByRole("option", { name: new RegExp(text) }).first().click();
+  await page
+    .getByRole("option", { name: new RegExp(text) })
+    .first()
+    .click();
 }
 
 /** The next-step panel on a claim page. */
@@ -77,7 +80,12 @@ test("an expense goes from submitted to booked, and its owner sees every step", 
   await member.goto(url);
   await expect(member.locator(".stamp")).toHaveText("Bokförd");
   const history = member.locator("ol").last();
-  for (const step of ["Attesterar kvittodelen", "Jag har bekräftat kvittots giltighet.", "Betalade ut i betalning", "Bokförde med verifikationsnumret"]) {
+  for (const step of [
+    "Attesterar kvittodelen",
+    "Jag har bekräftat kvittots giltighet.",
+    "Betalade ut i betalning",
+    "Bokförde med verifikationsnumret",
+  ]) {
     await expect(history, step).toContainText(step);
   }
   expect(errors).toEqual([]);
@@ -87,15 +95,23 @@ test("the claim form lists every problem at once and refuses files that aren't r
   const page = await login(USERS.member);
   await page.goto("/expenses/new");
   await page.getByRole("button", { name: "Skicka in utlägget" }).click();
-  for (const problem of ["Skriv vad det gäller.", "Välj resultatställe.", "Fyll i ett belopp större än noll.", "Lägg till minst ett kvitto."]) {
+  for (const problem of [
+    "Skriv vad det gäller.",
+    "Välj resultatställe.",
+    "Fyll i ett belopp större än noll.",
+    "Lägg till minst ett kvitto.",
+  ]) {
     await expect(page.getByText(problem), problem).toBeVisible();
   }
   // An HTML file named like anything is refused by its contents.
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "kvitto.png",
-    mimeType: "image/png",
-    buffer: Buffer.from("<html><script>alert(1)</script></html>"),
-  });
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "kvitto.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("<html><script>alert(1)</script></html>"),
+    });
   await expect(page.getByText("Bara bilder (JPEG, PNG, WebP, HEIC) och PDF fungerar.")).toBeVisible();
 });
 
