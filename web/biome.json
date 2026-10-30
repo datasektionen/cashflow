@@ -5,6 +5,8 @@
       "src/**",
       "scripts/**",
       "e2e/**",
+      "e2e-demo/**",
+      "playwright.demo.config.ts",
       "vite.config.ts",
       "playwright.config.ts",
       "!src/gen",

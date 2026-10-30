@@ -67,6 +67,8 @@ e2e:
 ## Install frontend dependencies for local development or a new T3 worktree.
 setup:
 	cd web && bun install --frozen-lockfile
+	mkdir -p server/internal/spa/dist
+	touch server/internal/spa/dist/.gitkeep
 
 ## A self-contained demo on localhost:5180, with all integrations mocked.
 demo:
@@ -79,3 +81,8 @@ demo-down:
 ## Reset only the local demo's claims and receipts.
 demo-reset:
 	docker compose -f compose.demo.yaml -f compose.demo.local.yaml exec app cashflow-seed -reset
+
+.PHONY: demo-test
+## Browser smoke checks without resetting the shared sandbox.
+demo-test:
+	cd web && CHROMIUM_PATH=$${CHROMIUM_PATH:-$$(ls -d $$HOME/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | tail -1)} bunx playwright test --config playwright.demo.config.ts

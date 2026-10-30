@@ -51,6 +51,7 @@ make setup        # install locked frontend dependencies
 make demo         # build and start the complete local demo, localhost:5180
 make demo-down    # stop it, retaining data
 make demo-reset   # replace only this local demo's claims and receipts
+make demo-test    # check roles, restrictions, upload, approval and mock Fortnox
 ```
 
 The local stack has its own Compose project and volumes, separate from Coolify.
@@ -76,3 +77,7 @@ To reset the hosted sandbox, use the application's terminal on the **app**
 container and run `cashflow-seed -reset`. This replaces demo claims, receipts and
 payments for all testers. Normal deploys never reset data automatically.
 `cashflow-verify` reads every claim and checks its receipt in S3 without changes.
+
+Run the same smoke checks against the hosted sandbox with
+`CASHFLOW_DEMO_URL=https://cashflow.havet.dev make demo-test`. The workflow check
+adds one clearly named demo expense without resetting other testers' data.
