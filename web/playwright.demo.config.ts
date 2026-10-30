@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Run against the isolated demo only; never resets the shared database.
 export default defineConfig({
   testDir: "e2e-demo",
+  testMatch: "**/*.e2e.ts",
   workers: 1,
   expect: { timeout: 15_000 },
   timeout: 90_000,

@@ -35,7 +35,7 @@ services:
       demo-db:
         condition: service_healthy
       s3:
-        condition: service_healthy
+        condition: service_started
       mocks:
         condition: service_healthy
     expose:
@@ -47,17 +47,18 @@ services:
       retries: 10
       start_period: 60s
   demo-db:
-    image: postgres:18-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.demo-db
     environment:
       POSTGRES_USER: cashflow
       POSTGRES_PASSWORD: demo-only
       POSTGRES_DB: cashflow_demo
     volumes:
       - demo-db:/var/lib/postgresql
-      - ./server/internal/database/cashflow3/schema.sql:/docker-entrypoint-initdb.d/cashflow3.sql:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "cashflow", "-d", "cashflow_demo"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "cashflow", "-d", "cashflow_demo"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -72,12 +73,6 @@ services:
     volumes:
       - demo-s3:/data
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9090/"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
   mocks:
     build:
       context: .

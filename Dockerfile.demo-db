@@ -1,0 +1,4 @@
+# Bake the schema into the image: Coolify builds inside a helper container,
+# so source-tree bind mounts are not available on the deployment host.
+FROM postgres:18-alpine
+COPY server/internal/database/cashflow3/schema.sql /docker-entrypoint-initdb.d/cashflow3.sql
