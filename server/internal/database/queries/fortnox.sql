@@ -44,10 +44,12 @@ ORDER BY code;
 UPDATE core_claim SET verification = @verification WHERE id = @id;
 
 -- name: GetVoucherDetails :one
--- What a voucher needs from a claim: its total and transaction date (the
--- expense date, or the invoice date).
+-- What a voucher needs from a claim: its total and transaction date: the
+-- expense date, or the invoice date. Fortnox requires a date, and the invoice
+-- date is optional, so an invoice without one is dated when it was paid, or
+-- else submitted (Cashflow 3 sent no date, which Fortnox refuses).
 SELECT COALESCE((SELECT sum(amount) FROM core_claimpart WHERE claim_id = c.id) * 100, 0)::bigint AS total_ore,
-       COALESCE(e.expense_date, i.invoice_date) AS date
+       COALESCE(e.expense_date, i.invoice_date, i.paid_at, c.created_date) AS date
 FROM core_claim c
 LEFT JOIN expenses_expensedata e ON e.id = c.expense_data_id
 LEFT JOIN invoices_invoicedata i ON i.id = c.invoice_data_id

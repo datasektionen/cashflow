@@ -37,9 +37,13 @@ export function PartsCard({ claim }: { claim: Claim }) {
           {parts.map((part) => (
             <li key={part.id.toString()} className="flex items-center justify-between gap-3 px-4 py-2">
               <div className="flex min-w-0 flex-col gap-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <CostCentreChip name={part.costCentre || "–"} />
-                  <span className="truncate text-sm">
+                <div className="flex min-w-0 items-center gap-2">
+                  <CostCentreChip name={part.costCentre || "–"} className="shrink-0" />
+                  {/* One line: long budget names are cut, and shown whole on hover. */}
+                  <span
+                    className="min-w-0 truncate text-sm"
+                    title={[part.secondaryCostCentre, part.budgetLine].filter(Boolean).join(" › ")}
+                  >
                     {[part.secondaryCostCentre, part.budgetLine].filter(Boolean).join(" › ")}
                   </span>
                 </div>

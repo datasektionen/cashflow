@@ -7,6 +7,7 @@ import { Kbd } from "#/components/ui/kbd";
 import { Textarea } from "#/components/ui/textarea";
 import type { Claim } from "#/gen/cashflow/claim/v1/claim_pb";
 import { intlLocale, useLocale, useT } from "#/lib/i18n";
+import { cn } from "#/lib/utils";
 import { useClaimAction } from "./use-claim-action";
 
 /**
@@ -39,14 +40,17 @@ export function HistoryCard({ claim }: { claim: Claim }) {
   const format = new Intl.DateTimeFormat(intlLocale[locale], { dateStyle: "medium", timeStyle: "short" });
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
-        <CardTitle>{t.claim.history}</CardTitle>
+        <CardTitle className="flex items-baseline gap-2">
+          {t.claim.history}
+          {comments.length === 0 && (
+            <span className="font-normal text-muted-foreground text-sm">{t.claim.noComments}</span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {comments.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t.claim.noComments}</p>
-        ) : (
+        {comments.length > 0 && (
           <ol className="flex flex-col gap-3">
             {comments.map((comment, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: comments have no id and never reorder
@@ -74,14 +78,14 @@ export function HistoryCard({ claim }: { claim: Claim }) {
             ))}
           </ol>
         )}
-        <CommentBox claim={claim} />
+        <CommentBox claim={claim} first={comments.length === 0} />
       </CardContent>
     </Card>
   );
 }
 
 /** Write a comment; Ctrl/Cmd+Enter sends. The text stays if sending fails. */
-function CommentBox({ claim }: { claim: Claim }) {
+function CommentBox({ claim, first }: { claim: Claim; first: boolean }) {
   const t = useT();
   const [body, setBody] = useState("");
   const s = claim.summary;
@@ -100,7 +104,7 @@ function CommentBox({ claim }: { claim: Claim }) {
 
   return (
     <form
-      className="mt-6 flex flex-col gap-2 border-t pt-4"
+      className={cn("flex flex-col gap-2", !first && "mt-3 border-t pt-3")}
       onSubmit={(event) => {
         event.preventDefault();
         void send();
@@ -114,8 +118,9 @@ function CommentBox({ claim }: { claim: Claim }) {
         }}
         placeholder={t.claim.commentPlaceholder}
         aria-label={t.claim.commentPlaceholder}
-        rows={2}
-        className="min-h-16 resize-y"
+        rows={1}
+        // One line until there is more to say; grows with the text.
+        className="field-sizing-content min-h-9 max-h-48 resize-none"
       />
       <div className="flex items-center justify-between gap-2">
         <span className="text-muted-foreground text-xs">{t.claim.commentHint}</span>

@@ -89,7 +89,7 @@ function HeaderCard({ claim }: { claim: Claim }) {
 
   return (
     <Card className="receipt-edge relative overflow-hidden rounded-b-none">
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-2">
         <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
           <KindIcon kind={s.kind} />
           {t.claims.kind[kindSlug(s.kind)]}

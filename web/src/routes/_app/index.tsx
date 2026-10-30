@@ -49,7 +49,7 @@ function Overview() {
       <div className="mt-3">
         <WorkOverview />
       </div>
-      <div className="mt-4">
+      <div className="mt-3">
         <ClaimsList
           scope={{ mine: true }}
           search={search}

@@ -220,3 +220,20 @@ func TestBuildDraft(t *testing.T) {
 		t.Errorf("invoice draft %+v", got)
 	}
 }
+
+// Fortnox requires a date; an invoice without an invoice date is dated by
+// its payment (Cashflow 3 sent none, which Fortnox refuses).
+func TestUndatedInvoiceIsBookedOnItsPaymentDate(t *testing.T) {
+	s, f := testStore(t)
+	ctx := context.Background()
+	fx, fake := testFortnox(t, f)
+	n := f.add(claimSpec{kind: Invoice, owner: "anna", description: "Hyra", paid: true, parts: []partSpec{{"Ada", 500, true}}})
+	f.pool.Exec(ctx, `UPDATE invoices_invoicedata SET invoice_date = NULL, paid_at = '2026-10-15' WHERE id = $1`, n)
+	in := AccountingInput{Rows: []fortnox.VoucherRow{{Account: 4010, Debit: 500}, {Account: 2440, Credit: 500}}}
+	if _, err := s.Account(ctx, accountant, Invoice, n, in, fx); err != nil {
+		t.Fatal(err)
+	}
+	if got := fake.Vouchers["U"][0].TransactionDate; got != "2026-10-15" {
+		t.Errorf("transaction date %q, want the payment date", got)
+	}
+}

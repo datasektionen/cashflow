@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, settled, test, toast, USERS } from "./fixtures";
+import { expect, expectToast, settled, test, USERS } from "./fixtures";
 
 const RECEIPT = "e2e/assets/receipt.png";
 
@@ -47,7 +47,7 @@ test("an expense goes from submitted to booked, and its owner sees every step", 
   const kassor = await login(USERS.kassor);
   await kassor.goto(url);
   await nextStep(kassor).getByRole("button", { name: "Attestera" }).click();
-  expect(await toast(kassor)).toContain("Attesterat");
+  await expectToast(kassor, "Attesterat");
   await nextStep(kassor).getByRole("button", { name: "Bekräfta kvitto" }).click();
   await expect(nextStep(kassor)).toContainText("Klart för utbetalning");
 
@@ -74,7 +74,7 @@ test("an expense goes from submitted to booked, and its owner sees every step", 
   if ((await account.inputValue()) === "") await choose(kassor, "Rad 1: Konto", "5460");
   await expect(kassor.getByText("Balanserar och stämmer med totalen.")).toBeVisible();
   await kassor.getByRole("button", { name: "Bokför i Fortnox" }).click();
-  expect(await toast(kassor)).toMatch(/Bokfört som E\d+/);
+  await expectToast(kassor, /Bokfört som E\d+/);
 
   // The member sees it booked, with the whole history.
   await member.goto(url);

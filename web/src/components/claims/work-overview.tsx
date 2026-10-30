@@ -8,7 +8,7 @@ import { useT } from "#/lib/i18n";
 import { navigation } from "#/lib/navigation";
 
 const SHOWN = 4;
-const row = "flex items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-muted";
+const row = "flex items-center gap-2 rounded px-1 text-sm leading-6 hover:bg-muted";
 // Queue pages all take the claims list's search params, cost centre included.
 const queuePath = {
   [Queue.UNSPECIFIED]: "/attest",
@@ -34,7 +34,7 @@ export function WorkOverview() {
       <CardHeader>
         <CardTitle>{t.work.title}</CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
+      <CardContent className="grid gap-x-6 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
         {data.queues.map((q) => {
           const item = items.find((i) => i.queue === q.queue);
           if (!item) return null;

@@ -211,6 +211,11 @@ func (f *Fake) createVoucher(w http.ResponseWriter, r *http.Request) {
 		fakeError(w, http.StatusBadRequest, 2001939, "Ogiltig verifikationsserie")
 		return
 	}
+	if v.TransactionDate == "" {
+		// As Fortnox: a voucher must have a date.
+		fakeError(w, http.StatusBadRequest, 2001795, "Transaktionsdatum saknas")
+		return
+	}
 	var debit, credit int64
 	created := FakeVoucher{NewVoucher: NewVoucher{Series: v.VoucherSeries, Description: v.Description, TransactionDate: v.TransactionDate}}
 	for _, row := range v.VoucherRows {

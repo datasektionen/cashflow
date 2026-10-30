@@ -51,11 +51,9 @@ export const test = base.extend<Fixtures>({
 
 export { expect };
 
-/** The last toast's text. */
-export async function toast(page: Page) {
-  const t = page.locator("[data-sonner-toast]").last();
-  await t.waitFor();
-  return (await t.innerText()).replace(/\s+/g, " ").trim();
+/** Waits for a toast saying text (earlier toasts may still be showing). */
+export async function expectToast(page: Page, text: string | RegExp) {
+  await expect(page.locator("[data-sonner-toast]", { hasText: text }).first()).toBeVisible();
 }
 
 /** Accessibility violations axe finds, serious and critical only. */
@@ -82,5 +80,7 @@ export async function overflow(page: Page) {
 
 /** Waits until nothing is loading: no skeletons, nothing marked busy. */
 export async function settled(page: Page) {
+  // Give a just-opened page the moment it needs to start loading.
+  await page.waitForTimeout(150);
   await expect(page.locator('[data-slot="skeleton"], [aria-busy="true"]')).toHaveCount(0, { timeout: 10_000 });
 }
