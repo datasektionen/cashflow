@@ -80,7 +80,7 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 		}
 		target.Path = ""
 		proxy := httputil.NewSingleHostReverseProxy(target)
-		mux.Handle("/demo/fortnox/", http.StripPrefix("/demo/fortnox", proxy))
+		mux.Handle("GET /demo/fortnox/oauth-v1/auth", http.StripPrefix("/demo/fortnox", proxy))
 	}
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
