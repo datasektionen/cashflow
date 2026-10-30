@@ -8,13 +8,13 @@ talk over ConnectRPC; the API is defined in `proto/`. Why it is built this way: 
 You need Go (version in `server/go.mod`), Bun and Docker.
 
 ```console
-$ cp server/.env.example server/.env
-$ (cd web && bun install)
-$ make services      # Postgres, mock SSO + Hive (nyckeln), mock rfinger + spam (dock)
-$ make dev-server    # terminal 1: http://localhost:3000
-$ make dev-web       # terminal 2: http://localhost:5173  <- open this one
-$ make dev-fortnox   # terminal 3, optional: a fake Fortnox on :9004
+$ make dev SEED=1    # everything in one terminal, database filled; then open http://localhost:5173
 ```
+
+`make dev` creates `server/.env` from the example and installs the web app's packages if needed. It runs the mock
+services (Postgres, SSO and Hive in nyckeln, rfinger and spam in dock, S3), a fake Fortnox, the Go server and the web
+app, each line prefixed with where it came from; Ctrl-C stops them all. The pieces also run one by one: `make services`,
+`make dev-server`, `make dev-web`, `make dev-fortnox`.
 
 The fake Fortnox keeps vouchers in memory and approves connecting at once: open Fortnox in the sidebar as `turetek`
 and press "Anslut Fortnox". Without it (or without `FORTNOX_*` in `server/.env`) claims are booked by entering
@@ -113,6 +113,18 @@ Until the cutover the database is shared with Cashflow 3, and Django owns its ta
 
 The dev database is created from `cashflow3/schema.sql`. To start over with an empty one:
 `docker compose -f compose.next.yaml rm -sfv db && make services`.
+
+## Testing
+
+| Command | What | Needs |
+|---|---|---|
+| `make check` | Go tests (against Postgres), lint, types, web unit tests: what CI runs | `make services` |
+| `make e2e` | Browser tests in `web/e2e`: every page for each kind of user with accessibility checks, a claim's whole life, invoices, filters, keyboard, layout at 1366×768 and on a phone, dark mode and English. Reseeds the database first. `ARGS=e2e/workflow.e2e.ts` runs one file | `make dev` |
+| `make parity` | Asks Cashflow 3 (its own code, in Docker) and Cashflow 4 the same questions about the dev database, as every mock user: what they see, queues, filters, every action on every claim, stats, budget. Differences that are deliberate are listed with their reason; any other fails | `make dev` |
+| `make coexistence` | Cashflow 3 and 4 writing to and reading from one database, files included | `make dev` |
+
+Parity has found real differences in both directions; [parity.md](parity.md) lists what Cashflow 4 does differently
+on purpose.
 
 ## Before a deploy
 

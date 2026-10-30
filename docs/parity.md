@@ -89,3 +89,16 @@ Legend: ✅ done · 🔜 planned (phase) · ➖ intentionally not ported (reason
 | User list (`api/users/`) | ✅ `/users`, searchable (50 at a time) |
 | Own bank details | ✅ Profile |
 | Language sv/en, dark mode | ✅ |
+
+## Found by `make parity`
+
+Bugs in Cashflow 3 that Cashflow 4 does not have:
+
+- **Multi-part claims can't be opened (500)** by anyone but view-all admins, payers and confirmers, not even by their
+  owner: `viewable_by` joins the parts without `DISTINCT`, so `get_object()` finds the claim twice. Every action on
+  such a claim fails the same way.
+- **Payouts take no lock**, so the same expense can be paid out twice at once (see [cutover.md](cutover.md)).
+- **Invoices without an invoice date** are booked with no date, which Fortnox refuses.
+
+Deliberate differences the parity test reports with their reasons: flagging what is already flagged is not offered;
+the "attested" filter means every part attested; the "receipt confirmed" filter is about expenses only.

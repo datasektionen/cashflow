@@ -14,6 +14,8 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   retries: 0,
+  // Dev mode compiles each page on its first visit, which can take seconds.
+  expect: { timeout: 10_000 },
   reporter: [["list"]],
   use: {
     baseURL: process.env.CASHFLOW_WEB_URL ?? "http://localhost:5173",
