@@ -5,7 +5,7 @@
 //	cd server && go run ./cmd/seed          # refuses if claims exist
 //	cd server && go run ./cmd/seed -reset   # replaces all claims
 //
-// It only runs against a database on localhost.
+// It only runs against localhost, or the explicitly enabled isolated demo database.
 package main
 
 import (
@@ -24,14 +24,17 @@ import (
 
 	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/config"
+	"github.com/datasektionen/cashflow/server/internal/database"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
+	"github.com/datasektionen/cashflow/server/internal/demo"
 	"github.com/datasektionen/cashflow/server/internal/storage"
 )
 
 func main() {
 	reset := flag.Bool("reset", false, "delete all claims, comments, files and payments first")
+	ifEmpty := flag.Bool("if-empty", false, "leave an already populated demo database unchanged")
 	flag.Parse()
-	if err := run(context.Background(), *reset); err != nil {
+	if err := run(context.Background(), *reset, *ifEmpty); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -83,7 +86,7 @@ const (
 	accounted
 )
 
-func run(ctx context.Context, reset bool) error {
+func run(ctx context.Context, reset, ifEmpty bool) error {
 	if err := config.LoadDotEnv(".env"); err != nil {
 		return err
 	}
@@ -91,10 +94,13 @@ func run(ctx context.Context, reset bool) error {
 	if err != nil {
 		return err
 	}
-	if u, err := url.Parse(env.DatabaseURL); err != nil || (u.Hostname() != "localhost" && u.Hostname() != "127.0.0.1") {
-		return fmt.Errorf("refusing to seed a database that is not on localhost")
+	if u, err := url.Parse(env.DatabaseURL); err != nil || (u.Hostname() != "localhost" && u.Hostname() != "127.0.0.1" && !(demo.Enabled() && u.Hostname() == "demo-db" && u.Path == "/cashflow_demo")) {
+		return fmt.Errorf("refusing to seed a database outside localhost or the isolated demo target")
 	}
 
+	if err := database.Migrate(env.DatabaseURL); err != nil {
+		return err
+	}
 	conn, err := pgx.Connect(ctx, env.DatabaseURL)
 	if err != nil {
 		return err
@@ -108,6 +114,10 @@ func run(ctx context.Context, reset bool) error {
 	var existing int
 	if err := conn.QueryRow(ctx, "SELECT count(*) FROM core_claim").Scan(&existing); err != nil {
 		return err
+	}
+	if existing > 0 && ifEmpty && !reset {
+		fmt.Printf("Demo database already has %d claims; preserving them.\n", existing)
+		return nil
 	}
 	if existing > 0 && !reset {
 		return fmt.Errorf("the database already has %d claims; run with -reset to replace them", existing)

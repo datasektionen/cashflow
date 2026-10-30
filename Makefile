@@ -62,3 +62,20 @@ parity:
 ## Uses an installed Chromium when Playwright's own is missing.
 e2e:
 	cd web && CHROMIUM_PATH=$${CHROMIUM_PATH:-$$(ls -d $$HOME/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | tail -1)} bunx playwright test $(ARGS)
+
+.PHONY: demo demo-down demo-reset setup
+## Install frontend dependencies for local development or a new T3 worktree.
+setup:
+	cd web && bun install --frozen-lockfile
+
+## A self-contained demo on localhost:5180, with all integrations mocked.
+demo:
+	PUBLIC_URL=http://localhost:5180 docker compose -f compose.demo.yaml -f compose.demo.local.yaml up -d --build --wait
+
+## Stop the local demo, retaining test data.
+demo-down:
+	docker compose -f compose.demo.yaml -f compose.demo.local.yaml down
+
+## Reset only the local demo's claims and receipts.
+demo-reset:
+	docker compose -f compose.demo.yaml -f compose.demo.local.yaml exec app cashflow-seed -reset

@@ -1,0 +1,5 @@
+# Local-only port; Coolify uses compose.demo.yaml without this override.
+services:
+  app:
+    ports:
+      - "127.0.0.1:5180:3000"

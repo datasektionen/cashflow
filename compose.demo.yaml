@@ -1,0 +1,96 @@
+# Isolated public demo. No database, S3 or mock service ports are published.
+# Coolify attaches HTTPS only to app:3000. Local: make demo.
+name: cashflow-demo
+
+x-demo-env: &demo-env
+  DEMO_MODE: "true"
+  DATABASE_URL: postgres://cashflow:demo-only@demo-db:5432/cashflow_demo?sslmode=disable
+  HIVE_URL: http://mocks:9004
+  HIVE_SECRET: demo
+  BUDGET_URL: http://mocks:9004
+  SPAM_URL: http://mocks:9004
+  SPAM_API_KEY: demo
+  RFINGER_API_URL: http://mocks:9004
+  RFINGER_API_KEY: demo
+  S3_BUCKET_NAME: cashflow
+  S3_REGION: eu-west-1
+  S3_ACCESS_KEY_ID: demo
+  S3_SECRET_ACCESS_KEY: demo
+  S3_ENDPOINT: http://s3:9090
+  PUBLIC_URL: ${PUBLIC_URL:-https://cashflow.havet.dev}
+  APP_SECRET_KEY: ${SERVICE_PASSWORD_64_DEMOSESSION:-local-demo-session-key-only-not-for-production-0123456789}
+  FORTNOX_CLIENT_ID: demo
+  FORTNOX_CLIENT_SECRET: demo
+  FORTNOX_API_URL: http://mocks:9004/3
+  FORTNOX_AUTH_URL: ${PUBLIC_URL:-https://cashflow.havet.dev}/demo/fortnox/oauth-v1
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    environment: *demo-env
+    restart: unless-stopped
+    depends_on:
+      demo-db:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+      mocks:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+  demo-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: cashflow
+      POSTGRES_PASSWORD: demo-only
+      POSTGRES_DB: cashflow_demo
+    volumes:
+      - demo-db:/var/lib/postgresql
+      - ./server/internal/database/cashflow3/schema.sql:/docker-entrypoint-initdb.d/cashflow3.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cashflow", "-d", "cashflow_demo"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  s3:
+    image: adobe/s3mock:latest
+    environment:
+      initialBuckets: cashflow
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: cashflow
+      COM_ADOBE_TESTING_S3MOCK_STORE_REGION: eu-west-1
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /data
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
+    volumes:
+      - demo-s3:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9090/"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  mocks:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    command: ["cashflow-demomocks"]
+    environment:
+      DEMO_MODE: "true"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9004/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  demo-db:
+  demo-s3:

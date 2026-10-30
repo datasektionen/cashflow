@@ -1,0 +1,27 @@
+FROM oven/bun:1-alpine AS web
+WORKDIR /src/web
+COPY web/package.json web/bun.lock ./
+RUN bun install --frozen-lockfile
+COPY web ./
+RUN bun run build
+
+FROM golang:1.27-alpine AS server
+WORKDIR /src/server
+COPY server/go.mod server/go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY server ./
+COPY --from=web /src/web/dist/client ./internal/spa/dist
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /bin/cashflow . && \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /bin/cashflow-seed ./cmd/seed && \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /bin/cashflow-demomocks ./cmd/demomocks && \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /bin/cashflow-verify ./cmd/verify
+
+FROM alpine:3
+RUN apk add --no-cache ca-certificates tzdata && adduser -D -H -u 10001 cashflow
+ENV TZ=Europe/Stockholm
+COPY --from=server /bin/cashflow* /bin/
+COPY --chmod=755 deploy/demo/start.sh /bin/start-demo
+USER cashflow
+EXPOSE 3000
+CMD ["/bin/start-demo"]

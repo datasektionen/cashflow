@@ -3,6 +3,7 @@ import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useState } from "react";
 import { AppSidebar } from "#/components/layout/app-sidebar";
+import { DemoBanner } from "#/components/layout/demo-banner";
 import { Logo } from "#/components/layout/logo";
 import { Page } from "#/components/layout/page";
 import { GlobalHotkeys, ShortcutsDialog } from "#/components/layout/shortcuts";
@@ -38,6 +39,7 @@ function AppLayout() {
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
           <Logo />
         </header>
+        <DemoBanner />
         <Guarded capabilities={capabilities} />
       </SidebarInset>
       <GlobalHotkeys capabilities={capabilities} onShowShortcuts={showShortcuts} />

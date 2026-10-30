@@ -1,0 +1,12 @@
+# Only what Dockerfile.next needs; local builds and secrets stay out.
+*
+!web
+!server
+web/node_modules
+web/dist
+web/.tanstack
+server/.env
+server/internal/spa/dist/*
+!server/internal/spa/dist/.gitkeep
+
+!deploy

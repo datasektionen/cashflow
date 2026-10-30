@@ -8,6 +8,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"os"
 	"time"
 
 	"connectrpc.com/connect"
@@ -23,6 +26,7 @@ import (
 	"github.com/datasektionen/cashflow/server/internal/budget"
 	"github.com/datasektionen/cashflow/server/internal/claims"
 	"github.com/datasektionen/cashflow/server/internal/database/db"
+	"github.com/datasektionen/cashflow/server/internal/demo"
 	"github.com/datasektionen/cashflow/server/internal/fortnox"
 	"github.com/datasektionen/cashflow/server/internal/hive"
 	"github.com/datasektionen/cashflow/server/internal/rfinger"
@@ -46,9 +50,20 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	authCfg := auth.ConfigFromEnv()
 	// Same session length as Cashflow 3.
 	authCfg.SessionDuration = 48 * time.Hour
-	authenticator, err := auth.New(ctx, authCfg)
-	if err != nil {
-		return nil, fmt.Errorf("init auth: %w", err)
+	var mountAuth func(*http.ServeMux)
+	var sessionMiddleware func(http.Handler) http.Handler
+	if demo.Enabled() {
+		authenticator, err := demo.New(authCfg.SecretKey, deps.PublicURL)
+		if err != nil {
+			return nil, err
+		}
+		mountAuth, sessionMiddleware = authenticator.Mount, authenticator.Middleware
+	} else {
+		authenticator, err := auth.New(ctx, authCfg)
+		if err != nil {
+			return nil, fmt.Errorf("init auth: %w", err)
+		}
+		mountAuth, sessionMiddleware = authenticator.MountAuthRoutes, authenticator.SessionMiddleware
 	}
 
 	queries := db.New(deps.Pool)
@@ -56,7 +71,17 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	mux := http.NewServeMux()
 
 	// /login, /auth/callback and /logout.
-	authenticator.MountAuthRoutes(mux)
+	mountAuth(mux)
+	mux.HandleFunc("GET /demo/status", demo.Status)
+	if demo.Enabled() {
+		target, err := url.Parse(os.Getenv("FORTNOX_API_URL"))
+		if err != nil || target.Host == "" {
+			return nil, fmt.Errorf("demo requires a mock Fortnox URL")
+		}
+		target.Path = ""
+		proxy := httputil.NewSingleHostReverseProxy(target)
+		mux.Handle("/demo/fortnox/", http.StripPrefix("/demo/fortnox", proxy))
+	}
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		if err := deps.Pool.Ping(r.Context()); err != nil {
@@ -93,6 +118,6 @@ func NewHandler(ctx context.Context, deps Deps) (http.Handler, error) {
 	// Cashflow 3's addresses redirect to their new places.
 	mux.Handle("GET /", legacyRedirects(spa.Handler(spa.Dist())))
 
-	handler := authenticator.SessionMiddleware(mux)
+	handler := sessionMiddleware(mux)
 	return securityHeaders(http.NewCrossOriginProtection().Handler(handler)), nil
 }

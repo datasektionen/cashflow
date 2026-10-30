@@ -1,6 +1,10 @@
 import type { Messages } from "./sv";
 
 export const en: Messages = {
+  demo: {
+    notice: "Demo · Fictional data shared with other testers. Use test receipts only. Data may be reset.",
+    switchUser: "Switch test user",
+  },
   nav: {
     groups: { mine: "Mine", manage: "Manage", insight: "Insight" },
     overview: "Overview",

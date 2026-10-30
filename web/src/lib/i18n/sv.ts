@@ -3,6 +3,10 @@
  * missing from another language is a type error. Functions take parameters.
  */
 export const sv = {
+  demo: {
+    notice: "Testmiljö · Påhittade uppgifter, delade med andra testare. Använd bara testkvitton. Data kan återställas.",
+    switchUser: "Byt testanvändare",
+  },
   nav: {
     groups: { mine: "Mitt", manage: "Hantera", insight: "Översikt" },
     overview: "Översikt",
