@@ -51,7 +51,7 @@ make setup        # install locked frontend dependencies
 make demo         # build and start the complete local demo, localhost:5180
 make demo-down    # stop it, retaining data
 make demo-reset   # replace only this local demo's claims and receipts
-make demo-test    # check roles, restrictions, upload, approval and mock Fortnox
+make demo-test    # check roles, restrictions and the complete mock expense lifecycle
 ```
 
 The local stack has its own Compose project and volumes, separate from Coolify.
@@ -80,4 +80,5 @@ payments for all testers. Normal deploys never reset data automatically.
 
 Run the same smoke checks against the hosted sandbox with
 `CASHFLOW_DEMO_URL=https://cashflow.havet.dev make demo-test`. The workflow check
-adds one clearly named demo expense without resetting other testers' data.
+adds one clearly named demo expense and takes it through approval, a simulated
+payout and a mock Fortnox voucher, without resetting other testers' data.

@@ -1,3 +1,22 @@
+# Cashflow 4.0
+
+This branch (`slop-rewrite`) contains the Go backend in `server/` and TanStack
+frontend in `web/`. Try the public demo at **https://cashflow.havet.dev**: choose
+one of six test users to explore different permissions. Its data and integrations
+are simulated, and records are shared with other testers.
+
+```sh
+make setup
+make demo       # complete isolated sandbox on http://localhost:5180
+make demo-down  # stop it while retaining demo data
+```
+
+See the [developer guide](docs/cashflow4.md) for hot reload and architecture, and
+[demo and orcy setup](docs/demo.md) for roles, mock services, testing, deployment
+and resets. The **Cashflow 4.0** project on orcy uses `/home/t3/dev/cashflow`.
+
+---
+
 # Cashflow 3.0
 
 [![Deploy](https://img.shields.io/github/actions/workflow/status/datasektionen/cashflow/deploy.yml?branch=master&style=flat-square&logo=github&label=Deploy)](https://github.com/datasektionen/cashflow/actions/workflows/deploy.yml)
