@@ -1,38 +1,39 @@
 import base64
+from collections.abc import Callable
 from enum import Enum
-from typing import Union, Literal, Any, Optional, Callable, Unpack
+from typing import Any, Literal, Unpack
 from urllib import parse
 
 import requests
-from pydantic import BaseModel, TypeAdapter, RootModel, Field
+from pydantic import BaseModel, Field, RootModel, TypeAdapter
 from structlog import get_logger
 from structlog.contextvars import bind_contextvars
 
 from fortnox.api_client.exceptions import (
     CODE_EXCEPTION_MAPPING,
     FortnoxAPIError,
-    ResponseParsingError,
-    FortnoxNotFound,
     FortnoxAuthenticationError,
     FortnoxErrorCode,
+    FortnoxNotFound,
+    ResponseParsingError,
 )
 from fortnox.api_client.models import (
-    Me,
-    AuthCodeGrant,
-    RefreshTokenGrant,
-    Error,
     AccessTokenResponse,
     Account,
-    ListMetaInformaion,
-    CostCenter,
-    _CostCenterFields,
+    AuthCodeGrant,
     CompanyInformation,
-    VoucherSeriesListItem,
-    VoucherSeries,
+    CostCenter,
+    Error,
     Expense,
+    FinancialYear,
+    ListMetaInformaion,
+    Me,
+    RefreshTokenGrant,
     Voucher,
     VoucherCreate,
-    FinancialYear,
+    VoucherSeries,
+    VoucherSeriesListItem,
+    _CostCenterFields,
     _VoucherFields,
 )
 
@@ -113,7 +114,7 @@ class FortnoxAPIClient:
         return f"{self.FORTNOX_URL}/auth?client_id={self.client_id}&redirect_uri={parse.quote_plus(redirect_uri)}&scope={'%20'.join(self.scope)}&state={state}&access_type={self.access_type}&response_type=code&account_type=service"
 
     def retrieve_access_token(
-        self, grant: Union[AuthCodeGrant, RefreshTokenGrant]
+        self, grant: AuthCodeGrant | RefreshTokenGrant
     ) -> AccessTokenResponse:
         """Requests a new access token for a user.
 
@@ -146,8 +147,8 @@ class FortnoxAPIClient:
 
         # Parse/deserialize response or error
         response = requests.post(token_url, headers=headers, data=body)
-        adapter: TypeAdapter[Union[AccessTokenResponse, AuthErrorInfo]] = TypeAdapter(
-            Union[AccessTokenResponse, AuthErrorInfo]
+        adapter: TypeAdapter[AccessTokenResponse | AuthErrorInfo] = TypeAdapter(
+            AccessTokenResponse | AuthErrorInfo
         )
         match adapter.validate_python(response.json()):
             case AccessTokenResponse() as token_response:
@@ -303,7 +304,7 @@ class FortnoxAPIClient:
 
     def create_voucher(
         self,
-        voucher: Optional[VoucherCreate] = None,
+        voucher: VoucherCreate | None = None,
         access_token: str | None = None,
         **fields,
     ) -> Voucher:
@@ -336,9 +337,13 @@ class FortnoxAPIClient:
         return self._parse_retrieve_response(response, VoucherSeries, "VoucherSeries")
 
     def find_voucher(
-        self, access_token: str | None = None, **fields: Unpack[_VoucherFields]
+        self,
+        access_token: str | None = None,
+        description_prefix: str | None = None,
+        **fields: Unpack[_VoucherFields],
     ) -> Voucher:
-        """Finds the first voucher that matches the given fields"""
+        """Finds the first voucher that matches the given fields, and whose
+        description starts with `description_prefix` if given"""
         page = 1
         while True:
             response = self._get(
@@ -348,6 +353,11 @@ class FortnoxAPIClient:
             )
             data, meta = self._parse_list_response(response, Voucher, "Vouchers")
             for v in data:
+                if description_prefix is not None and not v.Description.startswith(
+                    description_prefix
+                ):
+                    continue
+
                 v_data = v.model_dump()
 
                 # Check that given fields match
@@ -389,9 +399,7 @@ class FortnoxAPIClient:
             # noinspection PyTypeHints
             Collection: list[model] = Field(alias=label)  # type: ignore[valid-type,literal-required]
 
-        adapter: TypeAdapter[Union[ResponseModel, Error]] = TypeAdapter(
-            Union[ResponseModel, Error]
-        )
+        adapter = TypeAdapter(ResponseModel | Error)
 
         match adapter.validate_python(response.json()):
             case ResponseModel() as resp:
@@ -434,7 +442,6 @@ class FortnoxAPIClient:
 
         # TODO: Handle more errors
         if response.status_code != 200:
-
             if response.status_code == 401:
                 raise FortnoxAuthenticationError("Invalid access token")
             elif response.status_code == 404:
@@ -475,10 +482,7 @@ class FortnoxAPIClient:
     @classmethod
     def _validate(cls, model, response):
         # response -> InfoModel or Error
-        # noinspection PyTypeHints
-        return (
-            cls._APIResponse[Union[model, Error]].model_validate(response.json()).root
-        )
+        return cls._APIResponse[model | Error].model_validate(response.json()).root
 
     # This class should only be used internally,
     # it's constructed to neatly parse the JSON responses from Fortnox

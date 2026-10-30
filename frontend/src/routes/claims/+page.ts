@@ -1,11 +1,8 @@
 import { API_URL } from '$lib/config';
 import type { PageLoad } from './$types';
 import { API } from '$lib/api';
-import { isErrorResponse } from '$lib/api/errors';
-import { alerts, error } from '$lib/stores/alerts';
-import type { Claim, PaginatedResponse } from '$lib/api/types';
-import { _, waitLocale } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import type { ClaimOrdering } from '$lib/api/types';
+import { _ } from 'svelte-i18n';
 import { claimFilterFromUrl } from '$lib/api/claimFilter';
 
 export const load: PageLoad = async ({ fetch, url, parent }) => {
@@ -18,18 +15,12 @@ export const load: PageLoad = async ({ fetch, url, parent }) => {
 		? parseInt(url.searchParams.get('per_page')!)
 		: 10;
 
-	const claims = api.claims
-		.list(page, perPage, {
-			...claimFilterFromUrl(url),
-			user: user!.username,
-			q: url.searchParams.get('q') || undefined
-		})
-		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
-			if (!isErrorResponse(e)) throw e;
-			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
-			alerts.update((a) => [...a, error(msg)]);
-			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
-		});
+	const sortingParam = url.searchParams.get('sorting')?.split(',') as ClaimOrdering[] | null;
+	const sorting: ClaimOrdering[] = sortingParam ?? ['-created_date'];
+
+	const filter = claimFilterFromUrl(url);
+
+	const claims = api.claims.list(page, perPage, { ...filter, user: user!.username }, sorting);
 
 	return { claims };
 };

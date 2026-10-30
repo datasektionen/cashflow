@@ -40,7 +40,6 @@ from core.exceptions import (
 )
 from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, Profile
 from core.permissions import get_permission_provider
-from core.search import claim_search
 from expenses.api.serializers import PaymentSerializer
 from expenses.models import Payment
 from fortnox import FortnoxNotFound, FortnoxRequest, FortnoxServiceNotAvailableProblem
@@ -77,7 +76,7 @@ class ClaimsList(ListAPIView, AuthenticatedUserMixin):
 
 class ClaimPartAttestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
     serializer_class = ClaimPartSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return ClaimPart.objects.filter(
@@ -112,7 +111,7 @@ class ClaimPartAttestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
 
 class ClaimPartUnattestView(GenericAPIView[ClaimPart], AuthenticatedUserMixin):
     serializer_class = ClaimPartSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return ClaimPart.objects.filter(
