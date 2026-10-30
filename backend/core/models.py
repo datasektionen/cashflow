@@ -19,7 +19,6 @@ from core.exceptions import (
     FlaggedAttestationError,
     FlaggedConfirmationError,
     FortnoxRecordMissingError,
-    MismatchedTotalAmountError,
     NoAccountingMethodError,
     NotConfirmableError,
     NotConfirmedError,
@@ -352,6 +351,7 @@ class Claim(models.Model):
         fortnox_client: FortnoxAPIClient | None = None,
         voucher_rows: list[VoucherRow] | None = None,
         voucher_number: str | None = None,
+        voucher_description: str | None = None,
     ) -> str:
         """Accounts the claim (expense or invoice) either via Fortnox or by giving it an existing voucher number."""
 
@@ -371,7 +371,16 @@ class Claim(models.Model):
                 )
 
             description = settings.FORTNOX_DESCRIPTION_FORMAT.format(
-                description=self.description, kind=self.type, id=self.data_id
+                description=voucher_description or self.description,
+                kind=self.type,
+                id=self.data_id,
+            )
+
+            # Look at the description prefix to see if it's already accounted
+            description_prefix = settings.FORTNOX_DESCRIPTION_FORMAT.format(
+                description="",
+                kind=self.type,
+                id=self.data_id,
             )
             if self.verification:
                 try:
@@ -384,7 +393,11 @@ class Claim(models.Model):
                     raise FortnoxRecordMissingError()
             else:
                 try:
-                    fortnox_client.find_voucher(Description=description)
+                    # Expense and invoice ids overlap, so also match the series.
+                    fortnox_client.find_voucher(
+                        description_prefix=description_prefix,
+                        VoucherSeries=voucher_series,
+                    )
                     raise CashflowVerificationMissingError()
                 except FortnoxNotFound:
                     pass

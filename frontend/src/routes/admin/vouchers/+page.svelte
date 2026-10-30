@@ -63,7 +63,8 @@
 					id: 'created_date',
 					header: $_('expense_created_at'),
 					render: (c) => c.created_date,
-					width: 'w-28'
+					width: 'w-28',
+					sorting: ['-created_date', 'created_date']
 				}
 			] as TableColumn<Claim>[]
 		).filter((col) => {

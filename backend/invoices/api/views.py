@@ -265,6 +265,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         serializer.is_valid(raise_exception=True)
 
         voucher_number = serializer.validated_data.get("voucher_number")
+        voucher_description = serializer.validated_data.get("voucher_description")
         voucher_rows_data = serializer.validated_data.get("voucher_rows", [])
 
         fortnox_client = None
@@ -297,6 +298,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                     fortnox_client=fortnox_client,
                     voucher_rows=voucher_rows,
                     voucher_number=voucher_number,
+                    voucher_description=voucher_description,
                 )
             except UnauthorizedAccountingError as e:
                 raise AccountingPermissionDeniedProblem() from e

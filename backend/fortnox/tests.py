@@ -274,6 +274,36 @@ def test_find_vouchers_handles_many_vouchers(fortnox_client):
     assert mock_get.call_count == target_page
 
 
+def test_find_voucher_matches_description_prefix(fortnox_client):
+    target = VoucherFactory.create(Description="(12) edited description")
+    page = [
+        VoucherFactory.create(Description="(123) other claim"),
+        VoucherFactory.create(Description="lunch (12) "),
+        target,
+    ]
+    response = _voucher_page_response(page, current_page=1, total_pages=1)
+
+    with patch.object(fortnox_client, "_get", side_effect=[response]):
+        result = fortnox_client.find_voucher(description_prefix="(12) ")
+
+    assert result.Description == "(12) edited description"
+
+
+def test_find_voucher_combines_prefix_and_fields(fortnox_client):
+    page = [
+        VoucherFactory.create(Description="(12) invoice", VoucherSeries="F"),
+        VoucherFactory.create(Description="(12) expense", VoucherSeries="E"),
+    ]
+    response = _voucher_page_response(page, current_page=1, total_pages=1)
+
+    with patch.object(fortnox_client, "_get", side_effect=[response]):
+        result = fortnox_client.find_voucher(
+            description_prefix="(12) ", VoucherSeries="E"
+        )
+
+    assert result.Description == "(12) expense"
+
+
 def test_find_nonexisting_voucher_raises_exception(fortnox_client):
     page_1 = _voucher_page_response(
         VoucherFactory.create_batch(3), current_page=1, total_pages=2

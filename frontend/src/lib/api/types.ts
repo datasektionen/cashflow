@@ -306,7 +306,9 @@ export type ClaimOrdering =
 	| 'is_flagged'
 	| '-is_flagged'
 	| 'cost_centre'
-	| '-cost_centre';
+	| '-cost_centre'
+	| 'verification'
+	| '-verification';
 
 export type ExpenseOrdering =
 	| ClaimOrdering
@@ -426,6 +428,7 @@ export type VoucherRow = {
 export type AccountPayload = {
 	voucher_rows?: VoucherRow[];
 	voucher_number?: string;
+	voucher_description?: string;
 };
 
 export type VoucherSeries = {
