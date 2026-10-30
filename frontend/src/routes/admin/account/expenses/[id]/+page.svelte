@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
-	import { ChevronDown, TriangleAlert } from '@lucide/svelte';
+	import { ChevronDown, CircleAlert, TriangleAlert } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import { api } from '$lib/api';
 	import { mayAccount } from '$lib/auth';
@@ -20,6 +20,7 @@
 		type VoucherRowErrors,
 		type VoucherRowWarnings
 	} from '../../voucherRowValidation';
+	import { voucherValidation, VoucherFormField, type VoucherNumberErrors } from '../../validation';
 	import { formatDineroAmount, sumDinero, claimTotal } from '$lib/money';
 	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
 	import { toDecimal } from 'dinero.js';
@@ -47,6 +48,27 @@
 	let voucherNumber = $state('');
 	// Which of the two submit buttons is in flight, so only it shows a spinner.
 	let submitting = $state<'rows' | 'number' | null>(null);
+
+	let voucherFormData = $state({
+		// svelte-ignore state_referenced_locally
+		description: expense.description
+	});
+
+	let voucherFormResult = $state(voucherValidation.get());
+	const voucherFormErrors = $derived(voucherFormResult.getErrors() as VoucherNumberErrors);
+
+	function validateVoucherForm(field?: string) {
+		voucherFormResult = voucherValidation.run(voucherFormData, field);
+	}
+
+	function showVoucherFormErrors(field: VoucherFormField) {
+		return voucherFormResult.isTested(field) && (voucherFormErrors[field]?.length ?? 0) > 0;
+	}
+
+	const voucherRowsPayload = () => ({
+		voucher_rows: toVoucherRows(voucherRows),
+		voucher_description: voucherFormData.description.trim()
+	});
 
 	const isAccounted = $derived(expense.voucher != null);
 
@@ -78,19 +100,22 @@
 	);
 
 	function submitVoucherRows() {
-		if (!voucherRowFields?.validate()) return;
+		// Validate both so all errors show at once, not one form at a time.
+		const rowsValid = voucherRowFields?.validate() ?? false;
+		validateVoucherForm();
+		if (!rowsValid || voucherFormResult.hasErrors()) return;
 
 		if (hasVoucherRowWarnings) {
 			showSubmitDialog = true;
 			return;
 		} else {
-			submitAccounting('rows', { voucher_rows: toVoucherRows(voucherRows) });
+			submitAccounting('rows', voucherRowsPayload());
 		}
 	}
 
 	function confirmVoucherRows() {
 		showSubmitDialog = false;
-		submitAccounting('rows', { voucher_rows: toVoucherRows(voucherRows) });
+		submitAccounting('rows', voucherRowsPayload());
 	}
 
 	// Rows without an account are dropped on submit, so require at least one.
@@ -198,32 +223,79 @@
 			>
 				{$_('admin_account.create_voucher_help')}
 			</p>
-			<VoucherRowFields
-				bind:this={voucherRowFields}
-				bind:voucherRows
-				accounts={data.accounts}
-				costCentres={data.costCentres}
-				{expectedTotal}
-				bind:errors={voucherRowErrors}
-				bind:warnings={voucherRowWarnings}
-			/>
-			<div class="mt-4 flex justify-end">
-				<button
-					type="button"
-					onclick={submitVoucherRows}
-					disabled={submitting != null ||
-						isAccounted ||
-						!hasSubmittableRows ||
-						!mayAccount(data.user)}
-					class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{#if submitting === 'rows'}
-						<CashSpinner class="size-5" />
-					{:else}
-						{$_('submit')}
-					{/if}
-				</button>
-			</div>
+
+			<form>
+				<div class="mb-4 flex flex-col gap-1">
+					<div class="flex flex-row items-center justify-between">
+						<label
+							for="voucher-description"
+							class="text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+						>
+							{$_('admin_account.voucher_description')}
+						</label>
+
+						{#if showVoucherFormErrors(VoucherFormField.Description)}
+							<span
+								id="voucher-description-error"
+								class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
+							>
+								<span>{$_(voucherFormErrors[VoucherFormField.Description]![0])}</span>
+								<CircleAlert class="size-4" />
+							</span>
+						{/if}
+					</div>
+					<div
+						class={[
+							'flex items-center border bg-base-200 text-sm dark:bg-dark-base-200',
+							showVoucherFormErrors(VoucherFormField.Description)
+								? 'border-red-500'
+								: 'border-base-500 dark:border-dark-base-200'
+						]}
+					>
+						<span class="pl-2 text-base-subtle tabular-nums dark:text-dark-base-subtle">
+							({expense.id})
+						</span>
+						<input
+							id="voucher-description"
+							type="text"
+							bind:value={voucherFormData.description}
+							oninput={() => validateVoucherForm(VoucherFormField.Description)}
+							aria-invalid={showVoucherFormErrors(VoucherFormField.Description)}
+							aria-describedby={showVoucherFormErrors(VoucherFormField.Description)
+								? 'voucher-description-error'
+								: undefined}
+							class="w-full border-0 bg-transparent p-2 pl-1.5 outline-none"
+						/>
+					</div>
+				</div>
+
+				<VoucherRowFields
+					bind:this={voucherRowFields}
+					bind:voucherRows
+					accounts={data.accounts}
+					costCentres={data.costCentres}
+					{expectedTotal}
+					bind:errors={voucherRowErrors}
+					bind:warnings={voucherRowWarnings}
+				/>
+				<div class="mt-4 flex justify-end">
+					<button
+						type="button"
+						onclick={submitVoucherRows}
+						disabled={submitting != null ||
+							isAccounted ||
+							!hasSubmittableRows ||
+							!mayAccount(data.user)}
+						class="flex min-w-24 cursor-pointer justify-center bg-money-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						{#if submitting === 'rows'}
+							<CashSpinner class="size-5" />
+						{:else}
+							{$_('submit')}
+						{/if}
+					</button>
+				</div>
+			</form>
 		</div>
 
 		<div class="border-t border-base-400 pt-6 dark:border-dark-base-200">

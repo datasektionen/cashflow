@@ -57,7 +57,7 @@ WSGI_APPLICATION = "cashflow.wsgi.application"
 
 # Apps
 
-INSTALLED_APPS = (
+INSTALLED_APPS: tuple[str, ...] = (
     "django.contrib.auth",
     "mozilla_django_oidc",
     "django.contrib.contenttypes",

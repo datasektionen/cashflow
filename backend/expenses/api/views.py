@@ -58,7 +58,6 @@ from core.exceptions import (
 from core.files import normalize_upload
 from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, File
 from core.permissions import get_permission_provider
-from core.search import claim_search
 from expenses.api.filters import ExpenseFilter
 from expenses.api.serializers import (
     ExpenseAccountSerializer,
@@ -297,6 +296,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         serializer.is_valid(raise_exception=True)
 
         voucher_number = serializer.validated_data.get("voucher_number")
+        voucher_description = serializer.validated_data.get("voucher_description")
         voucher_rows_data = serializer.validated_data.get("voucher_rows", [])
 
         fortnox_client = None
@@ -329,6 +329,7 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
                     fortnox_client=fortnox_client,
                     voucher_rows=voucher_rows,
                     voucher_number=voucher_number,
+                    voucher_description=voucher_description,
                 )
             except UnauthorizedAccountingError as e:
                 raise AccountingPermissionDeniedProblem() from e

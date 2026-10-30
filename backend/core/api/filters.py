@@ -19,6 +19,7 @@ class ClaimOrdering(filters.OrderingFilter):
         ("owner__user__username", "user"),
         ("expense_data__is_flagged", "is_flagged"),
         ("part__cost_centre", "cost_centre"),
+        ("verification", "verification"),
     )
 
     def __init__(self, *args, **kwargs):

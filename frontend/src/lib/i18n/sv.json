@@ -25,6 +25,8 @@
 	"confirm": "Bekräfta",
 	"no_results": "Inga resultat",
 	"description_required": "Beskrivning krävs",
+	"blank_description": "Beskrivning krävs",
+	"description_contains_emoji": "Beskrivningen får inte innehålla emojis",
 	"invoice_number_required": "Fakturanummer krävs",
 	"expense_date_required": "Inköpsdatum krävs",
 	"expense_date_future": "Inköpsdatum får inte vara i framtiden",
@@ -154,6 +156,7 @@
 		"manual_accounting": "Manuell bokföring",
 		"existing_voucher_help": "Här kan du ange ett befintligt verifikationsnummer som redan finns i Fortnox. Gör detta om du redan har bokfört utlägget/fakturan för att markera det som bokfört i Cashflow.",
 		"voucher_number_placeholder": "Verifikatnummer",
+		"voucher_description": "Beskrivning",
 		"success": "Verifikat {verification} bokfördes",
 		"error": "Verifikatet kunde inte bokföras",
 		"tabs": {

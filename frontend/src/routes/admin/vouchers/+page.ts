@@ -17,7 +17,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		: 15;
 
 	const sortingParam = url.searchParams.get('sorting')?.split(',') as ClaimOrdering[] | null;
-	const sorting = sortingParam ?? ['-date'];
+	const sorting = sortingParam ?? ['-created_date'];
 
 	const claims = api.claims
 		.list(

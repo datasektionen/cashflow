@@ -23,6 +23,8 @@
 	"browse_files": "Browse files",
 	"no_results": "No results",
 	"description_required": "Description is required",
+	"blank_description": "Description is required",
+	"description_contains_emoji": "Description can't contain emojis",
 	"invoice_number_required": "Invoice number is required",
 	"expense_date_required": "Expense date is required",
 	"expense_date_future": "Expense date cannot be in the future",
@@ -184,6 +186,7 @@
 		"manual_accounting": "Manual accounting",
 		"existing_voucher_help": "Here you can enter an existing voucher number that already exists in Fortnox. Do this if you have already recorded the expense/invoice, to mark it as recorded in Cashflow.",
 		"voucher_number_placeholder": "Voucher number",
+		"voucher_description": "Description",
 		"success": "Voucher {verification} was recorded",
 		"error": "The voucher could not be recorded",
 		"tabs": {

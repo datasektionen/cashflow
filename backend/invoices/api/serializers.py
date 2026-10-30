@@ -24,6 +24,7 @@ from .problems import (
 
 class InvoiceAccountSerializer(serializers.Serializer):
     voucher_number = serializers.RegexField(r"[A-Z]\d+", required=False)
+    voucher_description = serializers.CharField(allow_blank=False, required=False)
     voucher_rows = VoucherRowSerializer(many=True, required=False)
 
 
