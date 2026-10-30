@@ -389,26 +389,6 @@ class Claim(models.Model):
                 except FortnoxNotFound:
                     pass
 
-            # Verify total amount of voucher rows matches the total amount of the claim
-            if voucher_rows is not None:
-                voucher_total = sum(
-                    (
-                        Decimal(str(r.Debit))
-                        for r in voucher_rows
-                        if r.Debit is not None
-                    ),
-                    Decimal(0),
-                )
-
-                if voucher_total != self.total_amount():
-                    logger.debug(
-                        "mismatched total",
-                        voucher_total=voucher_total,
-                        claim_total=self.total_amount(),
-                        voucher_rows=voucher_rows,
-                    )
-                    raise MismatchedTotalAmountError()
-
             created = fortnox_client.create_voucher(
                 VoucherCreate(
                     Description=description,
