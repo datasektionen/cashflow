@@ -36,8 +36,8 @@ test("all six identities have their own server-enforced capabilities", async ({ 
     for (const [key, value] of Object.entries(capabilities))
       expect(Boolean(data.capabilities[key]), `${user}: ${key}`).toBe(value);
     if (!capabilities.pay) {
-      const denied = await context.request.post("/api/cashflow.payment.v1.PaymentService/ListPendingPayouts", {
-        data: {},
+      const denied = await context.request.post("/api/cashflow.payment.v1.PaymentService/CreatePayout", {
+        data: { expenseNumbers: ["1"] },
       });
       expect(denied.status()).toBe(403);
       await page.goto("/pay");
@@ -63,9 +63,16 @@ test("a member submits a receipt and the treasurer approves it using only mocks"
   await choose(page, "Sekundärt resultatställe", "Kärnverksamhet");
   await choose(page, "Budgetpost", "Fika");
   await page.getByLabel("Belopp").fill("12,34");
+  const uploaded = page.waitForResponse(
+    (response) => response.url().endsWith("/files") && response.request().method() === "POST",
+  );
   await page.locator('input[type="file"]').first().setInputFiles("e2e/assets/receipt.png");
+  expect((await uploaded).status()).toBe(200);
   await expect(page.getByText("receipt.png")).toBeVisible();
+  const submitted = page.waitForResponse((response) => response.url().endsWith("/CreateClaim"));
   await page.getByRole("button", { name: "Skicka in utlägget" }).click();
+  const created = await submitted;
+  expect(created.ok(), await created.text()).toBe(true);
   await expect(page.getByRole("heading", { level: 1, name: description })).toBeVisible();
   const claimURL = page.url();
   expect(claimURL).toMatch(/\/expenses\/\d+$/);
@@ -84,6 +91,17 @@ test("a member submits a receipt and the treasurer approves it using only mocks"
   await expect(connected.or(connect)).toBeVisible();
   if (await connect.isVisible()) await connect.click();
   await expect(connected).toBeVisible();
+  const payout = await context.request.post("/api/cashflow.payment.v1.PaymentService/CreatePayout", {
+    data: { expenseNumbers: [claimURL.split("/").at(-1)] },
+  });
+  expect(payout.ok(), await payout.text()).toBe(true);
+  await page.goto(`${claimURL}/account`);
+  const account = page.getByRole("combobox", { name: "Rad 1: Konto" });
+  await expect(account).toBeVisible();
+  if ((await account.inputValue()) === "") await choose(page, "Rad 1: Konto", "5460");
+  await expect(page.getByText("Balanserar och stämmer med totalen.")).toBeVisible();
+  await page.getByRole("button", { name: "Bokför i Fortnox" }).click();
+  await expect(page.locator("[data-sonner-toast]", { hasText: /Bokfört som E\d+/ }).first()).toBeVisible();
   expect(errors).toEqual([]);
   await context.close();
 });
