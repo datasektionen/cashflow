@@ -401,6 +401,13 @@ class Claim(models.Model):
                 kind=self.type,
                 id=self.data_id,
             )
+
+            comment = settings.FORTNOX_COMMENT_FORMAT.format(
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+
             if self.verification:
                 try:
                     fortnox_client.retrieve_voucher(
@@ -427,6 +434,7 @@ class Claim(models.Model):
                     TransactionDate=transaction_date,
                     VoucherRows=voucher_rows or [],
                     VoucherSeries=voucher_series,
+                    Comments=comment,
                 )
             )
             self.verification = f"{voucher_series}{created.VoucherNumber}"

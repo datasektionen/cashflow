@@ -363,3 +363,5 @@ PAYMENT_TAG_PREFIX = "Data"
 
 # When accounting to Fortnox the description fill follow this format
 FORTNOX_DESCRIPTION_FORMAT = "({id}) {description}"
+
+FORTNOX_COMMENT_FORMAT = "({username}) {first_name} {last_name}"
