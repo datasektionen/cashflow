@@ -187,6 +187,7 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .viewable_by(self.current_user)
             .annotate(date=F("invoice_data__invoice_date"))
             .with_total()
+            .with_cost_centres()
         )
 
     def get_serializer_context(self):

@@ -70,6 +70,7 @@ class ClaimsList(ListAPIView, AuthenticatedUserMixin):
                 )
             )
             .with_total()
+            .with_cost_centres()
             .distinct()
         )
 
