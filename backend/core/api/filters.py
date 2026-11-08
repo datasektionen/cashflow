@@ -18,7 +18,7 @@ class ClaimOrdering(filters.OrderingFilter):
         ("created_date", "created_date"),
         ("owner__user__username", "user"),
         ("expense_data__is_flagged", "is_flagged"),
-        ("part__cost_centre", "cost_centre"),
+        ("cost_centres", "cost_centre"),
         ("verification", "verification"),
     )
 

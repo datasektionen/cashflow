@@ -3,6 +3,7 @@ from typing import ClassVar, Unpack
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
 from django.db.models.functions import Coalesce
 from django.db.models.signals import post_save
@@ -276,6 +277,24 @@ class ClaimQuerySet(models.QuerySet["Claim"]):
                     .values("t")
                 ),
                 models.Value(Decimal(0)),
+            )
+        )
+
+    def with_cost_centres(self) -> ClaimQuerySet:
+        """Annotates each claim with its parts' cost centres, comma-separated."""
+        return self.annotate(
+            cost_centres=models.Subquery(
+                ClaimPart.objects.filter(claim=models.OuterRef("pk"))
+                .values("claim")
+                .annotate(
+                    c=StringAgg(
+                        "cost_centre",
+                        delimiter=", ",
+                        distinct=True,
+                        ordering="cost_centre",
+                    )
+                )
+                .values("c")
             )
         )
 
