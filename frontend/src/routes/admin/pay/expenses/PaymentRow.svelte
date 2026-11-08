@@ -83,7 +83,7 @@
 	</h1>
 {/snippet}
 {#snippet payDescription()}
-	<p class="text-base-subtle dark:text-dark-base-subtle">
+	<p class="truncate text-base-subtle dark:text-dark-base-subtle">
 		{$_('pay_confirm.description')}
 	</p>
 {/snippet}
@@ -155,7 +155,7 @@
 						rel="noopener noreferrer"
 						class="group dark:hover:text-dark-base flex min-w-0 items-center gap-x-1.5 text-sm text-base-subtle dark:text-dark-base-subtle"
 					>
-						<span class="my-auto min-w-0 text-xs">#{expense.id}</span>
+						<span class="my-auto shrink-0 text-xs">#{expense.id}</span>
 						<span class="min-w-0 truncate">{expense.description}</span>
 						<ExternalLink
 							class="size-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"

@@ -106,7 +106,7 @@
 								<tr
 									class="flex border-b border-b-base-400 bg-base-200/60 dark:border-dark-base-150 dark:bg-dark-base-100/60"
 								>
-									<td class="flex-1">
+									<td class="min-w-0 flex-1">
 										<PaymentRow
 											owner={pending.owner}
 											bankInfo={pending.bank_info}
