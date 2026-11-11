@@ -218,6 +218,8 @@ class ExpenseViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .annotate(date=F("expense_data__expense_date"))
             .with_total()
             .with_cost_centres()
+            # viewable_by joins on parts, which yields one row per part
+            .distinct()
         )
 
     @action(detail=True, methods=["POST"], url_path="comments")
