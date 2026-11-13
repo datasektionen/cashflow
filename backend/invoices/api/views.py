@@ -188,7 +188,6 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
             .annotate(date=F("invoice_data__invoice_date"))
             .with_total()
             .with_cost_centres()
-            # viewable_by joins on parts, which yields one row per part
             .distinct()
         )
 
