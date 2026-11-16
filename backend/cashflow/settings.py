@@ -172,6 +172,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 2  # Sessions expire after 2 days
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "drf_problems.exceptions.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "core.api.pagination.DefaultPagination",
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
 
