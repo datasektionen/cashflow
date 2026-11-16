@@ -24,7 +24,7 @@ from stats.api.serializers import (
 class LeaderboardView(ListAPIView):
     serializer_class = LeaderboardSerializer
     pagination_class = DefaultPagination
-    
+
     def get_queryset(self):
         return get_leaderboard_queryset(self.request)
 

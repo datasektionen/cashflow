@@ -33,7 +33,7 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class ProfilePictureView(generics.ListAPIView):
+class ProfilePictureView(generics.ListAPIView, AuthenticatedUserMixin):
     """Retrieves profile pictures for a list of usernames."""
 
     pagination_class = None
