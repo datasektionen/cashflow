@@ -1,5 +1,5 @@
-import { ApiClient } from '$lib/api';
-import type { FortnoxAccount, FortnoxCostCentre, FortnoxStatus } from '$lib/api/types';
+import { ApiClient } from '#lib/api/index.ts';
+import type { FortnoxAccount, FortnoxCostCentre, FortnoxStatus } from '#lib/api/types.ts';
 
 export class FortnoxAPI {
 	private apiClient: ApiClient;

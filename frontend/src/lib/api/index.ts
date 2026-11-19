@@ -1,15 +1,15 @@
-import { ExpensesAPI } from '$lib/api/resources/expenses';
-import { UsersAPI } from '$lib/api/resources/users';
-import { ApiClient } from '$lib/api/client';
-import { InvoicesAPI } from '$lib/api/resources/invoices';
-import { ClaimsAPI } from '$lib/api/resources/claims';
-import { ProfilePictureAPI } from '$lib/api/resources/profilePictures';
-import { PaymentsAPI } from '$lib/api/resources/payments';
-import { FortnoxAPI } from '$lib/api/resources/fortnox';
-import { BudgetAPI } from '$lib/api/resources/budget';
-import { VoucherSeriesAPI } from '$lib/api/resources/voucherSeries.js';
-import { StatsAPI } from '$lib/api/resources/stats';
-import { API_URL } from '$lib/config';
+import { ExpensesAPI } from '#lib/api/resources/expenses.ts';
+import { UsersAPI } from '#lib/api/resources/users.ts';
+import { ApiClient } from '#lib/api/client.ts';
+import { InvoicesAPI } from '#lib/api/resources/invoices.ts';
+import { ClaimsAPI } from '#lib/api/resources/claims.ts';
+import { ProfilePictureAPI } from '#lib/api/resources/profilePictures.ts';
+import { PaymentsAPI } from '#lib/api/resources/payments.ts';
+import { FortnoxAPI } from '#lib/api/resources/fortnox.ts';
+import { BudgetAPI } from '#lib/api/resources/budget.ts';
+import { VoucherSeriesAPI } from '#lib/api/resources/voucherSeries.js';
+import { StatsAPI } from '#lib/api/resources/stats.ts';
+import { API_URL } from '#lib/config.ts';
 import { ApiUtil } from './util';
 
 export { ApiClient } from './client';

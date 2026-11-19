@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '$lib/api';
+	import { api } from '#lib/api/index.ts';
 
 	type UserAvatarProps = {
 		url?: string;

@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { hasAdminAccess } from '$lib/auth';
+import { hasAdminAccess } from '#lib/auth.ts';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ parent }) => {

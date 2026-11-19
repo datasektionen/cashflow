@@ -1,20 +1,20 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { Invoice } from '$lib/api/types';
-	import { DUE_WARNING_DAYS } from '$lib/config';
-	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
+	import type { Invoice } from '#lib/api/types.ts';
+	import { DUE_WARNING_DAYS } from '#lib/config.ts';
+	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
 	import { Check, TriangleAlert } from '@lucide/svelte';
-	import type { TableColumn } from '$lib/components/types';
+	import type { TableColumn } from '#lib/components/types.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _, locale } from 'svelte-i18n';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
 	import InvoicePreview from './InvoicePreview.svelte';
 	import { ScrollArea } from 'bits-ui';
-	import { mayPay } from '$lib/auth';
+	import { mayPay } from '#lib/auth.ts';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
-	import { isSmallLayout } from '$lib/stores/state.svelte';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
+	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
 	import type { Dinero } from 'dinero.js';
 
 	let { data }: PageProps = $props();
@@ -27,41 +27,30 @@
 		return sumDinero(invoice.parts.map((part) => part.amount));
 	}
 
-	const fmt = new Intl.NumberFormat('sv-SE', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2
-	});
-
 	function handlePageChange(p: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handlePerPageChange(perPage: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handleSortChange(sort: string) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (sort) {
 			url.searchParams.set('sorting', sort);
 		} else {
 			url.searchParams.delete('sorting');
 		}
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	let preview: Invoice | null = $state(null);

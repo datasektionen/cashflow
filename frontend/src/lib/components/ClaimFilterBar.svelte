@@ -17,17 +17,22 @@
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import ComboBox from '$lib/components/ComboBox.svelte';
-	import TextInput from '$lib/components/TextInput.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
-	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
-	import type { BudgetLine, CostCentre, SecondaryCostCentre, VoucherSeries } from '$lib/api/types';
-	import { api } from '$lib/api';
-	import { budget } from '$lib/stores/budget.svelte';
-	import { isErrorResponse } from '$lib/api/errors';
-	import { alerts, error } from '$lib/stores/alerts';
-	import { logger } from '$lib/logger';
+	import ComboBox from '#lib/components/ComboBox.svelte';
+	import TextInput from '#lib/components/TextInput.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
+	import type { ComboboxColumn } from '#lib/components/AdvancedCombobox.svelte';
+	import AdvancedCombobox from '#lib/components/AdvancedCombobox.svelte';
+	import type {
+		BudgetLine,
+		CostCentre,
+		SecondaryCostCentre,
+		VoucherSeries
+	} from '#lib/api/types.ts';
+	import { api } from '#lib/api/index.ts';
+	import { budget } from '#lib/stores/budget.svelte.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import { alerts, error } from '#lib/stores/alerts.ts';
+	import { logger } from '#lib/logger.ts';
 
 	let {
 		includeBudget = true,
@@ -127,7 +132,7 @@
 		clearTimeout(queryTimeout);
 		resetting = true;
 		resetKey++;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		for (const key of filterKeys) {
 			url.searchParams.delete(key);
 		}
@@ -135,9 +140,7 @@
 		for (const key of visibleTristateKeys()) {
 			url.searchParams.delete(key);
 		}
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (resetting = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (resetting = false));
 	}
 
 	function filterValue(key: string) {
@@ -171,19 +174,19 @@
 	}
 
 	function clearTristateFilters() {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		for (const key of visibleTristateKeys()) {
 			url.searchParams.set(key, 'none');
 		}
 		url.searchParams.delete('page');
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+		goto(url, { reset: false, replaceState: true });
 	}
 
 	async function setFilter(
 		key: (typeof filterKeys)[number] | (typeof tristateKeys)[number],
 		value: string
 	) {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (value) {
 			url.searchParams.set(key, value);
 		} else {
@@ -213,7 +216,7 @@
 		}
 
 		url.searchParams.delete('page');
-		await goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+		await goto(url, { reset: false, replaceState: true });
 	}
 
 	let queryTimeout: ReturnType<typeof setTimeout>;
@@ -221,7 +224,7 @@
 	function setQuery(query: string) {
 		clearTimeout(queryTimeout);
 		queryTimeout = setTimeout(() => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			if (query) {
 				url.searchParams.set('q', query);
 				url.searchParams.delete('page');
@@ -229,7 +232,7 @@
 				url.searchParams.delete('q');
 			}
 			url.searchParams.delete('page');
-			goto(url, { keepFocus: true, noScroll: true, replaceState: true });
+			goto(url, { reset: false, replaceState: true });
 		}, 500);
 	}
 </script>

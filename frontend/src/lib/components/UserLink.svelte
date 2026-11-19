@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Profile } from '$lib/api/types';
+	import type { Profile } from '#lib/api/types.ts';
 
 	let { user, class: className }: { user: Profile; class?: string } = $props();
 </script>

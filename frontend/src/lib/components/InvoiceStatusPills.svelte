@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import type { Invoice } from '$lib/api/types';
-	import StatusPill from '$lib/components/StatusPill.svelte';
+	import type { Invoice } from '#lib/api/types.ts';
+	import StatusPill from '#lib/components/StatusPill.svelte';
 
 	let { invoice }: { invoice: Invoice } = $props();
 

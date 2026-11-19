@@ -1,12 +1,12 @@
-import { ApiClient } from '$lib/api';
-import type { Expense, PaginatedResponse, Payment, PendingPayment } from '$lib/api/types';
+import { ApiClient } from '#lib/api/index.ts';
+import type { Expense, PaginatedResponse, Payment, PendingPayment } from '#lib/api/types.ts';
 import {
 	type APIPayment,
 	type APIPendingPayment,
 	parsePayment,
 	parsePendingPayment
-} from '$lib/api/parse';
-import type { ListResponse } from '$lib/api/client';
+} from '#lib/api/parse.ts';
+import type { ListResponse } from '#lib/api/client.ts';
 
 export class PaymentsAPI {
 	private apiClient: ApiClient;

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { page } from '$app/state';
-	import { api } from '$lib/api';
+	import { api } from '#lib/api/index.ts';
 	import type { LeaderboardEntry, PaginatedResponse } from '../../lib/api/types';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import LeaderboardSkeleton from './LeaderboardSkeleton.svelte';
-	import { formatAmount } from '$lib/money';
+	import { formatAmount } from '#lib/money.ts';
 
 	let range = $state(0);
 

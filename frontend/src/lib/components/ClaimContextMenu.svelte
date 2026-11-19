@@ -8,12 +8,12 @@ Accepts an Expense, an Invoice or a Claim (the union used by the attest/confirm
 lists), which all carry the fields the menu needs under different names.
 -->
 <script lang="ts">
-	import type { Claim, Expense, Invoice, ExpensePart, InvoicePart, User } from '$lib/api/types';
+	import type { Claim, Expense, Invoice, ExpensePart, InvoicePart, User } from '#lib/api/types.ts';
 	import { _ } from 'svelte-i18n';
 	import { page } from '$app/state';
 	import { Separator } from 'bits-ui';
 	import { BookText, Copy, SquareArrowOutUpRight, User as UserIcon } from '@lucide/svelte';
-	import { mayAccount } from '$lib/auth';
+	import { mayAccount } from '#lib/auth.ts';
 
 	interface Props {
 		claim: Expense | Invoice | Claim;
@@ -72,7 +72,10 @@ lists), which all carry the fields the menu needs under different names.
 	<button
 		type="button"
 		role="menuitem"
-		onclick={() => navigator.clipboard.writeText(new URL(detailHref, page.url).href)}
+		onclick={() => {
+			const root = new URL(page.url.href);
+			navigator.clipboard.writeText(new URL(detailHref, root).href);
+		}}
 		class={itemClass}
 	>
 		<Copy class="size-4 shrink-0" />

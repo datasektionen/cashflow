@@ -3,7 +3,7 @@
 	import { _ } from 'svelte-i18n';
 	import { usePdfiumEngine } from '@embedpdf/engines/svelte';
 	import type { PdfEngine } from '@embedpdf/models';
-	import FileThumbnail from '$lib/components/FileThumbnail.svelte';
+	import FileThumbnail from '#lib/components/FileThumbnail.svelte';
 
 	let {
 		files = $bindable<File[]>([]),

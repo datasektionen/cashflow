@@ -3,32 +3,32 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
-	import type { TableColumn, TableRowProps } from '$lib/components/types';
-	import type { Claim } from '$lib/api/types';
-	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
-	import ClaimStatusPills from '$lib/components/ClaimStatusPills.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
-	import { formatBankAccount } from '$lib/bankAccount';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { mayPay } from '$lib/auth';
-	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
-	import { formatDineroAmount } from '$lib/money';
+	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
+	import type { TableColumn, TableRowProps } from '#lib/components/types.ts';
+	import type { Claim } from '#lib/api/types.ts';
+	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
+	import ClaimStatusPills from '#lib/components/ClaimStatusPills.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import { formatBankAccount } from '#lib/bankAccount.ts';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { mayPay } from '#lib/auth.ts';
+	import ClaimContextMenu from '#lib/components/ClaimContextMenu.svelte';
+	import { formatDineroAmount } from '#lib/money.ts';
 
 	let { data }: PageProps = $props();
 
 	function handlePageChange(p: number) {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { reset: false });
 	}
 
 	function handlePerPageChange(perPage: number) {
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true });
+		goto(url, { reset: false });
 	}
 
 	const rowProps: TableRowProps<Claim> = {

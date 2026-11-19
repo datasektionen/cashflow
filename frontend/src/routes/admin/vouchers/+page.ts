@@ -1,12 +1,12 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import { isErrorResponse } from '$lib/api/errors';
-import { alerts, error } from '$lib/stores/alerts';
-import type { Claim, ClaimOrdering, PaginatedResponse } from '$lib/api/types';
+import { API } from '#lib/api/index.ts';
+import { isErrorResponse } from '#lib/api/errors.ts';
+import { alerts, error } from '#lib/stores/alerts.ts';
+import type { Claim, ClaimOrdering, PaginatedResponse } from '#lib/api/types.ts';
 import { _, waitLocale } from 'svelte-i18n';
 import { get } from 'svelte/store';
-import { claimFilterFromUrl } from '$lib/api/claimFilter';
+import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API(API_URL, fetch);

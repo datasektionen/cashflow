@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import Skeleton from '#lib/components/ui/Skeleton.svelte';
 </script>
 
 <div class="animate-delayed-fade-in [&_.animate-pulse]:[animation-duration:2s]">

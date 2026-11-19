@@ -1,5 +1,5 @@
-import { ApiClient } from '$lib/api';
-import type { ActionOverview, ActionSummary, BankInfo, User } from '$lib/api/types';
+import { ApiClient } from '#lib/api/index.ts';
+import type { ActionOverview, ActionSummary, BankInfo, User } from '#lib/api/types.ts';
 
 export class UsersAPI {
 	private readonly apiClient: ApiClient;

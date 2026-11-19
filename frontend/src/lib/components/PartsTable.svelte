@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { Check, X } from '@lucide/svelte';
-	import type { BudgetLine, ExpensePart, InvoicePart, Profile, User } from '$lib/api/types';
+	import type { BudgetLine, ExpensePart, InvoicePart, Profile, User } from '#lib/api/types.ts';
 	import { _ } from 'svelte-i18n';
-	import { api } from '$lib/api';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import { api } from '#lib/api/index.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { logger } from '$lib/logger';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
+	import { logger } from '#lib/logger.ts';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
 
 	export type ClaimPartsTableProps = {
 		parts: (ExpensePart | InvoicePart)[];

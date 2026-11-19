@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
-	import type { TableColumn } from '$lib/components/types';
-	import type { Payment } from '$lib/api/types';
+	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
+	import type { TableColumn } from '#lib/components/types.ts';
+	import type { Payment } from '#lib/api/types.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import UserLink from '$lib/components/UserLink.svelte';
-	import { formatDineroAmount } from '$lib/money';
-	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
+	import { formatDineroAmount } from '#lib/money.ts';
+	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
 	import PaymentRow from './PaymentRow.svelte';
 
 	let { data }: PageProps = $props();
@@ -59,21 +59,17 @@
 
 	function handlePageChange(p: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handlePerPageChange(perPage: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 </script>
 

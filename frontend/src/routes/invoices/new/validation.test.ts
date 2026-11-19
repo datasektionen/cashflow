@@ -1,8 +1,8 @@
 import { afterEach, assert, beforeEach, test, vi } from 'vitest';
-import { freezeTime } from '$lib/test/helpers';
+import { freezeTime } from '#lib/test/helpers.ts';
 import type { NewInvoiceFormData } from './validation';
 import validation from './validation';
-import type { PartCreateUpdate } from '$lib/api/types';
+import type { PartCreateUpdate } from '#lib/api/types.ts';
 import { dinero, SEK } from 'dinero.js';
 import { parseDate } from '@internationalized/date';
 

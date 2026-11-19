@@ -23,7 +23,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { CircleAlert, Plus, X } from '@lucide/svelte';
-	import ComboBox from '$lib/components/ComboBox.svelte';
+	import ComboBox from '#lib/components/ComboBox.svelte';
 
 	type Props = {
 		parts: Part[];

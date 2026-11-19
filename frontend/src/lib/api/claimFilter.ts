@@ -1,4 +1,4 @@
-import type { ClaimFilter, InvoiceFilter, TristateFilter } from '$lib/api/types';
+import type { ClaimFilter, InvoiceFilter, TristateFilter } from '#lib/api/types.ts';
 
 const TRISTATE_KEYS = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
 

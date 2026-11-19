@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { api } from '$lib/api';
-	import { isErrorResponse } from '$lib/api/errors';
-	import type { User } from '$lib/api/types';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { api } from '#lib/api/index.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import type { User } from '#lib/api/types.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 
 	let { user }: { user: User } = $props();
 

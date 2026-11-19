@@ -8,7 +8,7 @@ or more url sources, of either kind, mixed or not.
 <script lang="ts">
 	import { RotateCcw, RotateCw, Expand, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import PdfSnippetViewer from '$lib/components/PdfSnippetViewer.svelte';
+	import PdfSnippetViewer from '#lib/components/PdfSnippetViewer.svelte';
 
 	export type ReceiptViewerProps = {
 		source: string[] | string;

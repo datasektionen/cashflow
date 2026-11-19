@@ -1,5 +1,5 @@
 import { SEK } from 'dinero.js';
-import { dineroFromDecimal } from '$lib/money';
+import { dineroFromDecimal } from '#lib/money.ts';
 import type {
 	Claim,
 	Expense,
@@ -9,8 +9,8 @@ import type {
 	LeaderboardEntry,
 	Payment,
 	PendingPayment
-} from '$lib/api/types';
-import type { MonthlyStatistics, YearlyStatistics } from '$lib/api/resources/stats';
+} from '#lib/api/types.ts';
+import type { MonthlyStatistics, YearlyStatistics } from '#lib/api/resources/stats.ts';
 
 // The API returns money as decimal strings. These types describe the raw responses,
 // and the parse functions convert them to Dinero objects as early as possible.

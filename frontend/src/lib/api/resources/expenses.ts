@@ -1,4 +1,4 @@
-import { ApiClient } from '$lib/api';
+import { ApiClient } from '#lib/api/index.ts';
 import type {
 	AccountPayload,
 	Comment,
@@ -11,10 +11,10 @@ import type {
 	ExpenseUpdate,
 	PaginatedResponse,
 	PartCreateUpdate
-} from '$lib/api/types';
-import type { ListResponse } from '$lib/api/client';
+} from '#lib/api/types.ts';
+import type { ListResponse } from '#lib/api/client.ts';
 import { toDecimal } from 'dinero.js';
-import { type APIExpense, parseExpense } from '$lib/api/parse';
+import { type APIExpense, parseExpense } from '#lib/api/parse.ts';
 
 export class ExpensesAPI {
 	private apiClient: ApiClient;

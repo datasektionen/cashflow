@@ -1,10 +1,10 @@
 /**
  * This file contains shared state for budget-related data, including cost centres, secondary cost centres, and budget lines.
  */
-import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
+import type { BudgetLine, CostCentre, SecondaryCostCentre } from '#lib/api/types.ts';
 import { SvelteMap } from 'svelte/reactivity';
-import { logger } from '$lib/logger';
-import { api } from '$lib/api';
+import { logger } from '#lib/logger.ts';
+import { api } from '#lib/api/index.ts';
 
 class CostCentres {
 	private costCentres: CostCentre[] = $state([]);

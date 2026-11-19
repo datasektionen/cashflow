@@ -3,7 +3,7 @@
 A table that accepts either a paginated response or other data. Uses bits-ui Pagination
 -->
 <script lang="ts" generics="T">
-	import type { PaginatedResponse } from '$lib/api/types';
+	import type { PaginatedResponse } from '#lib/api/types.ts';
 	import type { TableColumn, TableRowProps } from './types';
 	import { Pagination } from 'bits-ui';
 	import {
@@ -14,8 +14,8 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		ChevronUp
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import Skeleton from '$lib/components/ui/Skeleton.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import Skeleton from '#lib/components/ui/Skeleton.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
 	import { goto } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 

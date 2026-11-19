@@ -1,21 +1,21 @@
 <script lang="ts">
-	import type { BankInfo, Profile } from '$lib/api/types';
-	import { api } from '$lib/api';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import type { BankInfo, Profile } from '#lib/api/types.ts';
+	import { api } from '#lib/api/index.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { Check, Copy, ExternalLink } from '@lucide/svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import { isErrorResponse } from '$lib/api/errors';
-	import { logger } from '$lib/logger';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
-	import { formatBankAccount } from '$lib/bankAccount';
-	import Dialog from '$lib/components/Dialog.svelte';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import { logger } from '#lib/logger.ts';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import { formatBankAccount } from '#lib/bankAccount.ts';
+	import Dialog from '#lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
 	import { _ } from 'svelte-i18n';
 	import { completedPayments } from './completedPayments.svelte';
-	import { isExtraSmallLayout } from '$lib/stores/state.svelte';
+	import { isExtraSmallLayout } from '#lib/stores/state.svelte.ts';
 
 	let {
 		owner,

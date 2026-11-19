@@ -1,14 +1,14 @@
 <script lang="ts">
 	import '../app.css';
-	import '$lib/i18n'; // initialize i18n
+	import '#lib/i18n/index.ts'; // initialize i18n
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import NavBar from '$lib/components/nav/NavBar.svelte';
-	import SideNavLink from '$lib/components/SideNavLink.svelte';
+	import NavBar from '#lib/components/nav/NavBar.svelte';
+	import SideNavLink from '#lib/components/SideNavLink.svelte';
 	import { Separator } from 'bits-ui';
 	import type { LayoutProps } from './$types';
-	import { type Alert, alerts } from '$lib/stores/alerts';
-	import AlertToast from '$lib/components/AlertToast.svelte';
+	import { type Alert, alerts } from '#lib/stores/alerts.ts';
+	import AlertToast from '#lib/components/AlertToast.svelte';
 	import {
 		ReceiptText,
 		FileText,
@@ -25,10 +25,10 @@
 		Trophy,
 		PiggyBank
 	} from '@lucide/svelte';
-	import { api } from '$lib/api';
-	import type { ActionSummary } from '$lib/api/types';
-	import { hasAdminAccess } from '$lib/auth';
-	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import { api } from '#lib/api/index.ts';
+	import type { ActionSummary } from '#lib/api/types.ts';
+	import { hasAdminAccess } from '#lib/auth.ts';
+	import Skeleton from '#lib/components/ui/Skeleton.svelte';
 
 	let { children, data }: LayoutProps = $props();
 

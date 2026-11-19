@@ -1,6 +1,6 @@
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import { API_URL } from '$lib/config';
+import { API } from '#lib/api/index.ts';
+import { API_URL } from '#lib/config.ts';
 
 export const load: PageLoad = async ({ fetch, params }) => {
 	const api = new API(API_URL, fetch);
