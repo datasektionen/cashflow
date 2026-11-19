@@ -1,6 +1,6 @@
-import { ApiClient } from '$lib/api';
-import type { Claim, ClaimFilter, ClaimOrdering, PaginatedResponse } from '$lib/api/types';
-import { type APIClaim, parseClaim } from '$lib/api/parse';
+import { ApiClient } from '#lib/api/index.ts';
+import type { Claim, ClaimFilter, ClaimOrdering, PaginatedResponse } from '#lib/api/types.ts';
+import { type APIClaim, parseClaim } from '#lib/api/parse.ts';
 
 export class ClaimsAPI {
 	private apiClient: ApiClient;

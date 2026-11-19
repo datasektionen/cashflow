@@ -1,11 +1,11 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import { alerts, error } from '$lib/stores/alerts';
-import type { ExpenseOrdering } from '$lib/api/types';
-import { isErrorResponse } from '$lib/api/errors';
-import { logger } from '$lib/logger';
-import { claimFilterFromUrl } from '$lib/api/claimFilter';
+import { API } from '#lib/api/index.ts';
+import { alerts, error } from '#lib/stores/alerts.ts';
+import type { ExpenseOrdering } from '#lib/api/types.ts';
+import { isErrorResponse } from '#lib/api/errors.ts';
+import { logger } from '#lib/logger.ts';
+import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API(API_URL, fetch);

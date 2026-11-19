@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { Component } from 'svelte';
-	import type { CostCentreCount, OwnerCount } from '$lib/api/types';
+	import type { CostCentreCount, OwnerCount } from '#lib/api/types.ts';
 	import { _ } from 'svelte-i18n';
 	import { Stamp, BookText, CircleCheck, Banknote } from '@lucide/svelte';
-	import { api } from '$lib/api';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import { api } from '#lib/api/index.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
 	import PendingList from './PendingList.svelte';
 
 	let { data }: { data: PageData } = $props();

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import type { Claim } from '$lib/api/types';
-	import StatusPill from '$lib/components/StatusPill.svelte';
+	import type { Claim } from '#lib/api/types.ts';
+	import StatusPill from '#lib/components/StatusPill.svelte';
 
 	// A claim shows a single pill for its furthest-reached state.
 	let { claim }: { claim: Claim } = $props();

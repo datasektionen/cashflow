@@ -3,7 +3,7 @@
 The bindable value is a dinero object.
 -->
 <script lang="ts">
-	import { dineroFromDecimal, formatDineroAmount } from '$lib/money';
+	import { dineroFromDecimal, formatDineroAmount } from '#lib/money.ts';
 	import { Lock } from '@lucide/svelte';
 	import { isZero, SEK, toDecimal, type Dinero } from 'dinero.js';
 

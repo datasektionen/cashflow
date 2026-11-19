@@ -1,10 +1,10 @@
 import { create, only, enforce, test } from 'vest';
 import { type DateValue } from '@internationalized/date';
-import type { InvoiceUpdate, PartCreateUpdate } from '$lib/api/types';
+import type { InvoiceUpdate, PartCreateUpdate } from '#lib/api/types.ts';
 import { dinero, greaterThan, isZero, lessThan } from 'dinero.js';
 import { SEK } from 'dinero.js/currencies';
-import { logger } from '$lib/logger';
-import { testBudgetLineExceeded, type BudgetLineUsage } from '$lib/budgetUsage';
+import { logger } from '#lib/logger.ts';
+import { testBudgetLineExceeded, type BudgetLineUsage } from '#lib/budgetUsage.ts';
 
 export type UpdateInvoiceFormData = {
 	description: string;

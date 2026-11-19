@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
-	import type { Comment, User } from '$lib/api/types';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import { api } from '$lib/api';
+	import type { Comment, User } from '#lib/api/types.ts';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import { api } from '#lib/api/index.ts';
 
 	function formatComment(text: string): string {
 		return text

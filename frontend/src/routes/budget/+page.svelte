@@ -1,13 +1,13 @@
 <script lang="ts">
-	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Checkbox from '#lib/components/Checkbox.svelte';
 	import { page } from '$app/state';
-	import type { CostCentre } from '$lib/api/types.js';
+	import type { CostCentre } from '#lib/api/types.js';
 	import ExpandedCostCentre from './ExpandedCostCentre.svelte';
 	import { ChevronDown, ChevronUp, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { tick } from 'svelte';
-	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import Skeleton from '#lib/components/ui/Skeleton.svelte';
 
 	let { data } = $props();
 
@@ -18,9 +18,12 @@
 
 	// "pre-expand" and scroll to the cost centre specified in the hash section of the url
 	// e.g. loading /budget/#Dive will expand that row and scroll to it.
-	afterNavigate(async () => {
+	afterNavigate(async ({ shallow, type }) => {
+		if (shallow && type === 'goto') return;
+
 		const costCentre: string | null =
 			page.url.hash != '' ? decodeURIComponent(page.url.hash.replace('#', '')) : null;
+
 		const resolved = data.costCentres.find((cc) => cc.name == costCentre);
 		const target = resolved ? resolved.id : null;
 		if (target === expanded) {
@@ -90,7 +93,7 @@
 
 	async function handleFilterChange(checked: boolean) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (checked) {
 			url.searchParams.set('contains_blown', 'true');
 			filterBlown = true;
@@ -98,7 +101,7 @@
 			url.searchParams.delete('contains_blown');
 			filterBlown = false;
 		}
-		await goto(url, { noScroll: true });
+		await goto(url, { reset: false });
 		loading = false;
 
 		if (expanded != null) {
@@ -173,11 +176,9 @@
 					<tr
 						class="group cursor-pointer scroll-mt-20 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
 					>
-						<td class="px-4 py-3">
-							<div class="flex h-6 items-center">
-								<Skeleton class="h-4 {w} rounded-md"></Skeleton>
-							</div>
-						</td>
+						<td class="px-4 py-3"
+							><div class="flex h-6 items-center"><Skeleton class="h-4 {w} rounded-md" /></div></td
+						>
 					</tr>
 				{/each}
 			{/if}
@@ -188,7 +189,7 @@
 					class="group cursor-pointer scroll-mt-20 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
 					id="cost-centre-{costCentre.id}"
 					onclick={async () => {
-						const url = new URL(page.url);
+						const url = new URL(page.url.href);
 						if (expanded === costCentre.id) {
 							expanded = null;
 							url.hash = '';
@@ -197,7 +198,7 @@
 							url.hash = encodeURIComponent(costCentre.name);
 							scrollToExpanded();
 						}
-						await goto(url, { noScroll: true });
+						await goto(url, { reset: false });
 					}}
 					oncontextmenu={(e) => {
 						e.preventDefault();

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { api } from '$lib/api';
-	import type { BudgetLine, CostCentre, SecondaryCostCentre, User } from '$lib/api/types';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import { formatAmount } from '$lib/money';
+	import { api } from '#lib/api/index.ts';
+	import type { BudgetLine, CostCentre, SecondaryCostCentre, User } from '#lib/api/types.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import { formatAmount } from '#lib/money.ts';
 	import { _ } from 'svelte-i18n';
 	import { Receipt, SquareArrowOutUpRight, TriangleAlert } from '@lucide/svelte';
-	import { hasAdminAccess } from '$lib/auth';
+	import { hasAdminAccess } from '#lib/auth.ts';
 
 	let {
 		costCentre,

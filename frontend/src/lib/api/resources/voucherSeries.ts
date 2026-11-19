@@ -1,6 +1,6 @@
-import { ApiClient } from '$lib/api';
-import type { PaginatedResponse, VoucherSeries } from '$lib/api/types';
-import type { ListResponse } from '$lib/api/client';
+import { ApiClient } from '#lib/api/index.ts';
+import type { PaginatedResponse, VoucherSeries } from '#lib/api/types.ts';
+import type { ListResponse } from '#lib/api/client.ts';
 
 export class VoucherSeriesAPI {
 	private apiClient: ApiClient;

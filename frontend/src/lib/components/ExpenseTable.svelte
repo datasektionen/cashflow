@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Expense, PaginatedResponse } from '$lib/api/types';
+	import type { Expense, PaginatedResponse } from '#lib/api/types.ts';
 	import { Pagination } from 'bits-ui';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';

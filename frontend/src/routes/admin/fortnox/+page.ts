@@ -1,10 +1,10 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import type { FortnoxStatus } from '$lib/api/types';
-import { alerts, error } from '$lib/stores/alerts';
-import { isErrorResponse } from '$lib/api/errors';
-import { logger } from '$lib/logger';
+import { API } from '#lib/api/index.ts';
+import type { FortnoxStatus } from '#lib/api/types.ts';
+import { alerts, error } from '#lib/stores/alerts.ts';
+import { isErrorResponse } from '#lib/api/errors.ts';
+import { logger } from '#lib/logger.ts';
 
 export const load: PageLoad = async ({ fetch }) => {
 	const api = new API(API_URL, fetch);

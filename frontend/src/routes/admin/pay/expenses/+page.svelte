@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { PaginatedResponse, PendingPayment } from '$lib/api/types';
-	import { api } from '$lib/api';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import type { PaginatedResponse, PendingPayment } from '#lib/api/types.ts';
+	import { api } from '#lib/api/index.ts';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
 	import { ChevronDown, ChevronUp, TriangleAlert } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import PaymentRow from './PaymentRow.svelte';
 	import { _ } from 'svelte-i18n';
-	import { mayPay } from '$lib/auth';
-	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatBankAccount } from '$lib/bankAccount';
+	import { mayPay } from '#lib/auth.ts';
+	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { formatBankAccount } from '#lib/bankAccount.ts';
 	import { completedPayments } from './completedPayments.svelte';
-	import { formatDineroAmount } from '$lib/money';
+	import { formatDineroAmount } from '#lib/money.ts';
 
 	type pageData = {
 		pendingPayments: PaginatedResponse<PendingPayment>;

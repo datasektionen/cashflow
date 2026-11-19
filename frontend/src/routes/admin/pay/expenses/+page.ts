@@ -1,7 +1,7 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import type { PaginatedResponse, PendingPayment } from '$lib/api/types';
-import { API } from '$lib/api';
+import type { PaginatedResponse, PendingPayment } from '#lib/api/types.ts';
+import { API } from '#lib/api/index.ts';
 
 export const load: PageLoad = async ({ fetch }) => {
 	const api = new API(API_URL, fetch);

@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { Check, MessageSquarePlus, Trash } from '@lucide/svelte';
-	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
-	import type { Invoice, Comment, User } from '$lib/api/types';
-	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import Dialog from '$lib/components/Dialog.svelte';
+	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import type { Invoice, Comment, User } from '#lib/api/types.ts';
+	import ReceiptViewer from '#lib/components/ReceiptViewer.svelte';
+	import CommentDisplay from '#lib/components/CommentDisplay.svelte';
+	import PartsTable from '#lib/components/PartsTable.svelte';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import Dialog from '#lib/components/Dialog.svelte';
 	import { Dialog as DialogPrimitive } from 'bits-ui';
-	import { api } from '$lib/api';
-	import { logger } from '$lib/logger';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import { isErrorResponse } from '$lib/api/errors';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import { api } from '#lib/api/index.ts';
+	import { logger } from '#lib/logger.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import UserLink from '#lib/components/UserLink.svelte';
 	import { goto } from '$app/navigation';
 	import { tick } from 'svelte';
 

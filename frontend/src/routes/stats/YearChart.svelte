@@ -2,11 +2,11 @@
 	import { scaleBand } from 'd3-scale';
 	import { Axis, Bar, Chart, Layer } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
-	import { api } from '$lib/api';
+	import { api } from '#lib/api/index.ts';
 	import { _, locale } from 'svelte-i18n';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
-	import { isSmallLayout } from '$lib/stores/state.svelte';
-	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import Skeleton from '#lib/components/ui/Skeleton.svelte';
 	import { toDecimal } from 'dinero.js';
 
 	// Static bar heights (%) for the loading placeholder, one per month

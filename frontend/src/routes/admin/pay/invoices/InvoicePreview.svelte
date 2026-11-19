@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { ExternalLink } from '@lucide/svelte';
-	import type { Invoice } from '$lib/api/types';
-	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import UserLink from '$lib/components/UserLink.svelte';
-	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
-	import { api } from '$lib/api';
-	import { logger } from '$lib/logger';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import { isErrorResponse } from '$lib/api/errors';
+	import type { Invoice } from '#lib/api/types.ts';
+	import ReceiptViewer from '#lib/components/ReceiptViewer.svelte';
+	import CommentDisplay from '#lib/components/CommentDisplay.svelte';
+	import PartsTable from '#lib/components/PartsTable.svelte';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
+	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import { api } from '#lib/api/index.ts';
+	import { logger } from '#lib/logger.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
 
 	let {

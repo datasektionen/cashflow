@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Alert, AlertType, dismiss } from '$lib/stores/alerts';
+	import { type Alert, AlertType, dismiss } from '#lib/stores/alerts.ts';
 	import { CircleAlert, CircleDollarSign, CircleX, Lightbulb, X } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';

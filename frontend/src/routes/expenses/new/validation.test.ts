@@ -1,10 +1,10 @@
 import { test, assert, afterEach, beforeEach, vi } from 'vitest';
-import { freezeTime } from '$lib/test/helpers';
+import { freezeTime } from '#lib/test/helpers.ts';
 import validation from './validation';
 import type { NewExpenseFormData } from './validation';
-import type { PartCreateUpdate } from '$lib/api/types';
+import type { PartCreateUpdate } from '#lib/api/types.ts';
 import { dinero, SEK } from 'dinero.js';
-import { BUDGET_USAGE_FIELD, type BudgetLineUsage } from '$lib/budgetUsage';
+import { BUDGET_USAGE_FIELD, type BudgetLineUsage } from '#lib/budgetUsage.ts';
 import { parseDate } from '@internationalized/date';
 
 const TODAY = parseDate('2026-05-29');

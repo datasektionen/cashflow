@@ -2,18 +2,18 @@
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { AlertTriangle, CircleAlert, Plus, TriangleAlert, X } from '@lucide/svelte';
-	import ComboBox from '$lib/components/ComboBox.svelte';
-	import AmountInput from '$lib/components/AmountInput.svelte';
-	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '$lib/api/types';
-	import { budget } from '$lib/stores/budget.svelte';
-	import type { PartCreateUpdate } from '$lib/api/types';
-	import { ZERO, dineroFromDecimal, dineroFromFloat, sumDinero } from '$lib/money';
+	import ComboBox from '#lib/components/ComboBox.svelte';
+	import AmountInput from '#lib/components/AmountInput.svelte';
+	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '#lib/api/types.ts';
+	import { budget } from '#lib/stores/budget.svelte.ts';
+	import type { PartCreateUpdate } from '#lib/api/types.ts';
+	import { ZERO, dineroFromDecimal, dineroFromFloat, sumDinero } from '#lib/money.ts';
 	import { SEK, subtract } from 'dinero.js';
-	import { BUDGET_USAGE_FIELD, sameBudgetLine, type BudgetLineUsage } from '$lib/budgetUsage';
+	import { BUDGET_USAGE_FIELD, sameBudgetLine, type BudgetLineUsage } from '#lib/budgetUsage.ts';
 
 	import { SvelteSet } from 'svelte/reactivity';
-	import { api } from '$lib/api';
-	import { logger } from '$lib/logger';
+	import { api } from '#lib/api/index.ts';
+	import { logger } from '#lib/logger.ts';
 	import { fade } from 'svelte/transition';
 
 	function newPart(): PartCreateUpdate {

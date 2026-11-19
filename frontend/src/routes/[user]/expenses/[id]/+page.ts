@@ -1,7 +1,7 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import { hasAdminAccess } from '$lib/auth';
+import { API } from '#lib/api/index.ts';
+import { hasAdminAccess } from '#lib/auth.ts';
 import { redirect } from '@sveltejs/kit';
 
 export const load: PageLoad = async ({ fetch, params, parent }) => {

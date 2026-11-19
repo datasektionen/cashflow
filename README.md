@@ -3,7 +3,7 @@
 [![Deploy](https://img.shields.io/github/actions/workflow/status/datasektionen/cashflow/deploy.yml?branch=master&style=flat-square&logo=github&label=Deploy)](https://github.com/datasektionen/cashflow/actions/workflows/deploy.yml)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdatasektionen%2Fcashflow%2Frefs%2Fheads%2Fmaster%2Fbackend%2Fpyproject.toml&style=flat-square&logoSize=auto)
 ![Django](https://img.shields.io/badge/Django-6-092E20?style=flat-square&logo=django&logoColor=white)
-![SvelteKit](https://img.shields.io/badge/SvelteKit-2-FF3E00?style=flat-square&logo=svelte&logoColor=white)
+![SvelteKit](https://img.shields.io/badge/SvelteKit-3-FF3E00?style=flat-square&logo=svelte&logoColor=white)
 
 Django project to manage receipts and reimbursements at Datasektionen.
 
@@ -12,8 +12,10 @@ The repository is split in two parts: the Django backend in `backend/` and the S
 ## Developing locally
 
 ### Docker
+
 There is a provided Docker compose file; this will run all necessary services for development, including
 a PostgreSQL instance, a mock authentication system, an s3 mock as well as a mail system.
+
 > [!NOTE]
 > By default, the compose stack will use a Dockerfile meant for development only. This Dockerfile also runs an Nginx server to proxy the mock authentication.
 
@@ -40,7 +42,6 @@ Install it using your package manager of choice. You will also need provide the 
 
 Cashflow uses Poetry for dependency management. Depending on your system you can install it globally using
 `pip install poetry` or install it using your package manager.
-
 
 > [!TIP]
 > To manage Python several versions, you can use a tool like [pyenv](https://github.com/pyenv/pyenv).
@@ -85,24 +86,24 @@ The frontend will be available on `http://localhost:5173`.
 
 The following environment variables are required to run the project:
 
-| Variable             | Description                          | Default                        |
-| -------------------- | ------------------------------------ | ------------------------------ |
-| DEBUG                | Django debug mode. Set to True when developing locally. Never set to True in production.                     | False                          |
-| DJANGO_LOG_LEVEL     | Which types of logs to get           | INFO                           |
-| DATABASE_URL         | PostgreSQL server url                | ---                            |
-| SECRET_KEY           | Django encryption key                | ---                            |
-| OIDC_PROVIDER        | URL to sso (with /op)                | ---                            |
-| OIDC_ID              | ID used when authentication to oidc  | ---                            |
-| OIDC_SECRET          | Secret used when authentication to oidc  | ---                            |
-| REDIRECT_URL         | Return point after successful login  | ---                            |
-| HIVE_URL             | URL to Hive service                  | https://hive.datasektionen.se  |
-| HIVE_SECRET          | Hive API Token secret                | ---                            |
-| SPAM_URL             | URL to spam service                  | https://spam.datasektionen.se  |
-| SPAM_API_KEY         | API key for the spam mail system     | ---                            |
-| RFINGER_API_URL      | URL to rfinger api                   | https://rfinger.datasektionen.se |
-| RFINGER_API_KEY      | API key for rfinger                  | ---                            |
-| S3_ACCESS_KEY_ID     | Amazon AWS IAM access key id         | ---                            |
-| S3_SECRET_ACCESS_KEY | Amazon AWS IAM secret access key     | ---                            |
-| S3_USE_SIGV4         | If Frankfurt, set to False           | True                           |
-| S3_HOST              | Url to s3 server                     | None                           |
-| S3_BUCKET_NAME       | Amazon AWS s3 bucket name            | calypso                        |
+| Variable             | Description                                                                              | Default                          |
+| -------------------- | ---------------------------------------------------------------------------------------- | -------------------------------- |
+| DEBUG                | Django debug mode. Set to True when developing locally. Never set to True in production. | False                            |
+| DJANGO_LOG_LEVEL     | Which types of logs to get                                                               | INFO                             |
+| DATABASE_URL         | PostgreSQL server url                                                                    | ---                              |
+| SECRET_KEY           | Django encryption key                                                                    | ---                              |
+| OIDC_PROVIDER        | URL to sso (with /op)                                                                    | ---                              |
+| OIDC_ID              | ID used when authentication to oidc                                                      | ---                              |
+| OIDC_SECRET          | Secret used when authentication to oidc                                                  | ---                              |
+| REDIRECT_URL         | Return point after successful login                                                      | ---                              |
+| HIVE_URL             | URL to Hive service                                                                      | https://hive.datasektionen.se    |
+| HIVE_SECRET          | Hive API Token secret                                                                    | ---                              |
+| SPAM_URL             | URL to spam service                                                                      | https://spam.datasektionen.se    |
+| SPAM_API_KEY         | API key for the spam mail system                                                         | ---                              |
+| RFINGER_API_URL      | URL to rfinger api                                                                       | https://rfinger.datasektionen.se |
+| RFINGER_API_KEY      | API key for rfinger                                                                      | ---                              |
+| S3_ACCESS_KEY_ID     | Amazon AWS IAM access key id                                                             | ---                              |
+| S3_SECRET_ACCESS_KEY | Amazon AWS IAM secret access key                                                         | ---                              |
+| S3_USE_SIGV4         | If Frankfurt, set to False                                                               | True                             |
+| S3_HOST              | Url to s3 server                                                                         | None                             |
+| S3_BUCKET_NAME       | Amazon AWS s3 bucket name                                                                | calypso                          |

@@ -1,8 +1,8 @@
 <script lang="ts" module>
-	import type { ExpensePart, InvoicePart, VoucherRow } from '$lib/api/types';
+	import type { ExpensePart, InvoicePart, VoucherRow } from '#lib/api/types.ts';
 	import type { VoucherRowDraft } from './voucherRowValidation';
 	import { add, isZero, toDecimal } from 'dinero.js';
-	import { sumDinero, ZERO } from '$lib/money';
+	import { sumDinero, ZERO } from '#lib/money.ts';
 
 	function emptyVoucherRow(): VoucherRowDraft {
 		return {
@@ -70,12 +70,12 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { CircleAlert, Plus, X, TriangleAlert } from '@lucide/svelte';
-	import AmountInput from '$lib/components/AmountInput.svelte';
-	import AdvancedCombobox from '$lib/components/AdvancedCombobox.svelte';
-	import type { ComboboxColumn } from '$lib/components/AdvancedCombobox.svelte';
+	import AmountInput from '#lib/components/AmountInput.svelte';
+	import AdvancedCombobox from '#lib/components/AdvancedCombobox.svelte';
+	import type { ComboboxColumn } from '#lib/components/AdvancedCombobox.svelte';
 	import { type Dinero } from 'dinero.js';
-	import { formatDineroAmount } from '$lib/money';
-	import type { FortnoxAccount, FortnoxCostCentre } from '$lib/api/types';
+	import { formatDineroAmount } from '#lib/money.ts';
+	import type { FortnoxAccount, FortnoxCostCentre } from '#lib/api/types.ts';
 	import {
 		type VoucherRowErrors,
 		type VoucherRowWarnings,

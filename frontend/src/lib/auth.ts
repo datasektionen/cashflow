@@ -1,4 +1,4 @@
-import type { User } from '$lib/api/types';
+import type { User } from '#lib/api/types.ts';
 
 export function mayAccount(user: User | null | undefined): boolean {
 	if (user == null) return false;

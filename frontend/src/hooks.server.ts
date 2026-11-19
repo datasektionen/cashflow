@@ -1,7 +1,7 @@
-import type { Handle, HandleFetch } from '@sveltejs/kit';
-import { logger } from '$lib/logger';
-import { API } from '$lib/api';
-import { API_URL } from '$lib/config';
+import type { Handle, HandleFetch } from '@sveltejs/kit/hooks';
+import { logger } from '#lib/logger.ts';
+import { API } from '#lib/api/index.ts';
+import { API_URL } from '#lib/config.ts';
 
 // Mirrors the paths nginx proxies to the backend (see nginx.conf).
 const BACKEND_PATH = /^\/(api|admin|oidc|fortnox|static|media)(\/|$)/;

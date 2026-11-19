@@ -1,9 +1,9 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
-import type { ClaimOrdering } from '$lib/api/types';
+import { API } from '#lib/api/index.ts';
+import type { ClaimOrdering } from '#lib/api/types.ts';
 import { _ } from 'svelte-i18n';
-import { claimFilterFromUrl } from '$lib/api/claimFilter';
+import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url, parent }) => {
 	const api = new API(API_URL, fetch);

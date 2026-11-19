@@ -1,4 +1,4 @@
-import type { BankInfo, Payment } from '$lib/api/types';
+import type { BankInfo, Payment } from '#lib/api/types.ts';
 import type { Dinero } from 'dinero.js';
 import { SvelteSet } from 'svelte/reactivity';
 

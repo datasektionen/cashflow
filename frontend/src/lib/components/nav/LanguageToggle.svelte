@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
-	import { LOCALE_STORAGE_KEY } from '$lib/i18n';
-	import FlagEN from '$lib/components/FlagEN.svelte';
-	import FlagSE from '$lib/components/FlagSE.svelte';
+	import { LOCALE_STORAGE_KEY } from '#lib/i18n/index.ts';
+	import FlagEN from '#lib/components/FlagEN.svelte';
+	import FlagSE from '#lib/components/FlagSE.svelte';
 
 	const isSwedish = $derived($locale?.toLowerCase().startsWith('sv') ?? true);
 

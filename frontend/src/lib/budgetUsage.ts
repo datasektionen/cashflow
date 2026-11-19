@@ -1,7 +1,7 @@
 import { enforce, include, test, warn } from 'vest';
 import { add, greaterThan, type Dinero } from 'dinero.js';
-import type { PartCreateUpdate } from '$lib/api/types';
-import { sumDinero } from '$lib/money';
+import type { PartCreateUpdate } from '#lib/api/types.ts';
+import { sumDinero } from '#lib/money.ts';
 
 /**
  * How much of a budget line's expense budget is used, not counting the

@@ -1,6 +1,6 @@
 import { MediaQuery } from 'svelte/reactivity';
-import { api } from '$lib/api';
-import { logger } from '$lib/logger';
+import { api } from '#lib/api/index.ts';
+import { logger } from '#lib/logger.ts';
 
 export const isExtraSmallLayout = new MediaQuery('max-width: 575.98px');
 export const isSmallLayout = new MediaQuery('max-width: 767.98px'); // < md

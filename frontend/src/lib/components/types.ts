@@ -1,5 +1,5 @@
 import type { Snippet } from 'svelte';
-import type { Payment } from '$lib/api/types';
+import type { Payment } from '#lib/api/types.ts';
 
 export type TableColumn<T> = {
 	id: string;

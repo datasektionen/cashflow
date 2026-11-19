@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { ExternalLink } from '@lucide/svelte';
-	import type { Expense, User } from '$lib/api/types';
-	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import { api } from '$lib/api';
-	import { mayConfirm } from '$lib/auth';
+	import type { Expense, User } from '#lib/api/types.ts';
+	import ReceiptViewer from '#lib/components/ReceiptViewer.svelte';
+	import CommentDisplay from '#lib/components/CommentDisplay.svelte';
+	import PartsTable from '#lib/components/PartsTable.svelte';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import { api } from '#lib/api/index.ts';
+	import { mayConfirm } from '#lib/auth.ts';
 	import { invalidateAll } from '$app/navigation';
-	import { logger } from '$lib/logger';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import { isErrorResponse } from '$lib/api/errors';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import { logger } from '#lib/logger.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import UserLink from '#lib/components/UserLink.svelte';
 
 	let { expenseId, currentUser }: { expenseId: number; currentUser?: User } = $props();
 

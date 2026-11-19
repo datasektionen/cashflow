@@ -1,4 +1,4 @@
-import { ApiClient } from '$lib/api';
+import { ApiClient } from '#lib/api/index.ts';
 import type {
 	AccountPayload,
 	ClaimFilter,
@@ -11,9 +11,9 @@ import type {
 	InvoiceUpdate,
 	PaginatedResponse,
 	PartCreateUpdate
-} from '$lib/api/types';
+} from '#lib/api/types.ts';
 import { toDecimal } from 'dinero.js';
-import { type APIInvoice, parseInvoice } from '$lib/api/parse';
+import { type APIInvoice, parseInvoice } from '#lib/api/parse.ts';
 
 // The response format from DRF
 type RawResponse = {

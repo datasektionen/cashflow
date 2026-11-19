@@ -1,13 +1,13 @@
-import { ApiClient } from '$lib/api';
-import type { LeaderboardEntry, PaginatedResponse } from '$lib/api/types';
-import type { ListResponse } from '$lib/api/client';
+import { ApiClient } from '#lib/api/index.ts';
+import type { LeaderboardEntry, PaginatedResponse } from '#lib/api/types.ts';
+import type { ListResponse } from '#lib/api/client.ts';
 import type { Dinero } from 'dinero.js';
 import {
 	type APILeaderboardEntry,
 	type APIYearlyStatistics,
 	parseLeaderboardEntry,
 	parseYearlyStatistics
-} from '$lib/api/parse';
+} from '#lib/api/parse.ts';
 
 export type MonthlyStatistics = {
 	year: number;

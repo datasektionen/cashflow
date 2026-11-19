@@ -1,12 +1,12 @@
-import { ApiClient } from '$lib/api';
+import { ApiClient } from '#lib/api/index.ts';
 import type {
 	BudgetLine,
 	CostCentre,
 	CostCentreFilter,
 	PaginatedResponse,
 	SecondaryCostCentre
-} from '$lib/api/types';
-import type { ListResponse } from '$lib/api/client';
+} from '#lib/api/types.ts';
+import type { ListResponse } from '#lib/api/client.ts';
 
 export class BudgetAPI {
 	private apiClient: ApiClient;

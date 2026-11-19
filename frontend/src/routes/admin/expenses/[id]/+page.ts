@@ -1,6 +1,6 @@
-import { API_URL } from '$lib/config';
+import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '$lib/api';
+import { API } from '#lib/api/index.ts';
 
 export const load: PageLoad = ({ fetch, params }) => {
 	const api = new API(API_URL, fetch);

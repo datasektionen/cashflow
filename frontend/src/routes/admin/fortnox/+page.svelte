@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { _ } from 'svelte-i18n';
-	import { api } from '$lib/api';
-	import { isErrorResponse } from '$lib/api/errors';
-	import { alerts, error, success, warning } from '$lib/stores/alerts';
-	import { invalidateAll, goto } from '$app/navigation';
+	import { api } from '#lib/api/index.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import { alerts, error, success, warning } from '#lib/stores/alerts.ts';
+	import { goto, refreshAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
@@ -20,7 +20,7 @@
 		try {
 			await api.fortnox.disconnect();
 			alerts.update((a) => [...a, warning($_('fortnox.disconnected'))]);
-			await invalidateAll();
+			await refreshAll();
 		} catch (e) {
 			if (isErrorResponse(e)) {
 				alerts.update((a) => [...a, error(e.detail)]);
@@ -41,7 +41,7 @@
 			alerts.update((a) => [...a, error($_('fortnox.auth_failed'))]);
 		}
 		if (result) {
-			goto('/admin/fortnox', { replaceState: true, noScroll: true });
+			goto('/admin/fortnox', { replaceState: true, reset: false });
 		}
 	});
 </script>

@@ -3,16 +3,16 @@
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert } from '@lucide/svelte';
 	import { getLocalTimeZone, today } from '@internationalized/date';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import DatePicker from '$lib/components/DatePicker.svelte';
-	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import DatePicker from '#lib/components/DatePicker.svelte';
+	import ExpenseParts from '#lib/components/ExpenseParts.svelte';
 	import validation, { validateFormData } from './validation.ts';
 	import type { NewExpenseFormData } from './validation.ts';
-	import { api } from '$lib/api/index';
-	import { alerts, success } from '$lib/stores/alerts';
+	import { api } from '#lib/api/index.ts';
+	import { alerts, success } from '#lib/stores/alerts.ts';
 	import { goto } from '$app/navigation';
-	import { logger } from '$lib/logger';
-	import { ZERO } from '$lib/money';
+	import { logger } from '#lib/logger.ts';
+	import { ZERO } from '#lib/money.ts';
 
 	let submitting: Boolean = $state(false);
 

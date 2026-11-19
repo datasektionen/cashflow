@@ -1,19 +1,19 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
-	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
-	import type { TableColumn } from '$lib/components/types';
-	import { type Expense } from '$lib/api/types';
+	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
+	import ClaimContextMenu from '#lib/components/ClaimContextMenu.svelte';
+	import type { TableColumn } from '#lib/components/types.ts';
+	import { type Expense } from '#lib/api/types.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
+	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
 	import ExpensePreview from './ExpensePreview.svelte';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
 	import { ScrollArea } from 'bits-ui';
-	import { isSmallLayout } from '$lib/stores/state.svelte';
-	import { formatDineroAmount, sumDinero } from '$lib/money';
-	import ExpenseStatusPills from '$lib/components/ExpenseStatusPills.svelte';
+	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import ExpenseStatusPills from '#lib/components/ExpenseStatusPills.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -51,34 +51,28 @@
 
 	function handlePageChange(p: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handlePerPageChange(perPage: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handleSortChange(sort: string) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (sort) {
 			url.searchParams.set('sorting', sort);
 		} else {
 			url.searchParams.delete('sorting');
 		}
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	let preview: Expense | null = $state(null);
@@ -116,9 +110,7 @@
 	<ExpenseStatusPills {expense} />
 {/snippet}
 
-<!-- height = viewport - navbar (4rem) - main's py-4 (2rem) - page-title header (~4rem) -->
 <div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
-	<!-- Table column: full width on small screens, constrained on large to leave room on the right -->
 	<div class="min-w-0 flex-1 lg:min-h-0 lg:max-w-4xl lg:overflow-y-auto">
 		<ClaimFilterBar
 			exclude={[

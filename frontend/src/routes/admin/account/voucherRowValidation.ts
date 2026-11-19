@@ -1,6 +1,6 @@
 import { create, each, enforce, only, test, warn } from 'vest';
 import { equal, greaterThan, isZero, type Dinero } from 'dinero.js';
-import { sumDinero, ZERO } from '$lib/money';
+import { sumDinero, ZERO } from '#lib/money.ts';
 
 export type VoucherRowDraft = {
 	// Account number as a string (the AdvancedCombobox value), e.g. "1234".

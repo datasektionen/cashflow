@@ -1,5 +1,5 @@
-import { logger } from '$lib/logger';
-import type { ErrorResponse } from '$lib/api/errors';
+import { logger } from '#lib/logger.ts';
+import type { ErrorResponse } from '#lib/api/errors.ts';
 
 /**
  * Base API client class, gets subclassed for specific resources.

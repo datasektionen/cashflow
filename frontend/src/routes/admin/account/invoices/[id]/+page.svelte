@@ -3,15 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { ChevronDown, CircleAlert, TriangleAlert } from '@lucide/svelte';
 	import type { PageData } from './$types';
-	import { api } from '$lib/api';
-	import { mayAccount } from '$lib/auth';
-	import { isErrorResponse } from '$lib/api/errors';
-	import { alerts, error, success } from '$lib/stores/alerts';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import CommentDisplay from '$lib/components/CommentDisplay.svelte';
-	import PartsTable from '$lib/components/PartsTable.svelte';
-	import ReceiptViewer from '$lib/components/ReceiptViewer.svelte';
-	import UserLink from '$lib/components/UserLink.svelte';
+	import { api } from '#lib/api/index.ts';
+	import { mayAccount } from '#lib/auth.ts';
+	import { isErrorResponse } from '#lib/api/errors.ts';
+	import { alerts, error, success } from '#lib/stores/alerts.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import CommentDisplay from '#lib/components/CommentDisplay.svelte';
+	import PartsTable from '#lib/components/PartsTable.svelte';
+	import ReceiptViewer from '#lib/components/ReceiptViewer.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
 	import VoucherRowFields, { draftsFromParts, toVoucherRows } from '../../VoucherRowFields.svelte';
 	import type { VoucherRowDraft } from '../../voucherRowValidation';
 	import {
@@ -21,9 +21,9 @@
 		type VoucherRowWarnings
 	} from '../../voucherRowValidation';
 	import { voucherValidation, VoucherFormField, type VoucherNumberErrors } from '../../validation';
-	import { sumDinero, claimTotal } from '$lib/money';
-	import CopyableValue from '$lib/components/ui/CopyableValue.svelte';
-	import { formatDineroAmount } from '$lib/money';
+	import { sumDinero, claimTotal } from '#lib/money.ts';
+	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { formatDineroAmount } from '#lib/money.ts';
 	import { toDecimal } from 'dinero.js';
 
 	let { data }: { data: PageData } = $props();

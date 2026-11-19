@@ -2,16 +2,16 @@
 	import FileInput from './FileInput.svelte';
 	import { _ } from 'svelte-i18n';
 	import { BanknoteArrowUp, CircleAlert } from '@lucide/svelte';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
-	import ExpenseParts from '$lib/components/ExpenseParts.svelte';
-	import DatePicker from '$lib/components/DatePicker.svelte';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
+	import ExpenseParts from '#lib/components/ExpenseParts.svelte';
+	import DatePicker from '#lib/components/DatePicker.svelte';
 	import validation, { validateFormData } from './validation.ts';
 	import type { NewInvoiceFormData } from './validation.ts';
-	import { api } from '$lib/api/index';
-	import { alerts, success } from '$lib/stores/alerts';
+	import { api } from '#lib/api/index.ts';
+	import { alerts, success } from '#lib/stores/alerts.ts';
 	import { goto } from '$app/navigation';
-	import { logger } from '$lib/logger';
-	import { ZERO } from '$lib/money';
+	import { logger } from '#lib/logger.ts';
+	import { ZERO } from '#lib/money.ts';
 
 	let disclaimerParts = $derived($_('new_invoice.disclaimer').split('{new_expense_link}'));
 	let submitting: Boolean = $state(false);

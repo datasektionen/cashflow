@@ -2,13 +2,13 @@
 	import { Menu, X, LogOut, Wallet } from '@lucide/svelte';
 	import { Separator } from 'bits-ui';
 	import NavLink from './NavLink.svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import { getProfilePicture, clearProfilePicture } from '$lib/stores/state.svelte';
+	import { getProfilePicture, clearProfilePicture } from '#lib/stores/state.svelte.ts';
 	import LanguageToggle from './LanguageToggle.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import type { Profile } from '$lib/api/types';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import type { Profile } from '#lib/api/types.ts';
 
 	let {
 		user,

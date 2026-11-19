@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import PaginatedTable from '$lib/components/PaginatedTable.svelte';
-	import ClaimContextMenu from '$lib/components/ClaimContextMenu.svelte';
-	import type { TableColumn } from '$lib/components/types';
-	import type { Expense } from '$lib/api/types';
+	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
+	import ClaimContextMenu from '#lib/components/ClaimContextMenu.svelte';
+	import type { TableColumn } from '#lib/components/types.ts';
+	import type { Expense } from '#lib/api/types.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import UserLink from '$lib/components/UserLink.svelte';
-	import ClaimFilterBar from '$lib/components/ClaimFilterBar.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '$lib/stores/state.svelte';
+	import UserLink from '#lib/components/UserLink.svelte';
+	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
+	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
 
 	let { data }: PageProps = $props();
 
@@ -18,15 +18,13 @@
 	let sorting = $state(page.url.searchParams.get('sorting'));
 	function handleSortChange(sort: string) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (sort) {
 			url.searchParams.set('sorting', sort);
 		} else {
 			url.searchParams.delete('sorting');
 		}
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	const columns: TableColumn<Expense>[] = $derived([
@@ -61,21 +59,17 @@
 
 	function handlePageChange(p: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', p.toString());
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 
 	function handlePerPageChange(perPage: number) {
 		loading = true;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('per_page', perPage.toString());
 		url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true, replaceState: true }).then(
-			() => (loading = false)
-		);
+		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
 	}
 </script>
 

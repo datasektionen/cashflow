@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { api } from '$lib/api';
-	import type { Payment } from '$lib/api/types';
-	import CashSpinner from '$lib/components/CashSpinner.svelte';
+	import { api } from '#lib/api/index.ts';
+	import type { Payment } from '#lib/api/types.ts';
+	import CashSpinner from '#lib/components/CashSpinner.svelte';
 	import { ExternalLink } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import { formatDineroAmount, sumDinero, claimTotal } from '$lib/money';
+	import { formatDineroAmount, sumDinero, claimTotal } from '#lib/money.ts';
 
 	let { payment }: { payment: Payment } = $props();
 

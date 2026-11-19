@@ -1,4 +1,4 @@
-import { ApiClient } from '$lib/api';
+import { ApiClient } from '#lib/api/index.ts';
 
 export class ProfilePictureAPI {
 	private client: ApiClient;
