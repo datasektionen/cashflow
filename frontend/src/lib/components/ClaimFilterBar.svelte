@@ -1,3 +1,15 @@
+<script module lang="ts">
+	const tristateKeys = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
+	type TristateKey = (typeof tristateKeys)[number];
+	export type Filter =
+		| TristateKey
+		| 'voucher_series'
+		| 'reimbursement'
+		| 'description'
+		| 'verification'
+		| 'invoice_number';
+</script>
+
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -43,14 +55,7 @@
 		includeBudget?: boolean;
 		includeReset?: boolean;
 		includeChecks?: boolean;
-		exclude?: (
-			| (typeof tristateKeys)[number]
-			| 'voucher_series'
-			| 'reimbursement'
-			| 'description'
-			| 'verification'
-			| 'invoice_number'
-		)[];
+		exclude?: Filter[];
 	} = $props();
 
 	let showAllFilters: boolean = $state(false);
@@ -147,10 +152,8 @@
 		return resetting ? '' : (page.url.searchParams.get(key) ?? '');
 	}
 
-	const tristateKeys = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
-
 	function visibleTristateKeys() {
-		return tristateKeys.filter((key) => !exclude.includes(key));
+		return tristateKeys.filter((key) => !exclude.includes(key as Filter));
 	}
 
 	function tristateChecked(key: (typeof tristateKeys)[number], want: 'true' | 'false') {
@@ -158,18 +161,14 @@
 		return filterValue(key) !== other && filterValue(key) !== 'none';
 	}
 
-	function setTristateFilter(
-		key: (typeof tristateKeys)[number],
-		positive: boolean,
-		negative: boolean
-	) {
+	function setTristateFilter(key: TristateKey, positive: boolean, negative: boolean) {
 		if (positive && negative) setFilter(key, '');
 		else if (positive) setFilter(key, 'true');
 		else if (negative) setFilter(key, 'false');
 		else setFilter(key, 'none');
 	}
 
-	function tristateActive(key: (typeof tristateKeys)[number]) {
+	function tristateActive(key: TristateKey) {
 		return filterValue(key) !== '';
 	}
 
@@ -182,10 +181,7 @@
 		goto(url, { reset: false, replaceState: true });
 	}
 
-	async function setFilter(
-		key: (typeof filterKeys)[number] | (typeof tristateKeys)[number],
-		value: string
-	) {
+	async function setFilter(key: (typeof filterKeys)[number] | TristateKey, value: string) {
 		const url = new URL(page.url.href);
 		if (value) {
 			url.searchParams.set(key, value);
@@ -377,7 +373,7 @@
 		{/if}
 	</div>
 </div>
-{#if includeChecks}
+{#if includeChecks && !tristateKeys.every((key) => exclude.includes(key))}
 	<div
 		class={[
 			'mb-4 flex-col items-start space-x-2 gap-y-3 border-b border-base-500 pb-4 md:flex md:flex-row md:items-center md:gap-y-0 dark:border-dark-base-200',
