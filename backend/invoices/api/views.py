@@ -15,19 +15,15 @@ from structlog import get_logger
 
 from core.api.problems import (
     AccountingPermissionDeniedProblem,
-    AlreadyConfirmedProblem,
     AlreadyPaidProblem,
-    ConfirmationPermissionDeniedProblem,
     DeletionPermissionDeniedProblem,
     FileRequiredProblem,
     MismatchedTotalAmountProblem,
     NoAccountingMethodProblem,
-    NotConfirmedProblem,
     NotPayableProblem,
     PartInvalidJSONProblem,
     PartRequiredProblem,
     PaymentPermissionDeniedProblem,
-    UnconfirmationPermissionDeniedProblem,
     UpdatePermissionDeniedProblem,
 )
 from core.api.serializers import ClaimPartSerializer, CommentSerializer
@@ -35,14 +31,10 @@ from core.api.utils import AuthenticatedUserMixin
 from core.exceptions import (
     AlreadyAccountedError,
     CashflowVerificationMissingError,
-    DuplicateConfirmationError,
     FortnoxRecordMissingError,
     MismatchedTotalAmountError,
     NoAccountingMethodError,
-    NotConfirmedError,
     UnauthorizedAccountingError,
-    UnauthorizedConfirmationError,
-    UnauthorizedUnconfirmationError,
 )
 from core.files import normalize_upload
 from core.models import Claim, ClaimPart, ClaimQuerySet, Comment, File
@@ -196,7 +188,9 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         # Recommendations require a GOrdian/Fortnox lookup per part, so only
         # compute them for single-invoice reads (e.g. the accounting page),
         # never for list responses.
-        context["include_recommendations"] = self.action == "retrieve"  # pyright: ignore[reportIndexIssue]
+        context["include_recommendations"] = (
+            self.action == "retrieve"
+        )  # pyright: ignore[reportIndexIssue]
         return context
 
     @action(detail=True, methods=["post"], url_path="comments")
@@ -213,35 +207,6 @@ class InvoiceViewSet(viewsets.ModelViewSet, AuthenticatedUserMixin):
         get_notification_provider().on_comment(invoice, comment)
 
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["POST"])
-    def confirm(self, request: Request, pk=None) -> Response:
-        with transaction.atomic():
-            invoice = Claim.objects.select_for_update().get(invoice_data_id=pk)
-            try:
-                invoice.confirm(self.current_user)
-            except UnauthorizedConfirmationError as e:
-                raise ConfirmationPermissionDeniedProblem(
-                    detail="You are not authorized to confirm this invoice."
-                ) from e
-            except DuplicateConfirmationError as e:
-                raise AlreadyConfirmedProblem(
-                    detail="This invoice has already been confirmed."
-                ) from e
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=True, methods=["POST"])
-    def unconfirm(self, request: Request, pk=None) -> Response:
-        with transaction.atomic():
-            invoice = Claim.objects.select_for_update().get(invoice_data_id=pk)
-            try:
-                invoice.unconfirm(self.current_user)
-            except UnauthorizedUnconfirmationError as e:
-                raise UnconfirmationPermissionDeniedProblem() from e
-            except NotConfirmedError as e:
-                raise NotConfirmedProblem() from e
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
     def pay(self, request: Request, pk=None) -> Response:
