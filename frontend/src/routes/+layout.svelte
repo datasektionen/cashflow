@@ -126,6 +126,7 @@
 	<main
 		class={[
 			'w-full flex-1',
+			page.data.fill && 'lg:flex lg:min-h-0 lg:flex-col',
 			adminView
 				? ['px-4 py-6 lg:pr-8', prefs.sidebarSlim ? 'lg:pl-24' : 'lg:pl-68']
 				: 'mx-auto max-w-7xl px-4 py-6 lg:px-8'

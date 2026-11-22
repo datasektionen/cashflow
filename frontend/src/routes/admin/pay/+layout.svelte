@@ -5,7 +5,7 @@
 	let { children } = $props();
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6 lg:min-h-0 lg:flex-1">
 	<LinkTabs
 		tabs={[
 			{ href: '/admin/pay/expenses', label: $_('admin_pay.tabs.expenses') },

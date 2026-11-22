@@ -29,8 +29,7 @@
 {#if list.value?.pagination.total === 0 && !filtered}
 	<EmptyState icon={CircleCheck} title={$_('tasks.empty')} class="max-w-4xl" />
 {:else}
-	<!-- viewport minus navbar, main padding and page title -->
-	<div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
+	<div class="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
 		<div class="min-w-0 lg:min-h-0 lg:flex-[3] lg:overflow-y-auto">
 			<ClaimTable
 				claims={data.claims}

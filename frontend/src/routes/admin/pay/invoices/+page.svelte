@@ -107,8 +107,7 @@
 {#if empty}
 	<EmptyState icon={CircleCheck} title={$_('admin_pay.empty')} class="max-w-4xl" />
 {:else}
-	<!-- viewport minus navbar, main padding, page title and tabs -->
-	<div class="flex flex-col gap-6 lg:h-[calc(100dvh-14rem)] lg:flex-row lg:overflow-hidden">
+	<div class="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
 		<div class="min-w-0 lg:min-h-0 lg:flex-[3] lg:overflow-y-auto">
 			<PaginatedTable
 				paginatedResponse={data.invoices}

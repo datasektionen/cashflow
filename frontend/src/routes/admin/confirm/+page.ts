@@ -12,6 +12,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 
 	return {
 		title_key: 'admin_confirmable.title',
+		fill: true,
 		claims: defer(
 			api.expenses.list(
 				page,

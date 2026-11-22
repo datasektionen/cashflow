@@ -11,6 +11,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 
 	return {
 		title_key: 'admin_pay.title',
+		fill: true,
 		invoices: defer(api.invoices.list(page, perPage, { payable: true }, sorting))
 	};
 };
