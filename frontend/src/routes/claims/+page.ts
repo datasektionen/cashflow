@@ -1,26 +1,24 @@
 import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
 import { API } from '#lib/api/index.ts';
+import { listParams, orEmptyPage } from '#lib/listParams.ts';
 import type { ClaimOrdering } from '#lib/api/types.ts';
-import { _ } from 'svelte-i18n';
 import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url, parent }) => {
 	const api = new API(API_URL, fetch);
 
-	const { user } = await parent();
+	const user = (await parent()).user!;
 
-	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
-	const perPage = url.searchParams.get('per_page')
-		? parseInt(url.searchParams.get('per_page')!)
-		: 10;
-
-	const sortingParam = url.searchParams.get('sorting')?.split(',') as ClaimOrdering[] | null;
-	const sorting: ClaimOrdering[] = sortingParam ?? ['-created_date'];
+	const { page, perPage, sorting } = listParams<ClaimOrdering>(url, 15, ['-created_date']);
 
 	const filter = claimFilterFromUrl(url);
 
-	const claims = api.claims.list(page, perPage, { ...filter, user: user!.username }, sorting);
+	const claims = orEmptyPage(
+		api.claims.list(page, perPage, { ...filter, user: user.username }, sorting),
+		page,
+		perPage
+	);
 
-	return { claims };
+	return { claims, user, title: `${user.first_name} ${user.last_name}`, ownHeader: true };
 };

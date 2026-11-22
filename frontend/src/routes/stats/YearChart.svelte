@@ -3,96 +3,61 @@
 	import { Axis, Bar, Chart, Layer } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
 	import { api } from '#lib/api/index.ts';
+	import { latest } from '#lib/latest.svelte.ts';
 	import { _, locale } from 'svelte-i18n';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
-	import Skeleton from '#lib/components/ui/Skeleton.svelte';
+	import { Button, SegmentedControl, Skeleton } from '#lib/components/ui/index.ts';
 	import { toDecimal } from 'dinero.js';
 
 	// Static bar heights (%) for the loading placeholder, one per month
 	const skeletonBars = [45, 70, 30, 85, 55, 65, 40, 90, 50, 75, 35, 60];
 
 	const currentYear = new Date().getFullYear();
-	let { year = currentYear, mode = 'total' }: { year?: number; mode?: 'total' | 'count' } =
-		$props();
+	let year = $state(currentYear);
+	let mode = $state<'total' | 'count'>('total');
 
-	let monthFmt = $derived(new Intl.DateTimeFormat($locale ?? 'sv', { month: 'short' }));
-
-	let data = $state<{ month: string; expense_count: number; expense_total: number }[]>([]);
-
-	$effect(() => {
-		const y = year;
-		const fmt = monthFmt;
-		let cancelled = false;
-		api.stats.yearly(y).then((value) => {
-			if (cancelled) return;
-			data = value.months.map((month) => ({
-				month: fmt.format(new Date(y, month.month - 1)),
-				expense_count: Number(month.expense_count),
-				expense_total: Number(toDecimal(month.expense_total))
-			}));
-		});
-		return () => {
-			cancelled = true;
-		};
+	const yearly = latest(() => api.stats.yearly(year));
+	const data = $derived.by(() => {
+		const fmt = new Intl.DateTimeFormat($locale ?? 'sv', { month: 'short' });
+		return (yearly.value?.months ?? []).map((month) => ({
+			month: fmt.format(new Date(month.year, month.month - 1)),
+			expense_count: Number(month.expense_count),
+			expense_total: Number(toDecimal(month.expense_total))
+		}));
 	});
 </script>
 
-<div class="flex flex-row">
-	<div class="flex flex-row">
-		<button
-			class="size-6 cursor-pointer transition-all hover:scale-115"
-			onclick={() => {
-				year--;
-			}}
-		>
-			<ChevronLeft class="m-auto size-5" />
-		</button>
-		<div>
-			{year}
-		</div>
-		<button
-			class="size-6 cursor-pointer transition-all hover:scale-115 disabled:cursor-not-allowed disabled:text-base-subtle disabled:opacity-40 disabled:hover:scale-100 dark:disabled:text-dark-base-subtle"
-			onclick={() => {
-				year++;
-			}}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+	<div class="flex items-center gap-1">
+		<Button variant="ghost" size="icon-sm" aria-label={String(year - 1)} onclick={() => year--}>
+			<ChevronLeft />
+		</Button>
+		<span class="w-12 text-center text-sm font-semibold tabular-nums">{year}</span>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			aria-label={String(year + 1)}
+			onclick={() => year++}
 			disabled={year >= currentYear}
 		>
-			<ChevronRight class="m-auto size-5" />
-		</button>
+			<ChevronRight />
+		</Button>
 	</div>
 
-	<div
-		class="relative ml-auto flex w-24 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300"
-	>
-		<div
-			class={[
-				'absolute inset-y-0 w-12 bg-money-green-500 transition-all',
-				mode === 'total' && 'left-0',
-				mode === 'count' && 'left-12'
-			]}
-		></div>
-
-		<button
-			onclick={() => (mode = 'total')}
-			class={[
-				'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
-				mode === 'total' ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-			]}
-			>{$_('leaderboard.sum')}
-		</button>
-		<button
-			onclick={() => (mode = 'count')}
-			class={[
-				'z-2 w-12 cursor-pointer py-1.5 text-center text-xs font-medium uppercase transition-colors',
-				mode === 'count' ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-			]}
-			>{$_('leaderboard.count')}
-		</button>
-	</div>
+	<SegmentedControl
+		size="sm"
+		bind:value={mode}
+		items={[
+			{ value: 'total', label: $_('leaderboard.sum') },
+			{ value: 'count', label: $_('leaderboard.count') }
+		]}
+	/>
 </div>
 
-{#if data.length}
+{#if yearly.error}
+	<p class="text-sm text-danger">{$_('claims.error')}</p>
+{:else if data.length}
 	<Chart
 		{data}
 		x="month"
@@ -101,16 +66,31 @@
 		yDomain={[0, null]}
 		yNice
 		height={isSmallLayout.current ? 240 : 400}
-		padding={{ left: 24, bottom: 20, top: 8 }}
+		padding={{ left: 40, bottom: 20, top: 8 }}
 	>
 		<Layer>
-			<Axis placement="left" grid rule />
-			<Axis placement="bottom" rule />
+			<Axis
+				placement="left"
+				grid
+				tickMarks={false}
+				stroke="var(--color-border)"
+				fill="var(--color-muted-foreground)"
+				classes={{ tickLabel: 'text-xs stroke-card' }}
+			/>
+			<Axis
+				placement="bottom"
+				rule
+				tickMarks={false}
+				stroke="var(--color-border)"
+				fill="var(--color-muted-foreground)"
+				classes={{ tickLabel: 'text-xs stroke-card' }}
+			/>
 			{#each data as d, i}
 				<Bar
 					data={d}
-					fill="var(--color-money-green-500)"
-					radius={0}
+					fill="var(--color-primary)"
+					radius={4}
+					rounded="top"
 					strokeWidth={0}
 					motion={{
 						type: 'tween',
@@ -123,13 +103,10 @@
 		</Layer>
 	</Chart>
 {:else}
-	<div
-		class="flex items-end pt-2 pr-2 pb-5 pl-6"
-		style="height: {isSmallLayout.current ? 240 : 400}px"
-	>
+	<div class="flex items-end pt-2 pb-5 pl-10" style="height: {isSmallLayout.current ? 240 : 400}px">
 		{#each skeletonBars as h (h)}
 			<div class="flex flex-1 justify-center" style="height: {h}%">
-				<Skeleton class="h-full w-[60%] rounded-t-sm" />
+				<Skeleton class="h-full w-[60%]" />
 			</div>
 		{/each}
 	</div>

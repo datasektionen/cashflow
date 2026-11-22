@@ -1,38 +1,33 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import ExpenseTotalLeaderboard from './ExpenseTotalLeaderboard.svelte';
-	import ExpenseCountLeaderboard from './ExpenseCountLeaderboard.svelte';
+	import { Card, Section } from '#lib/components/ui/index.ts';
+	import { formatDineroAmount } from '#lib/money.ts';
+	import Leaderboard from './Leaderboard.svelte';
 	import YearChart from './YearChart.svelte';
 </script>
 
-<h2 class="mb-4 text-lg font-semibold tracking-tight dark:text-slate-100">
-	{$_('stats.yearly_title')}
-</h2>
+<div class="flex flex-col gap-8">
+	<Section title={$_('stats.yearly_title')}>
+		<Card>
+			<YearChart />
+		</Card>
+	</Section>
 
-<div class="mb-12 w-full">
-	<YearChart />
-</div>
-
-<h2 class="mb-4 text-lg font-semibold tracking-tight dark:text-slate-100">
-	{$_('leaderboard.title')}
-</h2>
-
-<div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
-	<div>
-		<h2
-			class="mb-4 text-sm font-semibold tracking-wide text-base-subtle uppercase dark:text-dark-base-subtle"
-		>
-			{$_('leaderboard.total_title')}
-		</h2>
-		<ExpenseTotalLeaderboard />
-	</div>
-
-	<div>
-		<h2
-			class="mb-4 text-sm font-semibold tracking-wide text-base-subtle uppercase dark:text-dark-base-subtle"
-		>
-			{$_('leaderboard.count_title')}
-		</h2>
-		<ExpenseCountLeaderboard />
-	</div>
+	<Section title={$_('leaderboard.title')}>
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			<Leaderboard
+				title={$_('leaderboard.total_title')}
+				help={$_('leaderboard.help')}
+				valueLabel={$_('leaderboard.amount')}
+				value={(entry) => formatDineroAmount(entry.expense_total)}
+			/>
+			<Leaderboard
+				title={$_('leaderboard.count_title')}
+				help={$_('leaderboard.help_count')}
+				valueLabel={$_('leaderboard.count')}
+				ordering="-expense_count"
+				value={(entry) => entry.expense_count}
+			/>
+		</div>
+	</Section>
 </div>
