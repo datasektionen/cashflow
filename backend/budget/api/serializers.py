@@ -138,3 +138,19 @@ class CostCentreListQuerySerializer(serializers.Serializer):
             "contain a budget line whose uploaded amount exceeds its budget."
         ),
     )
+
+
+class BudgetYearQuerySerializer(serializers.Serializer):
+    year = IntegerField(required=False, min_value=2000, max_value=2100)
+
+
+class CostCentreSummarySerializer(serializers.Serializer):
+    id = IntegerField(read_only=True)
+    name = CharField(read_only=True)
+    type = CharField(read_only=True)
+    income = IntegerField(read_only=True)
+    expense = IntegerField(read_only=True)
+    amount_uploaded = DecimalField(read_only=True, max_digits=12, decimal_places=2)
+    amount_attested = DecimalField(read_only=True, max_digits=12, decimal_places=2)
+    amount_paid = DecimalField(read_only=True, max_digits=12, decimal_places=2)
+    blown_lines = IntegerField(read_only=True)

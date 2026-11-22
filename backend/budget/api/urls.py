@@ -5,11 +5,17 @@ from budget.api.views import (
     BudgetLineList,
     CostCentreDetailView,
     CostCentreList,
+    CostCentreSummaryList,
     SecondaryCostCentreList,
 )
 
 urlpatterns = [
     path("cost-centres/", CostCentreList.as_view(), name="costcentre-list"),
+    path(
+        "cost-centres/summary/",
+        CostCentreSummaryList.as_view(),
+        name="costcentre-summary",
+    ),
     path(
         "cost-centres/<int:cost_centre_id>/",
         CostCentreDetailView.as_view(),
