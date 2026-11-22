@@ -102,9 +102,10 @@
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 </svelte:head>
 
-<!-- Above the action bar that claim pages pin to the bottom on phones -->
-<div class="fixed right-4 bottom-20 z-50 flex flex-col gap-2 sm:right-6 lg:bottom-6">
-	{#each $alerts as alert (alert.id)}
+<!-- Bottom left, away from the action buttons on the right; on phones above the bottom action bar.
+     Only the newest few, so quick repeated actions don't stack up over the page. -->
+<div class="fixed bottom-20 left-4 z-50 flex flex-col gap-2 lg:bottom-6 lg:left-6">
+	{#each $alerts.slice(-3) as alert (alert.id)}
 		<AlertToast {alert} />
 	{/each}
 </div>
