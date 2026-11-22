@@ -1,163 +1,34 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
-	import ClaimContextMenu from '#lib/components/ClaimContextMenu.svelte';
-	import type { TableColumn } from '#lib/components/types.ts';
-	import { type Expense } from '#lib/api/types.ts';
+	import { type Claim, type Expense, type Invoice } from '#lib/api/types.ts';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
 	import ExpensePreview from './ExpensePreview.svelte';
-	import UserLink from '#lib/components/UserLink.svelte';
 	import { ScrollArea } from 'bits-ui';
-	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
-	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
-	import ExpenseStatusPills from '#lib/components/ExpenseStatusPills.svelte';
+	import ClaimTable from '#lib/components/tables/ClaimTable.svelte';
 
 	let { data }: PageProps = $props();
 
-	let loading = $state(false);
-	let sorting = $state(page.url.searchParams.get('sorting'));
-
-	const columns: TableColumn<Expense>[] = $derived([
-		{
-			id: 'description',
-			header: $_('admin_confirmable.columns.description'),
-			render: (c) => c.description,
-			width: ''
-		},
-		{
-			id: 'owner',
-			header: $_('admin_confirmable.columns.owner'),
-			renderSnippet: ownerCell,
-			width: 'w-40'
-		},
-		{
-			id: 'expense_date',
-			header: $_('date'),
-			render: (e) => e.expense_date,
-			width: 'w-28',
-			sorting: ['-date', 'date']
-		},
-		{
-			id: 'amount',
-			header: $_('admin_confirmable.columns.amount'),
-			renderSnippet: amountCell,
-			width: 'w-32',
-			sorting: ['-total', 'total']
-		}
-	]);
-
-	function handlePageChange(p: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('page', p.toString());
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
-	function handlePerPageChange(perPage: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('per_page', perPage.toString());
-		url.searchParams.set('page', '1');
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
-	function handleSortChange(sort: string) {
-		loading = true;
-		const url = new URL(page.url.href);
-		if (sort) {
-			url.searchParams.set('sorting', sort);
-		} else {
-			url.searchParams.delete('sorting');
-		}
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
 	let preview: Expense | null = $state(null);
 
-	function handleRowClick(e: Expense) {
+	function handleRowClick(e: Claim | Expense | Invoice) {
 		// lg breakpoint = where the preview pane becomes visible; below it, navigate instead
 		if (window.matchMedia('(min-width: 1024px)').matches) {
-			preview = e;
+			preview = e as Expense;
 		} else {
 			goto(`/admin/expenses/${e.id}`);
 		}
 	}
 </script>
 
-{#snippet contextSnippet(e: Expense)}
-	<ClaimContextMenu claim={e} kind={'expense'} user={data.user} />
-{/snippet}
-
-{#snippet ownerCell(e: Expense)}
-	<UserLink user={e.owner} />
-{/snippet}
-
-{#snippet amountCell(e: Expense)}
-	<span class="tabular-nums">{formatDineroAmount(sumDinero(e.parts.map((p) => p.amount)))} kr</span>
-{/snippet}
-
-{#snippet idCell(e: Expense)}
-	<div class="flex flex-row items-center">
-		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">#</span>
-		<span class="text-xs text-base-subtle dark:text-dark-base-subtle">{e.id}</span>
-	</div>
-{/snippet}
-
-{#snippet statusCell(expense: Expense)}
-	<ExpenseStatusPills {expense} />
-{/snippet}
-
 <div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
 	<div class="min-w-0 flex-1 lg:min-h-0 lg:max-w-4xl lg:overflow-y-auto">
-		<ClaimFilterBar
-			exclude={[
-				'confirmed',
-				'paid',
-				'accounted',
-				'voucher_series',
-				'verification',
-				'reimbursement',
-				'invoice_number'
-			]}
-		/>
-		<PaginatedTable
-			paginatedResponse={data.claims}
-			columns={[
-				{
-					id: 'id',
-					header: $_('admin_confirmable.columns.id'),
-					renderSnippet: idCell,
-					width: 'w-16'
-				},
-				...columns,
-				{
-					id: 'is_confirmed',
-					header: $_('admin_confirmable.columns.status'),
-					renderSnippet: statusCell,
-					width: 'w-28'
-				}
-			].filter((col) => {
-				if (isSmallLayout.current)
-					return !['id', 'expense_date', 'amount', 'is_confirmed'].includes(col.id);
-				return true;
-			})}
-			bind:sorting
-			onPageChange={handlePageChange}
-			onPerPageChange={handlePerPageChange}
-			onSortChange={handleSortChange}
-			{loading}
-			scrollable
-			rowProps={{
-				onClick: handleRowClick,
-				class: (e: Expense) =>
-					preview && e.id === preview.id
-						? 'cursor-pointer bg-base-200 dark:bg-dark-base-200'
-						: 'cursor-pointer'
-			}}
-			{contextSnippet}
+		<ClaimTable
+			claims={data.claims}
+			user={data.user!}
+			filters={['description', 'attested', 'flagged']}
+			excludeColumns={['verification', 'type', 'status']}
+			onRowClick={handleRowClick}
 		/>
 	</div>
 
