@@ -28,6 +28,7 @@
 			user={data.user!}
 			filters={['description', 'attested', 'flagged']}
 			excludeColumns={['verification', 'type', 'status']}
+			rowHref={(c) => `/admin/expenses/${c.id}`}
 			onRowClick={handleRowClick}
 		/>
 	</div>

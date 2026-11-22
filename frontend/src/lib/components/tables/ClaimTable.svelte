@@ -70,14 +70,16 @@
 	let {
 		claims,
 		user,
-		onRowClick = (c) =>
-			goto(`/admin/${getType(c) === 'expense' ? 'expenses' : 'invoices'}/${c.id}`),
+		rowHref = (c) => `/admin/${getType(c) === 'expense' ? 'expenses' : 'invoices'}/${c.id}`,
+		onRowClick,
 		filters,
 		includeColumns = ['__all__'],
 		excludeColumns = []
 	}: {
 		claims: Promise<PaginatedResponse<AnyClaim>>;
 		user: User;
+		rowHref?: (c: AnyClaim) => string;
+		// Overrides plain-click behaviour; rowHref is still used for opening in a new tab.
 		onRowClick?: (c: AnyClaim) => void;
 		filters: Filter[];
 		includeColumns?: ColumnOption[];
@@ -253,6 +255,7 @@
 	{loading}
 	scrollable
 	rowProps={{
+		href: rowHref,
 		onClick: onRowClick,
 		class: 'cursor-pointer'
 	}}
