@@ -20,3 +20,19 @@ export function getProfilePicture(username: string): Promise<string | null> {
 export function clearProfilePicture(): void {
 	cachedProfilePicture = undefined;
 }
+
+type Redirect = {
+	id: string | null;
+	url: URL | null;
+};
+
+export let redirect: Redirect = $state({ id: null, url: null });
+
+export function setRedirect(r: Redirect) {
+	redirect.id = r.id;
+	redirect.url = r.url;
+}
+
+export function getRedirect(): Redirect {
+	return redirect;
+}

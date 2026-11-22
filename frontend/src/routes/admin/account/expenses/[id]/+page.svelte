@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ChevronDown, CircleAlert, TriangleAlert } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import { api } from '#lib/api/index.ts';
@@ -24,6 +25,7 @@
 	import { formatDineroAmount, sumDinero, claimTotal } from '#lib/money.ts';
 	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
 	import { toDecimal } from 'dinero.js';
+	import { getRedirect } from '#lib/stores/state.svelte.ts';
 
 	let { data }: { data: PageData } = $props();
 	const expense = $derived(data.expense);
@@ -83,8 +85,14 @@
 				...a,
 				success($_('admin_account.success', { values: { verification: updated.voucher } }))
 			]);
-			// Back to the queue of remaining accountable expenses.
-			await goto('/admin/account/expenses');
+			const redirect = getRedirect();
+			const redirectId = page.url.searchParams.get('redirect');
+			if (redirect.url && redirectId != null && redirect.id === redirectId) {
+				redirect.url.searchParams.delete('redirect');
+				await goto(redirect.url);
+			} else {
+				await goto('/admin/account/expenses');
+			}
 		} catch (e) {
 			const message = isErrorResponse(e) ? e.detail : $_('admin_account.error');
 			alerts.update((a) => [...a, error(message)]);
