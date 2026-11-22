@@ -1,6 +1,5 @@
 import type { PdfDocumentObject, PdfEngine } from '@embedpdf/models';
-// Served from the installed package so it always matches the engine version
-import WASM_URL from '@embedpdf/pdfium/pdfium.wasm?url';
+import { pdfiumWasmUrl } from './pdfium.ts';
 
 let engine: Promise<PdfEngine> | undefined;
 const byUrl = new Map<string, Promise<string | null>>();
@@ -9,8 +8,7 @@ const byFile = new WeakMap<File, Promise<string | null>>();
 // One PDF engine for the whole page, started the first time a preview is needed
 function getEngine() {
 	engine ??= import('@embedpdf/engines/pdfium-worker-engine').then(({ createPdfiumEngine }) =>
-		// The engine runs in a worker started from a blob, so the URL must be absolute
-		createPdfiumEngine(new URL(WASM_URL, location.href).href)
+		createPdfiumEngine(pdfiumWasmUrl())
 	);
 	return engine;
 }

@@ -6,6 +6,7 @@
 		type InteractionManagerPlugin,
 		type UIPlugin
 	} from '@embedpdf/snippet';
+	import { pdfiumWasmUrl } from '#lib/pdfium.ts';
 
 	// Inline viewers sit inside a page: no toolbar, and touch scrolls the page
 	type Props = { url: string; class: string; inline?: boolean };
@@ -139,6 +140,7 @@
 			type: 'container',
 			target: container,
 			src: url,
+			wasmUrl: pdfiumWasmUrl(),
 			theme: theme(),
 			pan: { defaultMode: inline ? 'never' : 'mobile' }
 		});
