@@ -45,7 +45,14 @@
 						</div>
 					{:else}
 						{#key preview.id}
-							<ExpensePreview expenseId={preview.id} currentUser={data.user ?? undefined} />
+							<ExpensePreview
+								expenseId={preview.id}
+								currentUser={data.user ?? undefined}
+								afterConfirm={async () => {
+									const { data: rows } = await data.claims;
+									preview = (rows[0] as Expense | undefined) ?? null;
+								}}
+							/>
 						{/key}
 					{/if}
 				</div>

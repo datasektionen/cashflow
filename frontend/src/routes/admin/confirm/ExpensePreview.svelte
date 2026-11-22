@@ -8,13 +8,17 @@
 	import CashSpinner from '#lib/components/CashSpinner.svelte';
 	import { api } from '#lib/api/index.ts';
 	import { mayConfirm } from '#lib/auth.ts';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { logger } from '#lib/logger.ts';
 	import { alerts, error, success } from '#lib/stores/alerts.ts';
 	import { isErrorResponse } from '#lib/api/errors.ts';
 	import UserLink from '#lib/components/UserLink.svelte';
 
-	let { expenseId, currentUser }: { expenseId: number; currentUser?: User } = $props();
+	let {
+		expenseId,
+		currentUser,
+		afterConfirm
+	}: { expenseId: number; currentUser?: User; afterConfirm: () => void | Promise<void> } = $props();
 
 	let expensePromise = $derived(api.expenses.get(expenseId));
 
@@ -25,7 +29,8 @@
 		try {
 			await api.expenses.confirm(expense.id);
 			alerts.update((a) => [...a, success($_('alerts.expense_confirmed'))]);
-			await invalidateAll();
+			await refreshAll();
+			await afterConfirm();
 		} catch (e) {
 			logger.error(e);
 			const msg = isErrorResponse(e) ? e.detail : $_('action_failed');
