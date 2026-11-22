@@ -7,5 +7,5 @@ export const load: PageLoad = ({ fetch, params }) => {
 
 	const expense = api.expenses.get(parseInt(params.id));
 
-	return { expense, title: expense.then((e) => e.description) };
+	return { expense, title: expense.then((e) => e.description).catch(() => ''), ownHeader: true };
 };

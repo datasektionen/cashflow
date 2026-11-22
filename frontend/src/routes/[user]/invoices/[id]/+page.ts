@@ -8,14 +8,10 @@ export const load: PageLoad = async ({ fetch, params, parent }) => {
 	const api = new API(API_URL, fetch);
 	const { user } = await parent();
 
-	if (params.user != user?.username) {
-		const url = `/admin/invoices/${params.id}/`;
-		if (hasAdminAccess(user)) {
-			redirect(303, url);
-		}
-	}
+	if (params.user != user?.username && hasAdminAccess(user))
+		redirect(303, `/admin/invoices/${params.id}/`);
 
 	const invoice = await api.invoices.get(parseInt(params.id));
 
-	return { invoice: invoice, title: invoice.description };
+	return { invoice, title: invoice.description, ownHeader: true };
 };

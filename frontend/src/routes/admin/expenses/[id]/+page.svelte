@@ -3,17 +3,17 @@
 	import { fade } from 'svelte/transition';
 	import type { PageProps } from './$types';
 	import ExpenseDetail from './ExpenseDetail.svelte';
-	import ExpenseSkeleton from './ExpenseSkeleton.svelte';
+	import ClaimDetailSkeleton from '#lib/components/claim/ClaimDetailSkeleton.svelte';
 
 	let { data }: PageProps = $props();
 </script>
 
 {#await data.expense}
-	<ExpenseSkeleton />
+	<ClaimDetailSkeleton />
 {:then expense}
 	<div in:fade={{ duration: 50 }}>
 		<ExpenseDetail {expense} user={data.user} />
 	</div>
 {:catch}
-	<div class="py-24 text-center text-sm text-red-500">{$_('action_failed')}</div>
+	<div class="py-24 text-center text-sm text-danger">{$_('action_failed')}</div>
 {/await}

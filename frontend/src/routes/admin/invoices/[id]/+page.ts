@@ -7,5 +7,5 @@ export const load: PageLoad = ({ fetch, params }) => {
 
 	const invoice = api.invoices.get(parseInt(params.id));
 
-	return { invoice, title: invoice.then((i) => i.description) };
+	return { invoice, title: invoice.then((i) => i.description).catch(() => ''), ownHeader: true };
 };
