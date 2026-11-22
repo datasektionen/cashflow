@@ -117,15 +117,13 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 
 	function handleRowClick(e: MouseEvent, row: T) {
 		if ((e.target as HTMLElement).closest('a, button')) return;
-		if (rowProps?.href) {
-			const href = rowProps.href(row);
-			if (e.metaKey || e.ctrlKey || e.shiftKey) {
-				window.open(href, '_blank', 'noopener');
-			} else if (!e.altKey) {
-				goto(href);
-			}
-		} else {
-			rowProps?.onClick?.(row);
+		const href = rowProps?.href?.(row);
+		if (href && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+			window.open(href, '_blank', 'noopener');
+		} else if (rowProps?.onClick) {
+			rowProps.onClick(row);
+		} else if (href && !e.altKey) {
+			goto(href);
 		}
 	}
 
@@ -246,7 +244,7 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 								>
 									{#each columns as column, ci}
 										<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
-											{#if ci === 0 && rowProps?.href}
+											{#if ci === 0 && rowProps?.href && !rowProps.onClick}
 												<a href={rowProps.href(row)}>
 													{#if column.renderSnippet}
 														{@render column.renderSnippet(row)}
