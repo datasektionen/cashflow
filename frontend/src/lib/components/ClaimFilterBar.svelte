@@ -1,8 +1,8 @@
 <script module lang="ts">
-	const tristateKeys = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
-	type TristateKey = (typeof tristateKeys)[number];
+	import { TRISTATE_KEYS } from '#lib/api/claimFilter.ts';
+
 	export type Filter =
-		| TristateKey
+		| (typeof TRISTATE_KEYS)[number]
 		| 'voucher_series'
 		| 'reimbursement'
 		| 'description'
@@ -29,9 +29,7 @@
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import ComboBox from '#lib/components/ComboBox.svelte';
 	import TextInput from '#lib/components/TextInput.svelte';
-	import Checkbox from '#lib/components/Checkbox.svelte';
 	import type { ComboboxColumn } from '#lib/components/AdvancedCombobox.svelte';
 	import AdvancedCombobox from '#lib/components/AdvancedCombobox.svelte';
 	import type {
@@ -41,31 +39,28 @@
 		VoucherSeries
 	} from '#lib/api/types.ts';
 	import { api } from '#lib/api/index.ts';
-	import { budget } from '#lib/stores/budget.svelte.ts';
+	import { fetchAllPages } from '#lib/api/util.ts';
+	import { budget } from '#lib/stores/budget.ts';
 	import { isErrorResponse } from '#lib/api/errors.ts';
-	import { alerts, error } from '#lib/stores/alerts.ts';
+	import { error } from '#lib/stores/alerts.ts';
 	import { logger } from '#lib/logger.ts';
+	import { Button, Checkbox, Combobox } from '#lib/components/ui/index.ts';
 
 	let {
 		includeBudget = true,
-		includeReset = true,
 		includeChecks = true,
 		exclude = []
 	}: {
 		includeBudget?: boolean;
-		includeReset?: boolean;
 		includeChecks?: boolean;
 		exclude?: Filter[];
 	} = $props();
 
-	let showAllFilters: boolean = $state(false);
+	const showChecks = $derived(
+		includeChecks && !TRISTATE_KEYS.every((key) => exclude.includes(key))
+	);
 
-	// These bind to the comboboxes search strings, and are used to clear e.g. budget line when cost centre is changed
-	let budgetSearchValues = $state({
-		costCentre: '',
-		secondaryCostCentre: '',
-		budgetLine: ''
-	});
+	let showAllFilters: boolean = $state(false);
 
 	let costCentres: CostCentre[] = $state([]);
 	let secondaryCostCentres: SecondaryCostCentre[] = $state([]);
@@ -73,37 +68,40 @@
 
 	let voucherSeries: VoucherSeries[] = $state([]);
 
-	onMount(async () => {
-		costCentres = await budget.costCentres.list();
+	// The fallback budget line list spans all secondary cost centres, so names can repeat
+	const names = (items: { name: string }[]) => [...new Set(items.map((it) => it.name))];
 
-		voucherSeries = await api.util
-			.fetchAllPages((page, perPage) => api.voucherSeries.list(page, perPage))
-			.catch(async (err) => {
-				if (isErrorResponse(err)) {
-					logger.error(err);
-					if (err.type.endsWith('/fortnox_service_not_available/')) {
-						// Attempt to fetch voucher series from existing expenses instead
-						try {
-							return await api.voucherSeries.list(1, 100, false).then((res) => res.data);
-						} catch (fallbackErr) {
-							logger.error(fallbackErr);
-						}
+	onMount(async () => {
+		costCentres = await budget.costCentres();
+
+		voucherSeries = await fetchAllPages((page, perPage) =>
+			api.voucherSeries.list(page, perPage)
+		).catch(async (err) => {
+			if (isErrorResponse(err)) {
+				logger.error(err);
+				if (err.type.endsWith('/fortnox_service_not_available/')) {
+					// Attempt to fetch voucher series from existing expenses instead
+					try {
+						return await api.voucherSeries.list(1, 100, false).then((res) => res.data);
+					} catch (fallbackErr) {
+						logger.error(fallbackErr);
 					}
 				}
-				alerts.update((a) => [...a, error($_('voucher_series_fetch_error'))]);
-				return [];
-			});
+			}
+			error($_('voucher_series_fetch_error'));
+			return [];
+		});
 
 		const selectedCostCentre = costCentres.find((cc) => cc.name === filterValue('cost_centre'));
-		if (selectedCostCentre?.id != null) {
-			secondaryCostCentres = (await budget.secondaryCostCentres.get(selectedCostCentre)) ?? [];
+		if (selectedCostCentre) {
+			secondaryCostCentres = await budget.secondaryCostCentres(selectedCostCentre);
 		}
 
 		const selectedSecondaryCostCentre = secondaryCostCentres.find(
 			(scc) => scc.name === filterValue('secondary_cost_centre')
 		);
-		if (selectedSecondaryCostCentre?.id != null) {
-			budgetLines = (await budget.budgetLines.get(selectedSecondaryCostCentre)) ?? [];
+		if (selectedSecondaryCostCentre) {
+			budgetLines = await budget.budgetLines(selectedSecondaryCostCentre);
 		}
 	});
 
@@ -117,14 +115,18 @@
 		'invoice_number'
 	] as const;
 
+	const textFilters = [
+		{ key: 'invoice_number', icon: FileDigit, placeholder: 'search_invoice_number' },
+		{ key: 'verification', icon: Hash, placeholder: 'search_voucher_number' },
+		{ key: 'reimbursement', icon: HandCoins, placeholder: 'search_reimbursement' }
+	] as const;
+
 	const voucherSeriesColumns: ComboboxColumn<VoucherSeries>[] = [
 		{
-			label: 'Kod',
 			field: 'code',
 			render: VoucherSeriesCodeSnippet
 		},
 		{
-			label: 'Beskrivning',
 			field: 'description',
 			render: VoucherSeriesDescriptionSnippet
 		}
@@ -137,15 +139,9 @@
 		clearTimeout(queryTimeout);
 		resetting = true;
 		resetKey++;
-		const url = new URL(page.url.href);
-		for (const key of filterKeys) {
-			url.searchParams.delete(key);
-		}
-		url.searchParams.delete('q');
-		for (const key of visibleTristateKeys()) {
-			url.searchParams.delete(key);
-		}
-		goto(url, { reset: false, replaceState: true }).then(() => (resetting = false));
+		navigate((params) => {
+			for (const key of [...filterKeys, 'q', ...visibleTristateKeys()]) params.delete(key);
+		}, false).then(() => (resetting = false));
 	}
 
 	function filterValue(key: string) {
@@ -153,382 +149,226 @@
 	}
 
 	function visibleTristateKeys() {
-		return tristateKeys.filter((key) => !exclude.includes(key as Filter));
+		return TRISTATE_KEYS.filter((key) => !exclude.includes(key));
 	}
 
-	function tristateChecked(key: (typeof tristateKeys)[number], want: 'true' | 'false') {
+	function tristateChecked(key: (typeof TRISTATE_KEYS)[number], want: 'true' | 'false') {
 		const other = want === 'true' ? 'false' : 'true';
 		return filterValue(key) !== other && filterValue(key) !== 'none';
 	}
 
-	function setTristateFilter(key: TristateKey, positive: boolean, negative: boolean) {
-		if (positive && negative) setFilter(key, '');
-		else if (positive) setFilter(key, 'true');
-		else if (negative) setFilter(key, 'false');
-		else setFilter(key, 'none');
-	}
+	const setTristateFilter = (
+		key: (typeof TRISTATE_KEYS)[number],
+		positive: boolean,
+		negative: boolean
+	) => setFilter(key, positive ? (negative ? '' : 'true') : negative ? 'false' : 'none');
 
-	function tristateActive(key: TristateKey) {
-		return filterValue(key) !== '';
-	}
+	const tristateFilters = [
+		{ key: 'attested', icon: Stamp },
+		{ key: 'confirmed', icon: CircleCheck },
+		{ key: 'paid', icon: Banknote },
+		{ key: 'accounted', icon: Receipt },
+		{ key: 'flagged', icon: Flag }
+	] as const;
 
-	function clearTristateFilters() {
+	function navigate(update: (params: URLSearchParams) => void, resetPage = true) {
 		const url = new URL(page.url.href);
-		for (const key of visibleTristateKeys()) {
-			url.searchParams.set(key, 'none');
-		}
-		url.searchParams.delete('page');
-		goto(url, { reset: false, replaceState: true });
+		update(url.searchParams);
+		if (resetPage) url.searchParams.delete('page');
+		return goto(url, { reset: false, replaceState: true });
 	}
 
-	async function setFilter(key: (typeof filterKeys)[number] | TristateKey, value: string) {
-		const url = new URL(page.url.href);
-		if (value) {
-			url.searchParams.set(key, value);
-		} else {
-			url.searchParams.delete(key);
-		}
+	const clearTristateFilters = () =>
+		navigate((params) => {
+			for (const key of visibleTristateKeys()) params.set(key, 'none');
+		});
 
+	async function setFilter(
+		key: (typeof filterKeys)[number] | (typeof TRISTATE_KEYS)[number] | 'q',
+		value: string
+	) {
 		if (key === 'cost_centre') {
 			const costCentre = costCentres.find((cc) => cc.name === value);
-			// Cost centres with no GOrdian id (inactive/legacy) can't be used to
-			// scope secondary cost centres, so show none rather than the full
-			// unfiltered list.
-			secondaryCostCentres = secondaryCostCentres =
-				costCentre?.id != null ? ((await budget.secondaryCostCentres.get(costCentre)) ?? []) : [];
+			secondaryCostCentres = costCentre ? await budget.secondaryCostCentres(costCentre) : [];
 			budgetLines = [];
-			budgetSearchValues.secondaryCostCentre = '';
-			budgetSearchValues.budgetLine = '';
-			url.searchParams.delete('secondary_cost_centre');
-			url.searchParams.delete('budget_line');
 		} else if (key === 'secondary_cost_centre') {
 			const secondaryCostCentre = secondaryCostCentres.find((scc) => scc.name === value);
 			budgetLines =
 				secondaryCostCentre?.id != null
-					? ((await budget.budgetLines.get(secondaryCostCentre)) ?? [])
+					? await budget.budgetLines(secondaryCostCentre)
 					: await api.budget.listBudgetLines(1, 100).then((res) => res.data);
-			budgetSearchValues.budgetLine = '';
-			url.searchParams.delete('budget_line');
 		}
 
-		url.searchParams.delete('page');
-		await goto(url, { reset: false, replaceState: true });
+		await navigate((params) => {
+			if (value) params.set(key, value);
+			else params.delete(key);
+			// Clear the filters below the changed one
+			if (key === 'cost_centre') params.delete('secondary_cost_centre');
+			if (key === 'cost_centre' || key === 'secondary_cost_centre') params.delete('budget_line');
+		});
 	}
 
 	let queryTimeout: ReturnType<typeof setTimeout>;
 
 	function setQuery(query: string) {
 		clearTimeout(queryTimeout);
-		queryTimeout = setTimeout(() => {
-			const url = new URL(page.url.href);
-			if (query) {
-				url.searchParams.set('q', query);
-				url.searchParams.delete('page');
-			} else {
-				url.searchParams.delete('q');
-			}
-			url.searchParams.delete('page');
-			goto(url, { reset: false, replaceState: true });
-		}, 500);
+		queryTimeout = setTimeout(() => setFilter('q', query), 500);
 	}
 </script>
 
 {#snippet VoucherSeriesDisplay(vs: VoucherSeries)}
 	<span>{vs.code}</span>
 	{#if vs.description}
-		<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
-			{vs.description}
-		</span>
+		<span class="ml-2 truncate text-xs text-muted-foreground">{vs.description}</span>
 	{/if}
 {/snippet}
 {#snippet VoucherSeriesCodeSnippet(vs: VoucherSeries)}
-	<span>{vs.code}</span>
+	<span class="font-mono">{vs.code}</span>
 {/snippet}
 {#snippet VoucherSeriesDescriptionSnippet(vs: VoucherSeries)}
-	<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
-		{vs.description}
-	</span>
+	<span class="text-xs text-muted-foreground">{vs.description}</span>
 {/snippet}
 
+<!-- The full budget loads once someone heads for the filters, not on every list -->
 <div
-	class="mb-4 flex flex-col items-center space-y-1 space-x-2 border-b border-base-500 pb-4 md:flex-row dark:border-dark-base-200"
+	role="search"
+	class="mb-4 flex flex-col gap-3"
+	onpointerenter={budget.preload}
+	onfocusin={budget.preload}
 >
-	{#key resetKey}
-		{#if includeBudget}
-			<ComboBox
-				name="cost-centre"
-				class="text-sm"
-				value={filterValue('cost_centre')}
-				bind:searchValue={budgetSearchValues.costCentre}
-				onchange={(v) => setFilter('cost_centre', v)}
-				placeholder={$_('cost_centre')}
-				items={costCentres.map((it) => it.name)}
-			/>
-			<ComboBox
-				name="secondary-cost-centre"
-				class="text-sm"
-				value={filterValue('secondary_cost_centre')}
-				bind:searchValue={budgetSearchValues.secondaryCostCentre}
-				onchange={(v) => setFilter('secondary_cost_centre', v)}
-				placeholder={$_('secondary_cost_centre')}
-				items={secondaryCostCentres.map((it) => it.name)}
-				locked={filterValue('cost_centre') === ''}
-			/>
-			<ComboBox
-				name="budget-line"
-				class="text-sm"
-				value={filterValue('budget_line')}
-				bind:searchValue={budgetSearchValues.budgetLine}
-				onchange={(v) => setFilter('budget_line', v)}
-				placeholder={$_('budget_line')}
-				items={budgetLines.map((it) => it.name)}
-				locked={filterValue('secondary_cost_centre') === ''}
-			/>
-		{/if}
-
-		{#if !exclude.includes('voucher_series')}
-			<AdvancedCombobox
-				name="voucher-series"
-				class="text-sm"
-				columns={voucherSeriesColumns}
-				items={voucherSeries}
-				searchField={['code', 'description']}
-				valueField="code"
-				value={filterValue('voucher_series')}
-				onchange={(v) => setFilter('voucher_series', v ?? '')}
-				display={VoucherSeriesDisplay}
-				placeholder={$_('voucher_series')}
-			/>
-		{/if}
-
-		{#if !exclude.includes('description')}
-			{#snippet searchIcon()}
-				<Search class="size-4" />
-			{/snippet}
-			<TextInput
-				class="text-sm"
-				value={filterValue('q')}
-				onchange={setQuery}
-				placeholder={$_('search_description')}
-				icon={searchIcon}
-			/>
-		{/if}
-
-		{#if !exclude.includes('invoice_number')}
-			{#snippet voucherNrIcon()}
-				<FileDigit class="size-4" />
-			{/snippet}
-			<TextInput
-				class="text-sm"
-				value={filterValue('invoice_number')}
-				onchange={(v) => setFilter('invoice_number', v ?? '')}
-				placeholder={$_('search_invoice_number')}
-				icon={voucherNrIcon}
-			/>
-		{/if}
-
-		{#snippet voucherIcon()}
-			<Hash class="size-4" />
-		{/snippet}
-		{#if !exclude.includes('verification')}
-			<TextInput
-				class="text-sm"
-				value={filterValue('verification')}
-				onchange={(v) => setFilter('verification', v ?? '')}
-				placeholder={$_('search_voucher_number')}
-				icon={voucherIcon}
-			/>
-		{/if}
-		{#snippet reimbursementIcon()}
-			<HandCoins />
-		{/snippet}
-		{#if !exclude.includes('reimbursement')}
-			<TextInput
-				class="text-sm"
-				value={filterValue('reimbursement')}
-				onchange={(v) => setFilter('reimbursement', (v ?? '').replace(/^data/i, ''))}
-				placeholder={$_('search_reimbursement')}
-				icon={reimbursementIcon}
-			/>
-		{/if}
-	{/key}
-
-	<div class="flex w-full flex-row gap-2 md:justify-between">
-		<button
-			class="group flex min-w-fit flex-1 cursor-pointer flex-row items-center justify-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:hidden dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
-			onclick={() => (showAllFilters = !showAllFilters)}
-		>
-			<SlidersHorizontal class="size-4 shrink-0 transition-transform group-hover:scale-125" />
-			<span class="text-xs uppercase">{$_('show_all_filters')}</span>
-		</button>
-
-		{#if includeReset}
-			<button
-				onclick={resetFilter}
-				class="group flex min-w-fit flex-1 cursor-pointer flex-row items-center justify-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:flex-none md:justify-start md:border-0 md:px-0 md:py-0 dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
-			>
-				<ListRestart class="size-4 shrink-0 transition-transform group-hover:scale-125" />
-				<span class="text-xs uppercase">{$_('reset')}</span>
-			</button>
-		{/if}
-	</div>
-</div>
-{#if includeChecks && !tristateKeys.every((key) => exclude.includes(key))}
-	<div
-		class={[
-			'mb-4 flex-col items-start space-x-2 gap-y-3 border-b border-base-500 pb-4 md:flex md:flex-row md:items-center md:gap-y-0 dark:border-dark-base-200',
-			showAllFilters ? 'flex' : 'hidden'
-		]}
-	>
-		<div
-			class="grid grid-cols-[auto_auto_auto] items-center justify-items-end gap-x-3 gap-y-2.5 md:flex md:flex-1 md:flex-wrap md:justify-items-start md:gap-0 md:divide-x md:divide-base-400 dark:md:divide-dark-base-150"
-		>
-			{#if !exclude.includes('attested')}
-				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pr-4">
-					<Stamp
-						class={[
-							'size-4 shrink-0 transition-colors',
-							tristateActive('attested')
-								? 'text-money-green-600 dark:text-money-green-500'
-								: 'text-base-subtle dark:text-dark-base-subtle'
-						]}
+	<div class="flex flex-col gap-2 md:flex-row md:items-start">
+		<div class="flex flex-1 flex-wrap gap-2 *:min-w-0 *:flex-[1_1_13rem]">
+			{#key resetKey}
+				{#if includeBudget}
+					<Combobox
+						clearable
+						name="cost-centre"
+						value={filterValue('cost_centre')}
+						onchange={(v) => setFilter('cost_centre', v)}
+						placeholder={$_('cost_centre')}
+						items={names(costCentres)}
 					/>
-					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
-						<Checkbox
-							checked={tristateChecked('attested', 'true')}
-							onCheckedChange={(v) =>
-								setTristateFilter('attested', v, tristateChecked('attested', 'false'))}
-						>
-							{$_('attested')}
-						</Checkbox>
-						<Checkbox
-							checked={tristateChecked('attested', 'false')}
-							onCheckedChange={(v) =>
-								setTristateFilter('attested', tristateChecked('attested', 'true'), v)}
-						>
-							{$_('not_attested')}
-						</Checkbox>
-					</div>
-				</div>
-			{/if}
-			{#if !exclude.includes('confirmed')}
-				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pr-4">
-					<CircleCheck
-						class={[
-							'size-4 shrink-0 transition-colors',
-							tristateActive('confirmed')
-								? 'text-money-green-600 dark:text-money-green-500'
-								: 'text-base-subtle dark:text-dark-base-subtle'
-						]}
+					<Combobox
+						clearable
+						name="secondary-cost-centre"
+						value={filterValue('secondary_cost_centre')}
+						onchange={(v) => setFilter('secondary_cost_centre', v)}
+						placeholder={$_('secondary_cost_centre')}
+						items={names(secondaryCostCentres)}
+						locked={filterValue('cost_centre') === ''}
+						class={filterValue('cost_centre') === '' ? 'max-md:hidden' : undefined}
 					/>
-					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
-						<Checkbox
-							checked={tristateChecked('confirmed', 'true')}
-							onCheckedChange={(v) =>
-								setTristateFilter('confirmed', v, tristateChecked('confirmed', 'false'))}
-						>
-							{$_('confirmed')}
-						</Checkbox>
-						<Checkbox
-							checked={tristateChecked('confirmed', 'false')}
-							onCheckedChange={(v) =>
-								setTristateFilter('confirmed', tristateChecked('confirmed', 'true'), v)}
-						>
-							{$_('not_confirmed')}
-						</Checkbox>
-					</div>
-				</div>
-			{/if}
-			{#if !exclude.includes('paid')}
-				<div class="contents md:flex md:items-center md:gap-1.5 md:px-4 md:py-1">
-					<Banknote
-						class={[
-							'size-4 shrink-0 transition-colors',
-							tristateActive('paid')
-								? 'text-money-green-600 dark:text-money-green-500'
-								: 'text-base-subtle dark:text-dark-base-subtle'
-						]}
+					<Combobox
+						clearable
+						name="budget-line"
+						value={filterValue('budget_line')}
+						onchange={(v) => setFilter('budget_line', v)}
+						placeholder={$_('budget_line')}
+						items={names(budgetLines)}
+						locked={filterValue('secondary_cost_centre') === ''}
+						class={filterValue('secondary_cost_centre') === '' ? 'max-md:hidden' : undefined}
 					/>
-					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
-						<Checkbox
-							checked={tristateChecked('paid', 'true')}
-							onCheckedChange={(v) =>
-								setTristateFilter('paid', v, tristateChecked('paid', 'false'))}
-						>
-							{$_('paid')}
-						</Checkbox>
-						<Checkbox
-							checked={tristateChecked('paid', 'false')}
-							onCheckedChange={(v) => setTristateFilter('paid', tristateChecked('paid', 'true'), v)}
-						>
-							{$_('not_paid')}
-						</Checkbox>
-					</div>
-				</div>
-			{/if}
-			{#if !exclude.includes('accounted')}
-				<div class="contents md:flex md:items-center md:gap-1.5 md:px-4 md:py-1">
-					<Receipt
-						class={[
-							'size-4 shrink-0 transition-colors',
-							tristateActive('accounted')
-								? 'text-money-green-600 dark:text-money-green-500'
-								: 'text-base-subtle dark:text-dark-base-subtle'
-						]}
+				{/if}
+
+				{#if !exclude.includes('voucher_series')}
+					<AdvancedCombobox
+						clearable
+						name="voucher-series"
+						columns={voucherSeriesColumns}
+						items={voucherSeries}
+						searchField={['code', 'description']}
+						valueField="code"
+						value={filterValue('voucher_series')}
+						onchange={(v) => setFilter('voucher_series', v ?? '')}
+						display={VoucherSeriesDisplay}
+						placeholder={$_('voucher_series')}
 					/>
-					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
-						<Checkbox
-							checked={tristateChecked('accounted', 'true')}
-							onCheckedChange={(v) =>
-								setTristateFilter('accounted', v, tristateChecked('accounted', 'false'))}
-						>
-							{$_('accounted')}
-						</Checkbox>
-						<Checkbox
-							checked={tristateChecked('accounted', 'false')}
-							onCheckedChange={(v) =>
-								setTristateFilter('accounted', tristateChecked('accounted', 'true'), v)}
-						>
-							{$_('not_accounted')}
-						</Checkbox>
-					</div>
-				</div>
-			{/if}
-			{#if !exclude.includes('flagged')}
-				<div class="contents md:flex md:items-center md:gap-1.5 md:py-1 md:pl-4">
-					<Flag
-						class={[
-							'size-4 shrink-0 transition-colors',
-							tristateActive('flagged')
-								? 'text-money-green-600 dark:text-money-green-500'
-								: 'text-base-subtle dark:text-dark-base-subtle'
-						]}
+				{/if}
+
+				{#if !exclude.includes('description')}
+					<TextInput
+						value={filterValue('q')}
+						onchange={setQuery}
+						placeholder={$_('search_description')}
+						icon={Search}
 					/>
-					<div class="contents md:flex md:flex-wrap md:items-center md:justify-end md:gap-1.5">
-						<Checkbox
-							checked={tristateChecked('flagged', 'true')}
-							onCheckedChange={(v) =>
-								setTristateFilter('flagged', v, tristateChecked('flagged', 'false'))}
-						>
-							{$_('flagged')}
-						</Checkbox>
-						<Checkbox
-							checked={tristateChecked('flagged', 'false')}
-							onCheckedChange={(v) =>
-								setTristateFilter('flagged', tristateChecked('flagged', 'true'), v)}
-						>
-							{$_('not_flagged')}
-						</Checkbox>
-					</div>
-				</div>
-			{/if}
+				{/if}
+
+				{#each textFilters.filter((f) => !exclude.includes(f.key)) as filter (filter.key)}
+					<TextInput
+						value={filterValue(filter.key)}
+						onchange={(v) =>
+							setFilter(filter.key, filter.key === 'reimbursement' ? v.replace(/^data/i, '') : v)}
+						placeholder={$_(filter.placeholder)}
+						icon={filter.icon}
+					/>
+				{/each}
+			{/key}
 		</div>
-		<button
-			onclick={clearTristateFilters}
-			class="flex shrink-0 cursor-pointer flex-row items-center gap-1.5 border border-base-500 px-3 py-1.5 text-base-subtle transition-colors hover:text-base-text md:ml-auto md:border-0 md:px-0 md:py-0 dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text"
-		>
-			<Eraser class="size-4" />
-			<span class="text-xs uppercase">{$_('clear_all')}</span>
-		</button>
+
+		<div class="flex gap-2 md:shrink-0">
+			{#if showChecks}
+				<Button
+					variant="secondary"
+					class="flex-1 md:hidden"
+					onclick={() => (showAllFilters = !showAllFilters)}
+					aria-expanded={showAllFilters}
+				>
+					<SlidersHorizontal />
+					{$_('show_all_filters')}
+				</Button>
+			{/if}
+			<Button variant="secondary" class="flex-1 md:flex-none" onclick={resetFilter}>
+				<ListRestart />
+				{$_('reset')}
+			</Button>
+		</div>
 	</div>
-{/if}
+
+	{#if showChecks}
+		<div
+			class={[
+				'flex-col items-start gap-3 border border-border bg-card px-3 py-2.5 md:flex md:flex-row md:items-center',
+				showAllFilters ? 'flex' : 'hidden'
+			]}
+		>
+			<div
+				class="grid w-full auto-rows-[2.5rem] grid-cols-[auto_1fr_1fr] gap-x-3 md:flex md:flex-1 md:flex-wrap md:items-center md:gap-y-2 md:divide-x md:divide-border"
+			>
+				{#each tristateFilters.filter((f) => !exclude.includes(f.key)) as filter (filter.key)}
+					<div class="contents md:flex md:items-center md:gap-3 md:pr-4 md:not-first:pl-4">
+						<filter.icon
+							class={[
+								'size-4 shrink-0 self-center transition-colors',
+								filterValue(filter.key) !== '' ? 'text-primary-text' : 'text-muted-foreground'
+							]}
+						/>
+						<Checkbox
+							checked={tristateChecked(filter.key, 'true')}
+							onCheckedChange={(v) =>
+								setTristateFilter(filter.key, v, tristateChecked(filter.key, 'false'))}
+						>
+							{$_(filter.key)}
+						</Checkbox>
+						<Checkbox
+							checked={tristateChecked(filter.key, 'false')}
+							onCheckedChange={(v) =>
+								setTristateFilter(filter.key, tristateChecked(filter.key, 'true'), v)}
+						>
+							{$_(`not_${filter.key}`)}
+						</Checkbox>
+					</div>
+				{/each}
+			</div>
+			<Button
+				variant="ghost"
+				size="sm"
+				class="shrink-0 text-muted-foreground md:ml-auto"
+				onclick={clearTristateFilters}
+			>
+				<Eraser />
+				{$_('clear_all')}
+			</Button>
+		</div>
+	{/if}
+</div>

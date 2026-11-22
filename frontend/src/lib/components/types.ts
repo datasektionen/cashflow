@@ -1,13 +1,12 @@
 import type { Snippet } from 'svelte';
-import type { Payment } from '#lib/api/types.ts';
 
 export type TableColumn<T> = {
 	id: string;
-	key?: keyof T;
 	header: string;
 	render?: (row: T) => string;
 	renderSnippet?: Snippet<[T]>;
-	width: string;
+	width?: string;
+	align?: 'right';
 	sorting?: string[];
 };
 
