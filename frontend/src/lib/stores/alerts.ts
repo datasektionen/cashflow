@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { browser } from '$app/env';
 import { isErrorResponse } from '#lib/api/errors.ts';
 import { logger } from '#lib/logger.ts';
 
@@ -11,8 +12,12 @@ export type Alert = {
 
 export const alerts = writable<Alert[]>([]);
 
-const show = (type: Alert['type']) => (message: string) =>
-	alerts.update((a) => [...a, { id: crypto.randomUUID(), type, message, duration: 5000 }]);
+// Browser only: on the server this store is shared by every request, so a toast would reach everyone.
+// Loads run again in the browser on hydration, so their errors still show.
+const show = (type: Alert['type']) => (message: string) => {
+	if (browser)
+		alerts.update((a) => [...a, { id: crypto.randomUUID(), type, message, duration: 5000 }]);
+};
 
 export const success = show('success');
 export const warning = show('warning');

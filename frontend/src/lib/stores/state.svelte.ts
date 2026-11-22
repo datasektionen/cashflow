@@ -1,4 +1,5 @@
 import { MediaQuery } from 'svelte/reactivity';
+import { browser } from '$app/env';
 import { api } from '#lib/api/index.ts';
 import { logger } from '#lib/logger.ts';
 import type { TableColumn } from '#lib/components/types.ts';
@@ -10,6 +11,8 @@ export const isLargeLayout = new MediaQuery('max-width: 1535.98px'); // < 2xl
 let cachedProfilePicture: Promise<string | null> | undefined;
 
 export function getProfilePicture(username: string): Promise<string | null> {
+	// The server has no session for this call, and a module cache there would be shared by everyone
+	if (!browser) return Promise.resolve(null);
 	if (cachedProfilePicture === undefined) {
 		logger.debug({ username }, 'profile picture: cache miss, fetching');
 		cachedProfilePicture = api.profilePictures
