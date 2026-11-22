@@ -14,14 +14,7 @@
 		};
 	}
 
-	/**
-	 * Prefills voucher rows from claim parts: one debit row per part from the
-	 * account and cost centre GOrdian/Fortnox recommend, plus a balancing row
-	 * crediting `creditAccount` (the claim's recommended liability account).
-	 * Parts that resolve to an identical row (same account, cost centre and
-	 * budget line) are merged into one row with their amounts summed; parts
-	 * without a resolved account stay separate.
-	 */
+	/** One debit row per distinct account, cost centre and budget line, plus a balancing credit row. */
 	export function draftsFromParts(
 		parts: (ExpensePart | InvoicePart)[],
 		creditAccount: number | null
@@ -71,13 +64,13 @@
 	import { _ } from 'svelte-i18n';
 	import { CircleAlert, Plus, X, TriangleAlert } from '@lucide/svelte';
 	import AmountInput from '#lib/components/AmountInput.svelte';
+	import { Button } from '#lib/components/ui/index.ts';
 	import AdvancedCombobox from '#lib/components/AdvancedCombobox.svelte';
 	import type { ComboboxColumn } from '#lib/components/AdvancedCombobox.svelte';
 	import { type Dinero } from 'dinero.js';
 	import { formatDineroAmount } from '#lib/money.ts';
 	import type { FortnoxAccount, FortnoxCostCentre } from '#lib/api/types.ts';
 	import {
-		type VoucherRowErrors,
 		type VoucherRowWarnings,
 		VoucherRowField,
 		voucherRowValidation
@@ -88,7 +81,6 @@
 		accounts: FortnoxAccount[];
 		costCentres: FortnoxCostCentre[];
 		expectedTotal?: Dinero<number, 'SEK'>;
-		errors?: VoucherRowErrors;
 		warnings?: VoucherRowWarnings;
 	};
 
@@ -97,11 +89,14 @@
 		accounts,
 		costCentres,
 		expectedTotal,
-		errors = $bindable({}),
 		warnings = $bindable({})
 	}: VoucherRowFieldsProps = $props();
 
-	const cols = 'grid-cols-[1fr_18rem_8rem_8rem_2rem]';
+	// One line when wide; two (account, cost centre / debit, credit) when narrow
+	const cols =
+		'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2rem] @xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_7rem_7rem_2rem]';
+	// Keeps the last column on the first line when narrow
+	const corner = '@max-xl:col-start-3 @max-xl:row-start-1';
 
 	let validationResult = $state(voucherRowValidation.get());
 	$effect(() => {
@@ -110,23 +105,17 @@
 			expectedTotal
 		});
 		validationResult = result;
-		errors = result.getErrors() as VoucherRowErrors;
 		warnings = result.getWarnings() as VoucherRowWarnings;
 	});
 
 	const totalDebit = $derived(sumDinero(voucherRows.map((row) => row.debit)));
 	const totalCredit = $derived(sumDinero(voucherRows.map((row) => row.credit)));
 
-	let attemptedSubmit = $state(false);
-
 	export function validate(): boolean {
-		attemptedSubmit = true;
 		return validationResult.isValid();
 	}
 
-	// Undeletable rows (e.g. a mandatory balancing row) are pinned above the
-	// rest; `i` keeps pointing at the row's real position in `voucherRows` so
-	// binding and removal stay correct after reordering.
+	// Undeletable rows go first; `i` stays the row's index in `voucherRows`
 	const orderedRows = $derived(
 		voucherRows
 			.map((row, i) => ({ row, i }))
@@ -139,12 +128,10 @@
 
 	const accountColumns: ComboboxColumn<FortnoxAccount>[] = [
 		{
-			label: 'Konto',
 			field: 'number',
 			render: AccountNumberSnippet
 		},
 		{
-			label: 'Beskrivning',
 			field: 'description',
 			render: AccountDescriptionSnippet
 		}
@@ -152,12 +139,10 @@
 
 	const costCentreColumns: ComboboxColumn<FortnoxCostCentre>[] = [
 		{
-			label: 'Kod',
 			field: 'code',
 			render: CostCentreCodeSnippet
 		},
 		{
-			label: 'Beskrivning',
 			field: 'description',
 			render: CostCentreDescriptionSnippet
 		}
@@ -165,13 +150,11 @@
 </script>
 
 {#snippet AccountDisplay(account: FortnoxAccount)}
-	<span>{account.number}</span>
-	<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
-		{account.description}
-	</span>
+	<span class="font-mono">{account.number}</span>
+	<span class="ml-2 truncate text-xs text-muted-foreground">{account.description}</span>
 {/snippet}
 {#snippet AccountNumberSnippet(account: FortnoxAccount)}
-	<span>{account.number}</span>
+	<span class="font-mono">{account.number}</span>
 {/snippet}
 {#snippet AccountDescriptionSnippet(account: FortnoxAccount)}
 	<span>{account.description}</span>
@@ -179,9 +162,7 @@
 
 {#snippet CostCentreDisplay(costCentre: FortnoxCostCentre)}
 	<span>{costCentre.code}</span>
-	<span class="dark:dark-base-subtle ml-2 text-xs font-medium text-base-subtle uppercase">
-		{costCentre.description}
-	</span>
+	<span class="ml-2 truncate text-xs text-muted-foreground">{costCentre.description}</span>
 {/snippet}
 {#snippet CostCentreCodeSnippet(costCentre: FortnoxCostCentre)}
 	<span>{costCentre.code}</span>
@@ -190,29 +171,23 @@
 	<span>{costCentre.description}</span>
 {/snippet}
 
-<div class="flex flex-col">
-	<!-- The 5-column ledger grid is wider than the narrow mobile card, so it
-         scrolls horizontally on small screens (combobox dropdowns are portaled,
-         so they aren't clipped by the scroll container). -->
-	<div class="overflow-x-auto">
-		<div class="min-w-max md:min-w-0">
-			<div
-				class="grid {cols} gap-x-4 text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-			>
+<div class="flex flex-col gap-2">
+	<div class="@container">
+		<div class="flex flex-col gap-4 @xl:gap-2">
+			<div class="{cols} gap-x-3 gap-y-1 text-sm font-medium">
 				<div>{$_('booking_account_code')}</div>
 				<div>{$_('booking_cost_centre')}</div>
-				<div class="px-2 text-right">{$_('booking_debit')}</div>
-				<div class="px-2 text-right">{$_('booking_credit')}</div>
-				<div></div>
+				<div class="text-right">{$_('booking_debit')}</div>
+				<div class="text-right">{$_('booking_credit')}</div>
+				<div class={corner}></div>
 			</div>
 
 			{#each orderedRows as { row, i } (i)}
-				<div
-					class="grid {cols} items-center gap-x-2 border-b border-base-400 py-1 md:gap-x-4 dark:border-dark-base-200"
-				>
+				<div class="{cols} items-center gap-x-3 gap-y-2">
 					<AdvancedCombobox
 						name="account-{i}"
-						class="min-w-18 text-sm lg:min-w-42"
+						label={$_('booking_account_code')}
+						class="min-w-18 text-sm"
 						columns={accountColumns}
 						items={accounts}
 						searchField={['number', 'description']}
@@ -224,6 +199,7 @@
 
 					<AdvancedCombobox
 						name="cost-centre-{i}"
+						label={$_('booking_cost_centre')}
 						class="text-sm"
 						columns={costCentreColumns}
 						items={costCentres}
@@ -234,81 +210,74 @@
 						locked={row.lockedFields?.includes('cost_centre')}
 					/>
 
-					<div
-						class="flex border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200"
-					>
-						<AmountInput
-							bind:value={() => row.debit, (v) => (row.debit = v ?? ZERO)}
-							class="text-sm"
-							locked={!isZero(row.credit) || row.lockedFields?.includes('debit')}
-						/>
-					</div>
-					<div
-						class="flex border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200"
-					>
-						<AmountInput
-							bind:value={() => row.credit, (v) => (row.credit = v ?? ZERO)}
-							class="text-sm"
-							locked={!isZero(row.debit) || row.lockedFields?.includes('credit')}
-						/>
-					</div>
+					<AmountInput
+						label={$_('booking_debit')}
+						bind:value={() => row.debit, (v) => (row.debit = v ?? ZERO)}
+						locked={!isZero(row.credit) || row.lockedFields?.includes('debit')}
+					/>
+					<AmountInput
+						label={$_('booking_credit')}
+						bind:value={() => row.credit, (v) => (row.credit = v ?? ZERO)}
+						locked={!isZero(row.debit) || row.lockedFields?.includes('credit')}
+					/>
 					{#if row.deletable === false}
-						<div></div>
+						<div class={corner}></div>
 					{:else}
-						<button
-							type="button"
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="text-muted-foreground {corner}"
+							aria-label={$_('remove')}
 							onclick={() => removeRow(i)}
-							class="cursor-pointer text-base-subtle dark:text-dark-base-subtle"
 						>
-							<X class="size-4 transition-all hover:scale-125" />
-						</button>
+							<X />
+						</Button>
 					{/if}
 				</div>
 			{/each}
 
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="sm"
+				class="w-fit text-muted-foreground"
 				onclick={() => voucherRows.push(emptyVoucherRow())}
-				class="mt-1 flex w-fit cursor-pointer items-center gap-1 py-1 text-sm font-medium text-base-subtle transition-colors hover:text-base-text dark:text-dark-base-subtle dark:hover:text-dark-base-text"
 			>
-				<Plus class="size-4" />
-				<span>{$_('booking_add_row')}</span>
-			</button>
+				<Plus />
+				{$_('booking_add_row')}
+			</Button>
 
 			<div
-				class="mt-2 grid {cols} gap-x-4 border-t border-base-400 pt-2 text-sm font-medium dark:border-dark-base-200"
+				class="{cols} gap-x-3 gap-y-1 border-t border-border pt-3 text-sm font-medium tabular-nums"
 			>
-				<div></div>
-				<div class="text-right text-xs text-base-subtle uppercase dark:text-dark-base-subtle">
-					{$_('total')}
+				<div class="@max-xl:hidden"></div>
+				<div class="text-muted-foreground @max-xl:col-span-3 @xl:text-right">{$_('total')}</div>
+				<div class="border-x border-transparent px-3 text-right">
+					{formatDineroAmount(totalDebit)}
 				</div>
-				<div class="px-2 text-right tabular-nums">{formatDineroAmount(totalDebit)}</div>
-				<div class="px-2 text-right tabular-nums">{formatDineroAmount(totalCredit)}</div>
-				<div></div>
+				<div class="border-x border-transparent px-3 text-right">
+					{formatDineroAmount(totalCredit)}
+				</div>
+				<div class="@max-xl:hidden"></div>
 			</div>
 		</div>
 	</div>
 
-	<div class="mt-2 flex flex-col items-end gap-1">
-		{#if validationResult.hasErrors(VoucherRowField.DebitCredit)}
-			<span
-				class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
-			>
-				<span>{$_('booking_debit_credit_mismatch')}</span>
-				<CircleAlert class="size-4" />
-			</span>
-		{/if}
-		{#if validationResult.hasWarnings(VoucherRowField.ExpectedTotal)}
-			<span
-				class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-yellow-500 uppercase"
-			>
-				<span
-					>{$_('booking_total_mismatch', {
+	{#if validationResult.hasErrors(VoucherRowField.DebitCredit) || validationResult.hasWarnings(VoucherRowField.ExpectedTotal)}
+		<div class="flex flex-col items-end gap-1 text-xs font-medium">
+			{#if validationResult.hasErrors(VoucherRowField.DebitCredit)}
+				<p class="flex items-center gap-1.5 text-danger">
+					<CircleAlert class="size-3.5" />
+					{$_('booking_debit_credit_mismatch')}
+				</p>
+			{/if}
+			{#if validationResult.hasWarnings(VoucherRowField.ExpectedTotal)}
+				<p class="flex items-center gap-1.5 text-warning-soft-foreground">
+					<TriangleAlert class="size-3.5" />
+					{$_('booking_total_mismatch', {
 						values: { total: formatDineroAmount(expectedTotal!) }
-					})}</span
-				>
-				<TriangleAlert class="size-4" />
-			</span>
-		{/if}
-	</div>
+					})}
+				</p>
+			{/if}
+		</div>
+	{/if}
 </div>

@@ -1,18 +1,16 @@
 import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
 import { API } from '#lib/api/index.ts';
+import { defer } from '#lib/api/util.ts';
+import { listParams } from '#lib/listParams.ts';
 import type { InvoiceOrdering } from '#lib/api/types.ts';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API(API_URL, fetch);
-	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
-	const perPage = url.searchParams.get('per_page')
-		? parseInt(url.searchParams.get('per_page')!)
-		: 15;
+	const { page, perPage, sorting } = listParams<InvoiceOrdering>(url, 15, ['due_date', '-total']);
 
-	const sorting: InvoiceOrdering[] = ['due_date', '-total'];
-
-	const invoices = api.invoices.list(page, perPage, { payable: true }, sorting);
-
-	return { title_key: 'admin_pay.title', invoices };
+	return {
+		title_key: 'admin_pay.title',
+		invoices: defer(api.invoices.list(page, perPage, { payable: true }, sorting))
+	};
 };
