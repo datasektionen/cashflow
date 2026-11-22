@@ -1,6 +1,6 @@
 import type { PdfDocumentObject, PdfEngine } from '@embedpdf/models';
-
-const WASM_URL = 'https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@2.14.3/dist/pdfium.wasm';
+// Served from the installed package so it always matches the engine version
+import WASM_URL from '@embedpdf/pdfium/pdfium.wasm?url';
 
 let engine: Promise<PdfEngine> | undefined;
 const byUrl = new Map<string, Promise<string | null>>();
