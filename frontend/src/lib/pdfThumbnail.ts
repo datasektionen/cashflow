@@ -9,7 +9,8 @@ const byFile = new WeakMap<File, Promise<string | null>>();
 // One PDF engine for the whole page, started the first time a preview is needed
 function getEngine() {
 	engine ??= import('@embedpdf/engines/pdfium-worker-engine').then(({ createPdfiumEngine }) =>
-		createPdfiumEngine(WASM_URL)
+		// The engine runs in a worker started from a blob, so the URL must be absolute
+		createPdfiumEngine(new URL(WASM_URL, location.href).href)
 	);
 	return engine;
 }
