@@ -47,6 +47,9 @@
 		"@embedpdf/plugin-render": "^2.15.1",
 		"@embedpdf/plugin-selection": "^2.15.1",
 		"@embedpdf/svelte-pdf-viewer": "^2.15.1",
+		"@fontsource-variable/bricolage-grotesque": "^5.3.0",
+		"@fontsource-variable/geist": "^5.3.0",
+		"@fontsource-variable/geist-mono": "^5.3.0",
 		"@lucide/svelte": "^1.76.0",
 		"bits-ui": "^2.21.0",
 		"d3-scale": "^4.0.3",
@@ -56,6 +59,7 @@
 		"layerchart": "^2.11.0",
 		"pino": "^10.4.0",
 		"svelte-i18n": "^4.0.1",
+		"tailwind-variants": "^4.0.2",
 		"vest": "^6.3.4"
 	},
 	"imports": {
