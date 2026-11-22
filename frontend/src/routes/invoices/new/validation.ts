@@ -1,11 +1,8 @@
 import { create, enforce, only, test } from 'vest';
-import 'vest/date';
 import { type DateValue } from '@internationalized/date';
 import type { InvoiceCreate, PartCreateUpdate } from '#lib/api/types.ts';
-import { dinero, greaterThan, isZero, lessThan } from 'dinero.js';
-import { SEK } from 'dinero.js/currencies';
 import { logger } from '#lib/logger.ts';
-import { testBudgetLineExceeded, type BudgetLineUsage } from '#lib/budgetUsage.ts';
+import { testParts, type BudgetLineUsage } from '#lib/budgetUsage.ts';
 
 export type NewInvoiceFormData = {
 	description: string;
@@ -18,32 +15,32 @@ export type NewInvoiceFormData = {
 	dueDate: DateValue | undefined;
 };
 
-//*
-// Takes the form data and converts it into the format expected by the API.
-//*
-export function validateFormData(formData: NewInvoiceFormData): InvoiceCreate {
-	if (!formData.invoiceDate) {
-		logger.error(formData, 'Expected valid invoice date in form data');
-		throw new Error('Invoice date is required');
-	}
-	if (!formData.dueDate) {
-		logger.error(formData, 'Expected valid due date in form data');
-		throw new Error('Due date is required');
+type InvoiceFields = Omit<NewInvoiceFormData, 'invoiceNumber'>;
+
+/** Converts the fields shared with the update form for the API. */
+export function invoiceFields(formData: InvoiceFields) {
+	if (!formData.invoiceDate || !formData.dueDate) {
+		logger.error(formData, 'Expected valid invoice and due dates in form data');
+		throw new Error('Invoice and due dates are required');
 	}
 
 	return {
 		description: formData.description,
 		invoice_date: formData.invoiceDate.toString(),
-		invoice_number: formData.invoiceNumber,
 		due_date: formData.dueDate.toString(),
 		files: formData.files,
 		parts: formData.parts
 	};
 }
 
-const validation = create((data: NewInvoiceFormData, currentField?: string) => {
-	only(currentField);
+/** Converts the form data into the format the API expects. */
+export const validateFormData = (formData: NewInvoiceFormData): InvoiceCreate => ({
+	...invoiceFields(formData),
+	invoice_number: formData.invoiceNumber
+});
 
+/** Rules shared with the update form. */
+export function testInvoiceFields(data: InvoiceFields) {
 	test('description', 'description_required', () => {
 		enforce(data.description).isNotBlank();
 	});
@@ -55,38 +52,21 @@ const validation = create((data: NewInvoiceFormData, currentField?: string) => {
 	test('due-date', 'due_date_required', () => {
 		enforce(data.dueDate).isNotEmpty();
 	});
+}
+
+const validation = create((data: NewInvoiceFormData, currentField?: string) => {
+	only(currentField);
+
+	testInvoiceFields(data);
+
 	test('files', 'files_required', () => {
 		enforce(data.files).isArray().longerThan(0);
 	});
 
-	test('parts', 'parts_required', () => {
-		data.parts?.forEach((part, i) => {
-			testBudgetLineExceeded(data.parts, data.budgetUsage, i);
-			test(`part-${i}-costcenter`, 'cost_center_required', () => {
-				enforce(part.cost_centre).isNotBlank();
-			});
-			test(`part-${i}-secondarycostcenter`, 'secondary_cost_center_required', () => {
-				enforce(part.secondary_cost_centre).isNotBlank();
-			});
-			test(`part-${i}-budgetline`, 'budget_line_required', () => {
-				enforce(part.budget_line).isNotBlank();
-			});
-			test(`part-${i}-amount`, 'amount_required', () => {
-				enforce(isZero(part.amount)).isFalsy();
-			});
-			test(`part-${i}-amount`, 'amount_negative', () => {
-				const zero = dinero({ amount: 0, currency: SEK });
-				enforce(greaterThan(part.amount, zero)).isTruthy();
-			});
-			test(`part-${i}-amount`, 'amount_too_large', () => {
-				const maxAmount = dinero({ amount: 999999999, currency: SEK });
-				enforce(lessThan(part.amount, maxAmount)).isTruthy();
-			});
-		});
-	});
+	testParts(data.parts, data.budgetUsage);
 
 	test('invoice-number', 'invoice_number_required', () => {
-		enforce(data.invoiceNumber.trim()).isNotBlank();
+		enforce(data.invoiceNumber).isNotBlank();
 	});
 });
 

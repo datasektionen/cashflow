@@ -7,5 +7,5 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
 	const expense = await api.expenses.get(parseInt(params.id));
 
-	return { expense, title: expense.description };
+	return { expense, title: expense.description, ownHeader: true };
 };

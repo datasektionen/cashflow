@@ -1,202 +1,89 @@
 <script lang="ts">
-	import FileInput from './FileInput.svelte';
+	import FileInput from '#lib/components/FileInput.svelte';
+	import ReceiptSplit from '#lib/components/ReceiptSplit.svelte';
+	import FormActions from '#lib/components/FormActions.svelte';
 	import { _ } from 'svelte-i18n';
-	import { BanknoteArrowUp, CircleAlert } from '@lucide/svelte';
 	import { getLocalTimeZone, today } from '@internationalized/date';
-	import CashSpinner from '#lib/components/CashSpinner.svelte';
-	import DatePicker from '#lib/components/DatePicker.svelte';
-	import ExpenseParts from '#lib/components/ExpenseParts.svelte';
+	import { Field, Section } from '#lib/components/ui/index.ts';
+	import TextField from '#lib/components/TextField.svelte';
+	import DateField from '#lib/components/DateField.svelte';
+	import ExpenseParts, { newPart } from '#lib/components/ExpenseParts.svelte';
+	import { formValidation } from '#lib/formValidation.svelte.ts';
 	import validation, { validateFormData } from './validation.ts';
 	import type { NewExpenseFormData } from './validation.ts';
 	import { api } from '#lib/api/index.ts';
-	import { alerts, success } from '#lib/stores/alerts.ts';
-	import { goto } from '$app/navigation';
-	import { logger } from '#lib/logger.ts';
-	import { ZERO } from '#lib/money.ts';
-
-	let submitting: Boolean = $state(false);
+	import { success } from '#lib/stores/alerts.ts';
+	import { submitter } from '#lib/submit.svelte.ts';
+	import UnsavedChanges from '#lib/components/UnsavedChanges.svelte';
 
 	let formData: NewExpenseFormData = $state({
 		description: '',
 		files: [],
 		budgetUsage: [],
-		parts: [
-			{
-				cost_centre: '',
-				secondary_cost_centre: '',
-				budget_line: '',
-				amount: ZERO
-			}
-		],
+		parts: [newPart()],
 		date: undefined
 	});
 
-	async function handleSubmit(e: SubmitEvent) {
-		e.preventDefault();
-		submitting = true;
-		validationResult = validation.run(formData);
-		if (!validationResult.isValid()) {
-			submitting = false;
-			return;
-		}
+	const submit = submitter(async () => {
+		if (!form.validate()) return;
+		await api.expenses.create(validateFormData(formData));
+		success($_('expense_created'));
+		return `/claims/`;
+	});
 
-		const created = await api.expenses.create(validateFormData(formData));
-		logger.debug(created, 'new expense created');
-
-		alerts.update((alerts) => [...alerts, success($_('expense_created'))]);
-		await goto(`/claims/`);
-	}
-
-	let validationResult = $state(validation.get());
-	let errors = $derived(validationResult.getErrors());
-	let warnings = $derived(validationResult.getWarnings());
-
-	function onBlur(e: FocusEvent & { currentTarget: HTMLInputElement }) {
-		validationResult = validation.run(formData, e.currentTarget.name);
-	}
-
-	function onDateBlur() {
-		validationResult = validation.run(formData, 'expense-date');
-	}
-
-	function validateField(field: string) {
-		validationResult = validation.run(formData, field);
-	}
-
-	function showErrors(field: string) {
-		return validationResult.isTested(field) && (errors[field]?.length ?? 0) > 0;
-	}
+	let pinned = $state<File | null>(null);
+	const form = formValidation(validation, () => formData);
 </script>
 
-<form
-	method="POST"
-	enctype="multipart/form-data"
-	onsubmit={handleSubmit}
-	class="flex flex-col space-y-4"
->
-	<div class="flex flex-col justify-between space-y-6 lg:max-h-128 lg:flex-row lg:space-x-6">
-		<fieldset class="flex flex-col space-y-6 border-0 p-0">
-			<!-- Description field -->
-			<div class="flex flex-col space-y-2">
-				<span class="flex h-12 flex-row items-center justify-between">
-					<label for="description" class="text-s mb-1 font-medium">
-						{$_('new_expense.form.description.label')}
-					</label>
+<UnsavedChanges data={() => formData} {submit} />
 
-					{#if showErrors('description')}
-						<span
-							class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
-						>
-							<span>{$_(errors.description![0])}</span>
-							<CircleAlert class="size-4" />
-						</span>
-					{/if}
-				</span>
-
-				<input
-					class={[
-						'h-[2.5em] border-0 bg-base-300 inset-shadow-sm dark:bg-dark-base-300',
-						showErrors('description') && 'border-2 border-red-500'
-					]}
-					id="description"
-					type="text"
+<ReceiptSplit bind:file={pinned}>
+	<form onsubmit={submit.onsubmit} class="@container flex flex-col gap-8">
+		<div class="grid gap-6 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+			<div class="flex flex-col gap-6">
+				<TextField
 					name="description"
-					onblur={onBlur}
+					label={$_('new_expense.form.description.label')}
+					help={$_('new_expense.form.description.help')}
+					{form}
 					bind:value={formData.description}
 				/>
-				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
-					{$_('new_expense.form.description.help')}
-				</span>
-			</div>
-			<div class="flex flex-col space-y-2">
-				<span class="flex h-12 flex-row items-center justify-between">
-					<label for="date" class="text-s mb-1 font-medium">
-						{$_('new_expense.form.date.label')}
-					</label>
-
-					{#if showErrors('expense-date')}
-						<span
-							class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
-						>
-							<span>{$_(errors['expense-date']![0])}</span>
-							<CircleAlert class="size-4" />
-						</span>
-					{/if}
-				</span>
-
-				<input type="hidden" name="expense-date" value={formData.date?.toString() ?? ''} />
-				<DatePicker
-					bind:value={formData.date}
+				<DateField
+					name="expense-date"
+					label={$_('new_expense.form.date.label')}
+					help={$_('new_expense.form.date.help')}
 					maxValue={today(getLocalTimeZone())}
-					invalid={showErrors('expense-date')}
-					errors={errors['expense-date']}
-					onBlur={onDateBlur}
+					{form}
+					bind:value={formData.date}
 				/>
-
-				<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
-					{$_('new_expense.form.date.help')}
-				</span>
 			</div>
-		</fieldset>
 
-		<fieldset class="flex w-full flex-col p-0">
-			<span class="flex h-12 flex-row items-center justify-between">
-				<span class="texts mb-1 font-medium">
-					{$_('new_expense.form.receipts.label')}
-				</span>
+			<Field
+				label={$_('new_expense.form.receipts.label')}
+				for="files"
+				error={form.errorFor('files')}
+			>
+				<FileInput bind:files={formData.files} bind:pinned invalid={form.showErrors('files')} />
+			</Field>
+		</div>
 
-				{#if showErrors('files')}
-					<span
-						class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase"
-					>
-						<span>{$_(errors.files![0])}</span>
-						<CircleAlert class="size-4" />
-					</span>
-				{/if}
-			</span>
-			<div class={['flex flex-1', showErrors('files') && 'border-2 border-red-500']}>
-				<FileInput bind:files={formData.files} />
-			</div>
-		</fieldset>
-	</div>
-
-	<fieldset class="flex flex-col space-y-2 border-0 p-0">
-		<legend class="text-s mb-1 flex flex-row items-center font-medium">
-			{$_('new_expense.form.expense_parts.label')}
-		</legend>
-
-		<span class="text-sm text-base-subtle dark:text-dark-base-subtle">
-			{$_('new_expense.form.expense_parts.help')}
-		</span>
-
-		<!--   Expense parts     -->
-		<ExpenseParts
-			bind:parts={formData.parts}
-			bind:budgetUsage={formData.budgetUsage}
-			{errors}
-			{warnings}
-			{showErrors}
-			onValidate={validateField}
-			addPartPrompt={$_('new_expense.form.add_part')}
-		/>
-
-		<input class="hidden" />
-	</fieldset>
-
-	<div class="mx-auto flex w-full flex-row justify-between">
-		<button type="button" class="cursor-pointer bg-base-300 p-4 dark:bg-dark-base-300">
-			{$_('cancel')}
-		</button>
-		<button
-			type="submit"
-			class="flex w-72 cursor-pointer bg-money-green-600 p-4 text-dark-base-text hover:bg-money-green-500"
+		<Section
+			title={$_('new_expense.form.expense_parts.label')}
+			description={$_('new_expense.form.expense_parts.help')}
 		>
-			{#if submitting}
-				<CashSpinner />
-			{:else}
-				<BanknoteArrowUp class="m-2 my-auto" />
-				{$_('new_expense.form.submit')}
-			{/if}
-		</button>
-	</div>
-</form>
+			<ExpenseParts
+				bind:parts={formData.parts}
+				bind:budgetUsage={formData.budgetUsage}
+				errorFor={form.errorFor}
+				onValidate={form.validate}
+				addPartPrompt={$_('new_expense.form.add_part')}
+			/>
+		</Section>
+
+		<FormActions
+			cancelHref="/claims"
+			submitLabel={$_('new_expense.form.submit')}
+			submitting={submit.submitting}
+		/>
+	</form>
+</ReceiptSplit>

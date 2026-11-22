@@ -1,37 +1,52 @@
+<script lang="ts" module>
+	import type { PartCreateUpdate } from '#lib/api/types.ts';
+	import { ZERO } from '#lib/money.ts';
+
+	export const newPart = (): PartCreateUpdate => ({
+		cost_centre: '',
+		secondary_cost_centre: '',
+		budget_line: '',
+		amount: ZERO
+	});
+
+	/** The form parts for editing a claim's saved parts. */
+	export const editableParts = (parts: PartCreateUpdate[]): PartCreateUpdate[] =>
+		parts.length > 0
+			? parts.map(({ cost_centre, secondary_cost_centre, budget_line, amount }) => ({
+					cost_centre,
+					secondary_cost_centre,
+					budget_line,
+					amount
+				}))
+			: [newPart()];
+</script>
+
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { onMount } from 'svelte';
-	import { AlertTriangle, CircleAlert, Plus, TriangleAlert, X } from '@lucide/svelte';
-	import ComboBox from '#lib/components/ComboBox.svelte';
+	import { onMount, tick } from 'svelte';
+	import { CircleAlert, Plus, TriangleAlert, X } from '@lucide/svelte';
 	import AmountInput from '#lib/components/AmountInput.svelte';
 	import type { BudgetLine, CostCentre, SecondaryCostCentre } from '#lib/api/types.ts';
-	import { budget } from '#lib/stores/budget.svelte.ts';
-	import type { PartCreateUpdate } from '#lib/api/types.ts';
-	import { ZERO, dineroFromDecimal, dineroFromFloat, sumDinero } from '#lib/money.ts';
-	import { SEK, subtract } from 'dinero.js';
-	import { BUDGET_USAGE_FIELD, sameBudgetLine, type BudgetLineUsage } from '#lib/budgetUsage.ts';
-
+	import { budget } from '#lib/stores/budget.ts';
+	import { dineroFromDecimal, dineroFromFloat, formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import { SEK, isNegative, multiply, subtract } from 'dinero.js';
+	import {
+		BUDGET_USAGE_FIELD,
+		budgetLineRemaining,
+		sameBudgetLine,
+		type BudgetLineUsage
+	} from '#lib/budgetUsage.ts';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { api } from '#lib/api/index.ts';
 	import { logger } from '#lib/logger.ts';
 	import { fade } from 'svelte/transition';
-
-	function newPart(): PartCreateUpdate {
-		return {
-			cost_centre: '',
-			secondary_cost_centre: '',
-			budget_line: '',
-			amount: ZERO
-		};
-	}
+	import { Button, Combobox } from '#lib/components/ui/index.ts';
 
 	type Props = {
 		parts: PartCreateUpdate[];
 		// The budget usage of each part's budget line, for the validation suite
 		budgetUsage: (BudgetLineUsage | null)[];
-		errors: Record<string, string[]>;
-		warnings: Record<string, string[]>;
-		showErrors: (field: string) => boolean;
+		errorFor: (field: string) => string | null;
 		onValidate: (field: string) => void;
 		addPartPrompt?: string;
 	};
@@ -39,9 +54,7 @@
 	let {
 		parts = $bindable(),
 		budgetUsage = $bindable(),
-		errors,
-		warnings,
-		showErrors,
+		errorFor,
 		onValidate,
 		addPartPrompt
 	}: Props = $props();
@@ -52,12 +65,16 @@
 	// The parts as they were when the form was opened. When updating a claim,
 	// these are already included in the budget lines' uploaded amounts.
 	let initialParts: PartCreateUpdate[] = [];
+	// Parts whose options are loading; -1 while the cost centres load
+	const loading = new SvelteSet<number>();
+	const isLoading = (i: number) => loading.has(i) || loading.has(-1);
 
 	onMount(async () => {
 		initialParts = parts.map((part) => ({ ...part }));
 
+		budget.preload();
 		loading.add(-1);
-		costCentres = await budget.costCentres.list().then((res) => res.filter((cc) => cc.active));
+		costCentres = await budget.costCentres().then((res) => res.filter((cc) => cc.active));
 		loading.delete(-1);
 
 		secondaryCostCentresByPart = parts.map(() => []);
@@ -71,13 +88,9 @@
 
 	async function loadSecondaryCostCentres(i: number) {
 		const costCentre = costCentres.find((cc) => cc.name === parts[i].cost_centre);
-		if (costCentre?.id != null) {
-			secondaryCostCentresByPart[i] = (
-				(await budget.secondaryCostCentres.get(costCentre)) ?? []
-			).filter((scc) => scc.cost_centre_id === costCentre.id && scc.active);
-		} else {
-			secondaryCostCentresByPart[i] = [];
-		}
+		secondaryCostCentresByPart[i] = costCentre
+			? (await budget.secondaryCostCentres(costCentre)).filter((scc) => scc.active)
+			: [];
 
 		await loadBudgetLines(i);
 	}
@@ -86,31 +99,27 @@
 		const secondaryCostCentre = secondaryCostCentresByPart[i]?.find(
 			(scc) => scc.name === parts[i].secondary_cost_centre
 		);
-		if (secondaryCostCentre?.id != null) {
-			const budgetLines = (await budget.budgetLines.get(secondaryCostCentre)) ?? [];
-			budgetLinesByPart[i] = budgetLines.filter((bl) => bl.active);
-		} else {
-			// Fetch all
-			budgetLinesByPart[i] = [];
-		}
+		budgetLinesByPart[i] = secondaryCostCentre
+			? (await budget.budgetLines(secondaryCostCentre)).filter((bl) => bl.active)
+			: [];
 	}
 
-	function onCostCentreChange(i: number, value: string) {
-		loading.add(i);
+	async function onCostCentreChange(i: number, value: string) {
 		parts[i].cost_centre = value;
 		parts[i].secondary_cost_centre = '';
 		parts[i].budget_line = '';
 		budgetUsage[i] = null;
-		loadSecondaryCostCentres(i);
+		loading.add(i);
+		await loadSecondaryCostCentres(i);
 		loading.delete(i);
 	}
 
-	function onSecondaryCostCentreChange(i: number, value: string) {
-		loading.add(i);
+	async function onSecondaryCostCentreChange(i: number, value: string) {
 		parts[i].secondary_cost_centre = value;
 		parts[i].budget_line = '';
 		budgetUsage[i] = null;
-		loadBudgetLines(i);
+		loading.add(i);
+		await loadBudgetLines(i);
 		loading.delete(i);
 	}
 
@@ -144,144 +153,173 @@
 		onValidate(BUDGET_USAGE_FIELD);
 	}
 
-	function addPart() {
+	const focusPart = (i: number) => document.getElementById(`part-${i}-costcenter`)?.focus();
+
+	async function addPart() {
 		parts = [...parts, newPart()];
 		secondaryCostCentresByPart = [...secondaryCostCentresByPart, []];
 		budgetLinesByPart = [...budgetLinesByPart, []];
 		budgetUsage = [...budgetUsage, null];
-		loadBudgetLines(parts.length - 1);
+		await tick();
+		focusPart(parts.length - 1);
 	}
 
-	function removePart(i: number) {
+	async function removePart(i: number) {
 		parts = parts.filter((_, j) => j !== i);
 		secondaryCostCentresByPart = secondaryCostCentresByPart.filter((_, j) => j !== i);
 		budgetLinesByPart = budgetLinesByPart.filter((_, j) => j !== i);
 		budgetUsage = budgetUsage.filter((_, j) => j !== i);
+		await tick();
+		focusPart(Math.min(i, parts.length - 1));
 	}
-
-	// A set of currently loading parts
-	let loading: SvelteSet<number> = $state(new SvelteSet<number>());
 </script>
 
 {#snippet fieldError(field: string, extra = '')}
-	{#if showErrors(field)}
-		<span
-			class="flex flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-red-500 uppercase {extra}"
-		>
-			<span>{$_(errors[field]![0])}</span>
-			<CircleAlert class="size-4" />
+	{@const message = errorFor(field)}
+	{#if message}
+		<span class="flex items-center gap-1 text-xs font-medium text-danger {extra}">
+			<CircleAlert class="size-3.5 shrink-0" />
+			{message}
 		</span>
 	{/if}
 {/snippet}
 
-<div class="flex flex-col">
-	{#each parts as part, i}
-		<div class="flex bg-base-300 p-4 md:justify-between dark:bg-dark-base-300">
-			<div
-				class="flex w-full flex-wrap justify-between border-b border-base-500 lg:flex-row dark:border-dark-base-200"
-			>
-				<div class="flex flex-col space-y-1">
-					{#if i === 0}<span class="mb-1 text-sm font-medium"
-							>{$_('new_expense.form.expense_parts.cost_center_label')}</span
-						>{/if}
-					<ComboBox
-						name="part-{i}-costcenter"
-						placeholder={$_('new_expense.form.expense_parts.cost_center_placeholder')}
-						items={costCentres.map((cc) => cc.name)}
-						bind:value={part.cost_centre}
-						onchange={(v) => onCostCentreChange(i, v)}
-						onblur={() => onValidate(`part-${i}-costcenter`)}
-						loading={loading.has(i) || loading.has(-1)}
-					/>
-					{@render fieldError(`part-${i}-costcenter`)}
-				</div>
-				<div class="flex flex-col space-y-1">
-					{#if i === 0}<span class="mb-1 text-sm font-medium"
-							>{$_('new_expense.form.expense_parts.secondary_cost_center_label')}</span
-						>{/if}
-					<ComboBox
-						name="part-{i}-secondarycostcenter"
-						placeholder={$_('new_expense.form.expense_parts.secondary_cost_center_placeholder')}
-						items={(secondaryCostCentresByPart[i] ?? []).map((scc) => scc.name)}
-						bind:value={part.secondary_cost_centre}
-						onchange={(v) => onSecondaryCostCentreChange(i, v)}
-						onblur={() => onValidate(`part-${i}-secondarycostcenter`)}
-						loading={loading.has(i) || loading.has(-1)}
-						locked={part.cost_centre === ''}
-					/>
-					{@render fieldError(`part-${i}-secondarycostcenter`)}
-				</div>
-				<div class="flex flex-col space-y-1">
-					{#if i === 0}<span class="mb-1 text-sm font-medium"
-							>{$_('new_expense.form.expense_parts.budget_line_label')}</span
-						>{/if}
-					<ComboBox
-						name="part-{i}-budgetline"
-						placeholder={$_('new_expense.form.expense_parts.budget_line_placeholder')}
-						items={(budgetLinesByPart[i] ?? []).map((bl) => bl.name)}
-						bind:value={part.budget_line}
-						onchange={(v) => onBudgetLineChange(i, v)}
-						onblur={() => onValidate(`part-${i}-budgetline`)}
-						loading={loading.has(i) || loading.has(-1)}
-						locked={part.secondary_cost_centre === ''}
-					/>
-					{#if budgetUsage[i] && warnings[`part-${i}-budgetline`]?.length}
-						<div
-							in:fade={{ duration: 150 }}
-							class="flex w-0 min-w-full animate-pulse flex-row items-center gap-1 text-[8pt] font-medium tracking-wide text-amber-400 uppercase"
-						>
-							<TriangleAlert class="size-4 shrink-0" />
-							<p class="text-xs font-medium">
-								{$_(warnings[`part-${i}-budgetline`]![0])}
-							</p>
-						</div>
-					{/if}
+{#snippet remove(i: number, extra = '')}
+	<Button
+		variant="ghost"
+		size="icon"
+		aria-label={$_('remove')}
+		onclick={() => removePart(i)}
+		class={['shrink-0 text-muted-foreground', extra]}
+	>
+		<X />
+	</Button>
+{/snippet}
 
-					{@render fieldError(`part-${i}-budgetline`)}
-				</div>
-				<div class="flex flex-col space-y-1">
-					{#if i === 0}<span class="mb-1 text-right text-sm font-medium"
-							>{$_('new_expense.form.expense_parts.amount_label')}</span
-						>{/if}
-					<div class="flex bg-base-300 dark:bg-dark-base-300">
-						<AmountInput
-							name="part-{i}-amount"
-							bind:value={
-								() => part.amount,
-								(v) => {
-									part.amount = v ?? ZERO;
-									onValidate(BUDGET_USAGE_FIELD);
-								}
-							}
-							suffix="SEK"
-						/>
-					</div>
-					{@render fieldError(`part-${i}-amount`, 'justify-end')}
-				</div>
-				<button
-					type="button"
-					onclick={() => removePart(i)}
-					class="ml-4 text-base-subtle transition-all hover:scale-125 hover:cursor-pointer dark:text-dark-base-subtle"
+{#snippet label(i: number, field: string, text: string, extra = '')}
+	<label for="part-{i}-{field}" class={['text-sm font-medium', i > 0 && '@3xl:sr-only', extra]}>
+		{text}
+	</label>
+{/snippet}
+
+{#snippet budgetField(
+	i: number,
+	key: 'cost_centre' | 'secondary_cost_centre' | 'budget_line',
+	field: string,
+	text: string,
+	items: string[],
+	onchange: (i: number, value: string) => void,
+	locked = false
+)}
+	<div class="flex min-w-0 flex-col gap-1.5">
+		{@render label(i, field, $_(`new_expense.form.expense_parts.${text}_label`))}
+		<Combobox
+			name="part-{i}-{field}"
+			id="part-{i}-{field}"
+			placeholder={$_(`new_expense.form.expense_parts.${text}_placeholder`)}
+			{items}
+			bind:value={parts[i][key]}
+			onchange={(v) => onchange(i, v)}
+			onblur={() => onValidate(`part-${i}-${field}`)}
+			loading={isLoading(i)}
+			{locked}
+		/>
+		{#if key === 'budget_line' && budgetUsage[i]}
+			{@const remaining = budgetLineRemaining(parts, budgetUsage, i)!}
+			{#if isNegative(remaining)}
+				<p
+					in:fade={{ duration: 150 }}
+					class="flex items-center gap-1 text-xs font-medium text-warning-soft-foreground"
 				>
-					{#if i > 0}
-						<X />
-					{/if}
-				</button>
+					<TriangleAlert class="size-3.5 shrink-0" />
+					{$_('budget_line_exceeded_by', {
+						values: { amount: formatDineroAmount(multiply(remaining, -1)) }
+					})}
+				</p>
+			{:else}
+				<p in:fade={{ duration: 150 }} class="text-xs text-muted-foreground tabular-nums">
+					{$_('budget_line_left', { values: { amount: formatDineroAmount(remaining) } })}
+				</p>
+			{/if}
+		{/if}
+		{@render fieldError(`part-${i}-${field}`)}
+	</div>
+{/snippet}
+
+<div class="@container flex flex-col gap-4">
+	{#each parts as part, i}
+		<div
+			class={[
+				'grid gap-3 @lg:grid-cols-2 @3xl:items-start',
+				parts.length > 1
+					? '@3xl:grid-cols-[repeat(3,minmax(0,1fr))_10rem_2.25rem]'
+					: '@3xl:grid-cols-[repeat(3,minmax(0,1fr))_10rem]',
+				i > 0 && 'border-t border-border pt-4 @3xl:border-0 @3xl:pt-0'
+			]}
+		>
+			{@render budgetField(
+				i,
+				'cost_centre',
+				'costcenter',
+				'cost_center',
+				costCentres.map((cc) => cc.name),
+				onCostCentreChange
+			)}
+			{@render budgetField(
+				i,
+				'secondary_cost_centre',
+				'secondarycostcenter',
+				'secondary_cost_center',
+				(secondaryCostCentresByPart[i] ?? []).map((scc) => scc.name),
+				onSecondaryCostCentreChange,
+				part.cost_centre === ''
+			)}
+			{@render budgetField(
+				i,
+				'budget_line',
+				'budgetline',
+				'budget_line',
+				(budgetLinesByPart[i] ?? []).map((bl) => bl.name),
+				onBudgetLineChange,
+				part.secondary_cost_centre === ''
+			)}
+			<div class="flex min-w-0 flex-col gap-1.5">
+				{@render label(
+					i,
+					'amount',
+					$_('new_expense.form.expense_parts.amount_label'),
+					'@3xl:text-right'
+				)}
+				<div class="flex gap-2">
+					<AmountInput
+						name="part-{i}-amount"
+						id="part-{i}-amount"
+						bind:value={
+							() => part.amount,
+							(v) => {
+								part.amount = v ?? ZERO;
+								onValidate(BUDGET_USAGE_FIELD);
+							}
+						}
+						suffix="SEK"
+					/>
+					{#if parts.length > 1}{@render remove(i, '@3xl:hidden')}{/if}
+				</div>
+				{@render fieldError(`part-${i}-amount`, '@3xl:justify-end')}
 			</div>
+			{#if parts.length > 1}
+				<div class={['hidden justify-end @3xl:flex', i === 0 && '@3xl:pt-6.5']}>
+					{@render remove(i)}
+				</div>
+			{/if}
 		</div>
 	{/each}
-	<button
-		type="button"
+	<Button
+		variant="secondary"
 		onclick={addPart}
-		class="group mt-2 flex cursor-pointer flex-col items-center justify-center gap-1 border-0 bg-base-300 py-3 dark:bg-dark-base-300"
+		class={['border-dashed text-muted-foreground', parts.length > 1 && '@3xl:mr-12']}
 	>
-		<span
-			class="flex size-10 items-center rounded-full transition-all group-hover:bg-base-100 dark:group-hover:bg-dark-base-100"
-		>
-			<Plus class="m-auto" />
-		</span>
-		<span class="text-center text-xs font-medium text-base-subtle dark:text-dark-base-subtle">
-			{addPartPrompt}
-		</span>
-	</button>
+		<Plus />
+		{addPartPrompt}
+	</Button>
 </div>
