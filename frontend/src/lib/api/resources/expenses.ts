@@ -1,129 +1,44 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type {
 	AccountPayload,
 	Comment,
-	DescriptionSearch,
 	Expense,
 	ExpenseCreate,
 	ExpenseFilter,
 	ExpenseOrdering,
-	ExpensePart,
 	ExpenseUpdate,
-	PaginatedResponse,
-	PartCreateUpdate
+	PaginatedResponse
 } from '#lib/api/types.ts';
-import type { ListResponse } from '#lib/api/client.ts';
-import { toDecimal } from 'dinero.js';
-import { type APIExpense, parseExpense } from '#lib/api/parse.ts';
+import { type APIExpense, claimFormData, parseExpense } from '#lib/api/parse.ts';
 
 export class ExpensesAPI {
-	private apiClient: ApiClient;
-
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
+	constructor(private apiClient: ApiClient) {}
 
 	async get(id: number): Promise<Expense> {
-		const expense = await this.apiClient.get<APIExpense>(`/expenses/${id}`);
-
-		return parseExpense(expense);
+		return parseExpense(await this.apiClient.get<APIExpense>(`/expenses/${id}`));
 	}
 
-	async list(
+	list(
 		page: number,
 		perPage: number,
 		filter?: ExpenseFilter,
 		ordering?: ExpenseOrdering[]
 	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.get<ListResponse<APIExpense>>('expenses/', {
-			page: page,
-			per_page: perPage,
-			...filter,
-			...(ordering ? { sorting: ordering.join(',') } : {})
-		});
-
-		return {
-			data: res.data.map(parseExpense),
-			pagination: {
-				total: res.pagination.total,
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				totalPages: res.pagination.total_pages
-			}
-		};
-	}
-
-	async search(
-		page: number,
-		perPage: number,
-		filter?: ExpenseFilter,
-		ordering?: ExpenseOrdering[],
-		searchFields?: DescriptionSearch
-	): Promise<PaginatedResponse<Expense>> {
-		const res = await this.apiClient.query<ListResponse<APIExpense>>(
-			'expenses/search/',
-			{
-				query: { ...filter, ...searchFields, ...(ordering ? { sorting: ordering.join(',') } : {}) }
-			},
-			'application/json',
-			{
-				page: page,
-				per_page: perPage
-			}
+		return this.apiClient.list(
+			'expenses/',
+			{ page, per_page: perPage, ...filter, sorting: ordering?.join(',') },
+			parseExpense
 		);
-
-		return {
-			data: res.data.map(parseExpense),
-			pagination: {
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				total: res.pagination.total,
-				totalPages: res.pagination.total_pages
-			}
-		};
 	}
 
 	async create(data: ExpenseCreate): Promise<Expense> {
-		const body = new FormData();
-		body.append('description', data.description);
-		body.append('expense_date', data.expense_date);
-
-		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
-
-		const parts: PartData[] = data.parts.map((part) => ({
-			...part,
-			amount: toDecimal(part.amount)
-		}));
-
-		body.append('parts', JSON.stringify(parts));
-		for (const file of data.files) {
-			body.append('files', file, file.name);
-		}
-
-		return parseExpense(await this.apiClient.post<APIExpense>('expenses/', body));
+		return parseExpense(await this.apiClient.post<APIExpense>('expenses/', claimFormData(data)));
 	}
 
 	async update(id: number, data: ExpenseUpdate): Promise<Expense> {
-		const body = new FormData();
-		if (data.description !== undefined) body.append('description', data.description);
-		if (data.expense_date !== undefined) body.append('expense_date', data.expense_date);
-
-		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
-		if (data.parts !== undefined) {
-			const parts: PartData[] = data.parts.map((part) => ({
-				...part,
-				amount: toDecimal(part.amount)
-			}));
-			body.append('parts', JSON.stringify(parts));
-		}
-
-		if (data.delete_files !== undefined)
-			body.append('delete_files', JSON.stringify(data.delete_files));
-		for (const file of data.files ?? []) {
-			body.append('files', file, file.name);
-		}
-
-		return parseExpense(await this.apiClient.patch<APIExpense>(`/expenses/${id}/`, body));
+		return parseExpense(
+			await this.apiClient.patch<APIExpense>(`/expenses/${id}/`, claimFormData(data))
+		);
 	}
 
 	delete(id: number) {

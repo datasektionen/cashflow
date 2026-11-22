@@ -7,37 +7,37 @@ const FORMAT = new Intl.NumberFormat('sv-SE', {
 	maximumFractionDigits: 2
 });
 
-/** Formats a decimal amount string or number as e.g. "1 234,56". */
-export function formatAmount(amount: string | number): string {
-	return `${FORMAT.format(Number(amount))}`;
+const WHOLE = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 });
+
+/** Formats an amount rounded to whole kronor, e.g. "1 235". */
+export function formatWholeAmount(amount: string | number): string {
+	return WHOLE.format(Number(amount));
 }
 
-/**
- * Formats a Dinero amount for display, e.g. "1 234,56".
- *
- * @example
- * formatDineroAmount(dinero({ amount: 123456, currency: SEK })); // "1 234,56"
- */
+/** Formats kronor with the unit, showing öre only when there are any: "1 235 kr", "62,50 kr". */
+export function formatKronor(amount: string | number): string {
+	const rounded = Math.round(Number(amount) * 100) / 100;
+	return `${Number.isInteger(rounded) ? formatWholeAmount(rounded) : formatAmount(rounded)}\u00a0kr`;
+}
+
+/** Formats a decimal amount string or number as e.g. "1 234,56". */
+export function formatAmount(amount: string | number): string {
+	return FORMAT.format(Number(amount));
+}
+
+/** Formats a Dinero amount for display, e.g. "1 234,56". */
 export function formatDineroAmount(dineroAmount: Dinero<number, 'SEK'>): string {
 	return toDecimal(dineroAmount, ({ value }) => formatAmount(value));
 }
 
-/*
- * Creates a dinero object from a float value
- */
+/** Creates a dinero object from a float value. */
 export function dineroFromFloat(value: number, currency: typeof SEK): Dinero<number, 'SEK'> {
 	const factor = currency.base ** currency.exponent;
 	const amount = Math.round(factor * value);
 	return dinero({ amount, currency });
 }
 
-/**
- * Creates a dinero object from a decimal string (e.g. from a Django DecimalField)
- * without going through floating point.
- *
- * @example
- * dineroFromDecimal('1234.56', SEK); // dinero({ amount: 123456, currency: SEK })
- */
+/** Creates a dinero object from a decimal string without going through floating point. */
 export function dineroFromDecimal(value: string, currency: typeof SEK): Dinero<number, 'SEK'> {
 	const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value.trim());
 	if (!match) {
@@ -54,24 +54,11 @@ export function dineroFromDecimal(value: string, currency: typeof SEK): Dinero<n
 	return dinero({ amount, currency });
 }
 
-/**
- * Sums the amount of several dinero objects. Uses the `add` function from `dinero.js` to avoid floating point errors.
- *
- * @example
- * sumDinero([dinero({ amount: 100, currency: SEK }), dinero({ amount: 200, currency: SEK })]); // dinero({ amount: 300, currency: SEK })
- */
 export function sumDinero(amounts: Dinero<number, 'SEK'>[]): Dinero<number, 'SEK'> {
-	return amounts.reduce((sum, amount) => {
-		return add(sum, amount);
-	}, ZERO);
+	return amounts.reduce((sum, amount) => add(sum, amount), ZERO);
 }
 
-/**
- * The total amount of a claim, i.e. the sum of its parts.
- *
- * @example
- * claimTotal(expense); // dinero({ amount: 30000, currency: SEK })
- */
+/** The sum of a claim's parts. */
 export function claimTotal(claim: {
 	parts: { amount: Dinero<number, 'SEK'> }[];
 }): Dinero<number, 'SEK'> {

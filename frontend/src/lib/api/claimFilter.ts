@@ -1,6 +1,6 @@
 import type { ClaimFilter, InvoiceFilter, TristateFilter } from '#lib/api/types.ts';
 
-const TRISTATE_KEYS = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
+export const TRISTATE_KEYS = ['attested', 'confirmed', 'paid', 'accounted', 'flagged'] as const;
 
 function tristateParam(url: URL, key: string): TristateFilter | undefined {
 	const value = url.searchParams.get(key);

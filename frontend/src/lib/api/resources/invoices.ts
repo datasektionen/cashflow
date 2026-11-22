@@ -1,119 +1,45 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type {
 	AccountPayload,
-	ClaimFilter,
 	Comment,
-	DescriptionSearch,
 	Invoice,
 	InvoiceCreate,
 	InvoiceFilter,
 	InvoiceOrdering,
 	InvoiceUpdate,
-	PaginatedResponse,
-	PartCreateUpdate
+	PaginatedResponse
 } from '#lib/api/types.ts';
-import { toDecimal } from 'dinero.js';
-import { type APIInvoice, parseInvoice } from '#lib/api/parse.ts';
-
-// The response format from DRF
-type RawResponse = {
-	data: APIInvoice[];
-	pagination: {
-		total: number;
-		page: number;
-		per_page: number;
-		total_pages: number;
-	};
-};
+import { type APIInvoice, claimFormData, parseInvoice } from '#lib/api/parse.ts';
 
 export class InvoicesAPI {
-	private apiClient: ApiClient;
-
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
+	constructor(private apiClient: ApiClient) {}
 
 	async get(id: number): Promise<Invoice> {
 		return parseInvoice(await this.apiClient.get<APIInvoice>(`invoices/${id}`));
 	}
 
-	async list(
+	list(
 		page: number,
 		perPage: number,
 		filter?: InvoiceFilter,
 		ordering?: InvoiceOrdering[]
 	): Promise<PaginatedResponse<Invoice>> {
-		const res = await this.apiClient.get<RawResponse>('invoices/', {
-			page,
-			per_page: perPage,
-			...filter,
-			...(ordering ? { sorting: ordering.join(',') } : {})
-		});
-
-		return {
-			data: res.data.map(parseInvoice),
-			pagination: {
-				total: res.pagination.total,
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				totalPages: res.pagination.total_pages
-			}
-		};
+		return this.apiClient.list(
+			'invoices/',
+			{ page, per_page: perPage, ...filter, sorting: ordering?.join(',') },
+			parseInvoice
+		);
 	}
 
-	async search(
-		page: number,
-		perPage: number,
-		filter?: InvoiceFilter,
-		ordering?: InvoiceOrdering[],
-		searchFields?: DescriptionSearch
-	): Promise<PaginatedResponse<Invoice>> {
-		const res = await this.apiClient.query<RawResponse>(
-			'invoices/search/',
-			{
-				query: { ...filter, ...searchFields },
-				...(ordering ? { sorting: ordering.join(',') } : {})
-			},
-			'application/json',
-			{
-				page: page,
-				per_page: perPage
-			}
-		);
-
-		return {
-			data: res.data.map(parseInvoice),
-			pagination: {
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				total: res.pagination.total,
-				totalPages: res.pagination.total_pages
-			}
-		};
+	async create(data: InvoiceCreate): Promise<Invoice> {
+		const fields = { ...data, verification: data.verification || undefined };
+		return parseInvoice(await this.apiClient.post<APIInvoice>('invoices/', claimFormData(fields)));
 	}
 
 	async update(id: number, data: InvoiceUpdate): Promise<Invoice> {
-		const body = new FormData();
-		if (data.description !== undefined) body.append('description', data.description);
-		if (data.invoice_date !== undefined) body.append('invoice_date', data.invoice_date);
-		if (data.due_date !== undefined) body.append('due_date', data.due_date);
-
-		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
-		if (data.parts !== undefined) {
-			const parts: PartData[] = data.parts.map((part) => ({
-				...part,
-				amount: toDecimal(part.amount)
-			}));
-			body.append('parts', JSON.stringify(parts));
-		}
-
-		if (data.delete_files !== undefined)
-			body.append('delete_files', JSON.stringify(data.delete_files));
-		for (const file of data.files ?? []) {
-			body.append('files', file, file.name);
-		}
-
-		return parseInvoice(await this.apiClient.patch<APIInvoice>(`/invoices/${id}/`, body));
+		return parseInvoice(
+			await this.apiClient.patch<APIInvoice>(`/invoices/${id}/`, claimFormData(data))
+		);
 	}
 
 	delete(id: number) {
@@ -122,14 +48,6 @@ export class InvoicesAPI {
 
 	comment(id: number, content: string) {
 		return this.apiClient.post<Comment>(`invoices/${id}/comments/`, { content });
-	}
-
-	confirm(id: number) {
-		return this.apiClient.post<void>(`invoices/${id}/confirm/`, {});
-	}
-
-	unconfirm(id: number) {
-		return this.apiClient.post<void>(`invoices/${id}/unconfirm/`, {});
 	}
 
 	attestPart(partId: number) {
@@ -146,28 +64,5 @@ export class InvoicesAPI {
 
 	async account(id: number, payload: AccountPayload): Promise<Invoice> {
 		return parseInvoice(await this.apiClient.post<APIInvoice>(`invoices/${id}/account/`, payload));
-	}
-
-	async create(data: InvoiceCreate): Promise<Invoice> {
-		const body = new FormData();
-		body.append('description', data.description);
-		body.append('invoice_date', data.invoice_date);
-		body.append('invoice_number', data.invoice_number);
-		body.append('due_date', data.due_date);
-
-		type PartData = Omit<PartCreateUpdate, 'amount'> & { amount: string };
-
-		const parts: PartData[] = data.parts.map((part) => ({
-			...part,
-			amount: toDecimal(part.amount)
-		}));
-
-		body.append('parts', JSON.stringify(parts));
-		if (data.accounted !== undefined) body.append('accounted', String(data.accounted));
-		if (data.verification) body.append('verification', data.verification);
-		for (const file of data.files) {
-			body.append('files', file, file.name);
-		}
-		return parseInvoice(await this.apiClient.post<APIInvoice>('invoices/', body));
 	}
 }

@@ -1,17 +1,14 @@
 import { logger } from '#lib/logger.ts';
 import type { ErrorResponse } from '#lib/api/errors.ts';
+import type { PaginatedResponse } from '#lib/api/types.ts';
 
-/**
- * Base API client class, gets subclassed for specific resources.
- */
+type Params = Record<string, string | number | boolean | undefined>;
+
 export class ApiClient {
-	private readonly apiUrl: string;
-	private readonly fetch: typeof globalThis.fetch;
-
-	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
-		this.apiUrl = apiUrl;
-		this.fetch = fetch;
-	}
+	constructor(
+		private readonly apiUrl: string,
+		private readonly fetch: typeof globalThis.fetch
+	) {}
 
 	private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		const isFormData = options.body instanceof FormData;
@@ -25,9 +22,7 @@ export class ApiClient {
 			response = await this.fetch(`${this.apiUrl}${path.replace(/^\/+/, '')}`, {
 				credentials: 'include',
 				...options,
-				// FormData and JSON data requires different headers
-				// If we pass a Content-Type header with FormData, we will get errors that can be hard
-				// to diagnose
+				// FormData must not get a Content-Type header
 				headers: {
 					...(isFormData ? {} : { 'Content-Type': 'application/json' }),
 					...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
@@ -77,9 +72,7 @@ export class ApiClient {
 		return response.json();
 	}
 
-	private static queryString(
-		params?: Record<string, string | number | boolean | undefined>
-	): string {
+	private static queryString(params?: Params): string {
 		return params
 			? '?' +
 					new URLSearchParams(
@@ -90,54 +83,44 @@ export class ApiClient {
 			: '';
 	}
 
-	get<T>(
-		path: string,
-		params?: Record<string, string | number | boolean | undefined>,
-		options: RequestInit = {}
-	): Promise<T> {
-		return this.request<T>(`${path}${ApiClient.queryString(params)}`, {
-			...options,
-			method: 'GET'
-		});
-	}
-
-	post<T>(path: string, body: unknown, contentType?: string) {
+	private send<T>(method: string, path: string, body: unknown) {
 		return this.request<T>(path, {
-			method: 'POST',
-			body: body instanceof FormData ? body : JSON.stringify(body),
-			...(contentType && { headers: { 'Content-Type': contentType } })
+			method,
+			body: body instanceof FormData ? body : JSON.stringify(body)
 		});
 	}
 
-	query<T>(
+	get<T>(path: string, params?: Params): Promise<T> {
+		return this.request<T>(`${path}${ApiClient.queryString(params)}`, { method: 'GET' });
+	}
+
+	/** GETs a paginated endpoint and maps each item with `parse`. */
+	async list<A, T = A>(
 		path: string,
-		body: unknown,
-		contentType?: string,
-		params?: Record<string, string | number | boolean | undefined>
-	) {
-		return this.request<T>(`${path}${ApiClient.queryString(params)}`, {
-			method: 'QUERY',
-			body: body instanceof FormData ? body : JSON.stringify(body),
-			...(contentType && { headers: { 'Content-Type': contentType } })
-		});
+		params: Params,
+		parse: (item: A) => T = (item) => item as unknown as T
+	): Promise<PaginatedResponse<T>> {
+		const { data, pagination: p } = await this.get<ListResponse<A>>(path, params);
+		return {
+			data: data.map((item) => parse(item)),
+			pagination: { total: p.total, page: p.page, perPage: p.per_page, totalPages: p.total_pages }
+		};
 	}
 
-	patch<T>(path: string, body: unknown, contentType?: string) {
-		return this.request<T>(path, {
-			method: 'PATCH',
-			body: body instanceof FormData ? body : JSON.stringify(body),
-			...(contentType && { headers: { 'Content-Type': contentType } })
-		});
+	post<T>(path: string, body: unknown) {
+		return this.send<T>('POST', path, body);
+	}
+
+	patch<T>(path: string, body: unknown) {
+		return this.send<T>('PATCH', path, body);
 	}
 
 	delete<T>(path: string, body: unknown) {
-		return this.request<T>(path, {
-			method: 'DELETE',
-			body: JSON.stringify(body)
-		});
+		return this.send<T>('DELETE', path, body);
 	}
 }
-export type ListResponse<T> = {
+
+type ListResponse<T> = {
 	data: T[];
 	pagination: {
 		total: number;

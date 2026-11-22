@@ -1,16 +1,7 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 
 export class ProfilePictureAPI {
-	private client: ApiClient;
-
-	constructor(client: ApiClient) {
-		this.client = client;
-	}
-
-	async get(username: string): Promise<string | null> {
-		const pictures = await this.getMany([username]);
-		return pictures[username] ?? null;
-	}
+	constructor(private client: ApiClient) {}
 
 	getMany(usernames: string[]): Promise<Record<string, string | null>> {
 		if (usernames.length === 0) return Promise.resolve({});

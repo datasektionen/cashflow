@@ -1,9 +1,9 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type { LeaderboardEntry, PaginatedResponse } from '#lib/api/types.ts';
-import type { ListResponse } from '#lib/api/client.ts';
 import type { Dinero } from 'dinero.js';
 import {
 	type APILeaderboardEntry,
+	type APIUserLeaderboardStats,
 	type APIYearlyStatistics,
 	parseLeaderboardEntry,
 	parseYearlyStatistics
@@ -29,40 +29,26 @@ export type UserLeaderboardStats = LeaderboardEntry & {
 };
 
 export class StatsAPI {
-	private apiClient: ApiClient;
+	constructor(private apiClient: ApiClient) {}
 
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
-
-	async leaderboard(
+	leaderboard(
 		page: number,
 		perPage: number,
 		startDate?: string,
 		endDate?: string,
 		orderBy?: '-expense_total' | 'expense_total' | '-expense_count' | 'expense_count'
 	): Promise<PaginatedResponse<LeaderboardEntry>> {
-		const params = {
-			page,
-			per_page: perPage,
-			start_date: startDate,
-			end_date: endDate,
-			ordering: orderBy ? orderBy : '-expense_total'
-		};
-		const res = await this.apiClient.get<ListResponse<APILeaderboardEntry>>(
+		return this.apiClient.list(
 			'/stats/leaderboard/',
-			params
+			{
+				page,
+				per_page: perPage,
+				start_date: startDate,
+				end_date: endDate,
+				ordering: orderBy ?? '-expense_total'
+			},
+			parseLeaderboardEntry<APILeaderboardEntry>
 		);
-
-		return {
-			data: res.data.map(parseLeaderboardEntry),
-			pagination: {
-				total: res.pagination.total,
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				totalPages: res.pagination.total_pages
-			}
-		};
 	}
 
 	async yearly(year: number): Promise<YearlyStatistics> {
@@ -76,20 +62,11 @@ export class StatsAPI {
 		startDate?: string,
 		endDate?: string
 	): Promise<UserLeaderboardStats> {
-		const res = await this.apiClient.get<
-			APILeaderboardEntry & {
-				amount_rank: number;
-				count_rank: number;
-			}
-		>(`/stats/leaderboard/${encodeURIComponent(username)}/`, {
-			start_date: startDate,
-			end_date: endDate
-		});
-
-		return {
-			...parseLeaderboardEntry(res),
-			amount_rank: res.amount_rank,
-			count_rank: res.count_rank
-		};
+		return parseLeaderboardEntry(
+			await this.apiClient.get<APIUserLeaderboardStats>(
+				`/stats/leaderboard/${encodeURIComponent(username)}/`,
+				{ start_date: startDate, end_date: endDate }
+			)
+		);
 	}
 }

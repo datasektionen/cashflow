@@ -46,7 +46,7 @@ export type Expense = {
 	// Fortnox voucher (verification) number; null if not yet accounted.
 	voucher: string | null;
 	is_flagged: boolean | null;
-	parts: ExpensePart[];
+	parts: ClaimPart[];
 	files: ExpenseFile[];
 	comments: Comment[];
 	// Fortnox account to credit on the balancing voucher row.
@@ -54,9 +54,8 @@ export type Expense = {
 	recommended_credit_account: number | null;
 };
 
-export type InvoicePart = {
+export type ClaimPart = {
 	id: number;
-	invoice?: number;
 	cost_centre: string;
 	secondary_cost_centre: string;
 	budget_line: string;
@@ -68,6 +67,8 @@ export type InvoicePart = {
 	recommended_accounts: number[] | null;
 	recommended_cost_centre: string | null;
 };
+export type ExpensePart = ClaimPart;
+export type InvoicePart = ClaimPart;
 
 export type Invoice = {
 	id: number;
@@ -82,7 +83,7 @@ export type Invoice = {
 	voucher: string | null;
 	paid_by: Profile | null;
 	paid_at: string | null;
-	parts: InvoicePart[];
+	parts: ClaimPart[];
 	comments: Comment[];
 	files: ExpenseFile[];
 	// Fortnox account to credit on the balancing voucher row.
@@ -108,43 +109,19 @@ export interface ExpenseCreate {
 	files: File[];
 }
 
-export type PartCreateUpdate = {
-	cost_centre: string;
-	secondary_cost_centre: string;
-	budget_line: string;
-	amount: Dinero<number, 'SEK'>;
-};
+export type PartCreateUpdate = Pick<
+	ClaimPart,
+	'cost_centre' | 'secondary_cost_centre' | 'budget_line' | 'amount'
+>;
 
-export interface ExpenseUpdate {
+type ClaimUpdate = {
 	description?: string;
-	expense_date?: string;
 	files?: File[];
 	parts?: PartCreateUpdate[];
 	delete_files?: number[];
-}
-
-export interface InvoiceUpdate {
-	description?: string;
-	invoice_date?: string;
-	due_date?: string;
-	files?: File[];
-	parts?: PartCreateUpdate[];
-	delete_files?: number[];
-}
-
-export type ExpensePart = {
-	id: number;
-	cost_centre: string;
-	secondary_cost_centre: string;
-	budget_line: string;
-	amount: Dinero<number, 'SEK'>;
-	attested_by: Profile | null;
-	attest_date: string | null;
-	// Voucher suggestions derived from GOrdian + Fortnox.
-	// null in list responses; populated on single-claim reads.
-	recommended_accounts: number[] | null;
-	recommended_cost_centre: string | null;
 };
+export type ExpenseUpdate = ClaimUpdate & { expense_date?: string };
+export type InvoiceUpdate = ClaimUpdate & { invoice_date?: string; due_date?: string };
 
 type ClaimBase = {
 	id: number;
@@ -161,11 +138,22 @@ type ClaimBase = {
 };
 
 export type Claim =
-	| (ClaimBase & { type: 'expense'; expense_date: string; parts: ExpensePart[] })
-	| (ClaimBase & { type: 'invoice'; invoice_date: string; parts: InvoicePart[] });
+	| (ClaimBase & { type: 'expense'; expense_date: string; parts: ClaimPart[] })
+	| (ClaimBase & { type: 'invoice'; invoice_date: string; parts: ClaimPart[] });
 
 export function getClaimDate(c: Claim) {
 	return c.type === 'expense' ? c.expense_date : c.invoice_date;
+}
+
+/** Which processing steps a claim has passed. */
+export function claimProgress(claim: Claim | Expense | Invoice) {
+	if ('is_paid' in claim)
+		return { attested: claim.is_attested, confirmed: claim.is_confirmed, paid: claim.is_paid };
+	return {
+		attested: claim.parts.length > 0 && claim.parts.every((p) => p.attested_by != null),
+		confirmed: claim.confirmed_at != null,
+		paid: ('payment' in claim ? claim.payment : claim.paid_at) != null
+	};
 }
 
 export type PaginatedResponse<T> = {
@@ -178,7 +166,7 @@ export type PaginatedResponse<T> = {
 	};
 };
 
-export type Permissions = {
+type Permissions = {
 	attest: string[];
 	accounting: string[];
 	'view-expenses': string[];
@@ -209,10 +197,24 @@ export type FortnoxCostCentre = {
 	description: string;
 };
 
+export type CostCentreType = 'committee' | 'partition' | 'project' | 'projectX' | 'other';
+
+export type CostCentreSummary = {
+	id: number;
+	name: string;
+	type: CostCentreType;
+	income: number;
+	expense: number;
+	amount_uploaded: string;
+	amount_attested: string;
+	amount_paid: string;
+	blown_lines: number;
+};
+
 export type CostCentre = {
 	id: number | null;
 	name: string;
-	type: 'committee' | 'partition' | 'project' | 'other' | null;
+	type: CostCentreType | null;
 	active: boolean;
 	contains_blown?: boolean;
 
@@ -318,8 +320,6 @@ export type ExpenseOrdering =
 	| '-expense_date'
 	| 'confirmed_at'
 	| '-confirmed_at'
-	| 'is_flagged'
-	| '-is_flagged'
 	| 'reimbursement'
 	| '-reimbursement';
 
@@ -330,7 +330,6 @@ export type InvoiceOrdering =
 	| 'invoice_date'
 	| '-invoice_date'
 	| 'invoice_number'
-	| '-invoice_number'
 	| '-invoice_number'
 	| 'due_date'
 	| '-due_date'
@@ -395,11 +394,6 @@ export type CostCentreFilter = {
 	active?: boolean;
 	// Whether the cost centre contains a blown budget line
 	contains_blown?: boolean;
-};
-
-export type DescriptionSearch = {
-	description?: string;
-	description_fuzzy?: string;
 };
 
 export type PendingPayment = {
