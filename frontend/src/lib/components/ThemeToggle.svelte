@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { _ } from 'svelte-i18n';
 	import { Moon, Sun } from '@lucide/svelte';
+	import { Button } from '#lib/components/ui/index.ts';
+	import { cn } from 'tailwind-variants';
 
-	// Same key as the previously used flowbite-svelte DarkMode component, so
-	// existing preferences carry over. The initial class is applied by the
-	// inline script in app.html before first paint.
+	let { class: className }: { class?: string } = $props();
+
+	// Also read by the inline script in app.html
 	const STORAGE_KEY = 'color-theme';
 
 	let dark = $state(
@@ -17,15 +20,16 @@
 	}
 </script>
 
-<button
-	type="button"
+<Button
+	variant="ghost"
+	size="icon"
 	onclick={toggle}
-	aria-label="Toggle dark mode"
-	class="cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 dark:hover:bg-dark-base-300"
+	aria-label={$_('toggle_theme')}
+	class={cn('text-muted-foreground hover:text-foreground', className)}
 >
 	{#if dark}
-		<Sun class="size-5" />
+		<Sun />
 	{:else}
-		<Moon class="size-5" />
+		<Moon />
 	{/if}
-</button>
+</Button>

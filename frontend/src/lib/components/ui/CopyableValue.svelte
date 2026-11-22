@@ -1,40 +1,45 @@
 <script lang="ts">
 	import { Check, Copy } from '@lucide/svelte';
+	import { cn } from 'tailwind-variants';
+	import type { Component } from 'svelte';
 	import type { ClassValue } from 'svelte/elements';
+	import { clipboard } from '#lib/clipboard.svelte.ts';
 
 	let {
 		display,
 		value,
+		label,
+		icon: Icon,
 		class: className
 	}: {
 		display: string | number;
 		value?: string | number;
+		/** Names the value on hover and for screen readers when the icon is all that labels it */
+		label?: string;
+		icon?: Component;
 		class?: ClassValue;
 	} = $props();
 
-	let resolvedValue = $derived(value ?? display);
-
-	let copied = $state(false);
-
-	function copy() {
-		navigator.clipboard.writeText(String(resolvedValue));
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
-	}
+	const clip = clipboard();
 </script>
 
 <button
 	type="button"
-	onclick={copy}
-	class={[
-		'group flex max-w-full cursor-pointer items-center gap-1.5 border border-base-500 px-2.5 py-1 text-xs text-base-subtle transition-colors hover:text-base-text dark:border-dark-base-200 dark:text-dark-base-subtle dark:hover:text-dark-base-text',
-		className
-	]}
+	onclick={() => clip.copy(String(value ?? display))}
+	title={label ? `${label}: ${display}` : String(display)}
+	class={cn(
+		'group flex h-7 max-w-60 cursor-pointer items-center gap-1.5 border border-border bg-card px-2 text-xs text-muted-foreground transition-colors hover:border-foreground/50 hover:text-foreground',
+		className as string
+	)}
 >
-	<span class="truncate">{display}</span>
-	{#if copied}
-		<Check class="size-3.5 shrink-0" />
+	{#if Icon}<Icon class="size-3.5 shrink-0" aria-hidden="true" />{/if}
+	<span class="truncate">
+		{#if label}<span class="sr-only">{label}:</span>{/if}
+		{display}
+	</span>
+	{#if clip.copied}
+		<Check class="size-3 shrink-0" />
 	{:else}
-		<Copy class="size-3.5 shrink-0 transition-transform group-hover:scale-110" />
+		<Copy class="size-3 shrink-0 transition-transform group-hover:scale-110" />
 	{/if}
 </button>

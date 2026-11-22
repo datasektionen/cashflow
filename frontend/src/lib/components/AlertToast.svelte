@@ -1,31 +1,20 @@
 <script lang="ts">
-	import { type Alert, AlertType, dismiss } from '#lib/stores/alerts.ts';
-	import { CircleAlert, CircleDollarSign, CircleX, Lightbulb, X } from '@lucide/svelte';
+	import { _ } from 'svelte-i18n';
+	import { type Alert, dismiss } from '#lib/stores/alerts.ts';
+	import { CircleAlert, CircleCheck, CircleX, X } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { linear } from 'svelte/easing';
+	import { Button } from '#lib/components/ui/index.ts';
 
-	type AlertProps = {
-		alert: Alert;
+	let { alert }: { alert: Alert } = $props();
+
+	const tones = {
+		success: { icon: CircleCheck, color: 'text-primary-text' },
+		warning: { icon: CircleAlert, color: 'text-warning-soft-foreground' },
+		error: { icon: CircleX, color: 'text-danger' }
 	};
-
-	let { alert }: AlertProps = $props();
-	const colors = $derived.by(() => {
-		switch (alert.type) {
-			case AlertType.Success:
-				return 'money-green';
-			case AlertType.Warning:
-				return 'amber';
-			case AlertType.Info:
-				return 'secondary';
-			case AlertType.Error:
-				return 'red';
-		}
-	});
-
-	function handleDismiss(): void {
-		dismiss(alert.id);
-	}
+	const tone = $derived(tones[alert.type]);
 
 	const progress = new Tween(100, { duration: () => alert.duration, easing: linear });
 
@@ -37,33 +26,22 @@
 </script>
 
 <div
-	class={[
-		'relative flex h-20 w-64 flex-row items-center justify-between bg-base-400 p-4 shadow-xl dark:bg-dark-base-150'
-	]}
+	role={alert.type === 'error' ? 'alert' : 'status'}
+	class="relative flex w-80 max-w-[calc(100vw-2rem)] items-start gap-3 overflow-hidden border border-border bg-card p-4 pr-11 text-sm shadow-lg"
 >
-	{#if alert.type === AlertType.Success}
-		<CircleDollarSign class="mr-2 shrink-0 text-money-green-500" />
-	{:else if alert.type === AlertType.Warning}
-		<CircleAlert class="mr-2 shrink-0 text-amber-500" />
-	{:else if alert.type === AlertType.Error}
-		<CircleX class="mr-2 shrink-0 text-red-500" />
-	{:else if alert.type === AlertType.Info}
-		<Lightbulb class="mr-2 shrink-0 text-secondary-500" />
-	{/if}
-	<div class="flex-1 text-base text-base-subtle dark:text-dark-base-subtle">
-		{alert.message}
-	</div>
-	<div class="shrink-0">
-		<button
-			class={['cursor-pointer text-base-subtle dark:text-dark-base-subtle']}
-			onclick={handleDismiss}
-		>
-			<X class="transition-all hover:scale-110" />
-		</button>
-	</div>
-
+	<tone.icon class={['mt-px size-4 shrink-0', tone.color]} />
+	<p class="flex-1">{alert.message}</p>
+	<Button
+		variant="ghost"
+		size="icon-sm"
+		onclick={() => dismiss(alert.id)}
+		aria-label={$_('close')}
+		class="absolute top-2.5 right-2 text-muted-foreground hover:text-foreground"
+	>
+		<X />
+	</Button>
 	<div
-		class={`absolute bottom-0 left-0 h-1 bg-${colors}-500`}
+		class={['absolute bottom-0 left-0 h-0.5 bg-current', tone.color]}
 		style="width: {progress.current}%"
 	></div>
 </div>

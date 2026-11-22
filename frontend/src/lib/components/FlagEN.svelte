@@ -5,7 +5,13 @@
 	let { class: className = 'size-5' }: { class?: ClassValue } = $props();
 </script>
 
-<svg viewBox="0 0 60 30" class={className} role="img" aria-label="English">
+<svg
+	viewBox="0 0 60 30"
+	preserveAspectRatio="xMidYMid slice"
+	class={className}
+	role="img"
+	aria-label="English"
+>
 	<clipPath id="flag-en-round"><rect width="60" height="30" /></clipPath>
 	<clipPath id="flag-en-tri">
 		<path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />

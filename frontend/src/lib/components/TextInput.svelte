@@ -1,50 +1,34 @@
 <!--
 @component
-A generic single-line text input, styled to match ComboBox/AmountInput.
+A single-line text input with an icon, styled to match Combobox/AmountInput.
 -->
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type { Component } from 'svelte';
+	import { innerInput, inputShell } from './inputShell';
 
 	let {
 		value = $bindable(''),
-		name,
-		type = 'text',
 		placeholder = '',
-		class: className = '',
-		icon,
-		onchange,
-		onblur,
-		onkeydown
+		icon: Icon,
+		onchange
 	}: {
 		value?: string;
-		name?: string;
-		type?: 'text' | 'search' | 'email';
 		placeholder?: string;
-		class?: string;
-		icon?: Snippet;
-		onchange?: (value: string) => void;
-		onblur?: (e: FocusEvent) => void;
-		onkeydown?: (e: KeyboardEvent) => void;
+		icon: Component;
+		onchange: (value: string) => void;
 	} = $props();
 </script>
 
-<div
-	class="flex w-full flex-row items-center border border-base-500 bg-base-200 dark:border-dark-base-200 dark:bg-dark-base-200 {className}"
->
-	{#if icon}
-		<span class="pl-2 text-base-subtle dark:text-dark-base-subtle">
-			{@render icon()}
-		</span>
-	{/if}
+<div class={inputShell}>
+	<span class="flex shrink-0 pl-3 text-muted-foreground [&_svg]:size-4">
+		<Icon />
+	</span>
 	<input
-		{name}
-		{type}
+		type="text"
 		bind:value
-		oninput={() => onchange?.(value)}
-		{onblur}
-		{onkeydown}
+		oninput={() => onchange(value)}
 		{placeholder}
 		aria-label={placeholder}
-		class="w-full flex-1 border-0 bg-transparent p-2 text-sm outline-none placeholder:text-base-subtle dark:placeholder:text-dark-base-subtle"
+		class={[innerInput, 'pl-2']}
 	/>
 </div>
