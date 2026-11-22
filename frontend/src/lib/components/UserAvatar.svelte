@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { api } from '#lib/api/index.ts';
+	import { avatarUrl } from '#lib/avatars.ts';
+	import { Avatar } from '#lib/components/ui/index.ts';
 
 	type UserAvatarProps = {
 		url?: string;
@@ -8,21 +9,19 @@
 		class?: string;
 	};
 
-	let { url, username, placeholder = false, class: className, ...more }: UserAvatarProps = $props();
+	let { url, username, placeholder = false, class: className }: UserAvatarProps = $props();
 
 	const resolved = $derived(
 		placeholder || (!url && !username)
-			? Promise.reject()
+			? Promise.resolve(null)
 			: url
 				? Promise.resolve(url)
-				: api.profilePictures.get(username!)
+				: avatarUrl(username!)
 	);
 </script>
 
 {#await resolved}
-	<div class={['size-8 rounded-full object-cover']}></div>
+	<Avatar class={className} />
 {:then src}
-	<img class={['size-8 rounded-full object-cover', className]} {src} alt="avatar" {...more} />
-{:catch e}
-	<div class={['size-8 rounded-full object-cover']}></div>
+	<Avatar {src} class={className} />
 {/await}

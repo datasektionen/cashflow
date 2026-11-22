@@ -2,40 +2,47 @@
 	import '../app.css';
 	import '#lib/i18n/index.ts'; // initialize i18n
 	import { page } from '$app/state';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { tick } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import NavBar from '#lib/components/nav/NavBar.svelte';
-	import SideNavLink from '#lib/components/SideNavLink.svelte';
-	import { Separator } from 'bits-ui';
+	import { Tooltip } from 'bits-ui';
 	import type { LayoutProps } from './$types';
-	import { type Alert, alerts } from '#lib/stores/alerts.ts';
+	import { alerts } from '#lib/stores/alerts.ts';
 	import AlertToast from '#lib/components/AlertToast.svelte';
-	import {
-		ReceiptText,
-		FileText,
-		Receipt,
-		Files,
-		CircleCheck,
-		Stamp,
-		Banknote,
-		BookCheck,
-		BookText,
-		HandCoins,
-		Settings2,
-		Wallet,
-		Trophy,
-		PiggyBank
-	} from '@lucide/svelte';
-	import { api } from '#lib/api/index.ts';
-	import type { ActionSummary } from '#lib/api/types.ts';
+	import { PageHeader, Skeleton } from '#lib/components/ui/index.ts';
+	import Sidebar from '#lib/components/nav/Sidebar.svelte';
 	import { hasAdminAccess } from '#lib/auth.ts';
-	import Skeleton from '#lib/components/ui/Skeleton.svelte';
+	import { setPreferences } from '#lib/preferences.svelte.ts';
+	import type { Snippet } from 'svelte';
 
 	let { children, data }: LayoutProps = $props();
 
-	let currentAlerts: Alert[] = $state([]);
+	// On desktop the content scrolls below the navbar instead of the window
+	let scroller: HTMLDivElement;
+	const scrollPositions = new Map<string, number>();
+	beforeNavigate(({ from }) => {
+		if (from) scrollPositions.set(from.url.href, scroller.scrollTop);
+	});
+	afterNavigate(async ({ from, to, type }) => {
+		if (!to) return;
+		if (type === 'popstate') {
+			await tick();
+			scroller.scrollTop = scrollPositions.get(to.url.href) ?? 0;
+		} else if (from?.url.pathname !== to.url.pathname) {
+			scroller.scrollTop = 0;
+		}
+	});
+
+	// Scroll keys with nothing focused scroll the content, while Tab still starts at the top bar
+	const scrollKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+	function onWindowKeydown(e: KeyboardEvent) {
+		if (document.activeElement === document.body && scrollKeys.includes(e.key))
+			scroller.focus({ preventScroll: true });
+	}
+
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 	const canAccessAdmin = $derived(hasAdminAccess(data.user));
-	const viewAll = $derived(data.user?.permissions?.['view-all'] === true);
 
 	// Pages may return `title` as a promise
 	let awaitedTitle: string | null = $state(null);
@@ -61,142 +68,22 @@
 	});
 
 	let sidebarOpen = $state(false);
-	let userDropdownOpen = $state(false);
+	// svelte-ignore state_referenced_locally
+	const prefs = setPreferences(data.preferences);
 
-	// Close sidebar when navigating to a new page or user dropdown opens
-	$effect(() => {
-		page.url.pathname;
-		sidebarOpen = false;
-	});
-
-	let availableActions: ActionSummary | null = $state(null);
-	$effect(() => {
-		if (adminView || sidebarOpen) {
-			api.users.actionSummary().then((v) => {
-				availableActions = v;
-			});
-		}
-	});
-
-	alerts.subscribe((val) => (currentAlerts = val));
+	const aboutBody = $derived($_('footer.about.body').split('{compsciwebsite}'));
 </script>
 
-<NavBar user={data.user} bind:sidebarOpen bind:userDropdownOpen {canAccessAdmin} />
+<svelte:window onkeydown={onWindowKeydown} />
 
-{#if data.user != null && sidebarOpen}
-	<button
-		type="button"
-		aria-label="Close sidebar"
-		onclick={() => (sidebarOpen = false)}
-		class="fixed inset-0 top-16 z-20 bg-black/40 lg:hidden"
-	></button>
-{/if}
+<NavBar user={data.user} bind:sidebarOpen {canAccessAdmin} />
 
 {#if data.user != null}
-	<aside
-		class={[
-			'fixed top-16 left-0 z-30 flex h-[calc(100vh-4rem)] w-52 flex-col gap-1 overflow-y-scroll border-r border-base-500 bg-base-200 px-3 py-4 text-sm transition-transform dark:border-dark-base-200 dark:bg-dark-base-100',
-			sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-			adminView ? 'lg:translate-x-0' : 'lg:hidden'
-		]}
-	>
-		<SideNavLink to="/expenses/new" text={$_('new_expense.title')} icon={ReceiptText} />
-		<SideNavLink to="/invoices/new" text={$_('new_invoice.title')} icon={FileText} />
-		<SideNavLink to="/claims/" text={$_('user_claims')} icon={Wallet} class="lg:hidden" />
-		<SideNavLink to="/stats" text={$_('statistics')} icon={Trophy} class="lg:hidden" />
-		<SideNavLink to="/budget" text={$_('budget.title')} icon={PiggyBank} />
-
-		{#if canAccessAdmin}
-			<p
-				class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wider text-base-subtle uppercase dark:text-dark-base-subtle"
-			>
-				{$_('admin')}
-			</p>
-			<SideNavLink to="/admin/expenses" text={$_('admin_expenses.nav_title')} icon={Receipt} />
-			<SideNavLink to="/admin/invoices" text={$_('admin_invoices.nav_title')} icon={Files} />
-			<SideNavLink to="/admin/vouchers" text={$_('admin_vouchers.nav_title')} icon={BookCheck} />
-			{#if viewAll || data.user?.permissions?.['view-all-payments']}
-				<SideNavLink to="/admin/payments" text={$_('admin_payments.nav_title')} icon={HandCoins} />
-			{/if}
-		{/if}
-
-		{#if data.user?.permissions}
-			{@const perms = data.user.permissions}
-			{#if viewAll || perms.confirm || perms.attest.length > 0 || perms.pay || perms.accounting.length > 0}
-				<Separator.Root
-					orientation="horizontal"
-					class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
-				/>
-				{#if viewAll || perms.attest.length > 0}
-					<SideNavLink
-						to="/admin/attest"
-						text={$_('tasks.attest')}
-						icon={Stamp}
-						badge={availableActions
-							? availableActions.expenses.attestable + availableActions.invoices.attestable
-							: undefined}
-					/>
-				{/if}
-				{#if viewAll || perms.confirm}
-					<SideNavLink
-						to="/admin/confirm"
-						text={$_('tasks.confirm')}
-						icon={CircleCheck}
-						badge={availableActions ? availableActions.expenses.confirmable : undefined}
-					/>
-				{/if}
-				{#if viewAll || perms.pay}
-					<SideNavLink
-						to="/admin/pay"
-						text={$_('tasks.pay')}
-						icon={Banknote}
-						badge={availableActions
-							? availableActions.expenses.payable + availableActions.invoices.payable
-							: undefined}
-					/>
-				{/if}
-				{#if viewAll || perms.accounting.length > 0}
-					<SideNavLink
-						to="/admin/account"
-						text={$_('tasks.account')}
-						icon={BookText}
-						badge={availableActions
-							? availableActions.expenses.accountable + availableActions.invoices.accountable
-							: undefined}
-					/>
-				{/if}
-			{/if}
-		{/if}
-
-		{#if viewAll || data.user?.permissions?.['manage-fortnox']}
-			<Separator.Root
-				orientation="horizontal"
-				class="my-3 h-px w-full bg-base-500 dark:bg-dark-base-200"
-			/>
-			<SideNavLink to="/admin/fortnox" text={$_('fortnox.title')} icon={Settings2} />
-		{/if}
-
-		<a
-			href="https://github.com/datasektionen/cashflow"
-			target="_blank"
-			rel="noreferrer"
-			class="mt-auto flex items-center justify-start gap-2.5 px-3 text-xs leading-tight text-base-subtle opacity-40 transition-opacity hover:opacity-100 dark:text-dark-base-subtle"
-		>
-			<svg class="size-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<path
-					d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-				/>
-			</svg>
-			<span class="flex flex-col">
-				<span>Cashflow</span>
-				<span>Datasektionen</span>
-			</span>
-		</a>
-	</aside>
+	<Sidebar user={data.user} bind:open={sidebarOpen} bind:slim={prefs.sidebarSlim} />
 {/if}
 
 <svelte:head>
-	<title>{pageTitle ? `Cashflow | ${pageTitle}` : 'Cashflow'}</title>
+	<title>{pageTitle ? `${pageTitle} | Cashflow` : 'Cashflow'}</title>
 	<link rel="icon" href="/favicon.ico" sizes="any" />
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -215,74 +102,66 @@
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 </svelte:head>
 
-<!-- Alerts -->
-<div class="fixed right-20 bottom-20 z-50 flex flex-col gap-2">
-	{#each currentAlerts as alert (alert.id)}
+<!-- Above the action bar that claim pages pin to the bottom on phones -->
+<div class="fixed right-4 bottom-20 z-50 flex flex-col gap-2 sm:right-6 lg:bottom-6">
+	{#each $alerts as alert (alert.id)}
 		<AlertToast {alert} />
 	{/each}
 </div>
 
-<div
-	class="base-text-base-text flex min-h-screen flex-col overflow-x-clip bg-base-200 pt-16 dark:bg-dark-base-100 dark:text-dark-base-text"
->
-	{#if pageTitle != null || titlePending}
-		<header
-			class={['w-full', adminView ? 'px-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 lg:px-8']}
-		>
-			<h1
-				class={[
-					adminView ? 'pt-6 pb-3 text-xl' : 'pt-12 pb-6 text-3xl',
-					'font-semibold tracking-tight'
-				]}
-			>
-				{#if titlePending}
-					<Skeleton class="h-[1lh] w-64 animate-delayed-fade-in rounded-sm" />
-				{:else}
-					{pageTitle}
-				{/if}
-			</h1>
-			<Separator.Root
-				orientation="horizontal"
-				class="h-px w-full bg-base-subtle dark:bg-dark-base-200"
-			/>
-		</header>
-	{/if}
+{#snippet footerColumn(title: string, body: Snippet)}
+	<div class="flex flex-col gap-2 lg:max-w-sm">
+		<h2 class="text-sm font-semibold">{title}</h2>
+		<p class="text-sm text-white/80">{@render body()}</p>
+	</div>
+{/snippet}
 
+<div
+	bind:this={scroller}
+	data-page-scroller
+	tabindex="-1"
+	class="flex min-h-screen flex-col overflow-x-clip bg-background pt-16 outline-none lg:fixed lg:inset-x-0 lg:top-16 lg:bottom-0 lg:min-h-0 lg:overflow-y-auto lg:pt-0"
+>
 	<main
 		class={[
-			'w-full flex-1 dark:text-dark-base-text',
-			adminView ? 'px-4 py-4 lg:pr-12 lg:pl-68' : 'mx-auto max-w-7xl px-4 py-8 lg:px-8'
+			'w-full flex-1',
+			adminView
+				? ['px-4 py-6 lg:pr-8', prefs.sidebarSlim ? 'lg:pl-24' : 'lg:pl-68']
+				: 'mx-auto max-w-7xl px-4 py-6 lg:px-8'
 		]}
 	>
-		{@render children()}
+		{#if (pageTitle != null || titlePending) && !page.data.ownHeader}
+			<PageHeader>
+				{#snippet heading()}
+					{#if titlePending}
+						<Skeleton class="h-[1lh] w-64 animate-delayed-fade-in" />
+					{:else}
+						{pageTitle}
+					{/if}
+				{/snippet}
+			</PageHeader>
+		{/if}
+		<Tooltip.Provider>
+			{@render children()}
+		</Tooltip.Provider>
 	</main>
 
 	{#if data.user == null}
-		<footer class="bg-money-green-700 text-white dark:bg-dark-base-200 dark:text-dark-base-text">
+		<footer class="bg-brand text-white">
 			<div
-				class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:h-64 lg:flex-row lg:justify-between lg:gap-0 lg:py-4"
+				class="mx-auto grid max-w-7xl gap-8 px-4 py-10 lg:grid-cols-3 lg:justify-between lg:px-8"
 			>
-				<div class="w-full lg:w-96">
-					<h2 class="font-bold">{$_('footer.about.title')}</h2>
-					<p>
-						{@html $_('footer.about.body').replaceAll(
-							'{compsciwebsite}',
-							'<a class="font-bold" href="https://datasektionen.se/">Konglig Datasektionen</a>'
-						)}
-					</p>
-				</div>
-				<div class="w-full lg:w-96">
-					<h2 class="font-bold">{$_('footer.help.title')}</h2>
-					<p>
-						{$_('footer.help.body')}
-					</p>
-				</div>
-				<div class="w-full lg:w-96">
-					<h2 class="font-bold">{$_('footer.issues.title')}</h2>
-					<p>
-						{$_('footer.issues.body')}
-					</p>
-				</div>
+				{#snippet about()}
+					{aboutBody[0]}<a
+						class="font-medium text-white underline underline-offset-4"
+						href="https://datasektionen.se/">Konglig Datasektionen</a
+					>{aboutBody[1]}
+				{/snippet}
+				{#snippet help()}{$_('footer.help.body')}{/snippet}
+				{#snippet issues()}{$_('footer.issues.body')}{/snippet}
+				{@render footerColumn($_('footer.about.title'), about)}
+				{@render footerColumn($_('footer.help.title'), help)}
+				{@render footerColumn($_('footer.issues.title'), issues)}
 			</div>
 		</footer>
 	{/if}
