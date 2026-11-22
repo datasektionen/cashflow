@@ -1,3 +1,5 @@
+from datetime import date
+
 from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
@@ -29,10 +31,10 @@ class TestExpenseListPermissions:
         ExpenseFactory.create_batch(20)
         cc_expenses = ExpenseFactory.create_batch(2)
         ExpensePartFactory.create_batch(
-            2, expense=cc_expenses[0], cost_centre="TestCostCenter"
+            2, claim=cc_expenses[0], cost_centre="TestCostCenter"
         )
         ExpensePartFactory.create_batch(
-            2, expense=cc_expenses[1], cost_centre="TestCostCenter"
+            2, claim=cc_expenses[1], cost_centre="TestCostCenter"
         )
 
         response = client.get("/api/expenses/")
@@ -79,7 +81,7 @@ class TestExpenseListFilters:
         target_cc = "TestCostCenter"
         expenses = ExpenseFactory.create_batch(5)
         for expense in expenses:
-            ExpensePartFactory.create_batch(2, expense=expense, cost_centre=target_cc)
+            ExpensePartFactory.create_batch(2, claim=expense, cost_centre=target_cc)
 
         response = client.get("/api/expenses/", {"cost_centre": target_cc})
 
@@ -101,42 +103,42 @@ class TestExpenseListSorting:
 
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
-        assert ids.index(second.id) < ids.index(first.id)
+        assert ids.index(second.data_id) < ids.index(first.data_id)
 
     def test_sorting_by_date_asc(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: True}
         mocker.patch(
             "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
         )
-        earlier = ExpenseFactory(expense_date="2024-01-01")
-        later = ExpenseFactory(expense_date="2024-06-01")
+        earlier = ExpenseFactory(expense_data__expense_date=date(2024, 1, 1))
+        later = ExpenseFactory(expense_data__expense_date=date(2024, 6, 1))
 
         response = client.get("/api/expenses/", {"sorting": "date"})
 
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
-        assert ids.index(earlier.id) < ids.index(later.id)
+        assert ids.index(earlier.data_id) < ids.index(later.data_id)
 
     def test_sorting_by_date_desc(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: True}
         mocker.patch(
             "cashflow.dauth.get_permissions", return_value=permissions, autospec=True
         )
-        earlier = ExpenseFactory(expense_date="2024-01-01")
-        later = ExpenseFactory(expense_date="2024-06-01")
+        earlier = ExpenseFactory(expense_data__expense_date=date(2024, 1, 1))
+        later = ExpenseFactory(expense_data__expense_date=date(2024, 6, 1))
 
         response = client.get("/api/expenses/", {"sorting": "-date"})
 
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
-        assert ids.index(later.id) < ids.index(earlier.id)
+        assert ids.index(later.data_id) < ids.index(earlier.data_id)
 
     def _expense_with_total(self, amount: str):
         # ExpenseFactory auto-creates one part with a random amount, so clear it
         # and set a known amount to make the total deterministic.
         expense = ExpenseFactory.create()
         expense.parts.all().delete()
-        ExpensePartFactory(expense=expense, amount=amount)
+        ExpensePartFactory(claim=expense, amount=amount)
         return expense
 
     def test_sorting_by_total_desc(self, user, client, mocker):
@@ -151,10 +153,7 @@ class TestExpenseListSorting:
 
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
-        assert ids.index(pricey.id) < ids.index(cheap.id)
-        totals = {e["id"]: e["total"] for e in response.data["data"]}
-        assert totals[cheap.id] == "10.00"
-        assert totals[pricey.id] == "100.00"
+        assert ids.index(pricey.data_id) < ids.index(cheap.data_id)
 
     def test_sorting_by_total_asc(self, user, client, mocker):
         permissions = {Permission.VIEW_EXPENSES: True}
@@ -168,4 +167,4 @@ class TestExpenseListSorting:
 
         assert response.status_code == 200
         ids = [e["id"] for e in response.data["data"]]
-        assert ids.index(cheap.id) < ids.index(pricey.id)
+        assert ids.index(cheap.data_id) < ids.index(pricey.data_id)

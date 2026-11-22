@@ -1,5 +1,5 @@
 from core.factories import UserFactory
-from expenses.models import Profile
+from core.models import Profile
 
 
 class TestProfileSignal:

@@ -1,5 +1,5 @@
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 from pydantic import HttpUrl
 from rest_framework.test import APIClient
 
@@ -23,13 +23,14 @@ class FakeProfilePictureProvider(ProfilePictureProvider):
 class TestGetProfilePictures:
 
     @pytest.mark.django_db
+    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(
         usernames=st.from_regex(r"\s*[\w.@+-]+(\s*,\s*[\w.@+-]+)*\s*", fullmatch=True)
     )
-    def test_correct_request(self, usernames):
-        client = APIClient()
-        client.force_authenticate()
-        response = client.get(f"/api/users/profile-pictures/", {"usernames": usernames})
+    def test_correct_request(self, api_client, usernames):
+        response = api_client.get(
+            f"/api/users/profile-pictures/", {"usernames": usernames}
+        )
         assert response.status_code == 200
         names = {name.strip() for name in usernames.split(",")}
         expected = {
@@ -53,12 +54,11 @@ class TestProfilePictureCache:
         cache.clear()
 
     @pytest.mark.django_db
-    def test_repeat_request_served_from_cache(self, mocker):
+    def test_repeat_request_served_from_cache(self, api_client, mocker):
         from users.api import views
 
         spy = mocker.spy(views.profile_picture_provider, "get_many")
-        client = APIClient()
-        client.force_authenticate()
+        client = api_client
         expected = {"alice": _picture_url("alice"), "bob": _picture_url("bob")}
 
         first = client.get("/api/users/profile-pictures/", {"usernames": "alice,bob"})
@@ -73,11 +73,10 @@ class TestProfilePictureCache:
         assert spy.call_count == 1
 
     @pytest.mark.django_db
-    def test_partial_hit_only_fetches_missing(self, mocker):
+    def test_partial_hit_only_fetches_missing(self, api_client, mocker):
         from users.api import views
 
-        client = APIClient()
-        client.force_authenticate()
+        client = api_client
 
         # Warm the cache for "alice" only.
         client.get("/api/users/profile-pictures/", {"usernames": "alice"})

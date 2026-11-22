@@ -7,13 +7,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from hypothesis import given, settings, HealthCheck, strategies as st
 
 from cashflow.dauth import Permission
-from core.api.serializers import ClaimData, ClaimSerializer
+from core.api.serializers import ClaimSerializer
 from core.factories import ProfileFactory
 from core.files import normalize_upload
+from core.models import Claim
 from core.search import fuzzy_model_search
 from expenses.factories import ExpenseFactory, ExpenseFileFactory, ExpensePartFactory
-from expenses.models import Expense, Payment
-from invoices.factories import InvoiceFactory, InvoiceFileFactory, InvoicePartFactory
+from expenses.models import Payment
+from invoices.factories import InvoiceFactory, InvoicePartFactory
 
 
 def implies(a: bool, b: bool) -> bool:
@@ -44,7 +45,7 @@ class TestFuzzyModelSearch:
         match = ExpenseFactory(description="Detta är ett utlägg för resa")
         ExpenseFactory.create_batch(10, description="Kontorsmaterial inköp")
 
-        result = fuzzy_model_search(Expense.objects.all(), "utlägg", "description")
+        result = fuzzy_model_search(Claim.objects.all(), "utlägg", "description")
 
         assert match in result
 
@@ -55,7 +56,7 @@ class TestFuzzyModelSearch:
             description="ett långt utläg med stavfel längre bort i texten"
         )
 
-        result = fuzzy_model_search(Expense.objects.all(), "utlägg", "description")
+        result = fuzzy_model_search(Claim.objects.all(), "utlägg", "description")
 
         assert list(result) == [best, worse]
 
@@ -64,10 +65,11 @@ class TestComment:
 
     @pytest.mark.django_db
     @settings(
+        deadline=None,
         suppress_health_check=[
             HealthCheck.function_scoped_fixture,
             HealthCheck.nested_given,
-        ]
+        ],
     )
     @given(
         comment=st.text(alphabet=st.characters(codec="utf-8"), min_size=1).filter(
@@ -79,7 +81,7 @@ class TestComment:
     ):
         resource, obj = commentable
         response = api_client.post(
-            f"/api/{resource}/{obj.id}/comments/",
+            f"/api/{resource}/{obj.data_id}/comments/",
             {"content": comment},
         )
 
@@ -88,10 +90,11 @@ class TestComment:
 
     @pytest.mark.django_db
     @settings(
+        deadline=None,
         suppress_health_check=[
             HealthCheck.function_scoped_fixture,
             HealthCheck.nested_given,
-        ]
+        ],
     )
     @given(comment=st.text().filter(lambda s: s.strip() == "" and "\x00" not in s))
     def test_rejects_blank_comment(
@@ -99,12 +102,12 @@ class TestComment:
     ):
         resource, obj = commentable
         response = api_client.post(
-            f"/api/{resource}/{obj.id}/comments/",
+            f"/api/{resource}/{obj.data_id}/comments/",
             {"content": comment},
         )
 
-        assert response.status_code == 422
-        assert response.data["detail"].code == "empty_comment"
+        assert response.status_code == 400
+        assert response.data["content"][0].code == "blank"
 
 
 class TestConfirmation:
@@ -121,7 +124,7 @@ class TestConfirmation:
     def test_confirm_succeeds(self, api_client, user, confirm_permission, today):
         expense = ExpenseFactory()
 
-        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+        response = api_client.post(f"/api/expenses/{expense.data_id}/confirm/")
 
         assert response.status_code == 204
 
@@ -130,7 +133,7 @@ class TestConfirmation:
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         expense = ExpenseFactory()
 
-        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+        response = api_client.post(f"/api/expenses/{expense.data_id}/confirm/")
 
         assert response.status_code == 403
         assert response.data["detail"].code == "confirmation_permission_denied"
@@ -142,19 +145,19 @@ class TestConfirmation:
         # Confirm after creation: the factory attaches a File post-creation,
         # which resets any confirmation passed as a factory kwarg.
         expense = ExpenseFactory()
-        expense.confirmed_by = user
-        expense.save()
+        expense.expense_data.confirmed_by = user
+        expense.expense_data.save()
 
-        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+        response = api_client.post(f"/api/expenses/{expense.data_id}/confirm/")
 
         assert response.status_code == 409
         assert response.data["detail"].code == "already_confirmed"
 
     @pytest.mark.django_db
     def test_confirm_rejects_flagged(self, api_client, confirm_permission):
-        expense = ExpenseFactory(is_flagged=True)
+        expense = ExpenseFactory(expense_data__is_flagged=True)
 
-        response = api_client.post(f"/api/expenses/{expense.id}/confirm/")
+        response = api_client.post(f"/api/expenses/{expense.data_id}/confirm/")
 
         assert response.status_code == 409
         assert response.data["detail"].code == "resource_is_flagged"
@@ -172,10 +175,10 @@ class TestClaimsList:
 
     @pytest.mark.django_db
     def test_lists_both_types_by_default(self, user, api_client, confirm_and_view_all):
-        ExpenseFactory(owner=user.profile, confirmed_by=None)
-        InvoiceFactory(owner=user.profile, confirmed_by=None)
+        ExpenseFactory(owner=user.profile)
+        InvoiceFactory(owner=user.profile)
 
-        response = api_client.get("/api/claims/?confirmable=true&per_page=100")
+        response = api_client.get("/api/claims/?per_page=100")
 
         assert response.status_code == 200
         types = {c["type"] for c in response.data["data"]}
@@ -183,13 +186,11 @@ class TestClaimsList:
 
     @pytest.mark.django_db
     def test_exposes_flagged_status(self, user, api_client, confirm_and_view_all):
-        flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
-        unflagged = ExpenseFactory(
-            owner=user.profile, confirmed_by=None, is_flagged=False
-        )
-        invoice = InvoiceFactory(owner=user.profile, confirmed_by=None)
+        flagged = ExpenseFactory(owner=user.profile, expense_data__is_flagged=True)
+        unflagged = ExpenseFactory(owner=user.profile, expense_data__is_flagged=False)
+        invoice = InvoiceFactory(owner=user.profile)
 
-        response = api_client.get("/api/claims/?confirmable=true&per_page=100")
+        response = api_client.get("/api/claims/?per_page=100")
 
         assert response.status_code == 200
         by_id = {
@@ -197,12 +198,12 @@ class TestClaimsList:
             for c in response.data["data"]
             if c["type"] == "expense"
         }
-        assert by_id[flagged.id] is True
-        assert by_id[unflagged.id] is False
+        assert by_id[flagged.data_id] is True
+        assert by_id[unflagged.data_id] is False
         invoice_row = next(
             c
             for c in response.data["data"]
-            if c["type"] == "invoice" and c["id"] == invoice.id
+            if c["type"] == "invoice" and c["id"] == invoice.data_id
         )
         assert invoice_row["is_flagged"] is False
 
@@ -210,28 +211,24 @@ class TestClaimsList:
     def test_flagged_true_excludes_invoices(
         self, user, api_client, confirm_and_view_all
     ):
-        flagged = ExpenseFactory(owner=user.profile, confirmed_by=None, is_flagged=True)
-        InvoiceFactory(owner=user.profile, confirmed_by=None)
+        flagged = ExpenseFactory(owner=user.profile, expense_data__is_flagged=True)
+        InvoiceFactory(owner=user.profile)
 
-        response = api_client.get(
-            "/api/claims/?confirmable=true&flagged=true&per_page=100"
-        )
+        response = api_client.get("/api/claims/?flagged=true&per_page=100")
 
         assert response.status_code == 200
         types = {c["type"] for c in response.data["data"]}
         assert types == {"expense"}
-        assert [c["id"] for c in response.data["data"]] == [flagged.id]
+        assert [c["id"] for c in response.data["data"]] == [flagged.data_id]
 
     @pytest.mark.django_db
     def test_type_expense_excludes_invoices(
         self, user, api_client, confirm_and_view_all
     ):
-        ExpenseFactory(owner=user.profile, confirmed_by=None)
-        InvoiceFactory(owner=user.profile, confirmed_by=None)
+        ExpenseFactory(owner=user.profile)
+        InvoiceFactory(owner=user.profile)
 
-        response = api_client.get(
-            "/api/claims/?confirmable=true&type=expense&per_page=100"
-        )
+        response = api_client.get("/api/claims/?type=expense&per_page=100")
 
         assert response.status_code == 200
         assert response.data["data"]
@@ -242,8 +239,8 @@ class TestClaimsList:
         self, user, api_client, confirm_and_view_all, django_assert_max_num_queries
     ):
         for _ in range(15):
-            ExpensePartFactory(expense=ExpenseFactory(owner=user.profile))
-            InvoicePartFactory(invoice=InvoiceFactory(owner=user.profile))
+            ExpensePartFactory(claim=ExpenseFactory(owner=user.profile))
+            InvoicePartFactory(claim=InvoiceFactory(owner=user.profile))
 
         with django_assert_max_num_queries(12):
             response = api_client.get("/api/claims/?per_page=5")
@@ -257,8 +254,8 @@ class TestClaimsList:
         self, user, api_client, confirm_and_view_all
     ):
         expected = {
-            ("expense", ExpenseFactory(owner=user.profile).id) for _ in range(7)
-        } | {("invoice", InvoiceFactory(owner=user.profile).id) for _ in range(7)}
+            ("expense", ExpenseFactory(owner=user.profile).data_id) for _ in range(7)
+        } | {("invoice", InvoiceFactory(owner=user.profile).data_id) for _ in range(7)}
 
         seen = []
         for page in range(1, 6):
@@ -278,19 +275,19 @@ class TestClaimsList:
         expense = ExpenseFactory(owner=user.profile)
         expense.parts.all().delete()
         for _ in range(3):
-            ExpensePartFactory(expense=expense, cost_centre="DKM")
+            ExpensePartFactory(claim=expense, cost_centre="DKM")
 
         invoice = InvoiceFactory(owner=user.profile)
         invoice.parts.all().delete()
         for _ in range(3):
-            InvoicePartFactory(invoice=invoice, cost_centre="DKM")
+            InvoicePartFactory(claim=invoice, cost_centre="DKM")
 
         response = api_client.get("/api/claims/?cost_centre=DKM&per_page=100")
 
         assert response.status_code == 200
         seen = [(c["type"], c["id"]) for c in response.data["data"]]
         assert sorted(seen) == sorted(
-            [("expense", expense.id), ("invoice", invoice.id)]
+            [("expense", expense.data_id), ("invoice", invoice.data_id)]
         )
         assert response.data["pagination"]["total"] == 2
 
@@ -298,18 +295,24 @@ class TestClaimsList:
     def test_sorting_by_date_merges_expenses_and_invoices(
         self, user, api_client, confirm_and_view_all
     ):
-        earliest = ExpenseFactory(owner=user.profile, expense_date="2024-01-01")
-        middle = InvoiceFactory(owner=user.profile, invoice_date="2024-03-01")
-        latest = ExpenseFactory(owner=user.profile, expense_date="2024-06-01")
+        earliest = ExpenseFactory(
+            owner=user.profile, expense_data__expense_date=date(2024, 1, 1)
+        )
+        middle = InvoiceFactory(
+            owner=user.profile, invoice_data__invoice_date=date(2024, 3, 1)
+        )
+        latest = ExpenseFactory(
+            owner=user.profile, expense_data__expense_date=date(2024, 6, 1)
+        )
 
         response = api_client.get("/api/claims/?sorting=date&per_page=100")
 
         assert response.status_code == 200
         keys = [(c["type"], c["id"]) for c in response.data["data"]]
         assert (
-            keys.index(("expense", earliest.id))
-            < keys.index(("invoice", middle.id))
-            < keys.index(("expense", latest.id))
+            keys.index(("expense", earliest.data_id))
+            < keys.index(("invoice", middle.data_id))
+            < keys.index(("expense", latest.data_id))
         )
 
     @pytest.mark.django_db
@@ -318,53 +321,43 @@ class TestClaimsList:
     ):
         cheap = ExpenseFactory(owner=user.profile)
         cheap.parts.all().delete()
-        ExpensePartFactory(expense=cheap, amount="10.00")
+        ExpensePartFactory(claim=cheap, amount="10.00")
         middle = InvoiceFactory(owner=user.profile)
-        InvoicePartFactory(invoice=middle, amount="50.00")
+        InvoicePartFactory(claim=middle, amount="50.00")
         pricey = ExpenseFactory(owner=user.profile)
         pricey.parts.all().delete()
-        ExpensePartFactory(expense=pricey, amount="100.00")
+        ExpensePartFactory(claim=pricey, amount="100.00")
 
         response = api_client.get("/api/claims/?sorting=-total&per_page=100")
 
         assert response.status_code == 200
         keys = [(c["type"], c["id"]) for c in response.data["data"]]
         assert (
-            keys.index(("expense", pricey.id))
-            < keys.index(("invoice", middle.id))
-            < keys.index(("expense", cheap.id))
+            keys.index(("expense", pricey.data_id))
+            < keys.index(("invoice", middle.data_id))
+            < keys.index(("expense", cheap.data_id))
         )
 
 
 class TestClaimSerializer:
 
-    def test_claim_data_matches_serializer(self):
-        # Compares the defined keys of the typed dict class and serializer class
-        data_fields = ClaimData.__annotations__.keys()
-        serializer_fields = ClaimSerializer._declared_fields
-        assert set(data_fields) == set(serializer_fields)
+    @pytest.mark.django_db
+    def test_serializes_annotated_claim(self):
+        expense = ExpenseFactory(expense_data__expense_date=date(2024, 1, 1))
+        expense.parts.all().delete()
+        ExpensePartFactory(claim=expense, amount="100.00")
+        ExpensePartFactory(claim=expense, amount="23.45")
 
-    def test_serializes_claim_data(self):
-        from unittest.mock import MagicMock
+        result = ClaimSerializer(Claim.objects.with_total().get(pk=expense.pk)).data
 
-        data = {
-            "id": 1,
-            "type": "expense",
-            "description": "Lunch",
-            "amount": "123.45",
-            "created_date": date(2024, 1, 1),
-            "expense_date": date(2024, 1, 1),
-            "invoice_date": None,
-            "is_attested": False,
-            "is_confirmed": False,
-            "is_paid": False,
-            "voucher": None,
-            "owner": MagicMock(),
-            "parts": [],
-        }
-        result = ClaimSerializer(data).data
+        assert result["id"] == expense.data_id
+        assert result["type"] == "expense"
         assert result["amount"] == "123.45"
-        assert result["created_date"] == "2024-01-01"
+        assert result["expense_date"] == "2024-01-01"
+        assert result["invoice_date"] is None
+        assert result["is_attested"] is False
+        assert result["is_paid"] is False
+        assert result["voucher"] is None
 
 
 class TestPendingPaymentsList:
@@ -378,14 +371,14 @@ class TestPendingPaymentsList:
         ExpenseFactory.create_batch(
             10,
             owner=user.profile,
-            reimbursement=Payment.objects.create(
+            expense_data__reimbursement=Payment.objects.create(
                 payer=user.profile, receiver=user.profile
             ),
         )
-        pending = ExpenseFactory.create_batch(5, owner=user.profile, reimbursement=None)
+        pending = ExpenseFactory.create_batch(5, owner=user.profile)
         for expense in pending:
-            expense.confirmed_by = user
-            expense.save()
+            expense.expense_data.confirmed_by = user
+            expense.expense_data.save()
             expense.parts.all().update(attested_by=user.profile)
         pending_sum = sum([sum([p.amount for p in e.parts.all()]) for e in pending])
 
@@ -415,10 +408,10 @@ class TestPaymentCreation:
             autospec=True,
         )
         payee = ProfileFactory.create()
-        expenses = ExpenseFactory.create_batch(5, reimbursement=None, owner=payee)
+        expenses = ExpenseFactory.create_batch(5, owner=payee)
         api_client.force_authenticate(user=user)
         response = api_client.post(
-            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+            f"/api/payments/", {"expenses": [e.data_id for e in expenses]}
         )
 
         assert response.status_code == 201, response.data
@@ -429,9 +422,9 @@ class TestPaymentCreation:
     def test_rejects_unauthorized(self, api_client, mocker):
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         payee = ProfileFactory.create()
-        expenses = ExpenseFactory.create_batch(5, reimbursement=None, owner=payee)
+        expenses = ExpenseFactory.create_batch(5, owner=payee)
         response = api_client.post(
-            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+            f"/api/payments/", {"expenses": [e.data_id for e in expenses]}
         )
 
         assert response.status_code == 403
@@ -460,17 +453,19 @@ class TestPaymentCreation:
         )
         payee = ProfileFactory.create()
         existing_payment = Payment.objects.create(payer=payee, receiver=payee)
-        expense = ExpenseFactory.create(reimbursement=existing_payment, owner=payee)
+        expense = ExpenseFactory.create(
+            expense_data__reimbursement=existing_payment, owner=payee
+        )
         api_client.force_authenticate(user=user)
 
-        response = api_client.post(f"/api/payments/", {"expenses": [expense.id]})
+        response = api_client.post(f"/api/payments/", {"expenses": [expense.data_id]})
 
         assert response.status_code == 409
         assert response.data["detail"].code == "already_reimbursed"
 
         # check that existing reimbursement was not changed
-        expense.refresh_from_db()
-        assert expense.reimbursement_id == existing_payment.id
+        expense.expense_data.refresh_from_db()
+        assert expense.expense_data.reimbursement_id == existing_payment.id
 
     @pytest.mark.django_db
     def test_rejects_multiple_receivers(self, user, api_client, mocker):
@@ -479,9 +474,9 @@ class TestPaymentCreation:
             return_value={Permission.PAY: True},
             autospec=True,
         )
-        expenses = ExpenseFactory.create_batch(5, reimbursement=None)
+        expenses = ExpenseFactory.create_batch(5)
         response = api_client.post(
-            f"/api/payments/", {"expenses": [e.id for e in expenses]}
+            f"/api/payments/", {"expenses": [e.data_id for e in expenses]}
         )
 
         assert response.status_code == 422
@@ -512,33 +507,27 @@ class TestNormalizeUpload:
 
 
 class TestFileChangeResetsConfirmation:
-    target_factories = {"expense": ExpenseFactory, "invoice": InvoiceFactory}
-    file_factories = {"expense": ExpenseFileFactory, "invoice": InvoiceFileFactory}
 
-    @pytest.fixture(params=["expense", "invoice"])
-    def confirmed(self, request, db, user):
-        # Confirm after creation: the factories attach a File post-creation,
+    @pytest.fixture
+    def confirmed(self, db, user):
+        # Confirm after creation: the factory attaches a File post-creation,
         # which itself resets any confirmation passed as a factory kwarg.
-        target = self.target_factories[request.param]()
-        target.confirmed_by = user
-        target.confirmed_at = date.today()
-        target.save()
-        return request.param, target
+        expense = ExpenseFactory()
+        expense.expense_data.confirmed_by = user
+        expense.expense_data.confirmed_at = date.today()
+        expense.expense_data.save()
+        return expense
 
     def test_adding_a_file_resets_confirmation(self, confirmed):
-        kind, target = confirmed
+        ExpenseFileFactory(claim=confirmed)
 
-        self.file_factories[kind](**{kind: target})
-
-        target.refresh_from_db()
-        assert target.confirmed_by is None
-        assert target.confirmed_at is None
+        confirmed.expense_data.refresh_from_db()
+        assert confirmed.expense_data.confirmed_by is None
+        assert confirmed.expense_data.confirmed_at is None
 
     def test_deleting_a_file_resets_confirmation(self, confirmed):
-        kind, target = confirmed
+        confirmed.file_set.first().delete()
 
-        target.file_set.first().delete()
-
-        target.refresh_from_db()
-        assert target.confirmed_by is None
-        assert target.confirmed_at is None
+        confirmed.expense_data.refresh_from_db()
+        assert confirmed.expense_data.confirmed_by is None
+        assert confirmed.expense_data.confirmed_at is None

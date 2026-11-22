@@ -2,40 +2,52 @@ import factory
 from factory.django import DjangoModelFactory
 
 from core.factories import ProfileFactory
-from expenses.models import File
-from invoices.models import Invoice, InvoicePart
+from core.models import Claim, ClaimPart, File
+from invoices.models import InvoiceData
 
 
-class InvoiceFactory(DjangoModelFactory):
+class InvoiceDataFactory(DjangoModelFactory[InvoiceData]):
     class Meta:
-        model = Invoice
+        model = InvoiceData
+
+    invoice_date = factory.Faker("date_object")
+    invoice_number = factory.Faker("numerify", text="#######")
+    due_date = factory.Faker("date_object")
+
+
+class InvoiceFactory(DjangoModelFactory[Claim]):
+    """An invoice claim with one file and no parts.
+
+    Invoice-specific fields live on the related InvoiceData, so set them with
+    e.g. `InvoiceFactory(invoice_data__invoice_date=...)`. The API addresses
+    invoices by `claim.data_id`, not `claim.id`.
+    """
+
+    class Meta:
+        model = Claim
         skip_postgeneration_save = True
 
     owner = factory.SubFactory(ProfileFactory)
     description = factory.Faker("text")
-    invoice_date = factory.Faker("date")
-    invoice_number = factory.Faker("numerify", text="#######")
-    due_date = factory.Faker("date")
-    file_is_original = True
+    invoice_data = factory.SubFactory(InvoiceDataFactory)
     file = factory.RelatedFactory(
-        "invoices.factories.InvoiceFileFactory", factory_related_name="invoice"
+        "invoices.factories.InvoiceFileFactory", factory_related_name="claim"
     )
 
 
-class InvoiceFileFactory(DjangoModelFactory):
+class InvoiceFileFactory(DjangoModelFactory[File]):
     class Meta:
         model = File
 
-    expense = None
-    invoice = factory.SubFactory(InvoiceFactory)
+    claim = factory.SubFactory(InvoiceFactory)
     file = factory.django.FileField()
 
 
-class InvoicePartFactory(DjangoModelFactory):
+class InvoicePartFactory(DjangoModelFactory[ClaimPart]):
     class Meta:
-        model = InvoicePart
+        model = ClaimPart
 
-    invoice = factory.SubFactory(InvoiceFactory)
+    claim = factory.SubFactory(InvoiceFactory)
     cost_centre = factory.Faker("word")
     secondary_cost_centre = factory.Faker("word")
     budget_line = factory.Faker("word")
