@@ -1,243 +1,247 @@
 <script lang="ts">
-	import Checkbox from '#lib/components/Checkbox.svelte';
-	import { page } from '$app/state';
-	import type { CostCentre } from '#lib/api/types.js';
-	import ExpandedCostCentre from './ExpandedCostCentre.svelte';
-	import { ChevronDown, ChevronUp, Receipt, SquareArrowOutUpRight } from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import { afterNavigate, goto } from '$app/navigation';
-	import { tick } from 'svelte';
-	import Skeleton from '#lib/components/ui/Skeleton.svelte';
+	import { ChevronLeft, ChevronRight, Search, TriangleAlert } from '@lucide/svelte';
+	import { afterNavigate, goto, replaceState } from '$app/navigation';
+	import { navigating, page } from '$app/state';
+	import type { CostCentreType } from '#lib/api/types.ts';
+	import { Button, Card, Combobox, Switch } from '#lib/components/ui/index.ts';
+	import { formatKronor, formatWholeAmount } from '#lib/money.ts';
+	import { rankOptions } from '#lib/search.ts';
+	import CostCentreDetail from './CostCentreDetail.svelte';
+	import UsageBar from './UsageBar.svelte';
 
 	let { data } = $props();
 
-	let expanded: number | null = $state(null);
+	// Dims the page while another year loads
+	const loading = $derived(navigating.to?.route.id === page.route.id);
 
-	// True only when the expanded row has been scrolled out of view above the viewport
-	let showScrollButton = $state(false);
+	const thisYear = new Date().getFullYear();
+	const groups: { key: string; types: CostCentreType[] }[] = [
+		{ key: 'committee', types: ['committee'] },
+		{ key: 'partition', types: ['partition'] },
+		{ key: 'project', types: ['project', 'projectX'] },
+		{ key: 'other', types: ['other'] }
+	];
 
-	// "pre-expand" and scroll to the cost centre specified in the hash section of the url
-	// e.g. loading /budget/#Dive will expand that row and scroll to it.
-	afterNavigate(async ({ shallow, type }) => {
-		if (shallow && type === 'goto') return;
+	let query = $state('');
+	let blownOnly = $state(page.url.searchParams.get('contains_blown') === 'true');
+	let selectedId = $state(Number(page.url.searchParams.get('cc')) || null);
 
-		const costCentre: string | null =
-			page.url.hash != '' ? decodeURIComponent(page.url.hash.replace('#', '')) : null;
-
-		const resolved = data.costCentres.find((cc) => cc.name == costCentre);
-		const target = resolved ? resolved.id : null;
-		if (target === expanded) {
-			return;
+	function urlWith(change: Record<string, string | null>) {
+		const url = new URL(location.href);
+		for (const [key, value] of Object.entries(change)) {
+			if (value === null) url.searchParams.delete(key);
+			else url.searchParams.set(key, value);
 		}
-		expanded = target;
-		await tick();
-		scrollToExpanded();
-	});
-
-	// Context menu
-	let ctx: { selected: CostCentre; x: number; y: number } | null = $state(null);
-	// Dismiss context table
-	$effect(() => {
-		if (!ctx) return;
-		const close = () => (ctx = null);
-		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') close();
-		};
-		window.addEventListener('click', close);
-		window.addEventListener('scroll', close, true);
-		window.addEventListener('keydown', onKeyDown);
-		return () => {
-			window.removeEventListener('click', close);
-			window.removeEventListener('scroll', close, true);
-			window.removeEventListener('keydown', onKeyDown);
-		};
-	});
-
-	$effect(() => {
-		if (expanded === null) {
-			showScrollButton = false;
-			return;
-		}
-		const element = document.getElementById(`cost-centre-${expanded}`);
-		if (!element) {
-			return;
-		}
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				// View is below the row when it's not intersecting and sits above the root's
-				// top edge (rootBounds.top already includes the rootMargin offset)
-				const rootTop = entry.rootBounds?.top ?? 80;
-				showScrollButton = !entry.isIntersecting && entry.boundingClientRect.top < rootTop;
-			},
-			// Matches the navbar offset (scroll-mt-20 = 5rem)
-			{ rootMargin: '-80px 0px 0px 0px' }
-		);
-		observer.observe(element);
-		return () => observer.disconnect();
-	});
-
-	// Scrolls the view to the expanded row
-	// Useful for mobile and cost centres with many budget lines for the user to go back easily
-	function scrollToExpanded() {
-		const element = document.getElementById(`cost-centre-${expanded}`);
-		if (!element) {
-			return;
-		}
-		element.scrollIntoView({
-			behavior: 'smooth'
-		});
+		url.hash = '';
+		return url;
 	}
 
-	let filterBlown = $state(page.url.searchParams.get('contains_blown') == 'true');
-	let loading = $state(false);
+	// Only the year needs new data; other changes just update the URL
+	const setParams = (change: Record<string, string | null>) =>
+		replaceState(urlWith(change), page.state);
+	const setYear = (year: number) =>
+		goto(urlWith({ year: year >= thisYear ? null : String(year) }), { reset: false });
 
-	async function handleFilterChange(checked: boolean) {
-		loading = true;
-		const url = new URL(page.url.href);
-		if (checked) {
-			url.searchParams.set('contains_blown', 'true');
-			filterBlown = true;
-		} else {
-			url.searchParams.delete('contains_blown');
-			filterBlown = false;
-		}
-		await goto(url, { reset: false });
-		loading = false;
-
-		if (expanded != null) {
-			scrollToExpanded();
-		}
+	function select(id: number) {
+		selectedId = id;
+		setParams({ cc: String(id) });
 	}
-	const itemClass =
-		'flex w-full cursor-pointer flex-row items-center gap-x-2 px-3 py-2 text-left transition-colors hover:bg-base-300 focus-visible:bg-base-300 focus-visible:outline-none dark:hover:bg-dark-base-300 dark:focus-visible:bg-dark-base-300';
+
+	// Parts link here as /budget/#<cost centre name>; the hash keeps the selection on reload
+	afterNavigate(() => {
+		const name = decodeURIComponent(location.hash.slice(1));
+		const match = name && summary.find((cc) => cc.name === name);
+		if (match) selectedId = match.id;
+	});
+
+	// The list is one tab stop; arrow keys move between cost centres
+	function onListKeydown(e: KeyboardEvent) {
+		const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End'];
+		if (!keys.includes(e.key)) return;
+		const buttons = [
+			...(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-cc]')
+		];
+		const current = buttons.indexOf(document.activeElement as HTMLElement);
+		const next =
+			e.key === 'Home'
+				? 0
+				: e.key === 'End'
+					? buttons.length - 1
+					: Math.max(0, Math.min(buttons.length - 1, current + (e.key === 'ArrowDown' ? 1 : -1)));
+		e.preventDefault();
+		buttons[next]?.focus();
+		buttons[next]?.click();
+	}
+
+	let nav = $state<HTMLElement | null>(null);
+
+	// Enter picks the best match, ArrowDown moves into the list
+	function onSearchKeydown(e: KeyboardEvent) {
+		const best = list[0];
+		if (!best || (e.key !== 'ArrowDown' && e.key !== 'Enter')) return;
+		e.preventDefault();
+		const id = e.key === 'Enter' ? best.id : focusId;
+		nav?.querySelector<HTMLElement>(`[data-cc="${id}"]`)?.focus();
+		if (e.key === 'Enter') select(best.id);
+	}
+
+	const summary = $derived(data.summary ?? []);
+	// The selection stays within the exceeded filter so the detail never shows a filtered-out cost centre
+	const shown = $derived(summary.filter((cc) => !blownOnly || cc.blown_lines > 0));
+	const selected = $derived(
+		shown.find((cc) => cc.id === selectedId) ??
+			shown.find((cc) => Number(cc.amount_uploaded) > 0) ??
+			shown[0]
+	);
+	const list = $derived(query.trim() ? rankOptions(shown, query, (cc) => cc.name) : shown);
+
+	// Keeps the selected cost centre in view, e.g. after a deep link
+	$effect(() => {
+		nav?.querySelector(`[data-cc="${selected?.id}"]`)?.scrollIntoView({ block: 'nearest' });
+	});
+	const selectedVisible = $derived(list.some((cc) => cc.id === selected?.id));
+	const focusId = $derived(selectedVisible ? selected?.id : list[0]?.id);
 </script>
 
-<div class={['flex flex-row py-4']}>
-	<span>
-		<Checkbox name="Test" onCheckedChange={handleFilterChange} checked={filterBlown}>
-			<p>{$_('budget.exceeded_filter_help')}</p>
-		</Checkbox>
-	</span>
-</div>
-
-<!-- Context menu -->
-{#if ctx != null}
-	{@const url = encodeURIComponent}
-	<div
-		role="menu"
-		class={[
-			'fixed flex w-52 flex-col border border-base-500 bg-base-100 py-1 shadow-lg',
-			'text-sm text-base-text dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-text'
-		]}
-		style="left: {ctx.x}px; top: {ctx.y}px"
+<header class="flex flex-wrap items-center gap-x-6 gap-y-3 pb-6">
+	<h1 class="mr-auto text-3xl font-bold tracking-tight">{$_('budget.title')}</h1>
+	<label
+		class="order-last flex w-full cursor-pointer items-center gap-2 text-sm sm:order-none sm:w-auto"
 	>
-		<a
-			href="/admin/expenses/?cost_centre={url(ctx.selected.name)}"
-			role="menuitem"
-			class={itemClass}
-			target="_blank"
-			rel="noopener noreferrer"
+		<Switch
+			checked={blownOnly}
+			onCheckedChange={(checked) => {
+				blownOnly = checked;
+				setParams({ contains_blown: checked ? 'true' : null });
+			}}
+		/>
+		{$_('budget.exceeded_filter_help')}
+	</label>
+	<div class="-mr-2 flex items-center">
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			aria-label={$_('previous')}
+			onclick={() => setYear(data.year - 1)}
 		>
-			<Receipt class="size-4" />
-			{$_('Visa utlägg')}
-			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
-		</a>
-		<a
-			href="/admin/invoices/?cost_centre={url(ctx.selected.name)}"
-			role="menuitem"
-			class={itemClass}
-			target="_blank"
-			rel="noopener noreferrer"
+			<ChevronLeft />
+		</Button>
+		<span class="w-14 text-center text-lg font-bold tabular-nums">{data.year}</span>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			aria-label={$_('next')}
+			disabled={data.year >= thisYear}
+			onclick={() => setYear(data.year + 1)}
 		>
-			<Receipt class="size-4" />
-			{$_('Visa fakturor')}
-			<SquareArrowOutUpRight class="ml-auto size-3 text-base-subtle dark:text-dark-base-subtle" />
-		</a>
+			<ChevronRight />
+		</Button>
 	</div>
-{/if}
+</header>
 
-<div class="border border-base-500 p-2 dark:border-dark-base-200">
-	<table class="w-full table-fixed">
-		<thead>
-			<tr>
-				<th
-					class="px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
+<div class="flex flex-col gap-6">
+	{#if data.summary === null}
+		<p class="text-sm text-danger">{$_('budget.load_error')}</p>
+	{:else}
+		<div
+			class={[
+				'grid gap-6 transition-opacity lg:h-[calc(100dvh-12rem)] lg:min-h-[28rem] lg:grid-cols-[20rem_minmax(0,1fr)]',
+				loading && 'opacity-60'
+			]}
+		>
+			<Combobox
+				items={list}
+				getValue={(cc) => String(cc.id)}
+				getLabel={(cc) => cc.name}
+				value={selected && selectedVisible ? String(selected.id) : ''}
+				onchange={(v) => v && select(Number(v))}
+				label={$_('budget.search')}
+				clearable
+				class="lg:hidden"
+			>
+				{#snippet item(cc)}
+					<span class="flex items-center gap-2">
+						{cc.name}
+						{#if cc.blown_lines > 0}<TriangleAlert class="size-3.5 shrink-0 text-danger" />{/if}
+					</span>
+				{/snippet}
+			</Combobox>
+			<Card padded={false} class="hidden min-h-0 flex-col lg:flex">
+				<label
+					class="flex shrink-0 items-center gap-2.5 border-b border-border px-4 ring-primary ring-inset focus-within:ring-1"
 				>
-					{$_('cost_centre')}
-				</th>
-				<th class="w-12"></th>
-			</tr>
-		</thead>
-		<tbody>
-			{#if loading}
-				{@const widths = ['w-24', 'w-32', 'w-40', 'w-48']}
-				{#each { length: 20 }}
-					{@const w = widths[Math.floor(Math.random() * widths.length)]}
-					<tr
-						class="group cursor-pointer scroll-mt-20 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-					>
-						<td class="px-4 py-3"
-							><div class="flex h-6 items-center"><Skeleton class="h-4 {w} rounded-md" /></div></td
-						>
-					</tr>
-				{/each}
-			{/if}
-
-			{#each data.costCentres as costCentre}
-				{@const Chevron = expanded === costCentre.id ? ChevronUp : ChevronDown}
-				<tr
-					class="group cursor-pointer scroll-mt-20 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-					id="cost-centre-{costCentre.id}"
-					onclick={async () => {
-						const url = new URL(page.url.href);
-						if (expanded === costCentre.id) {
-							expanded = null;
-							url.hash = '';
-						} else {
-							expanded = expanded === costCentre.id ? null : costCentre.id;
-							url.hash = encodeURIComponent(costCentre.name);
-							scrollToExpanded();
-						}
-						await goto(url, { reset: false });
-					}}
-					oncontextmenu={(e) => {
-						e.preventDefault();
-						ctx = { selected: costCentre, x: e.clientX, y: e.clientY };
-					}}
+					<Search class="size-4 shrink-0 text-muted-foreground" />
+					<input
+						type="search"
+						bind:value={query}
+						onkeydown={onSearchKeydown}
+						placeholder={$_('budget.search')}
+						class="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+					/>
+				</label>
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+				<nav
+					bind:this={nav}
+					onkeydown={onListKeydown}
+					class="min-h-0 flex-1 overflow-y-auto overscroll-contain py-2"
 				>
-					<td class="flex flex-row gap-2 px-4 py-3">
-						{costCentre.name}
-						{#if costCentre.contains_blown}
-							<span class="my-auto size-2 animate-pulse rounded-full bg-amber-400"></span>
+					{#each groups as group (group.key)}
+						{@const items = list.filter((cc) => group.types.includes(cc.type))}
+						{#if items.length > 0}
+							<p
+								class="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+							>
+								{$_(`budget.types.${group.key}`)}
+							</p>
+							<ul>
+								{#each items as cc (cc.id)}
+									{@const active = cc.id === selected?.id}
+									<li>
+										<button
+											type="button"
+											aria-current={active || undefined}
+											data-cc={cc.id}
+											tabindex={cc.id === focusId ? 0 : -1}
+											onclick={() => select(cc.id)}
+											class={[
+												'flex w-full cursor-pointer flex-col gap-1.5 px-4 py-2.5 text-left text-sm transition-colors',
+												active ? 'bg-accent font-semibold text-accent-foreground' : 'hover:bg-muted'
+											]}
+										>
+											<span class="flex items-center gap-2">
+												<span class="min-w-0 flex-1 wrap-break-word">{cc.name}</span>
+												{#if cc.blown_lines > 0}
+													<TriangleAlert class="size-3.5 shrink-0 text-danger" />
+												{/if}
+												<span class="text-xs font-normal text-muted-foreground tabular-nums">
+													{formatWholeAmount(cc.amount_uploaded)} / {formatKronor(cc.expense)}
+												</span>
+											</span>
+											<UsageBar
+												budget={cc.expense}
+												uploaded={Number(cc.amount_uploaded)}
+												attested={Number(cc.amount_attested)}
+												paid={Number(cc.amount_paid)}
+												thin
+											/>
+										</button>
+									</li>
+								{/each}
+							</ul>
 						{/if}
-					</td>
-					<td class="px-4 py-3 text-right">
-						<Chevron class="ml-auto size-5 transition-transform group-hover:scale-125" />
-					</td>
-				</tr>
+					{/each}
+					{#if list.length === 0}
+						<p class="px-4 py-6 text-center text-sm text-muted-foreground">{$_('no_results')}</p>
+					{/if}
+				</nav>
+			</Card>
 
-				{#if expanded === costCentre.id}
-					<tr class="border-b border-b-base-400 dark:border-dark-base-150">
-						<td colspan="2" class="px-4 py-3">
-							<ExpandedCostCentre {costCentre} {filterBlown} user={data.user} />
-						</td>
-					</tr>
-				{/if}
-			{/each}
-		</tbody>
-	</table>
-
-	<button
-		onclick={() => {
-			scrollToExpanded();
-		}}
-		class={[
-			'bg-black/60 p-1 text-white shadow-lg ring-1 ring-white/10 backdrop-blur-sm',
-			'hover-cursor transition-all',
-			showScrollButton ? 'flex opacity-100 md:hidden md:opacity-0' : 'hidden opacity-0',
-			'fixed bottom-5 left-1/2 h-8 w-16 -translate-x-1/2'
-		]}
-	>
-		<ChevronUp class="m-auto" />
-	</button>
+			{#if selected}
+				<div class="min-w-0 lg:min-h-0">
+					<CostCentreDetail costCentre={selected} year={data.year} {blownOnly} user={data.user} />
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
