@@ -50,7 +50,7 @@
 	{#if value === 0}
 		<span class="text-muted-foreground">–</span>
 	{:else}
-		<span class={tone === 'danger' ? 'text-danger' : ''}>{formatKronor(value)}</span>
+		<span class={tone === 'danger' ? 'text-danger-text' : ''}>{formatKronor(value)}</span>
 	{/if}
 {/snippet}
 
@@ -97,7 +97,10 @@
 				<div class="flex flex-col gap-0.5">
 					<dt class="text-xs text-muted-foreground">{stat.label}</dt>
 					<dd
-						class={['text-lg font-bold tabular-nums sm:text-xl', stat.value < 0 && 'text-danger']}
+						class={[
+							'text-lg font-bold tabular-nums sm:text-xl',
+							stat.value < 0 && 'text-danger-text'
+						]}
 					>
 						{formatKronor(stat.value)}
 					</dd>
@@ -114,7 +117,7 @@
 	</div>
 
 	{#if detail.error}
-		<p class="p-5 text-sm text-danger">{$_('budget.load_error')}</p>
+		<p class="p-5 text-sm text-danger-text">{$_('budget.load_error')}</p>
 	{:else}
 		{@const groups = detail.value?.secondary_cost_centres
 			?.map((scc) => ({
@@ -148,7 +151,10 @@
 								<div class={['flex flex-col', i === 2 && 'items-end']}>
 									<dt class="text-muted-foreground">{cell.label}</dt>
 									<dd
-										class={['font-semibold', cell.value != null && cell.value < 0 && 'text-danger']}
+										class={[
+											'font-semibold',
+											cell.value != null && cell.value < 0 && 'text-danger-text'
+										]}
 									>
 										{cell.value == null ? '–' : formatKronor(cell.value)}
 									</dd>

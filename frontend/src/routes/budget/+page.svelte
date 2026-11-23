@@ -142,7 +142,7 @@
 
 <div class="flex flex-col gap-6">
 	{#if data.summary === null}
-		<p class="text-sm text-danger">{$_('budget.load_error')}</p>
+		<p class="text-sm text-danger-text">{$_('budget.load_error')}</p>
 	{:else}
 		<div
 			class={[
@@ -163,7 +163,9 @@
 				{#snippet item(cc)}
 					<span class="flex items-center gap-2">
 						{cc.name}
-						{#if cc.blown_lines > 0}<TriangleAlert class="size-3.5 shrink-0 text-danger" />{/if}
+						{#if cc.blown_lines > 0}
+							<TriangleAlert class="size-3.5 shrink-0 text-danger-text" />
+						{/if}
 					</span>
 				{/snippet}
 			</Combobox>
@@ -212,7 +214,7 @@
 											<span class="flex items-center gap-2">
 												<span class="min-w-0 flex-1 wrap-break-word">{cc.name}</span>
 												{#if cc.blown_lines > 0}
-													<TriangleAlert class="size-3.5 shrink-0 text-danger" />
+													<TriangleAlert class="size-3.5 shrink-0 text-danger-text" />
 												{/if}
 												<span class="text-xs font-normal text-muted-foreground tabular-nums">
 													{formatWholeAmount(cc.amount_uploaded)} / {formatKronor(cc.expense)}

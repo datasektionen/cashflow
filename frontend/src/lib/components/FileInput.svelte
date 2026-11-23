@@ -94,7 +94,7 @@
 
 <div class="flex flex-1 flex-col gap-3">
 	{#if hasAny}
-		<ul class="flex max-h-56 flex-col divide-y divide-border overflow-y-auto border border-border">
+		<ul class="flex max-h-56 flex-col divide-y divide-border overflow-y-auto border border-input">
 			{#each existing as file (file.id)}
 				{@const isDeleted = !!deleted?.has(file.id)}
 				<li class="flex items-center gap-3 px-3 py-2">

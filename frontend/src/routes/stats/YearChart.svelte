@@ -56,7 +56,7 @@
 </div>
 
 {#if yearly.error}
-	<p class="text-sm text-danger">{$_('claims.error')}</p>
+	<p class="text-sm text-danger-text">{$_('claims.error')}</p>
 {:else if data.length}
 	<Chart
 		{data}

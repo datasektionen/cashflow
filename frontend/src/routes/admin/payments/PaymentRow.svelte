@@ -56,6 +56,6 @@
 			</div>
 		{/if}
 	{:catch}
-		<p class="p-4 text-sm text-danger">{$_('admin_pay.load_error')}</p>
+		<p class="p-4 text-sm text-danger-text">{$_('admin_pay.load_error')}</p>
 	{/await}
 </div>

@@ -7,11 +7,11 @@
 			variant: {
 				primary: 'bg-primary text-primary-foreground hover:bg-primary-hover',
 				secondary:
-					'border border-input bg-card text-foreground hover:border-foreground/50 hover:bg-muted',
+					'border border-input bg-card text-foreground hover:border-muted-foreground hover:bg-muted',
 				ghost: 'text-foreground hover:bg-muted',
 				danger: 'bg-danger text-danger-foreground hover:bg-danger-hover',
 				'danger-outline':
-					'border border-input bg-card text-danger hover:bg-danger-soft hover:text-danger-soft-foreground'
+					'border border-input bg-card text-danger-text hover:bg-danger-soft hover:text-danger-soft-foreground'
 			},
 			size: {
 				sm: 'h-8 px-3 text-xs',

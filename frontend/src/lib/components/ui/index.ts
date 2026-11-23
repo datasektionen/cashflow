@@ -24,4 +24,4 @@ export { default as Textarea } from './Textarea.svelte';
 export { default as Tooltip } from './Tooltip.svelte';
 export * as DropdownMenu from './dropdown-menu';
 export * as Table from './table';
-export { surface, menuItem } from './styles';
+export { surface, menuItem, chip } from './styles';

@@ -46,7 +46,7 @@
 
 	<div class="flex flex-col gap-4">
 		{#if stats.error}
-			<p class="text-sm text-danger">{$_('claims.error')}</p>
+			<p class="text-sm text-danger-text">{$_('claims.error')}</p>
 		{:else}
 			{@const s = stats.value}
 			<div

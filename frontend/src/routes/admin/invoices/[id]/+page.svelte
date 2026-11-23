@@ -15,5 +15,5 @@
 		<InvoiceDetail {invoice} user={data.user} />
 	</div>
 {:catch}
-	<div class="py-24 text-center text-sm text-danger">{$_('action_failed')}</div>
+	<div class="py-24 text-center text-sm text-danger-text">{$_('action_failed')}</div>
 {/await}

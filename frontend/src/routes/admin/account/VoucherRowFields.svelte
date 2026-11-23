@@ -265,7 +265,7 @@
 	{#if validationResult.hasErrors(VoucherRowField.DebitCredit) || validationResult.hasWarnings(VoucherRowField.ExpectedTotal)}
 		<div class="flex flex-col items-end gap-1 text-xs font-medium">
 			{#if validationResult.hasErrors(VoucherRowField.DebitCredit)}
-				<p class="flex items-center gap-1.5 text-danger">
+				<p class="flex items-center gap-1.5 text-danger-text">
 					<CircleAlert class="size-3.5" />
 					{$_('booking_debit_credit_mismatch')}
 				</p>

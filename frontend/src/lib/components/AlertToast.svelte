@@ -12,7 +12,7 @@
 	const tones = {
 		success: { icon: CircleCheck, color: 'text-primary-text' },
 		warning: { icon: CircleAlert, color: 'text-warning-soft-foreground' },
-		error: { icon: CircleX, color: 'text-danger' }
+		error: { icon: CircleX, color: 'text-danger-text' }
 	};
 	const tone = $derived(tones[alert.type]);
 

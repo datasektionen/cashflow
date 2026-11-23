@@ -106,7 +106,7 @@
 			aria-label={$_('show_receipt')}
 			title={$_('show_receipt')}
 			onclick={() => (prefs.receiptWidth = DEFAULT_WIDTH)}
-			class="fixed top-1/2 right-0 z-20 flex -translate-y-1/2 cursor-pointer items-center border border-r-0 border-border bg-card p-2 text-muted-foreground shadow-md transition-colors hover:text-foreground [&_svg]:size-5"
+			class="fixed top-1/2 right-0 z-20 flex -translate-y-1/2 cursor-pointer items-center border border-r-0 border-input bg-card p-2 text-muted-foreground shadow-md transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-5"
 		>
 			<PanelRightOpen />
 		</button>

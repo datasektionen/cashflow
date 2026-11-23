@@ -79,7 +79,7 @@
 			{@render actions?.(c)}
 		</div>
 	{:catch}
-		<p class="flex flex-1 items-center justify-center text-sm text-danger">
+		<p class="flex flex-1 items-center justify-center text-sm text-danger-text">
 			{$_('action_failed')}
 		</p>
 	{/await}

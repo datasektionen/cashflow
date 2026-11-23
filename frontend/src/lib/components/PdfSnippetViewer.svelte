@@ -32,7 +32,7 @@
 			disabled: '#9aa3b0',
 			onAccent: '#ffffff'
 		},
-		border: { default: '#dde3ea', subtle: '#eef2f6', strong: '#b6c1cf' },
+		border: { default: '#d3dae3', subtle: '#eef2f6', strong: '#848f9e' },
 		accent: {
 			primary: '#278032',
 			primaryHover: '#216c2a',
@@ -77,7 +77,7 @@
 			disabled: '#646d7c',
 			onAccent: '#ffffff'
 		},
-		border: { default: '#373c46', subtle: '#2b2f37', strong: '#565e6c' },
+		border: { default: '#373c46', subtle: '#2b2f37', strong: '#6b7381' },
 		accent: {
 			primary: '#278032',
 			primaryHover: '#216c2a',

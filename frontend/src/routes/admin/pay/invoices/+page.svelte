@@ -84,7 +84,7 @@
 	<span
 		class={[
 			'flex items-center gap-1 tabular-nums',
-			pastDue && 'text-danger',
+			pastDue && 'text-danger-text',
 			dueSoon && !pastDue && 'text-warning',
 			paidInvoices.has(invoice.id) && 'opacity-50'
 		]}

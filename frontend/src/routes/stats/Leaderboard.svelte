@@ -51,7 +51,7 @@
 		<Table.Body>
 			{#if leaderboard.error}
 				<Table.Row>
-					<Table.Cell colspan={3} class="py-6 text-center text-sm text-danger">
+					<Table.Cell colspan={3} class="py-6 text-center text-sm text-danger-text">
 						{$_('claims.error')}
 					</Table.Cell>
 				</Table.Row>

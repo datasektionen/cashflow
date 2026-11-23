@@ -132,7 +132,7 @@
 {#snippet blown(part: ClaimPart)}
 	{#await blownLines then lines}
 		{#if lines.has(lineKey(part.cost_centre, part.secondary_cost_centre, part.budget_line))}
-			<span title={$_('budget.exceeded')} class="shrink-0 text-danger">
+			<span title={$_('budget.exceeded')} class="shrink-0 text-danger-text">
 				<TriangleAlert class="size-3.5" aria-label={$_('budget.exceeded')} />
 			</span>
 		{/if}

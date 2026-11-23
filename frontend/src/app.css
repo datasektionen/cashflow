@@ -13,8 +13,8 @@
 	--card: #ffffff;
 	--muted: #f1f5f9;
 	--muted-foreground: #5b6574;
-	--border: #dde3ea;
-	--input: #b6c1cf;
+	--border: #d3dae3;
+	--input: #848f9e;
 	--primary: #278032;
 	--primary-hover: #216c2a;
 	--primary-foreground: #ffffff;
@@ -25,6 +25,7 @@
 	--danger: #dc2626;
 	--danger-hover: #b91c1c;
 	--danger-foreground: #ffffff;
+	--danger-text: #b91c1c;
 	--danger-soft: #fef2f2;
 	--danger-soft-foreground: #991b1b;
 	--warning: #d97706;
@@ -42,7 +43,7 @@
 	--muted: #2b2f37;
 	--muted-foreground: #9aa3b0;
 	--border: #373c46;
-	--input: #565e6c;
+	--input: #6b7381;
 	--primary: #278032;
 	--primary-hover: #216c2a;
 	--primary-foreground: #ffffff;
@@ -53,6 +54,7 @@
 	--danger: #dc2626;
 	--danger-hover: #b91c1c;
 	--danger-foreground: #ffffff;
+	--danger-text: #f87171;
 	--danger-soft: #3a1717;
 	--danger-soft-foreground: #fca5a5;
 	--warning: #f59e0b;
@@ -85,6 +87,7 @@
 	--color-danger: var(--danger);
 	--color-danger-hover: var(--danger-hover);
 	--color-danger-foreground: var(--danger-foreground);
+	--color-danger-text: var(--danger-text);
 	--color-danger-soft: var(--danger-soft);
 	--color-danger-soft-foreground: var(--danger-soft-foreground);
 	--color-warning: var(--warning);

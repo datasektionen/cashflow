@@ -20,7 +20,7 @@
 	{/if}
 	{@render children()}
 	{#if error}
-		<p role="alert" class="text-xs font-medium text-danger">{error}</p>
+		<p role="alert" class="text-xs font-medium text-danger-text">{error}</p>
 	{:else if help}
 		<p class="text-xs text-muted-foreground">{help}</p>
 	{/if}

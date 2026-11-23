@@ -177,7 +177,7 @@
 {#snippet fieldError(field: string, extra = '')}
 	{@const message = errorFor(field)}
 	{#if message}
-		<span class="flex items-center gap-1 text-xs font-medium text-danger {extra}">
+		<span class="flex items-center gap-1 text-xs font-medium text-danger-text {extra}">
 			<CircleAlert class="size-3.5 shrink-0" />
 			{message}
 		</span>

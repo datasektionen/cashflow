@@ -57,7 +57,7 @@
 		{:then rows}
 			<PendingList {rows} emptyText={$_('tasks.empty')} />
 		{:catch}
-			<p class="px-5 py-4 text-sm text-danger">{$_('action_failed')}</p>
+			<p class="px-5 py-4 text-sm text-danger-text">{$_('action_failed')}</p>
 		{/await}
 	</Card>
 {/snippet}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { Calendar, CalendarClock, Hash } from '@lucide/svelte';
-	import { CopyableValue } from '#lib/components/ui/index.ts';
+	import { CopyableValue, chip } from '#lib/components/ui/index.ts';
 	import { claimTotal, formatDineroAmount } from '#lib/money.ts';
 	import type { Expense, Invoice } from '#lib/api/types.ts';
 	import UserLink from '#lib/components/UserLink.svelte';
@@ -17,10 +17,7 @@
 <div class="flex flex-wrap items-center gap-1.5">
 	<CopyableValue display={claimIdLabel(claim, $_)} value={claim.id} />
 	{#if linkOwner}
-		<UserLink
-			user={claim.owner}
-			class="flex h-7 items-center border border-border bg-card px-2 text-xs text-muted-foreground hover:text-foreground"
-		/>
+		<UserLink user={claim.owner} class={chip} />
 	{:else}
 		<CopyableValue display="{claim.owner.first_name} {claim.owner.last_name}" />
 	{/if}
