@@ -28,6 +28,15 @@
 
 	const num = (v?: string | number | null) => Number(v ?? 0);
 	const budgetOf = (bl: BudgetLine) => Math.abs(num(bl.expense));
+	// Lines that only bring money in, like sponsorships
+	const incomeOf = (bl: BudgetLine) => (budgetOf(bl) === 0 ? num(bl.income) : 0);
+
+	// Expense budget and spending of a group of lines
+	function totals(lines: BudgetLine[]) {
+		const budget = lines.reduce((sum, bl) => sum + budgetOf(bl), 0);
+		const used = lines.reduce((sum, bl) => sum + num(bl.amount_uploaded), 0);
+		return { budget, used, rest: budget - used };
+	}
 
 	function expensesHref(scc: string, line: string) {
 		const params = new URLSearchParams({
@@ -38,19 +47,30 @@
 		return `/admin/expenses/?${params}`;
 	}
 
+	const restTone = (rest: number) => (rest < 0 ? 'text-danger-text' : 'text-primary-text');
+
 	const spent = $derived(num(costCentre.amount_uploaded));
 	const stats = $derived([
 		{ label: $_('budget.budget'), value: costCentre.expense },
 		{ label: $_('budget.spent'), value: spent },
-		{ label: $_('budget.rest'), value: costCentre.expense - spent }
+		{ label: $_('budget.rest'), value: costCentre.expense - spent, rest: true }
 	]);
 </script>
 
-{#snippet amount(value: number, tone?: 'danger')}
+{#snippet budgetCell(bl: BudgetLine)}
+	{#if incomeOf(bl) > 0}
+		<span class="text-primary-text">+{formatKronor(incomeOf(bl))}</span>
+	{:else}
+		{@render amount(budgetOf(bl))}
+	{/if}
+{/snippet}
+
+{#snippet amount(value: number, colored = false)}
 	{#if value === 0}
 		<span class="text-muted-foreground">–</span>
 	{:else}
-		<span class={tone === 'danger' ? 'text-danger-text' : ''}>{formatKronor(value)}</span>
+		<!-- Colored amounts are what's left: green within budget, red over it -->
+		<span class={[colored && restTone(value)]}>{formatKronor(value)}</span>
 	{/if}
 {/snippet}
 
@@ -69,6 +89,8 @@
 			{/if}
 			{#if bl.blown}
 				<Badge variant="danger"><TriangleAlert />{$_('budget.exceeded')}</Badge>
+			{:else if incomeOf(bl) > 0}
+				<Badge variant="success">{$_('budget.income')}</Badge>
 			{/if}
 		</span>
 		{#if bl.comment}
@@ -78,7 +100,7 @@
 {/snippet}
 
 {#snippet lineBar(bl: BudgetLine)}
-	{#if budgetOf(bl) > 0 || num(bl.amount_uploaded) > 0}
+	{#if num(bl.amount_uploaded) > 0}
 		<UsageBar
 			budget={budgetOf(bl)}
 			uploaded={num(bl.amount_uploaded)}
@@ -97,10 +119,7 @@
 				<div class="flex flex-col gap-0.5">
 					<dt class="text-xs text-muted-foreground">{stat.label}</dt>
 					<dd
-						class={[
-							'text-lg font-bold tabular-nums sm:text-xl',
-							stat.value < 0 && 'text-danger-text'
-						]}
+						class={['text-lg font-bold tabular-nums sm:text-xl', stat.rest && restTone(stat.value)]}
 					>
 						{formatKronor(stat.value)}
 					</dd>
@@ -122,6 +141,7 @@
 		{@const groups = detail.value?.secondary_cost_centres
 			?.map((scc) => ({
 				scc,
+				total: totals(scc.budget_lines ?? []),
 				lines: (scc.budget_lines ?? []).filter((bl) => !blownOnly || bl.blown)
 			}))
 			.filter((g) => g.lines.length > 0)}
@@ -138,8 +158,11 @@
 					</li>
 				{/each}
 			{/if}
-			{#each groups ?? [] as { scc, lines } (scc.id)}
-				<li class="bg-muted/60 px-5 py-2 text-xs font-semibold">{scc.name}</li>
+			{#each groups ?? [] as { scc, total, lines } (scc.id)}
+				<li class="flex items-baseline justify-between gap-3 bg-muted px-5 py-2.5 font-bold">
+					<span class="min-w-0 wrap-break-word">{scc.name}</span>
+					<span class="text-sm tabular-nums">{@render amount(total.rest, true)}</span>
+				</li>
 				{#each lines as bl (bl.id)}
 					{@const budget = budgetOf(bl)}
 					{@const used = num(bl.amount_uploaded)}
@@ -147,19 +170,24 @@
 						{@render lineName(scc.name, bl)}
 						{@render lineBar(bl)}
 						<dl class="grid grid-cols-3 gap-2 text-xs tabular-nums">
-							{#each [{ label: $_('budget.budget'), value: budget }, { label: $_('budget.spent'), value: used }, { label: $_('budget.rest'), value: budget > 0 ? budget - used : null }] as cell, i (cell.label)}
-								<div class={['flex flex-col', i === 2 && 'items-end']}>
-									<dt class="text-muted-foreground">{cell.label}</dt>
-									<dd
-										class={[
-											'font-semibold',
-											cell.value != null && cell.value < 0 && 'text-danger-text'
-										]}
-									>
-										{cell.value == null ? '–' : formatKronor(cell.value)}
-									</dd>
-								</div>
-							{/each}
+							<div class="flex flex-col">
+								<dt class="text-muted-foreground">{$_('budget.budget')}</dt>
+								<dd class="font-semibold">{@render budgetCell(bl)}</dd>
+							</div>
+							<div class="flex flex-col">
+								<dt class="text-muted-foreground">{$_('budget.spent')}</dt>
+								<dd class="font-semibold">{@render amount(used)}</dd>
+							</div>
+							<div class="flex flex-col items-end">
+								<dt class="text-muted-foreground">{$_('budget.rest')}</dt>
+								<dd class="font-bold">
+									{#if budget > 0}
+										{@render amount(budget - used, true)}
+									{:else}
+										<span class="text-muted-foreground">–</span>
+									{/if}
+								</dd>
+							</div>
 						</dl>
 					</li>
 				{/each}
@@ -204,9 +232,14 @@
 							</Table.Row>
 						{/each}
 					{/if}
-					{#each groups ?? [] as { scc, lines } (scc.id)}
-						<Table.Row class="bg-muted/60">
-							<Table.Cell colspan={4} class="h-9 pl-5 text-xs font-semibold">{scc.name}</Table.Cell>
+					{#each groups ?? [] as { scc, total, lines } (scc.id)}
+						<Table.Row class="bg-muted font-bold">
+							<Table.Cell class="h-11 pl-5">{scc.name}</Table.Cell>
+							<Table.Cell align="right">{@render amount(total.budget)}</Table.Cell>
+							<Table.Cell align="right">{@render amount(total.used)}</Table.Cell>
+							<Table.Cell align="right" class="pr-5">
+								{@render amount(total.rest, true)}
+							</Table.Cell>
 						</Table.Row>
 						{#each lines as bl (bl.id)}
 							{@const budget = budgetOf(bl)}
@@ -218,11 +251,11 @@
 										{@render lineBar(bl)}
 									</div>
 								</Table.Cell>
-								<Table.Cell align="right" class="py-3">{@render amount(budget)}</Table.Cell>
+								<Table.Cell align="right" class="py-3">{@render budgetCell(bl)}</Table.Cell>
 								<Table.Cell align="right" class="py-3">{@render amount(used)}</Table.Cell>
-								<Table.Cell align="right" class="py-3 pr-5 font-semibold">
+								<Table.Cell align="right" class="py-3 pr-5 font-bold">
 									{#if budget > 0}
-										{@render amount(budget - used, budget - used < 0 ? 'danger' : undefined)}
+										{@render amount(budget - used, true)}
 									{/if}
 								</Table.Cell>
 							</Table.Row>

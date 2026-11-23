@@ -428,6 +428,7 @@
 		"exceeded_filter_help": "Visa endast överskridna budgetposter",
 		"budget": "Budget",
 		"spent": "Spenderat",
+		"income": "Intäkt",
 		"exceeded": "Överskriden",
 		"search": "Sök kostnadsställen",
 		"types": {

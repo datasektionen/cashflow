@@ -430,6 +430,7 @@
 		"exceeded_filter_help": "Only show exceeded budget lines",
 		"budget": "Budget",
 		"spent": "Spent",
+		"income": "Income",
 		"exceeded": "Exceeded",
 		"search": "Search cost centres",
 		"types": {

@@ -47,7 +47,14 @@
 </script>
 
 <div class={cn('flex flex-col gap-1', className)}>
-	<div aria-hidden="true" class={['relative overflow-hidden bg-muted', thin ? 'h-1' : 'h-2']}>
+	<div
+		aria-hidden="true"
+		class={[
+			'relative overflow-hidden',
+			// Thin bars sit in lists, where empty tracks would add noise
+			thin ? 'h-1 bg-muted' : 'h-2 bg-border'
+		]}
+	>
 		{#each stages as stage (stage.label)}
 			<div
 				class={['absolute inset-y-0 left-0', stage.within]}
