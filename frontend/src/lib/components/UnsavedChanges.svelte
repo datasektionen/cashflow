@@ -7,9 +7,11 @@
 	type Props = {
 		data: () => unknown;
 		submit: { saved: boolean; save: () => Promise<string | undefined> };
+		// Save and leave is only offered when this passes
+		canSave: () => boolean;
 	};
 
-	let { data, submit }: Props = $props();
+	let { data, submit, canSave }: Props = $props();
 
 	const snapshot = () =>
 		JSON.stringify(data(), (key, v) => {
@@ -20,6 +22,7 @@
 	const initial = snapshot();
 
 	let open = $state(false);
+	let savable = $state(false);
 	let target: URL | undefined;
 	let leaving = false;
 
@@ -29,6 +32,7 @@
 		// Closing or reloading the tab gets the browser's own prompt
 		if (nav.type === 'leave' || !nav.to) return;
 		target = nav.to.url;
+		savable = canSave();
 		open = true;
 	});
 
@@ -43,10 +47,12 @@
 <ConfirmDialog
 	bind:open
 	title={$_('unsaved.title')}
+	description={$_(savable ? 'unsaved.description' : 'unsaved.description_incomplete')}
 	cancelLabel={$_('unsaved.stay')}
-	alternative={{ label: $_('unsaved.leave'), onclick: leave }}
-	confirmLabel={$_('unsaved.save_and_leave')}
+	alternative={savable ? { label: $_('unsaved.leave'), onclick: leave } : undefined}
+	confirmLabel={$_(savable ? 'unsaved.save_and_leave' : 'unsaved.leave')}
+	danger={!savable}
 	onConfirm={async () => {
-		if (await submit.save()) leave();
+		if (!savable || (await submit.save())) leave();
 	}}
 />

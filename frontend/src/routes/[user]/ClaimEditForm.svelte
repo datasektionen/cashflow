@@ -63,7 +63,7 @@ The owner's edit form for a claim.
 			: formValidation(expenseValidation, () => formData);
 </script>
 
-<UnsavedChanges data={() => formData} {submit} />
+<UnsavedChanges data={() => formData} {submit} canSave={form.canSave} />
 
 <form onsubmit={submit.onsubmit} class="flex flex-col gap-8">
 	<ReceiptLayout files={claim.files.map((f) => f.file)}>

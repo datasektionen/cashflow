@@ -446,6 +446,8 @@
 	},
 	"unsaved": {
 		"title": "Osparade ändringar",
+		"description": "Dina ändringar försvinner om du lämnar utan att spara.",
+		"description_incomplete": "Formuläret är inte färdigt och kan inte sparas än. Dina ändringar försvinner om du lämnar.",
 		"stay": "Stanna",
 		"leave": "Lämna",
 		"save_and_leave": "Spara och lämna"

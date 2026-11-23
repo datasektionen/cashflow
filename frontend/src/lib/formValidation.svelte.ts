@@ -7,9 +7,14 @@ type Result = {
 	isValid(): boolean;
 };
 
-type Suite<T, R extends Result> = { get(): R; run(data: T, field?: string): R };
+type Suite<T, R extends Result, D> = {
+	get(): R;
+	run(data: T, field?: string): R;
+	dump(): D;
+	resume(state: D): void;
+};
 
-export function formValidation<T, R extends Result>(suite: Suite<T, R>, data: () => T) {
+export function formValidation<T, R extends Result, D>(suite: Suite<T, R, D>, data: () => T) {
 	const t = fromStore(_);
 	let result = $state(suite.get());
 	const errors = $derived(result.getErrors());
@@ -22,6 +27,13 @@ export function formValidation<T, R extends Result>(suite: Suite<T, R>, data: ()
 		validate(field?: string) {
 			result = suite.run(data(), field);
 			return result.isValid();
+		},
+		// Checks every field without marking any as tested (runStatic does)
+		canSave() {
+			const state = suite.dump();
+			const valid = suite.run(data()).isValid();
+			suite.resume(state);
+			return valid;
 		},
 		onblur: (e: FocusEvent & { currentTarget: HTMLInputElement }) => {
 			result = suite.run(data(), e.currentTarget.name);

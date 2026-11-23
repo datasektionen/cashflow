@@ -448,6 +448,8 @@
 	},
 	"unsaved": {
 		"title": "Unsaved changes",
+		"description": "Your changes will be lost if you leave without saving.",
+		"description_incomplete": "The form isn't complete, so it can't be saved yet. Your changes will be lost if you leave.",
 		"stay": "Stay",
 		"leave": "Leave",
 		"save_and_leave": "Save and leave"

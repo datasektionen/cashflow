@@ -35,7 +35,7 @@
 	const form = formValidation(validation, () => formData);
 </script>
 
-<UnsavedChanges data={() => formData} {submit} />
+<UnsavedChanges data={() => formData} {submit} canSave={form.canSave} />
 
 <ReceiptSplit bind:file={pinned}>
 	<form onsubmit={submit.onsubmit} class="@container flex flex-col gap-8">
