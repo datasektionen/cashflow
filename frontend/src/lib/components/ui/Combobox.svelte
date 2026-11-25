@@ -160,11 +160,16 @@ Search, highlight, then commit with Enter or Tab. Escape and blur restore the la
 			aria-label={label ?? (placeholder || undefined)}
 			aria-invalid={invalid || undefined}
 			class={[
-				'h-full w-full min-w-0 flex-1 bg-transparent px-3 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
+				'h-full w-full min-w-0 flex-1 bg-transparent pr-8 pl-3 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
 				display && selected && !open && 'text-transparent'
 			]}
 			onfocus={() => {
 				if (locked) return;
+				open = true;
+				input?.select();
+			}}
+			onclick={() => {
+				if (locked || open) return;
 				open = true;
 				input?.select();
 			}}
@@ -181,19 +186,16 @@ Search, highlight, then commit with Enter or Tab. Escape and blur restore the la
 			}}
 		/>
 		{#if display && selected && !open}
-			<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center truncate px-3">
+			<div
+				class="pointer-events-none absolute inset-y-0 right-8 left-0 flex items-center truncate px-3"
+			>
 				{@render display(selected)}
 			</div>
 		{/if}
-		<Combobox.Trigger
-			tabindex={-1}
-			class={[
-				'flex h-full shrink-0 items-center pr-2.5 pl-1 text-muted-foreground',
-				locked ? 'cursor-not-allowed' : 'cursor-pointer'
-			]}
-		>
+		<!-- Clicks fall through to the input, which opens the list -->
+		<span class="pointer-events-none absolute right-2.5 text-muted-foreground">
 			{#if locked}<Lock class="size-3.5" />{:else}<ChevronsUpDown class="size-4" />{/if}
-		</Combobox.Trigger>
+		</span>
 	</div>
 
 	<Combobox.Portal>
