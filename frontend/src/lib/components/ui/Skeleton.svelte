@@ -1,5 +1,7 @@
 <script lang="ts">
-	let { class: className = '' } = $props();
+	import { cn } from 'tailwind-variants';
+
+	let { class: className = '' }: { class?: string } = $props();
 </script>
 
-<div class={['animate-pulse bg-base-300 dark:bg-dark-base-300', className]}></div>
+<div class={cn('animate-pulse bg-muted', className)}></div>

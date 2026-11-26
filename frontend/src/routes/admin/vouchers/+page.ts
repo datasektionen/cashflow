@@ -1,40 +1,22 @@
 import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
 import { API } from '#lib/api/index.ts';
-import { isErrorResponse } from '#lib/api/errors.ts';
-import { alerts, error } from '#lib/stores/alerts.ts';
-import type { Claim, ClaimOrdering, PaginatedResponse } from '#lib/api/types.ts';
-import { _, waitLocale } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import { listParams, orEmptyPage, titleOrNetworkError } from '#lib/listParams.ts';
+import type { ClaimOrdering } from '#lib/api/types.ts';
 import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const api = new API(API_URL, fetch);
 
-	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
-	const perPage = url.searchParams.get('per_page')
-		? parseInt(url.searchParams.get('per_page')!)
-		: 15;
+	const { page, perPage, sorting } = listParams<ClaimOrdering>(url, 15, ['-created_date']);
 
-	const sortingParam = url.searchParams.get('sorting')?.split(',') as ClaimOrdering[] | null;
-	const sorting = sortingParam ?? ['-created_date'];
-
-	const claims = api.claims
-		.list(
+	return {
+		claims: orEmptyPage(
+			api.claims.list(page, perPage, { ...claimFilterFromUrl(url), accounted: 'true' }, sorting),
 			page,
 			perPage,
-			{
-				...claimFilterFromUrl(url),
-				accounted: 'true'
-			},
-			sorting
-		)
-		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
-			if (!isErrorResponse(e)) throw e;
-			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
-			alerts.update((a) => [...a, error(msg)]);
-			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
-		});
-
-	return { claims, title_key: 'admin_vouchers.title' };
+			titleOrNetworkError
+		),
+		title_key: 'admin_vouchers.title'
+	};
 };

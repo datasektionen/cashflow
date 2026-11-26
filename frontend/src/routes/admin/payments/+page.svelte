@@ -1,35 +1,29 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
-	import type { TableColumn } from '#lib/components/types.ts';
 	import type { Payment } from '#lib/api/types.ts';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import UserLink from '#lib/components/UserLink.svelte';
+	import UserCell from '#lib/components/UserCell.svelte';
 	import { formatDineroAmount } from '#lib/money.ts';
 	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import { byLayout } from '#lib/stores/state.svelte.ts';
 	import PaymentRow from './PaymentRow.svelte';
 
 	let { data }: PageProps = $props();
 
-	let loading = $state(false);
-
-	const columns: TableColumn<Payment>[] = $derived(
-		(
+	const columns = $derived(
+		byLayout<Payment>(
 			[
 				{
 					id: 'tag',
 					header: $_('admin_expenses.columns.tag'),
-					render: (payment) => payment.tag,
+					renderSnippet: tagCell,
 					width: 'w-28'
 				},
 				{
 					id: 'payer',
 					header: $_('admin_expenses.columns.payer'),
-					renderSnippet: payerCell,
-					width: ''
+					renderSnippet: payerCell
 				},
 				{
 					id: 'receiver',
@@ -40,49 +34,40 @@
 				{
 					id: 'total',
 					header: $_('admin_expenses.columns.total'),
-					render: (p) => formatDineroAmount(p.total),
-					width: 'w-48'
+					renderSnippet: totalCell,
+					width: 'w-48',
+					align: 'right'
 				},
 				{
 					id: 'date',
-					header: $_('expense_created_at'),
+					header: $_('date'),
 					render: (payment) => payment.date,
-					width: 'w-28'
+					width: 'w-32'
 				}
-			] as TableColumn<Payment>[]
-		).filter((col) => {
-			if (isExtraSmallLayout.current) return ['tag', 'receiver'].includes(col.id);
-			if (isSmallLayout.current) return ['tag', 'receiver', 'total'].includes(col.id);
-			return true;
-		})
+			],
+			{ xs: ['tag', 'receiver'], sm: ['tag', 'receiver', 'total'] }
+		)
 	);
-
-	function handlePageChange(p: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('page', p.toString());
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
-	function handlePerPageChange(perPage: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('per_page', perPage.toString());
-		url.searchParams.set('page', '1');
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
 </script>
 
 {#snippet expanded(payment: Payment)}
 	<PaymentRow {payment} />
 {/snippet}
 
+{#snippet tagCell(p: Payment)}
+	<span class="font-mono text-xs">{p.tag}</span>
+{/snippet}
+
 {#snippet payerCell(p: Payment)}
-	<UserLink user={p.payer} class="relative z-10" />
+	<UserCell user={p.payer} />
 {/snippet}
 
 {#snippet receiverCell(p: Payment)}
-	<UserLink user={p.receiver} class="relative z-10" />
+	<UserCell user={p.receiver} />
+{/snippet}
+
+{#snippet totalCell(p: Payment)}
+	<span class="tabular-nums">{formatDineroAmount(p.total)}</span>
 {/snippet}
 
 <ClaimFilterBar
@@ -93,12 +78,5 @@
 <PaginatedTable
 	paginatedResponse={data.payments}
 	{columns}
-	onPageChange={handlePageChange}
-	onPerPageChange={handlePerPageChange}
-	{loading}
-	scrollable
-	rowProps={{
-		class: 'cursor-pointer',
-		expandedSnippet: expanded
-	}}
+	rowProps={{ expandedSnippet: expanded }}
 />

@@ -7,5 +7,5 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
 	const invoice = await api.invoices.get(parseInt(params.id));
 
-	return { invoice, title: invoice.description };
+	return { invoice, title: invoice.description, ownHeader: true };
 };

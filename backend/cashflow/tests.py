@@ -7,6 +7,7 @@ from pytest import fixture
 
 from cashflow.dauth import Hive, Permission
 from cashflow.utils import may_authenticate_fortnox
+from core.models import Claim
 from expenses.factories import ExpenseFactory, ExpensePartFactory
 from invoices.factories import InvoiceFactory, InvoicePartFactory
 
@@ -71,7 +72,9 @@ def provider():
 
 
 class TestHiveAccountingPermissions:
-    def test_user_with_no_scopes_may_not_account(user, provider, expense_set, mocker):
+    def test_user_with_no_scopes_may_not_account(
+        self, provider, user, expense_set, mocker
+    ):
         mocker.patch("cashflow.dauth.get_permissions", autospec=True, return_value={})
         assert provider.accountable_expenses(user).count() == 0
         for e in expense_set:
@@ -100,7 +103,7 @@ class TestHiveAccountingPermissions:
         )
         cc_expenses = ExpenseFactory.create_batch(5)
         for e in cc_expenses:
-            ExpensePartFactory.create(expense=e, cost_centre="Test")
+            ExpensePartFactory.create(claim=e, cost_centre="Test")
 
         assert provider.accountable_expenses(user).count() == 5
         for e in cc_expenses:
@@ -137,7 +140,7 @@ class TestHiveAccountingPermissions:
         )
         cc_invoices = InvoiceFactory.create_batch(5)
         for i in cc_invoices:
-            InvoicePartFactory.create(invoice=i, cost_centre="Test")
+            InvoicePartFactory.create(claim=i, cost_centre="Test")
 
         assert provider.accountable_invoices(user).count() == 5
         for i in cc_invoices:
@@ -155,10 +158,10 @@ class TestHiveAccountingPermissions:
         )
         cc_expenses = ExpenseFactory.create_batch(3)
         for e in cc_expenses:
-            ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+            ExpensePartFactory.create(claim=e, cost_centre="Mottagningen 2026")
         cc_invoices = InvoiceFactory.create_batch(2)
         for i in cc_invoices:
-            InvoicePartFactory.create(invoice=i, cost_centre="Mottagningen 2026")
+            InvoicePartFactory.create(claim=i, cost_centre="Mottagningen 2026")
 
         assert provider.accountable_expenses(user).count() == 3
         assert provider.accountable_invoices(user).count() == 2
@@ -175,8 +178,6 @@ class TestHiveViewExpensesPermissions:
         # Same casing pitfall as accounting: scope comes back lowercased while the
         # stored cost centre keeps its case. viewable_cost_centres must return the
         # original-case name so the case-sensitive `cost_centre__in` filter matches.
-        from expenses.models import Expense
-
         mocker.patch(
             "cashflow.dauth.get_permissions",
             autospec=True,
@@ -184,56 +185,48 @@ class TestHiveViewExpensesPermissions:
         )
         cc_expenses = ExpenseFactory.create_batch(3)
         for e in cc_expenses:
-            ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+            ExpensePartFactory.create(claim=e, cost_centre="Mottagningen 2026")
 
         assert provider.viewable_cost_centres(user) == ["Mottagningen 2026"]
-        viewable_ids = set(
-            Expense.objects.viewable_by(user).values_list("id", flat=True)
-        )
+        viewable_ids = set(Claim.objects.viewable_by(user).values_list("id", flat=True))
         assert {e.id for e in cc_expenses} <= viewable_ids
 
     def test_accounting_scope_grants_visibility(self, provider, user, mocker):
         # Accounting permission alone (no view-expenses) must make the expense
         # visible, so it shows up in the account queue (viewable_by ∩ accountable).
-        from expenses.models import Expense
-
         mocker.patch(
             "cashflow.dauth.get_permissions",
             autospec=True,
             return_value={Permission.ACCOUNTING: ["mottagningen 2026"]},
         )
         e = ExpenseFactory.create()
-        ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+        ExpensePartFactory.create(claim=e, cost_centre="Mottagningen 2026")
 
-        viewable = set(Expense.objects.viewable_by(user).values_list("id", flat=True))
+        viewable = set(Claim.objects.viewable_by(user).values_list("id", flat=True))
         assert e.id in viewable
 
     def test_attest_scope_grants_visibility(self, provider, user, mocker):
-        from expenses.models import Expense
-
         mocker.patch(
             "cashflow.dauth.get_permissions",
             autospec=True,
             return_value={Permission.ATTEST: ["mottagningen 2026"]},
         )
         e = ExpenseFactory.create()
-        ExpensePartFactory.create(expense=e, cost_centre="Mottagningen 2026")
+        ExpensePartFactory.create(claim=e, cost_centre="Mottagningen 2026")
 
-        viewable = set(Expense.objects.viewable_by(user).values_list("id", flat=True))
+        viewable = set(Claim.objects.viewable_by(user).values_list("id", flat=True))
         assert e.id in viewable
 
     def test_confirm_permission_grants_full_visibility(
         self, provider, user, expense_set, mocker
     ):
         # confirm is unscoped, so a confirmer may view every expense.
-        from expenses.models import Expense
-
         mocker.patch(
             "cashflow.dauth.get_permissions",
             autospec=True,
             return_value={Permission.CONFIRM: True},
         )
-        assert Expense.objects.viewable_by(user).count() == Expense.objects.count() > 0
+        assert Claim.objects.viewable_by(user).count() == Claim.objects.count() > 0
 
 
 class TestGordianParsing:
@@ -256,14 +249,19 @@ class TestCostCentreListActiveFilter:
         from cashflow.gordian import GCostCenter
 
         e = ExpenseFactory()
-        ExpensePartFactory.create(expense=e, cost_centre="Retired CC")
+        ExpensePartFactory.create(claim=e, cost_centre="Retired CC")
 
         client = Client()
         client.force_login(user)
         with (
             patch("cashflow.dauth.get_permissions", return_value={}),
             patch(
-                "cashflow.api.views.list_cost_centres_from_gordian",
+                "budget.api.views.list_secondary_cost_centres_from_gordian",
+                return_value=[],
+            ),
+            patch("budget.api.views.list_budget_lines_from_gordian", return_value=[]),
+            patch(
+                "budget.api.views.list_cost_centres_from_gordian",
                 return_value=[
                     GCostCenter(
                         CostCentreID=1,

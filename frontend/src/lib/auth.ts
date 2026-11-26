@@ -1,21 +1,10 @@
 import type { User } from '#lib/api/types.ts';
 
-export function mayAccount(user: User | null | undefined): boolean {
-	if (user == null) return false;
-	return user.permissions.accounting?.length > 0;
-}
+type MaybeUser = User | null | undefined;
 
-export function mayConfirm(user: User | null | undefined): boolean {
-	if (user == null) return false;
-	return user.permissions.confirm;
-}
+export const mayAccount = (user: MaybeUser) => !!user?.permissions.accounting?.length;
+export const mayConfirm = (user: MaybeUser) => !!user?.permissions.confirm;
+export const mayPay = (user: MaybeUser) => !!user?.permissions.pay;
 
-export function mayPay(user: User | null | undefined): boolean {
-	if (user == null) return false;
-	return user.permissions.pay;
-}
-
-export function hasAdminAccess(user: User | null | undefined): boolean {
-	if (user == null) return false;
-	return Object.values(user.permissions).some((v) => (Array.isArray(v) ? v.length > 0 : v));
-}
+export const hasAdminAccess = (user: MaybeUser) =>
+	!!user && Object.values(user.permissions).some((v) => (Array.isArray(v) ? v.length > 0 : v));

@@ -34,8 +34,7 @@ export enum ValidationError {
 }
 
 // A field only gets a key once it has failed, hence Partial.
-export type VoucherRowErrors = Partial<Record<VoucherRowField, ValidationError[]>>;
-export type VoucherRowWarnings = VoucherRowErrors;
+export type VoucherRowWarnings = Partial<Record<VoucherRowField, ValidationError[]>>;
 
 export const voucherRowValidation = create((data: AccountFormData, currentField?: string) => {
 	only(currentField);

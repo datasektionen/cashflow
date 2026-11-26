@@ -1,40 +1,41 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { Component } from 'svelte';
+	import { getContext, type Component } from 'svelte';
+	import { Badge } from '#lib/components/ui/index.ts';
+	import { isActivePath } from '#lib/nav.ts';
 
-	let props: { to: string; text: string; icon?: Component; badge?: number; class?: string } =
-		$props();
+	let props: { to: string; text: string; icon?: Component; badge?: number } = $props();
 
-	const normalizePath = (path: string) => path.replace(/\/+$/, '') || '/';
-	const active = $derived.by(() => {
-		const target = normalizePath(props.to);
-		const current = normalizePath(page.url.pathname);
-		if (target === '/') return current === '/';
-		return current === target || current.startsWith(target + '/');
-	});
+	// Icon-only on desktop when the sidebar is collapsed
+	const slim = getContext<() => boolean>('sidebar-slim');
+	const active = $derived(isActivePath(props.to, page.url.pathname));
 </script>
 
 <a
 	href={props.to}
+	aria-current={active ? 'page' : undefined}
+	title={slim() ? props.text : undefined}
 	class={[
-		'flex w-full items-center gap-2.5 border-l-2 px-3 py-2 transition-colors',
+		'relative flex h-9 w-full shrink-0 items-center gap-2.5 px-2.5 text-sm transition-colors',
+		slim() && 'lg:justify-center lg:px-0',
 		active
-			? 'border-money-green-600 bg-money-green-600/10 font-medium text-base-text dark:text-dark-base-text'
-			: 'border-transparent text-base-subtle hover:bg-base-300 hover:text-base-text dark:text-dark-base-subtle dark:hover:bg-dark-base-200 dark:hover:text-dark-base-text',
-		props.class
+			? 'bg-primary font-semibold text-primary-foreground'
+			: 'font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
 	]}
 >
 	{#if props.icon}
-		<props.icon
-			class={['size-4 shrink-0', active && 'text-money-green-600 dark:text-money-green-500']}
-		/>
+		<props.icon class="size-4 shrink-0" />
 	{/if}
-	<span>{props.text}</span>
+	<span class={['truncate', slim() && 'lg:sr-only']}>{props.text}</span>
 	{#if props.badge != null && props.badge > 0}
-		<span
-			class="ml-auto rounded-full bg-money-green-600/15 px-1.5 py-0.5 text-xs font-medium text-money-green-700 dark:bg-money-green-600/20 dark:text-money-green-400"
+		<Badge
+			class={[
+				'ml-auto tabular-nums',
+				active && 'bg-primary-foreground text-primary',
+				slim() && 'lg:absolute lg:top-0 lg:right-0 lg:px-1 lg:text-[10px]'
+			]}
 		>
 			{props.badge}
-		</span>
+		</Badge>
 	{/if}
 </a>

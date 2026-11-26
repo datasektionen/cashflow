@@ -1,6 +1,4 @@
-/*
-RFC 7807 style error objects, like the ones returned by the Cashflow API
- */
+/** RFC 7807 style error, as returned by the Cashflow API. */
 export interface ErrorResponse {
 	type: string;
 	title: string;
@@ -8,8 +6,6 @@ export interface ErrorResponse {
 	status: number;
 	code: string;
 }
-
-export type NotAuthenticatedError = ErrorResponse & { code: 'not_authenticated' };
 
 export function isErrorResponse(e: unknown): e is ErrorResponse {
 	return typeof e === 'object' && e !== null && 'detail' in e && 'status' in e;

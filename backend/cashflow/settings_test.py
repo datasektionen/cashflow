@@ -6,12 +6,9 @@ PROFILE_PICTURE_PROVIDER = "users.tests.FakeProfilePictureProvider"
 # backend's settings/network requirements aren't needed to construct it.
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    }
-}
+# Tests use the PostgreSQL database configured in settings (DATABASE_URL), in
+# which pytest-django creates a separate test database. SQLite can't run the
+# claim list queries, which aggregate cost centres with StringAgg(distinct=True).
 
 STORAGES = {
     "default": {

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
@@ -14,7 +15,9 @@ from rest_framework.views import APIView
 
 from budget.api.serializers import (
     BudgetLineSerializer,
+    BudgetYearQuerySerializer,
     CostCentreSerializer,
+    CostCentreSummarySerializer,
     SecondaryCostCentreSerializer,
 )
 from cashflow.api.filters import (
@@ -205,6 +208,17 @@ def _normalise(name: str) -> str:
     return " ".join(name.split()).lower()
 
 
+def _line_key(cc: str, scc: str, bl: str) -> tuple[str, str, str]:
+    """The key `_amounts_by_line` uses for a cost centre/secondary/budget line name."""
+    return (_normalise(cc), _normalise(scc), _normalise(bl))
+
+
+def _query_year(request: Request) -> int:
+    query = BudgetYearQuerySerializer(data=request.query_params)
+    query.is_valid(raise_exception=True)
+    return query.validated_data.get("year") or timezone.localdate().year
+
+
 def _is_blown(budget: int, uploaded: Decimal) -> bool:
     """Whether a budget line has been overspent.
 
@@ -245,10 +259,8 @@ def _amounts_by_line(year: int) -> dict[tuple[str, str, str], dict[str, Decimal]
     )
     for row in rows:
         entry = totals[
-            (
-                _normalise(row["cost_centre"]),
-                _normalise(row["secondary_cost_centre"]),
-                _normalise(row["budget_line"]),
+            _line_key(
+                row["cost_centre"], row["secondary_cost_centre"], row["budget_line"]
             )
         ]
         entry["uploaded"] += row["uploaded"] or Decimal(0)
@@ -275,9 +287,7 @@ def _blown_cost_centres(year: int | None = None) -> set[str]:
         cc_name = cc_name_by_id.get(scc.cc_id)
         if cc_name is None:
             continue
-        budget_by_line[
-            (_normalise(cc_name), _normalise(scc.name), _normalise(bl.name))
-        ] = bl.expense
+        budget_by_line[_line_key(cc_name, scc.name, bl.name)] = bl.expense
 
     blown: set[str] = set()
     for key, amounts in bl_totals.items():
@@ -285,6 +295,64 @@ def _blown_cost_centres(year: int | None = None) -> set[str]:
         if budget is not None and _is_blown(budget, amounts["uploaded"]):
             blown.add(key[0])
     return blown
+
+
+@dataclass
+class _CostCentreTotals:
+    id: int
+    name: str
+    type: str
+    income: int = 0
+    expense: int = 0
+    blown_lines: int = 0
+    amount_uploaded: Decimal = Decimal(0)
+    amount_attested: Decimal = Decimal(0)
+    amount_paid: Decimal = Decimal(0)
+
+
+class CostCentreSummaryList(APIView, AuthenticatedUserMixin):
+    """Budget and claimed totals per GOrdian cost centre for one year.
+
+    `expense` and `income` are the summed GOrdian budgets (expense as a positive
+    number). The amounts are summed over every claim part on the cost centre
+    that year, including parts on budget lines no longer on GOrdian.
+    """
+
+    def get(self, request: Request) -> Response:
+        amounts = _amounts_by_line(_query_year(request))
+        cost_centres = list_cost_centres_from_gordian()
+        cc_by_id = {cc.id: cc for cc in cost_centres}
+        scc_by_id = {scc.id: scc for scc in list_secondary_cost_centres_from_gordian()}
+
+        totals = {
+            cc.id: _CostCentreTotals(id=cc.id, name=cc.name, type=cc.type)
+            for cc in cost_centres
+        }
+
+        zero = {field: Decimal(0) for field in _AMOUNT_FIELDS}
+        for bl in list_budget_lines_from_gordian():
+            scc = scc_by_id.get(bl.scc_id)
+            if scc is None or scc.cc_id not in cc_by_id:
+                continue
+            cc = cc_by_id[scc.cc_id]
+            entry = totals[cc.id]
+            entry.income += bl.income
+            entry.expense += abs(bl.expense)
+            line = amounts.get(_line_key(cc.name, scc.name, bl.name), zero)
+            if _is_blown(bl.expense, line["uploaded"]):
+                entry.blown_lines += 1
+
+        cc_id_by_name = {_normalise(cc.name): cc.id for cc in cost_centres}
+        for (cc_name, _, _), line in amounts.items():
+            cc_id = cc_id_by_name.get(cc_name)
+            if cc_id is None:
+                continue
+            entry = totals[cc_id]
+            entry.amount_uploaded += line["uploaded"]
+            entry.amount_attested += line["attested"]
+            entry.amount_paid += line["paid"]
+
+        return Response(CostCentreSummarySerializer(totals.values(), many=True).data)
 
 
 class CostCentreDetailView(APIView, AuthenticatedUserMixin):
@@ -300,9 +368,7 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
             cost_center=cost_centre.id
         )
 
-        year = int(request.query_params.get("year") or timezone.localdate().year)
-
-        amounts = _amounts_by_line(year)
+        amounts = _amounts_by_line(_query_year(request))
         zero = {field: Decimal(0) for field in _AMOUNT_FIELDS}
 
         scc_data = []
@@ -310,12 +376,7 @@ class CostCentreDetailView(APIView, AuthenticatedUserMixin):
             budget_lines = []
             for bl in list_budget_lines_from_gordian(secondary_cost_center=scc.id):
                 line_amounts = amounts.get(
-                    (
-                        _normalise(cost_centre.name),
-                        _normalise(scc.name),
-                        _normalise(bl.name),
-                    ),
-                    zero,
+                    _line_key(cost_centre.name, scc.name, bl.name), zero
                 )
                 budget_lines.append(
                     {
@@ -371,15 +432,9 @@ class BudgetLineDetailView(APIView, AuthenticatedUserMixin):
         )
         cc = next(cc for cc in list_cost_centres_from_gordian() if cc.id == scc.cc_id)
 
-        year = int(request.query_params.get("year") or timezone.localdate().year)
-
-        amounts = _amounts_by_line(year)
+        amounts = _amounts_by_line(_query_year(request))
         line_amounts = amounts.get(
-            (
-                _normalise(cc.name),
-                _normalise(scc.name),
-                _normalise(budget_line.name),
-            ),
+            _line_key(cc.name, scc.name, budget_line.name),
             {field: Decimal(0) for field in _AMOUNT_FIELDS},
         )
 

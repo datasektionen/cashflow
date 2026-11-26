@@ -1,8 +1,6 @@
 {
 	"expense": "Utlägg",
 	"invoice": "Faktura",
-
-	"user_expenses": "Mina utlägg",
 	"user_claims": "Mina utlägg",
 	"statistics": "Statistik",
 	"admin": "Administrera",
@@ -18,17 +16,35 @@
 	"login_with_sso": "Logga in med SSO",
 	"logout": "Logga ut",
 	"chapter": "Konglig Datasektionen",
-	"help": "Hjälp",
 
 	"browse_files": "Välj filer",
 	"cancel": "Avbryt",
 	"confirm": "Bekräfta",
 	"no_results": "Inga resultat",
+	"previous": "Föregående",
+	"next": "Nästa",
+	"edit": "Redigera",
+	"remove": "Ta bort",
+	"rotate_left": "Rotera vänster",
+	"rotate_right": "Rotera höger",
+	"expand": "Förstora",
+	"open_in_new_tab": "Öppna i ny flik",
+	"show_beside": "Visa bredvid",
+	"drop_hint": "eller dra in dem här",
+	"copy": "Kopiera",
+	"resize": "Ändra storlek",
+	"show_receipt": "Visa kvitto",
+	"close": "Stäng",
+	"toggle_theme": "Växla mörkt läge",
+	"toggle_sidebar": "Visa eller dölj meny",
+	"compact_sidebar": "Kompakt sidomeny",
 	"description_required": "Beskrivning krävs",
 	"blank_description": "Beskrivning krävs",
 	"description_contains_emoji": "Beskrivningen får inte innehålla emojis",
 	"invoice_number_required": "Fakturanummer krävs",
 	"expense_date_required": "Inköpsdatum krävs",
+	"invoice_date_required": "Fakturadatum krävs",
+	"due_date_required": "Förfallodatum krävs",
 	"expense_date_future": "Inköpsdatum får inte vara i framtiden",
 	"files_required": "Minst ett kvitto krävs",
 	"cost_center_required": "Kostnadsställe krävs",
@@ -42,6 +58,8 @@
 	"amount_negative": "Beloppet måste vara större än noll",
 	"amount_too_large": "Beloppet överstiger det maximalt tillåtna värdet",
 	"budget_line_exceeded": "Budgetposten kommer att överskridas",
+	"budget_line_exceeded_by": "Överskrider budgetposten med {amount} kr",
+	"budget_line_left": "{amount} kr kvar på budgetposten",
 
 	"errors": {
 		"network": "Ett nätverksfel inträffade."
@@ -62,7 +80,6 @@
 		}
 	},
 	"welcome": {
-		"title": "Cashflow",
 		"intro": "Är det första gången du använder systemet?",
 		"process": {
 			"title": "Hur använder jag Cashflow och vad händer med kvittot?",
@@ -107,7 +124,6 @@
 		"title": "Bekräfta",
 		"columns": {
 			"id": "ID",
-			"type": "Typ",
 			"description": "Beskrivning",
 			"owner": "Ägare",
 			"amount": "Belopp",
@@ -126,16 +142,15 @@
 			"invoices": "Fakturor"
 		},
 		"columns": {
-			"user": "Användare",
 			"invoice": "Faktura",
 			"due_date": "Förfaller",
 			"total": "Total"
 		},
 		"empty": "Inga fakturor att betala",
 		"preview": {
-			"empty": "Välj en faktura för att förhandsgranska och betala",
-			"open_detail": "Öppna"
+			"empty": "Välj en faktura för att förhandsgranska och betala"
 		},
+		"count": "{count} utlägg",
 		"select_all": "Markera alla",
 		"load_error": "Kunde inte ladda utgifter",
 		"payment_created": "Betalning {tag} skapad",
@@ -204,17 +219,12 @@
 			"voucher": "Verifikat",
 			"description": "Beskrivning",
 			"owner": "Ägare",
-			"cost_centres": "Resultatställen",
-			"expense_date": "Inköpsdatum",
+			"cost_centres": "Kostnadsställen",
 			"tag": "Tagg",
 			"payer": "Betalare",
 			"receiver": "Mottagare",
 			"total": "Summa",
 			"status": "Status"
-		},
-		"pagination": {
-			"showing": "Visar {start} till {end} av {total}",
-			"show": "Visa"
 		}
 	},
 
@@ -235,8 +245,6 @@
 			"invoice_date": "Fakturadatum",
 			"due_date": "Förfallodatum",
 			"total": "Summa",
-			"verification": "Verifikat",
-			"confirmed_at": "Bekräftad",
 			"paid_at": "Betald",
 			"status": "Status"
 		}
@@ -288,7 +296,6 @@
 		"disclaimer_link_text": "istället registrera den som ett utlägg",
 		"form": {
 			"description": {
-				"label": "Beskrivning",
 				"help": "En beskrivning av fakturan och varför den ska betalas"
 			},
 			"invoice_number": {
@@ -296,12 +303,10 @@
 				"help": "Fakturanumret som det står på fakturan. (Ej ordernummer.)"
 			},
 			"invoice_date": {
-				"label": "Fakturadatum",
-				"help": "Det datum då fakturan utfärdades."
+				"label": "Fakturadatum"
 			},
 			"due_date": {
-				"label": "Förfallodatum",
-				"help": "Det datum då fakturan ska betalas."
+				"label": "Förfallodatum"
 			},
 			"files": {
 				"label": "Bild eller PDF av fakturan"
@@ -309,19 +314,11 @@
 			"invoice_parts": {
 				"label": "Fakturadelar",
 				"help": "Här anger du hur stor andel av fakturan som har köpts in på respektive budgetpost. Summan på fakturan måste vara exakt lika med summan här.",
-				"cost_center_label": "Kostnadsställe",
-				"cost_center_placeholder": "Välj kostnadsställe",
-				"secondary_cost_center_label": "Sekundärt kostnadsställe",
-				"secondary_cost_center_placeholder": "Välj sekundärt kostnadsställe",
-				"budget_line_label": "Budgetpost",
-				"budget_line_placeholder": "Välj budgetpost",
-				"amount_label": "Belopp",
 				"add_part": "Lägg till fakturadel"
 			},
 			"submit": "Spara och registrera faktura"
 		}
 	},
-	"file": "Fil",
 	"date": "Datum",
 	"expense_date": "Inköpsdatum",
 	"expense_created_at": "Skapad",
@@ -351,8 +348,6 @@
 		"invoice_part_unattested": "Attesteringen av fakturadelen har tagits bort",
 		"expense_confirmed": "Utlägget har bekräftats",
 		"expense_unconfirmed": "Utlägget har avbekräftats",
-		"invoice_confirmed": "Fakturan har bekräftats",
-		"invoice_unconfirmed": "Fakturan har avbekräftats",
 		"expense_unflagged": "Utlägget har avflaggats",
 		"expense_delete": "Utlägget \"{description}\" har tagits bort",
 		"invoice_delete": "Fakturan \"{description}\" har tagits bort",
@@ -362,10 +357,8 @@
 	"expense_verification": "Verifikationsnummer",
 	"expense_status": {
 		"unprocessed": "Obehandlad",
-		"paid": "Utbetald",
 		"unpaid": "Ej utbetald",
-		"not_booked": "Ej bokförd",
-		"not_attested": "Ej attesterad"
+		"not_booked": "Ej bokförd"
 	},
 	"total": "Totalt",
 	"comment_submitted": "Kommentar skickad",
@@ -384,9 +377,6 @@
 	},
 	"submit": "Skicka",
 	"expense_parts": "Kvittodelar",
-	"expense_receipt": "Kvitto",
-	"expense_parts_locked": "Delarna går inte längre att ändra när en del har attesterats.",
-	"alerts_already_attested": "Detta går inte längre att ändra — en del har redan attesterats.",
 	"amount": "Belopp",
 	"cost_centre": "Kostnadsställe",
 	"secondary_cost_centre": "Sekundärt kostnadsställe",
@@ -426,25 +416,41 @@
 		"month": "Månad"
 	},
 	"stats": {
-		"title": "Statistik",
 		"yearly_title": "Årsöversikt"
 	},
 	"budget": {
 		"title": "Budget",
-		"total": "Budget",
 		"rest": "Rest",
 		"load_error": "Kunde inte ladda budgetdetaljer.",
 		"paid": "Utbetalt",
 		"attested": "Attesterat",
 		"uploaded": "Upplagt",
-		"exceeded_filter_help": "Visa endast överskridna budgetposter"
+		"exceeded_filter_help": "Visa endast överskridna budgetposter",
+		"budget": "Budget",
+		"spent": "Spenderat",
+		"income": "Intäkt",
+		"exceeded": "Överskriden",
+		"search": "Sök kostnadsställen",
+		"types": {
+			"committee": "Nämnder",
+			"partition": "Partitioner",
+			"project": "Projekt",
+			"other": "Övrigt"
+		}
 	},
 	"claims": {
 		"total_cashflow": "Totalt Cashflowat",
 		"total_cashflows": "Antal utlägg",
 		"amount_rank": "Placering efter belopp",
 		"count_rank": "Placering efter antal",
-		"loading": "Laddar statistik...",
 		"error": "Kunde inte ladda statistik"
+	},
+	"unsaved": {
+		"title": "Osparade ändringar",
+		"description": "Dina ändringar försvinner om du lämnar utan att spara.",
+		"description_incomplete": "Formuläret är inte färdigt och kan inte sparas än. Dina ändringar försvinner om du lämnar.",
+		"stay": "Stanna",
+		"leave": "Lämna",
+		"save_and_leave": "Spara och lämna"
 	}
 }

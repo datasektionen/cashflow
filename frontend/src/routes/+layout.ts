@@ -4,9 +4,7 @@ import { preferredLocale } from '#lib/i18n/index.ts';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ data }) => {
-	if (browser) {
-		locale.set(preferredLocale());
-	}
+	if (browser) locale.set(preferredLocale());
 	await waitLocale();
 	return data;
 };

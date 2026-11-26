@@ -1,112 +1,77 @@
 <script lang="ts">
+	import { latest } from '#lib/latest.svelte.ts';
+	import { formatDate } from '#lib/date.ts';
 	import type { PageProps } from './$types';
 	import type { Invoice } from '#lib/api/types.ts';
 	import { DUE_WARNING_DAYS } from '#lib/config.ts';
 	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
-	import { Check, TriangleAlert } from '@lucide/svelte';
-	import type { TableColumn } from '#lib/components/types.ts';
+	import { Check, CircleCheck, Clock, TriangleAlert } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import { _, locale } from 'svelte-i18n';
+	import { _ } from 'svelte-i18n';
 	import UserLink from '#lib/components/UserLink.svelte';
 	import InvoicePreview from './InvoicePreview.svelte';
-	import { ScrollArea } from 'bits-ui';
 	import { mayPay } from '#lib/auth.ts';
 	import { paidInvoices } from '../expenses/completedPayments.svelte';
-	import { isSmallLayout } from '#lib/stores/state.svelte.ts';
-	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
-	import type { Dinero } from 'dinero.js';
+	import { byLayout, isMediumLayout } from '#lib/stores/state.svelte.ts';
+	import { formatDineroAmount, claimTotal } from '#lib/money.ts';
+	import { EmptyState } from '#lib/components/ui/index.ts';
 
 	let { data }: PageProps = $props();
 	const canPay = $derived(mayPay(data.user));
 
-	let loading = $state(false);
-	let sorting = $state(page.url.searchParams.get('sorting'));
-
-	function total(invoice: Invoice): Dinero<number, 'SEK'> {
-		return sumDinero(invoice.parts.map((part) => part.amount));
-	}
-
-	function handlePageChange(p: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('page', p.toString());
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
-	function handlePerPageChange(perPage: number) {
-		loading = true;
-		const url = new URL(page.url.href);
-		url.searchParams.set('per_page', perPage.toString());
-		url.searchParams.set('page', '1');
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
-
-	function handleSortChange(sort: string) {
-		loading = true;
-		const url = new URL(page.url.href);
-		if (sort) {
-			url.searchParams.set('sorting', sort);
-		} else {
-			url.searchParams.delete('sorting');
-		}
-		goto(url, { reset: false, replaceState: true }).then(() => (loading = false));
-	}
+	const list = latest(() => data.invoices);
+	const empty = $derived(list.value?.pagination.total === 0);
 
 	let preview: Invoice | null = $state(null);
 
 	function handleRowClick(invoice: Invoice) {
-		if (window.matchMedia('(min-width: 1024px)').matches) {
-			preview = invoice;
-		} else {
-			goto(`/admin/invoices/${invoice.id}`);
-		}
+		if (isMediumLayout.current) goto(`/admin/invoices/${invoice.id}`);
+		else preview = invoice;
 	}
 
-	const columns: TableColumn<Invoice>[] = $derived(
-		(
+	const columns = $derived(
+		byLayout<Invoice>(
 			[
 				{
 					id: 'invoice',
 					header: $_('admin_pay.columns.invoice'),
 					renderSnippet: invoiceCell,
-					width: ''
+					sorting: ['-description', 'description']
 				},
 				{
 					id: 'due_date',
 					header: $_('admin_pay.columns.due_date'),
 					renderSnippet: dueDateCell,
-					width: 'w-32'
+					width: 'w-32',
+					sorting: ['due_date', '-due_date']
 				},
 				{
 					id: 'total',
 					header: $_('admin_pay.columns.total'),
 					renderSnippet: totalCell,
 					width: 'w-32',
+					align: 'right',
 					sorting: ['-total', 'total']
 				}
-			] as TableColumn<Invoice>[]
-		).filter((col) => {
-			if (isSmallLayout.current) return col.id !== 'due_date';
-			return true;
-		})
+			],
+			{ sm: ['invoice', 'total'] }
+		)
 	);
 </script>
 
 {#snippet invoiceCell(invoice: Invoice)}
 	{@const paid = paidInvoices.has(invoice.id)}
-	<div class="flex min-w-0 flex-col gap-y-1">
+	<div class="flex min-w-0 flex-col gap-1">
 		<span class="flex min-w-0 items-center gap-1.5 font-medium">
 			<span class={['min-w-0 truncate', paid && 'opacity-50']}>{invoice.description}</span>
 			{#if paid}
-				<Check class="size-4 shrink-0 text-money-green-600 dark:text-money-green-500" />
+				<Check class="size-4 shrink-0 text-primary" />
 			{/if}
 		</span>
-		<span class="flex items-center gap-1.5 text-xs text-base-subtle dark:text-dark-base-subtle">
+		<span class="flex items-center gap-3 text-xs text-muted-foreground">
 			<span class={[paid && 'opacity-50']}><UserLink user={invoice.owner} /></span>
 			{#if paid}
-				<span>·</span>
-				<span class="tabular-nums">CF {invoice.id}</span>
+				<span class="font-mono">CF {invoice.id}</span>
 			{/if}
 		</span>
 	</div>
@@ -118,91 +83,51 @@
 	{@const pastDue = dueDate ? dueDate.getTime() < Date.now() : false}
 	<span
 		class={[
-			'tabular-nums',
-			pastDue
-				? 'text-red-500 dark:text-red-400'
-				: dueSoon
-					? 'text-yellow-500 dark:text-yellow-400'
-					: 'text-base-text dark:text-dark-base-text',
+			'flex items-center gap-1 tabular-nums',
+			pastDue && 'text-danger-text',
+			dueSoon && !pastDue && 'text-warning',
 			paidInvoices.has(invoice.id) && 'opacity-50'
 		]}
 	>
 		{#if pastDue}
-			<span class="flex flex-row items-center gap-1">
-				<TriangleAlert class="text-red size-4" />
-				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
-			</span>
+			<TriangleAlert class="size-4 shrink-0" />
 		{:else if dueSoon}
-			<span class="flex flex-row items-center justify-between">
-				<TriangleAlert class="size-4 text-yellow-500" />
-				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
-			</span>
-		{:else}
-			<span class="flex flex-row items-center justify-end gap-1">
-				{dueDate ? dueDate.toLocaleDateString($locale ?? 'sv-SE') : '–'}
-			</span>
+			<Clock class="size-4 shrink-0" />
 		{/if}
+		{dueDate ? formatDate(dueDate) : '–'}
 	</span>
 {/snippet}
 
 {#snippet totalCell(invoice: Invoice)}
-	<span class={['font-semibold tabular-nums', paidInvoices.has(invoice.id) && 'opacity-50']}
-		>{formatDineroAmount(total(invoice))} kr</span
-	>
+	<span class={['font-medium tabular-nums', paidInvoices.has(invoice.id) && 'opacity-50']}>
+		{formatDineroAmount(claimTotal(invoice))} kr
+	</span>
 {/snippet}
 
-<div class="flex flex-col gap-6 lg:h-[calc(100dvh-10rem)] lg:flex-row lg:overflow-hidden">
-	<div class="min-w-0 flex-1 lg:min-h-0 lg:max-w-4xl lg:overflow-y-auto">
-		<PaginatedTable
-			paginatedResponse={data.invoices}
-			{columns}
-			bind:sorting
-			onPageChange={handlePageChange}
-			onPerPageChange={handlePerPageChange}
-			onSortChange={handleSortChange}
-			{loading}
-			scrollable
-			rowProps={{
-				onClick: handleRowClick,
-				class: (invoice: Invoice) =>
-					preview && invoice.id === preview.id
-						? 'cursor-pointer bg-base-200 dark:bg-dark-base-200'
-						: 'cursor-pointer'
-			}}
-		/>
-		{#await data.invoices then invoices}
-			{#if invoices.data.length === 0}
-				<p class="p-8 text-center text-sm text-base-subtle dark:text-dark-base-subtle">
-					{$_('admin_pay.empty')}
-				</p>
+{#if empty}
+	<EmptyState icon={CircleCheck} title={$_('admin_pay.empty')} class="max-w-4xl" />
+{:else}
+	<div class="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
+		<div class="min-w-0 lg:min-h-0 lg:flex-[3] lg:overflow-y-auto">
+			<PaginatedTable
+				paginatedResponse={data.invoices}
+				{columns}
+				scrollable
+				rowProps={{
+					onClick: handleRowClick,
+					class: (invoice: Invoice) => (preview?.id === invoice.id ? 'bg-muted' : '')
+				}}
+			/>
+		</div>
+
+		<div class="hidden min-h-0 lg:flex lg:flex-[2]">
+			{#if preview}
+				{#key preview.id}
+					<InvoicePreview invoiceId={preview.id} {canPay} />
+				{/key}
+			{:else}
+				<EmptyState title={$_('admin_pay.preview.empty')} class="w-full" />
 			{/if}
-		{/await}
+		</div>
 	</div>
-
-	<div class="hidden min-h-0 flex-1 lg:block lg:max-w-2xl">
-		<ScrollArea.Root class="relative h-full w-full overflow-hidden">
-			<ScrollArea.Viewport class="h-full w-full">
-				<div class="px-8 pb-8">
-					{#if !preview}
-						<div class="flex h-full items-center justify-center py-24">
-							<p class="text-sm text-base-subtle dark:text-dark-base-subtle">
-								{$_('admin_pay.preview.empty')}
-							</p>
-						</div>
-					{:else}
-						{#key preview.id}
-							<InvoicePreview invoiceId={preview.id} {canPay} />
-						{/key}
-					{/if}
-				</div>
-			</ScrollArea.Viewport>
-
-			<ScrollArea.Scrollbar
-				orientation="vertical"
-				class="hover:bg-dark-10 data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out-0 data-[state=visible]:fade-in-0 flex w-2.5 touch-none rounded-none border-l border-l-transparent bg-base-subtle p-px transition-all duration-200 select-none hover:w-3 dark:bg-dark-base-subtle"
-			>
-				<ScrollArea.Thumb class="flex-1 rounded-none bg-base-400 dark:bg-dark-base-400" />
-			</ScrollArea.Scrollbar>
-		</ScrollArea.Root>
-	</div>
-</div>
+{/if}

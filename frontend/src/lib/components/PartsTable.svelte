@@ -1,22 +1,23 @@
 <script lang="ts">
-	import { Check, X } from '@lucide/svelte';
-	import type { BudgetLine, ExpensePart, InvoicePart, Profile, User } from '#lib/api/types.ts';
+	import { Check, TriangleAlert, X } from '@lucide/svelte';
+	import type { ClaimPart, Profile, User } from '#lib/api/types.ts';
 	import { _ } from 'svelte-i18n';
 	import { api } from '#lib/api/index.ts';
-	import { alerts, error, success } from '#lib/stores/alerts.ts';
-	import CashSpinner from '#lib/components/CashSpinner.svelte';
-	import { SvelteSet } from 'svelte/reactivity';
-	import { logger } from '#lib/logger.ts';
+	import { failed, success } from '#lib/stores/alerts.ts';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { Button, Spinner, Table } from '#lib/components/ui/index.ts';
 	import { formatDineroAmount, sumDinero } from '#lib/money.ts';
+	import type { Dinero } from 'dinero.js';
 
-	export type ClaimPartsTableProps = {
-		parts: (ExpensePart | InvoicePart)[];
+	type ClaimPartsTableProps = {
+		parts: ClaimPart[];
 		owner: Profile;
 		currentUser?: User;
 		includeAttest?: boolean;
 		attestDisabled?: boolean;
 		partType?: 'expense' | 'invoice';
-		dense?: boolean;
+		/** Called after a part is attested or unattested */
+		onchange?: () => void;
 	};
 
 	const {
@@ -26,219 +27,196 @@
 		includeAttest = false,
 		attestDisabled = false,
 		partType = 'expense',
-		dense = false
+		onchange
 	}: ClaimPartsTableProps = $props();
 
-	// Fetch information about included cost centres
-	// This is done to see if any included budget lines are exceeded
+	const lineKey = (cc: string, scc: string, bl: string) => `${cc}/${scc}/${bl}`;
 
-	type BudgetEntry = {
-		name: string;
-		children: {
-			name: string;
-			children: BudgetLine[];
-		}[];
-	};
-
-	let blownBudgetLines: Promise<BudgetEntry[]> = $derived.by(() => {
-		logger.debug('fetching budget info');
-		let uniqueCostCentres: SvelteSet<string> = new SvelteSet<string>();
-		parts.forEach((part) => {
-			uniqueCostCentres.add(part.cost_centre);
-		});
-		return (
-			api.budget
-				.listCostCentres(1, 100, { active: true, contains_blown: true })
-				.then((res) => {
-					logger.debug(res, 'got response');
-					return res.data.filter((cc) => uniqueCostCentres.has(cc.name));
-				})
-				// I regret writing this
-				.then((costCentres) => {
-					const ids: number[] = [];
-					for (const cc of costCentres) {
-						if (cc.id != null) {
-							ids.push(cc.id);
-						}
-					}
-					return Promise.all(ids.map((id) => api.budget.retrieveCostCentre(id)));
-				})
-				.then((costCentres) => {
-					return costCentres
-						.map((cc) => {
-							return { name: cc.name, children: cc.secondary_cost_centres ?? [] };
-						})
-						.map((obj) => {
-							return {
-								...obj,
-								children: obj.children.map((scc) => {
-									return {
-										name: scc.name,
-										children: scc.budget_lines ? scc.budget_lines.filter((bl) => bl.blown) : []
-									};
-								})
-							};
-						});
-				})
-		);
+	// Exceeded budget lines in the parts' cost centres
+	const blownLines = $derived.by(() => {
+		const names = new Set(parts.map((p) => p.cost_centre));
+		return api.budget
+			.listCostCentres(1, 100, { active: true, contains_blown: true })
+			.then((res) =>
+				Promise.all(
+					res.data.flatMap((cc) =>
+						cc.id != null && names.has(cc.name) ? [api.budget.retrieveCostCentre(cc.id)] : []
+					)
+				)
+			)
+			.then(
+				(ccs) =>
+					new Set(
+						ccs.flatMap((cc) =>
+							(cc.secondary_cost_centres ?? []).flatMap((scc) =>
+								(scc.budget_lines ?? [])
+									.filter((bl) => bl.blown)
+									.map((bl) => lineKey(cc.name, scc.name, bl.name))
+							)
+						)
+					)
+			);
 	});
 
-	function partIsBlown(part: ExpensePart | InvoicePart, budget: BudgetEntry[]) {
-		return budget
-			.find((b) => b.name === part.cost_centre)
-			?.children.find((scc) => scc.name === part.secondary_cost_centre)
-			?.children.map((bl) => bl.name)
-			.includes(part.budget_line);
+	const pending = new SvelteSet<number>();
+	// Attested state set here, until the parts reload
+	const override = new SvelteMap<number, boolean>();
+
+	async function setAttested(part: ClaimPart, attest: boolean) {
+		pending.add(part.id);
+		const claims = api[`${partType}s`];
+		try {
+			await (attest ? claims.attestPart(part.id) : claims.unattestPart(part.id));
+			override.set(part.id, attest);
+			success($_(`alerts.${partType}_part_${attest ? 'attested' : 'unattested'}`));
+			onchange?.();
+		} catch (err) {
+			failed(err, $_('action_failed'));
+		} finally {
+			pending.delete(part.id);
+		}
 	}
 
-	let currentlyAttesting: Set<number> = $state(new Set());
-	let attested: Set<number> = $state(new Set());
-	let currentlyUnattesting: Set<number> = $state(new Set());
-	let unattested: Set<number> = $state(new Set());
-	const attestCallback = async (part: ExpensePart) => {
-		currentlyAttesting = new Set([...currentlyAttesting, part.id]);
-		const attestFn =
-			partType === 'invoice'
-				? (id: number) => api.invoices.attestPart(id)
-				: (id: number) => api.expenses.attestPart(id);
-		await attestFn(part.id)
-			.then(() => {
-				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
-				attested = new Set([...attested, part.id]);
-				unattested = new Set([...unattested].filter((id) => id !== part.id));
-				alerts.update((a) => [...a, success($_(`alerts.${partType}_part_attested`))]);
-			})
-			.catch((err) => {
-				currentlyAttesting = new Set([...currentlyAttesting].filter((id) => id !== part.id));
-				alerts.update((a) => [...a, error(err)]);
-			});
-	};
-
-	const unattestCallback = async (part: ExpensePart) => {
-		currentlyUnattesting = new Set([...currentlyUnattesting, part.id]);
-		const unattestFn =
-			partType === 'invoice'
-				? (id: number) => api.invoices.unattestPart(id)
-				: (id: number) => api.expenses.unattestPart(id);
-		await unattestFn(part.id)
-			.then(() => {
-				currentlyUnattesting = new Set([...currentlyUnattesting].filter((id) => id !== part.id));
-				unattested = new Set([...unattested, part.id]);
-				attested = new Set([...attested].filter((id) => id !== part.id));
-				alerts.update((a) => [...a, success($_(`alerts.${partType}_part_unattested`))]);
-			})
-			.catch((err) => {
-				currentlyUnattesting = new Set([...currentlyUnattesting].filter((id) => id !== part.id));
-				alerts.update((a) => [...a, error(err)]);
-			});
-	};
+	// Expense owners may not attest their own parts
+	const mayAttest = (part: ClaimPart) =>
+		!!currentUser &&
+		currentUser.permissions.attest.includes(part.cost_centre) &&
+		(partType === 'invoice' || owner.username !== currentUser.username);
 
 	const totalAmount = $derived(sumDinero(parts.map((part) => part.amount)));
 </script>
 
-<div class="overflow-x-auto">
-	<table class={['w-full min-w-136 table-fixed wrap-break-word', dense ? 'text-xs' : 'text-sm']}>
-		<thead
-			class="text-xxs text-left font-medium text-base-subtle uppercase dark:text-dark-base-subtle"
-		>
-			<tr class="text-xs">
-				<td class="py-3 pr-4">{$_('cost_centre')}</td>
-				<td class="px-4 py-3">{$_('secondary_cost_centre')}</td>
-				<td class="px-4 py-3">{$_('budget_line')}</td>
-				<td class="py-3 pl-4 text-right">{$_('amount')}</td>
-				{#if includeAttest}<td class="w-40 py-3 pl-4 text-right"></td>{/if}
-			</tr>
-		</thead>
-		<tbody>
-			{#each parts as part}
-				<tr class="border-t border-base-500 dark:border-dark-base-200">
-					<td class="py-3 pr-4 text-left">
-						<a href="/budget/#{part.cost_centre}" class="hover:underline">
-							{part.cost_centre}
-						</a>
-					</td>
-					<td class="px-4 py-3 text-left">
-						<a href="/budget/#{part.cost_centre}" class="hover:underline">
-							{part.secondary_cost_centre}
-						</a>
-					</td>
-					<td class="flex flex-row px-4 py-3 text-left">
-						<a href="/budget/#{part.cost_centre}" class="hover:underline">
-							{part.budget_line}
-						</a>
-						{#await blownBudgetLines then result}
-							{#if partIsBlown(part, result)}
-								<div
-									class="my-auto ml-auto size-2 animate-pulse rounded-full bg-amber-500 opacity-75"
-								></div>
-							{/if}
-						{/await}
-					</td>
-					<td class="py-3 pl-4 text-right"
-						>{formatDineroAmount(part.amount)}
-						<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
-					>
-					{#if includeAttest}
-						<td class="w-40 py-3 pl-4 text-right">
-							{#if currentlyUnattesting.has(part.id)}
-								<CashSpinner />
-							{:else if (attested.has(part.id) || ('attested_by' in part && part.attested_by)) && !unattested.has(part.id)}
-								{@const attestedBy = attested.has(part.id)
-									? (currentUser ?? null)
-									: part.attested_by}
-								{@const mayUnattest =
-									!!currentUser &&
-									currentUser.permissions.attest.includes(part.cost_centre) &&
-									(partType === 'invoice' || owner.username !== currentUser.username)}
-								<div class="flex items-center justify-end gap-1.5">
-									<Check class="size-5 shrink-0 text-money-green-500" />
-									{#if attestedBy}
-										<span class="truncate text-xs text-base-subtle dark:text-dark-base-subtle"
-											>{attestedBy.first_name} {attestedBy.last_name}</span
-										>
-									{/if}
-									{#if mayUnattest}
-										<button
-											onclick={() => unattestCallback(part)}
-											title={$_('tasks.unattest')}
-											aria-label={$_('tasks.unattest')}
-											class="cursor-pointer rounded-full p-0.5 text-base-subtle transition-colors hover:scale-110 dark:text-dark-base-subtle"
-										>
-											<X class="size-3.5" />
-										</button>
-									{/if}
-								</div>
-							{:else if currentlyAttesting.has(part.id)}
-								<CashSpinner />
-							{:else}
-								{@const mayAttest =
-									!!currentUser &&
-									currentUser.permissions.attest.includes(part.cost_centre) &&
-									(partType === 'invoice' || owner.username !== currentUser.username)}
-								{#if mayAttest}
-									<button
-										onclick={() => attestCallback(part)}
-										disabled={attestDisabled}
-										title={attestDisabled ? $_('attest_disabled_flagged') : undefined}
-										class="cursor-pointer bg-money-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-money-green-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-money-green-700 dark:hover:bg-money-green-600"
-										>{$_('tasks.attest')}</button
-									>
-								{/if}
-							{/if}
-						</td>
-					{/if}
-				</tr>
-			{/each}
-		</tbody>
-		<tfoot>
-			<tr class="border-t border-base-500 font-medium dark:border-dark-base-200">
-				<td class="py-3 pr-4 text-right" colspan="3">{$_('total')}</td>
-				<td class="py-3 pl-4 text-right"
-					>{formatDineroAmount(totalAmount)}
-					<span class="text-xs text-base-subtle dark:text-dark-base-subtle">SEK</span></td
+{#snippet amount(value: Dinero<number, 'SEK'>)}
+	{formatDineroAmount(value)}
+	<span class="text-xs text-muted-foreground">SEK</span>
+{/snippet}
+
+{#snippet attestControls(part: ClaimPart)}
+	{#if pending.has(part.id)}
+		<Spinner />
+	{:else if override.get(part.id) ?? !!part.attested_by}
+		{@const attestedBy = override.get(part.id) ? (currentUser ?? null) : part.attested_by}
+		<div class="flex items-center justify-end gap-1.5">
+			<Check class="size-4 shrink-0 text-primary-text" />
+			{#if attestedBy}
+				<span class="truncate text-xs text-muted-foreground">
+					{attestedBy.first_name}
+					{attestedBy.last_name}
+				</span>
+			{/if}
+			{#if mayAttest(part)}
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onclick={() => setAttested(part, false)}
+					title={$_('tasks.unattest')}
+					aria-label={$_('tasks.unattest')}
+					class="size-6 text-muted-foreground"
 				>
-				{#if includeAttest}<td></td>{/if}
-			</tr>
-		</tfoot>
-	</table>
+					<X class="size-3.5!" />
+				</Button>
+			{/if}
+		</div>
+	{:else if mayAttest(part)}
+		<Button
+			size="sm"
+			onclick={() => setAttested(part, true)}
+			disabled={attestDisabled}
+			title={attestDisabled ? $_('attest_disabled_flagged') : undefined}
+		>
+			{$_('tasks.attest')}
+		</Button>
+	{/if}
+{/snippet}
+
+{#snippet blown(part: ClaimPart)}
+	{#await blownLines then lines}
+		{#if lines.has(lineKey(part.cost_centre, part.secondary_cost_centre, part.budget_line))}
+			<span title={$_('budget.exceeded')} class="shrink-0 text-danger-text">
+				<TriangleAlert class="size-3.5" aria-label={$_('budget.exceeded')} />
+			</span>
+		{/if}
+	{/await}
+{/snippet}
+
+<div class="@container">
+	<ul class="divide-y divide-border @xl:hidden">
+		{#each parts as part}
+			<li class="flex flex-col gap-2 px-4 py-3">
+				<div class="flex items-start justify-between gap-3">
+					<a href="/budget/#{part.cost_centre}" class="min-w-0 text-sm">
+						<span class="font-medium">{part.cost_centre}</span>
+						<span class="block text-xs text-muted-foreground">
+							{part.secondary_cost_centre} › {part.budget_line}
+						</span>
+					</a>
+					<span class="flex shrink-0 items-center gap-2 text-sm whitespace-nowrap tabular-nums">
+						{@render blown(part)}
+						{@render amount(part.amount)}
+					</span>
+				</div>
+				{#if includeAttest}
+					<div class="flex justify-end">{@render attestControls(part)}</div>
+				{/if}
+			</li>
+		{/each}
+		<li class="flex justify-between px-4 py-3 text-sm font-semibold tabular-nums">
+			<span>{$_('total')}</span>
+			<span>{@render amount(totalAmount)}</span>
+		</li>
+	</ul>
+
+	<div class="hidden @xl:block">
+		<Table.Root class="min-w-136 [&_th]:whitespace-normal">
+			<Table.Header>
+				<Table.Row>
+					<Table.Head>{$_('cost_centre')}</Table.Head>
+					<Table.Head>{$_('secondary_cost_centre')}</Table.Head>
+					<Table.Head>{$_('budget_line')}</Table.Head>
+					<Table.Head align="right" class="w-px">{$_('amount')}</Table.Head>
+					{#if includeAttest}<Table.Head class="w-px" />{/if}
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each parts as part}
+					<Table.Row>
+						{#each [part.cost_centre, part.secondary_cost_centre] as name, i (i)}
+							<Table.Cell>
+								<a
+									href="/budget/#{part.cost_centre}"
+									class="wrap-break-word underline-offset-4 hover:underline"
+								>
+									{name}
+								</a>
+							</Table.Cell>
+						{/each}
+						<Table.Cell>
+							<span class="flex items-center gap-2">
+								<a
+									href="/budget/#{part.cost_centre}"
+									class="min-w-0 wrap-break-word underline-offset-4 hover:underline"
+								>
+									{part.budget_line}
+								</a>
+								{@render blown(part)}
+							</span>
+						</Table.Cell>
+						<Table.Cell align="right">{@render amount(part.amount)}</Table.Cell>
+						{#if includeAttest}
+							<Table.Cell align="right">
+								{@render attestControls(part)}
+							</Table.Cell>
+						{/if}
+					</Table.Row>
+				{/each}
+			</Table.Body>
+			<Table.Footer>
+				<Table.Row>
+					<Table.Cell colspan={3} align="right">{$_('total')}</Table.Cell>
+					<Table.Cell align="right">{@render amount(totalAmount)}</Table.Cell>
+					{#if includeAttest}<Table.Cell />{/if}
+				</Table.Row>
+			</Table.Footer>
+		</Table.Root>
+	</div>
 </div>

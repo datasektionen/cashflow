@@ -1,12 +1,8 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type { FortnoxAccount, FortnoxCostCentre, FortnoxStatus } from '#lib/api/types.ts';
 
 export class FortnoxAPI {
-	private apiClient: ApiClient;
-
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
+	constructor(private apiClient: ApiClient) {}
 
 	status(): Promise<FortnoxStatus> {
 		return this.apiClient.get<FortnoxStatus>('/fortnox/status/');

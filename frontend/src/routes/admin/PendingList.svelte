@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Badge } from '#lib/components/ui/index.ts';
+
 	let {
 		rows,
 		emptyText
@@ -9,25 +11,19 @@
 </script>
 
 {#if rows.length === 0}
-	<p
-		class="border border-base-500 px-3 py-4 text-center text-sm text-base-subtle dark:border-dark-base-200 dark:text-dark-base-subtle"
-	>
-		{emptyText}
-	</p>
+	<p class="px-5 py-6 text-center text-sm text-muted-foreground">{emptyText}</p>
 {:else}
-	<ul class="max-h-80 overflow-y-auto border border-base-500 dark:border-dark-base-200">
+	<ul class="max-h-80 divide-y divide-border overflow-y-auto">
 		{#each rows as row (row.href)}
 			<li>
 				<a
 					href={row.href}
-					class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-base-subtle transition-colors hover:bg-base-300 hover:text-base-text dark:text-dark-base-subtle dark:hover:bg-dark-base-200 dark:hover:text-dark-base-text"
+					class="flex items-center justify-between gap-2 px-5 py-2.5 text-sm transition-colors hover:bg-muted/50"
 				>
-					<span>{row.label}</span>
-					<span
-						class="rounded-full bg-money-green-600/15 px-1.5 py-0.5 text-xs font-medium text-money-green-700 dark:bg-money-green-600/20 dark:text-money-green-400"
-					>
+					<span class="truncate">{row.label}</span>
+					<Badge variant="success" class="tabular-nums">
 						{row.count < 100 ? row.count : '99+'}
-					</span>
+					</Badge>
 				</a>
 			</li>
 		{/each}

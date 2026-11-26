@@ -14,13 +14,14 @@ from core.exceptions import (
     CashflowVerificationMissingError,
     FortnoxRecordMissingError,
 )
-from expenses.models import Expense
+from core.models import Claim
+from expenses.models import ExpenseData
 from rest_framework.test import APIClient
 
 from fortnox import FortnoxAPIClient, FortnoxNotFound
 from fortnox.api_client.models import Account, CostCenter, Voucher
 from fortnox.models import ServiceAccount
-from invoices.models import Invoice
+from invoices.models import InvoiceData
 
 UserModel = get_user_model()
 
@@ -318,8 +319,8 @@ def test_find_nonexisting_voucher_raises_exception(fortnox_client):
 
 
 def test_account_aborts_when_already_accounted(db, user, profile):
-    expense = Expense.objects.create(
-        expense_date=datetime.date(2025, 1, 1),
+    expense = Claim.objects.create(
+        expense_data=ExpenseData.objects.create(expense_date=datetime.date(2025, 1, 1)),
         owner=profile,
         description="lunch",
         verification="E123",
@@ -339,8 +340,8 @@ def test_account_aborts_when_already_accounted(db, user, profile):
 
 
 def test_account_expense_catches_missing_fortnox_record(db, user, profile):
-    expense = Expense.objects.create(
-        expense_date=datetime.date(2025, 1, 1),
+    expense = Claim.objects.create(
+        expense_data=ExpenseData.objects.create(expense_date=datetime.date(2025, 1, 1)),
         owner=profile,
         description="lunch",
         verification="E123",
@@ -356,8 +357,10 @@ def test_account_expense_catches_missing_fortnox_record(db, user, profile):
 
 
 def test_account_expense_catches_missing_cashflow_record(db, user, profile):
-    expense = Expense.objects.create(
-        expense_date=datetime.date(2025, 1, 1), owner=profile, description="lunch"
+    expense = Claim.objects.create(
+        expense_data=ExpenseData.objects.create(expense_date=datetime.date(2025, 1, 1)),
+        owner=profile,
+        description="lunch",
     )
     fortnox_service = MagicMock()
     fortnox_service.find_voucher.return_value = VoucherFactory.build()
@@ -370,11 +373,12 @@ def test_account_expense_catches_missing_cashflow_record(db, user, profile):
 
 
 def test_account_invoice_aborts_when_fortnox_voucher_exists(db, user, profile):
-    invoice = Invoice.objects.create(
-        invoice_date=datetime.date(2025, 1, 1),
+    invoice = Claim.objects.create(
+        invoice_data=InvoiceData.objects.create(
+            invoice_date=datetime.date(2025, 1, 1), invoice_number="1"
+        ),
         owner=profile,
         description="server",
-        file_is_original=True,
     )
 
     fortnox_service = MagicMock()

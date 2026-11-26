@@ -1,23 +1,25 @@
 import { enforce, include, test, warn } from 'vest';
-import { add, greaterThan, type Dinero } from 'dinero.js';
+import {
+	add,
+	dinero,
+	greaterThan,
+	isNegative,
+	isZero,
+	lessThan,
+	subtract,
+	type Dinero
+} from 'dinero.js';
+import { SEK } from 'dinero.js/currencies';
 import type { PartCreateUpdate } from '#lib/api/types.ts';
 import { sumDinero } from '#lib/money.ts';
 
-/**
- * How much of a budget line's expense budget is used, not counting the
- * claim being edited.
- */
+/** A budget line's expense budget and usage, not counting the claim being edited. */
 export type BudgetLineUsage = {
 	budget: Dinero<number, 'SEK'>;
-	// Uploaded amount on the budget line, excluding the parts the claim was
-	// saved with (those are replaced by the parts in the form).
 	uploaded: Dinero<number, 'SEK'>;
 };
 
-/**
- * A field without tests of its own. Running a suite for it only re-runs the
- * budget line warnings, e.g. after an amount or a budget line's usage changed.
- */
+/** A field without tests of its own; validating it only re-runs the budget line warnings. */
 export const BUDGET_USAGE_FIELD = 'budget-usage';
 
 export function sameBudgetLine(a: PartCreateUpdate, b: PartCreateUpdate): boolean {
@@ -28,13 +30,20 @@ export function sameBudgetLine(a: PartCreateUpdate, b: PartCreateUpdate): boolea
 	);
 }
 
-/**
- * Warns if saving the parts would make the budget line of part `i` exceed its budget.
- *
- * The test runs whenever the budget line's usage is known, so that changing
- * any amount in the form updates the warning.
- */
-export function testBudgetLineExceeded(
+/** What is left on the budget line of part `i` after saving the parts; negative when exceeded. */
+export function budgetLineRemaining(
+	parts: PartCreateUpdate[],
+	budgetUsage: (BudgetLineUsage | null)[],
+	i: number
+): Dinero<number, 'SEK'> | null {
+	const usage = budgetUsage[i];
+	if (usage == null) return null;
+	const onLine = sumDinero(parts.filter((p) => sameBudgetLine(p, parts[i])).map((p) => p.amount));
+	return subtract(usage.budget, add(usage.uploaded, onLine));
+}
+
+/** Warns if saving the parts would exceed the budget line of part `i`. */
+function testBudgetLineExceeded(
 	parts: PartCreateUpdate[],
 	budgetUsage: (BudgetLineUsage | null)[],
 	i: number
@@ -45,9 +54,34 @@ export function testBudgetLineExceeded(
 
 	test(field, 'budget_line_exceeded', () => {
 		warn();
-		if (usage == null) return;
+		const remaining = budgetLineRemaining(parts, budgetUsage, i);
+		if (remaining) enforce(isNegative(remaining)).isFalsy();
+	});
+}
 
-		const onLine = sumDinero(parts.filter((p) => sameBudgetLine(p, parts[i])).map((p) => p.amount));
-		enforce(greaterThan(add(usage.uploaded, onLine), usage.budget)).isFalsy();
+/** The tests every claim form runs for its parts. */
+export function testParts(parts: PartCreateUpdate[], budgetUsage: (BudgetLineUsage | null)[]) {
+	parts?.forEach((part, i) => {
+		testBudgetLineExceeded(parts, budgetUsage, i);
+		test(`part-${i}-costcenter`, 'cost_center_required', () => {
+			enforce(part.cost_centre).isNotBlank();
+		});
+		test(`part-${i}-secondarycostcenter`, 'secondary_cost_center_required', () => {
+			enforce(part.secondary_cost_centre).isNotBlank();
+		});
+		test(`part-${i}-budgetline`, 'budget_line_required', () => {
+			enforce(part.budget_line).isNotBlank();
+		});
+		test(`part-${i}-amount`, 'amount_required', () => {
+			enforce(isZero(part.amount)).isFalsy();
+		});
+		test(`part-${i}-amount`, 'amount_negative', () => {
+			const zero = dinero({ amount: 0, currency: SEK });
+			enforce(greaterThan(part.amount, zero)).isTruthy();
+		});
+		test(`part-${i}-amount`, 'amount_too_large', () => {
+			const maxAmount = dinero({ amount: 999999999, currency: SEK });
+			enforce(lessThan(part.amount, maxAmount)).isTruthy();
+		});
 	});
 }

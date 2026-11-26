@@ -1,23 +1,5 @@
-import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
-import { API } from '#lib/api/index.ts';
-import type { FortnoxAccount, FortnoxCostCentre } from '#lib/api/types.ts';
+import { loadAccounting } from '../../load';
 
-export const load: PageLoad = async ({ fetch, params }) => {
-	const api = new API(API_URL, fetch);
-
-	// Reference data is unavailable when the Fortnox integration is disabled
-	// or disconnected; the page still works for manual voucher numbers.
-	const [expense, accounts, costCentres] = await Promise.all([
-		api.expenses.get(parseInt(params.id)),
-		api.fortnox.accounts().catch(() => [] as FortnoxAccount[]),
-		api.fortnox.costCentres().catch(() => [] as FortnoxCostCentre[])
-	]);
-
-	return {
-		title_key: 'admin_account.title',
-		expense,
-		accounts,
-		costCentres
-	};
-};
+export const load: PageLoad = ({ fetch, params }) =>
+	loadAccounting(fetch, (api) => api.expenses.get(parseInt(params.id)));

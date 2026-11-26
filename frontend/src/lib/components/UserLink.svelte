@@ -8,7 +8,7 @@
 <a
 	href="/admin/users/{user.username}/"
 	onclick={(event) => event.stopPropagation()}
-	class={['hover:underline', className]}
+	class={['underline-offset-4 hover:underline', className]}
 >
 	{user.first_name}
 	{user.last_name}

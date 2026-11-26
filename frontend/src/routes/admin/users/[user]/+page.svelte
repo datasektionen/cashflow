@@ -1,90 +1,24 @@
 <script lang="ts">
+	import { claimColumns } from '#lib/components/TableCells.svelte';
 	import type { PageProps } from './$types';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
-	import type { TableColumn, TableRowProps } from '#lib/components/types.ts';
+	import type { TableRowProps } from '#lib/components/types.ts';
 	import type { Claim } from '#lib/api/types.ts';
 	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
-	import ClaimStatusPills from '#lib/components/ClaimStatusPills.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
 	import { formatBankAccount } from '#lib/bankAccount.ts';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
-	import CopyableValue from '#lib/components/ui/CopyableValue.svelte';
+	import { CopyableValue } from '#lib/components/ui/index.ts';
 	import { mayPay } from '#lib/auth.ts';
 	import ClaimContextMenu from '#lib/components/ClaimContextMenu.svelte';
-	import { formatDineroAmount } from '#lib/money.ts';
 
 	let { data }: PageProps = $props();
 
-	function handlePageChange(p: number) {
-		const url = new URL(page.url.href);
-		url.searchParams.set('page', p.toString());
-		goto(url, { reset: false });
-	}
-
-	function handlePerPageChange(perPage: number) {
-		const url = new URL(page.url.href);
-		url.searchParams.set('per_page', perPage.toString());
-		url.searchParams.set('page', '1');
-		goto(url, { reset: false });
-	}
-
 	const rowProps: TableRowProps<Claim> = {
-		href: (claim) =>
-			data.viewedUser
-				? `/admin/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`
-				: '',
-		class: 'cursor-pointer'
+		href: (claim) => `/admin/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`
 	};
 
-	const columns: TableColumn<Claim>[] = $derived(
-		(
-			[
-				{
-					id: 'type',
-					header: $_('claims_type'),
-					render: (row) => $_(row.type),
-					width: 'w-24'
-				},
-				{
-					id: 'description',
-					header: $_('admin_invoices.columns.description'),
-					render: (row) => row.description,
-					width: ''
-				},
-				{
-					id: 'cost_centres',
-					header: $_('admin_expenses.columns.cost_centres'),
-					renderSnippet: costCentres,
-					width: 'w-48'
-				},
-				{
-					id: 'created_date',
-					header: $_('expense_created_at'),
-					render: (row) => row.created_date,
-					width: 'w-28'
-				},
-				{
-					id: 'total',
-					header: $_('admin_expenses.columns.total'),
-					renderSnippet: totalCell,
-					width: 'w-28'
-				},
-				{
-					id: 'status',
-					header: $_('admin_expenses.columns.status'),
-					renderSnippet: statusCell,
-					width: 'w-40'
-				}
-			] as TableColumn<Claim>[]
-		).filter((col) => {
-			if (isExtraSmallLayout.current) return ['description', 'total'].includes(col.id);
-			if (isSmallLayout.current) return ['type', 'description', 'total', 'status'].includes(col.id);
-			return true;
-		})
-	);
+	const columns = $derived(claimColumns($_));
 
 	const formattedAccount = $derived(
 		data.viewedUser.bank_info
@@ -100,53 +34,27 @@
 	<ClaimContextMenu {claim} kind={claim.type} user={data.user} />
 {/snippet}
 
-{#snippet statusCell(c: Claim)}
-	<ClaimStatusPills claim={c} />
-{/snippet}
-
-{#snippet totalCell(c: Claim)}
-	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
-{/snippet}
-
-{#snippet costCentres(c: Claim)}
-	{@const unique = [...new Set(c.parts.map((p) => p.cost_centre))]}
-	<div class="flex flex-wrap gap-1">
-		{#each unique as cc}
-			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
-		{/each}
+<header class="flex flex-wrap items-center gap-x-6 gap-y-3 pb-6">
+	<UserAvatar username={data.viewedUser.username} class="size-12" />
+	<div class="mr-auto flex min-w-0 flex-col">
+		<h1 class="text-3xl font-bold tracking-tight wrap-break-word">
+			{data.viewedUser.first_name}
+			{data.viewedUser.last_name}
+		</h1>
+		<p class="truncate text-sm text-muted-foreground">{data.viewedUser.email}</p>
 	</div>
-{/snippet}
-
-<div
-	class="mb-6 flex flex-wrap items-center gap-6 border border-base-400 p-4 dark:border-dark-base-200"
->
-	<div class="flex items-center gap-4">
-		<UserAvatar username={data.viewedUser.username} class="size-16" />
-		<div>
-			<div class="font-semibold">{data.viewedUser.first_name} {data.viewedUser.last_name}</div>
-			<div class="text-sm text-base-subtle dark:text-dark-base-subtle">{data.viewedUser.email}</div>
-		</div>
-	</div>
-
 	{#if mayPay(data.user)}
-		<div class="flex flex-col text-sm text-base-subtle dark:text-dark-base-subtle">
-			<p class="pb-2 pl-2.5">{data.viewedUser.bank_info.bank_name}</p>
+		<div class="flex flex-col items-start gap-1.5 text-sm">
+			<p class="text-xs text-muted-foreground">{data.viewedUser.bank_info.bank_name}</p>
 			{#if formattedAccount != null}
-				<CopyableValue value={formattedAccount} display={formattedAccount} />
+				<CopyableValue value={formattedAccount} display={formattedAccount} class="font-mono" />
 			{/if}
 		</div>
 	{/if}
-</div>
+</header>
 
 <ClaimFilterBar
 	includeChecks={false}
 	exclude={['voucher_series', 'verification', 'invoice_number']}
 />
-<PaginatedTable
-	paginatedResponse={data.claims}
-	{columns}
-	onPageChange={handlePageChange}
-	onPerPageChange={handlePerPageChange}
-	{rowProps}
-	{contextSnippet}
-/>
+<PaginatedTable paginatedResponse={data.claims} {columns} {rowProps} {contextSnippet} />

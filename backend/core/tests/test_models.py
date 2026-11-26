@@ -12,7 +12,7 @@ from invoices.models import InvoiceData
 
 @pytest.mark.django_db
 def test_claim_only_expense_or_invoice(user):
-    owner = Profile.objects.create(user=user)
+    owner = user.profile
     expense_data = ExpenseData.objects.create(expense_date=timezone.localdate())
     invoice_data = InvoiceData.objects.create(
         invoice_date=timezone.localdate(),
@@ -27,7 +27,7 @@ def test_claim_only_expense_or_invoice(user):
     # Both
     with pytest.raises(IntegrityError), transaction.atomic():
         Claim.objects.create(
-            owner=user.core_profile,
+            owner=owner,
             description="ABC",
             expense_data=expense_data,
             invoice_data=invoice_data,
@@ -40,7 +40,7 @@ def test_claim_only_expense_or_invoice(user):
 
 @pytest.mark.django_db
 def test_claim_type_generated_correctly(user):
-    owner = Profile.objects.create(user=user)
+    owner = user.profile
     expense_data = ExpenseData.objects.create(expense_date=timezone.localdate())
     invoice_data = InvoiceData.objects.create(
         invoice_date=timezone.localdate(),

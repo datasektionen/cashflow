@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { _ } from 'svelte-i18n';
-	import ClaimTable from '#lib/components/tables/ClaimTable.svelte';
-	import { setRedirect } from '#lib/stores/state.svelte.js';
+	import type { PageProps } from './$types';
 	import { page } from '$app/state';
+	import { setRedirect } from '#lib/stores/state.svelte.ts';
+	import ClaimTable from '#lib/components/tables/ClaimTable.svelte';
 
-	let { data } = $props();
+	let { data }: PageProps = $props();
 
-	let redirectId = $state(crypto.randomUUID().slice(0, 8));
-
+	// Accounting a claim returns here with the same filters
+	const redirectId = crypto.randomUUID().slice(0, 8);
 	$effect(() => {
 		const url = new URL(page.url.href);
 		url.searchParams.set('redirect', redirectId);
@@ -17,8 +17,9 @@
 
 <ClaimTable
 	claims={data.expenses}
-	user={data.user!}
+	user={data.user}
 	filters={['description', 'reimbursement']}
 	excludeColumns={['verification', 'type', 'status']}
 	rowHref={(c) => `/admin/account/expenses/${c.id}?redirect=${redirectId}`}
+	layout={{ xs: ['description', 'owner'], sm: ['description', 'owner', 'cost_centres'] }}
 />

@@ -1,18 +1,14 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type { ActionOverview, ActionSummary, BankInfo, User } from '#lib/api/types.ts';
 
 export class UsersAPI {
-	private readonly apiClient: ApiClient;
+	constructor(private apiClient: ApiClient) {}
 
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
-
-	async getCurrent(): Promise<User> {
+	getCurrent(): Promise<User> {
 		return this.apiClient.get<User>('/users/me/');
 	}
 
-	async retrieve(username: string): Promise<User> {
+	retrieve(username: string): Promise<User> {
 		return this.apiClient.get<User>(`/users/${username}`);
 	}
 
@@ -20,11 +16,11 @@ export class UsersAPI {
 		return this.apiClient.patch<User>('/users/me/', { bank_info: bankInfo });
 	}
 
-	async actionSummary(): Promise<ActionSummary> {
+	actionSummary(): Promise<ActionSummary> {
 		return this.apiClient.get<ActionSummary>('/actions');
 	}
 
-	async actionOverview(): Promise<ActionOverview> {
+	actionOverview(): Promise<ActionOverview> {
 		return this.apiClient.get<ActionOverview>('/actions/overview');
 	}
 }

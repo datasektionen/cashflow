@@ -1,193 +1,154 @@
 <script lang="ts">
 	import { Menu, X, LogOut, Wallet } from '@lucide/svelte';
-	import { Separator } from 'bits-ui';
 	import NavLink from './NavLink.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import { getProfilePicture, clearProfilePicture } from '#lib/stores/state.svelte.ts';
 	import LanguageToggle from './LanguageToggle.svelte';
+	import MoneyRain, { throwBill } from '#lib/components/MoneyRain.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import { Button, DropdownMenu } from '#lib/components/ui/index.ts';
 	import type { Profile } from '#lib/api/types.ts';
 
 	let {
 		user,
 		canAccessAdmin = false,
-		sidebarOpen = $bindable(false),
-		userDropdownOpen = $bindable(false)
+		sidebarOpen = $bindable(false)
 	}: {
 		user: Profile | null;
 		canAccessAdmin?: boolean;
 		sidebarOpen?: boolean;
-		userDropdownOpen?: boolean;
 	} = $props();
+
+	let userDropdownOpen = $state(false);
 
 	const adminView = $derived(page.url.pathname.startsWith('/admin'));
 
+	let logoutForm: HTMLFormElement | undefined = $state();
+
+	const onBar = 'text-white/80 hover:bg-white/10 hover:text-white';
+
+	// Close menus on navigation
 	$effect(() => {
 		page.url.pathname;
+		sidebarOpen = false;
 		userDropdownOpen = false;
 	});
 </script>
 
-<svelte:window
-	onkeydown={(e) => {
-		if (e.key === 'Escape') userDropdownOpen = false;
-	}}
-/>
+<MoneyRain />
 
 <nav
-	class="fixed z-40 h-16 w-full bg-money-green-600 text-white drop-shadow-xl dark:bg-money-green-900 dark:text-dark-base-text"
+	class="fixed inset-x-0 top-0 z-40 h-16 bg-brand pr-(--scrollbar-width) text-white shadow-md [&_:focus-visible]:outline-white"
 >
 	<div
 		class={[
-			'flex h-full w-full flex-row justify-between',
-			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'px-4 lg:px-8'
+			'flex h-full w-full items-center justify-between gap-4',
+			adminView ? 'px-4 lg:px-6' : 'mx-auto max-w-7xl px-4 lg:px-8'
 		]}
 	>
-		<a
-			href="/"
-			class="absolute inset-y-0 left-1/2 flex -translate-x-1/2 items-center lg:hidden"
-			aria-label={$_('chapter')}
-		>
-			<img src="/icon.png" alt="Cashflow" class="size-10" />
-		</a>
-
-		<div class="flex h-full items-center">
-			<a href="/" class="mr-4 hidden items-center gap-2 lg:flex" aria-label={$_('chapter')}>
-				<img src="/icon.png" alt="" class="size-7" />
-				<span class="text-lg font-semibold">Cashflow</span>
-			</a>
+		<div class="flex h-full min-w-0 items-center gap-2">
 			{#if user != null}
-				<button
-					type="button"
+				<Button
+					variant="ghost"
+					size="icon"
 					onclick={() => {
 						sidebarOpen = !sidebarOpen;
 						userDropdownOpen = false;
 					}}
-					aria-label="Toggle sidebar"
+					aria-label={$_('toggle_sidebar')}
 					aria-expanded={sidebarOpen}
-					class="my-auto mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-white/10 lg:hidden dark:hover:bg-money-green-800"
+					class="-ml-2 text-white hover:bg-white/10 lg:hidden"
 				>
 					{#if sidebarOpen}
-						<X class="size-5" />
+						<X class="size-5!" />
 					{:else}
-						<Menu class="size-5" />
+						<Menu class="size-5!" />
 					{/if}
-				</button>
+				</Button>
+			{/if}
+			<a
+				href="/"
+				class="mr-4 flex shrink-0 items-center gap-2"
+				aria-label={$_('chapter')}
+				onclick={(e) =>
+					(e.target as HTMLElement).tagName === 'IMG' && throwBill(e.target as Element)}
+			>
+				<img src="/icon.png" alt="" class="size-7" />
+				<span class="font-display text-xl font-bold tracking-tight">Cashflow</span>
+			</a>
+			{#if user != null}
 				<div class="hidden h-full lg:flex">
-					<NavLink to="/expenses/new" text={$_('new_expense.title')}></NavLink>
-					<NavLink to="/invoices/new" text={$_('new_invoice.title')}></NavLink>
-					<NavLink to="/claims/" text={$_('user_claims')}></NavLink>
-					<NavLink to="/budget" text={$_('budget.title')}></NavLink>
-					<NavLink to="/stats" text={$_('statistics')}></NavLink>
+					<NavLink to="/expenses/new" text={$_('new_expense.title')} />
+					<NavLink to="/invoices/new" text={$_('new_invoice.title')} />
+					<NavLink to="/claims/" text={$_('user_claims')} />
+					<NavLink to="/budget" text={$_('budget.title')} />
+					<NavLink to="/stats" text={$_('statistics')} />
 					{#if canAccessAdmin}
-						<NavLink to="/admin/" text={$_('admin')}></NavLink>
+						<NavLink to="/admin/" text={$_('admin')} />
 					{/if}
 				</div>
 			{/if}
 		</div>
 
-		<div class="flex h-full items-center space-x-2">
-			<div class={['h-full items-center space-x-2', user != null ? 'hidden lg:flex' : 'flex']}>
-				<LanguageToggle />
-
-				<ThemeToggle />
-			</div>
+		<div class="flex shrink-0 items-center gap-1">
+			<LanguageToggle class="mr-1" />
+			<ThemeToggle class={onBar} />
 
 			{#if user != null}
-				<button
-					type="button"
-					onclick={() => {
-						userDropdownOpen = !userDropdownOpen;
-						sidebarOpen = false;
+				<DropdownMenu.Root
+					bind:open={userDropdownOpen}
+					onOpenChange={(open) => {
+						if (open) sidebarOpen = false;
 					}}
-					aria-haspopup="menu"
-					aria-expanded={userDropdownOpen}
-					aria-controls="user-menu"
-					aria-label={`${user.first_name} ${user.last_name}`}
-					class="flex cursor-pointer items-center gap-2 p-1 transition-colors"
 				>
-					<span class="hidden md:inline">{user.first_name} {user.last_name}</span>
-					{#await getProfilePicture(user.username)}
-						<UserAvatar class="bg-white dark:bg-dark-base-50" placeholder />
-					{:then profilePicture}
-						<UserAvatar class="bg-white dark:bg-dark-base-50" url={profilePicture ?? undefined} />
-					{/await}
-				</button>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<button
+								{...props}
+								aria-label={`${user.first_name} ${user.last_name}`}
+								class="ml-1 flex h-9 cursor-pointer items-center gap-2 px-0.5 text-sm font-medium transition-colors hover:bg-white/10 md:pl-3"
+							>
+								<span class="hidden md:inline">{user.first_name} {user.last_name}</span>
+								{#await getProfilePicture(user.username)}
+									<UserAvatar placeholder class="bg-white/20" />
+								{:then profilePicture}
+									<UserAvatar url={profilePicture ?? undefined} class="bg-white" />
+								{/await}
+							</button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Label>{user.first_name} {user.last_name}</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item>
+							{#snippet child({ props })}
+								<a href="/claims/" {...props}><Wallet />{$_('user_claims')}</a>
+							{/snippet}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onSelect={() => logoutForm?.requestSubmit()}>
+							<LogOut />{$_('logout')}
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+				<form
+					bind:this={logoutForm}
+					method="POST"
+					action="/logout"
+					onsubmit={() => clearProfilePicture()}
+					class="hidden"
+				></form>
 			{:else}
-				<a href="/oidc/authenticate/?next={encodeURIComponent(page.url.origin + '/')}"
-					>{$_('login')}</a
+				<Button
+					variant="secondary"
+					size="sm"
+					href="/oidc/authenticate/?next={encodeURIComponent(page.url.origin + '/')}"
+					class="ml-1 border-transparent"
 				>
+					{$_('login')}
+				</Button>
 			{/if}
 		</div>
 	</div>
 </nav>
-
-{#if user != null}
-	{#if userDropdownOpen}
-		<button
-			type="button"
-			aria-label="Close menu"
-			onclick={() => (userDropdownOpen = false)}
-			class="fixed inset-0 top-16 z-20"
-		></button>
-	{/if}
-
-	<div
-		class={[
-			'pointer-events-none fixed inset-x-0 top-16 z-30 flex justify-end',
-			adminView ? 'px-4 pr-8 lg:px-8 lg:pr-12' : 'px-4 lg:px-8'
-		]}
-	>
-		<div
-			id="user-menu"
-			role="menu"
-			inert={!userDropdownOpen}
-			class={[
-				'pointer-events-auto flex w-48 flex-col border-r border-b border-l border-base-500 bg-base-100 py-1 text-sm transition-all dark:border-dark-base-300 dark:bg-dark-base-200',
-				userDropdownOpen ? 'translate-y-0 shadow-lg' : '-translate-y-full'
-			]}
-		>
-			<p class="px-3 py-2 md:hidden dark:text-dark-base-text">
-				{user.first_name}
-				{user.last_name}
-			</p>
-			<Separator.Root
-				orientation="horizontal"
-				class="my-1 h-px w-full bg-base-500 md:hidden dark:bg-dark-base-300"
-			/>
-
-			<a
-				href="/claims/"
-				role="menuitem"
-				class="flex w-full cursor-pointer flex-row items-center gap-x-1 px-3 py-2 text-left text-base-subtle transition-colors hover:bg-base-300 dark:text-dark-base-subtle dark:hover:bg-dark-base-300"
-			>
-				<Wallet class="size-4" />
-				{$_('user_claims')}
-			</a>
-
-			<form method="POST" action="/logout" onsubmit={() => clearProfilePicture()}>
-				<button
-					type="submit"
-					role="menuitem"
-					class="flex w-full cursor-pointer flex-row items-center gap-x-1 px-3 py-2 text-left text-base-subtle transition-colors hover:bg-base-300 dark:text-dark-base-subtle dark:hover:bg-dark-base-300"
-				>
-					<LogOut class="size-4" />
-					{$_('logout')}
-				</button>
-			</form>
-
-			<Separator.Root
-				orientation="horizontal"
-				class="my-1 h-px w-full bg-base-500 lg:hidden dark:bg-dark-base-300"
-			/>
-			<div
-				class="flex items-center justify-between px-3 py-1 text-base-subtle lg:hidden dark:text-dark-base-subtle"
-			>
-				<LanguageToggle />
-				<ThemeToggle />
-			</div>
-		</div>
-	</div>
-{/if}

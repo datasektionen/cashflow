@@ -1,7 +1,6 @@
 {
 	"expense": "Expense",
 	"invoice": "Invoice",
-	"user_expenses": "My expenses",
 	"user_claims": "My claims",
 	"statistics": "Statistics",
 	"admin": "Administration",
@@ -18,15 +17,33 @@
 	"logout": "Log out",
 
 	"chapter": "Konglig Datasektionen",
-	"help": "Help",
 
 	"browse_files": "Browse files",
 	"no_results": "No results",
+	"previous": "Previous",
+	"next": "Next",
+	"edit": "Edit",
+	"remove": "Remove",
+	"rotate_left": "Rotate left",
+	"rotate_right": "Rotate right",
+	"expand": "Expand",
+	"open_in_new_tab": "Open in new tab",
+	"show_beside": "Show beside",
+	"drop_hint": "or drop them here",
+	"copy": "Copy",
+	"resize": "Resize",
+	"show_receipt": "Show receipt",
+	"close": "Close",
+	"toggle_theme": "Toggle dark mode",
+	"toggle_sidebar": "Toggle menu",
+	"compact_sidebar": "Compact sidebar",
 	"description_required": "Description is required",
 	"blank_description": "Description is required",
 	"description_contains_emoji": "Description can't contain emojis",
 	"invoice_number_required": "Invoice number is required",
 	"expense_date_required": "Expense date is required",
+	"invoice_date_required": "Invoice date is required",
+	"due_date_required": "Due date is required",
 	"expense_date_future": "Expense date cannot be in the future",
 	"files_required": "At least one receipt is required",
 	"cost_center_required": "Cost center is required",
@@ -40,6 +57,8 @@
 	"amount_negative": "Amount must be greater than zero",
 	"amount_too_large": "Amount exceeds maximum allowed value",
 	"budget_line_exceeded": "The budget line will be exceeded",
+	"budget_line_exceeded_by": "Exceeds the budget line by {amount} kr",
+	"budget_line_left": "{amount} kr left on the budget line",
 
 	"errors": {
 		"network": "Could not reach the server. Please try again later."
@@ -61,7 +80,6 @@
 	},
 
 	"welcome": {
-		"title": "Cashflow",
 		"intro": "Is this your first time using Cashflow?",
 		"process": {
 			"title": "How do I use Cashflow and what happens to the receipt?",
@@ -106,16 +124,11 @@
 			"description": "Description",
 			"owner": "Owner",
 			"cost_centres": "Cost centres",
-			"expense_date": "Expense date",
 			"total": "Total",
 			"status": "Status",
 			"tag": "Tag",
 			"payer": "Payer",
 			"receiver": "Receiver"
-		},
-		"pagination": {
-			"showing": "Showing {start} to {end} of {total}",
-			"show": "Show"
 		}
 	},
 
@@ -137,7 +150,6 @@
 		"title": "Confirm",
 		"columns": {
 			"id": "ID",
-			"type": "Type",
 			"description": "Description",
 			"owner": "Owner",
 			"amount": "Amount",
@@ -156,16 +168,15 @@
 			"invoices": "Invoices"
 		},
 		"columns": {
-			"user": "User",
 			"invoice": "Invoice",
 			"due_date": "Due",
 			"total": "Total"
 		},
 		"empty": "No invoices to pay",
 		"preview": {
-			"empty": "Select an invoice to preview and pay it",
-			"open_detail": "Open"
+			"empty": "Select an invoice to preview and pay it"
 		},
+		"count": "{count, plural, one {# expense} other {# expenses}}",
 		"select_all": "Select all",
 		"load_error": "Could not load expenses",
 		"payment_created": "Payment {tag} created",
@@ -234,8 +245,6 @@
 			"invoice_date": "Invoice date",
 			"due_date": "Due date",
 			"total": "Total",
-			"verification": "Voucher",
-			"confirmed_at": "Confirmed",
 			"paid_at": "Paid",
 			"status": "Status"
 		}
@@ -287,7 +296,6 @@
 		"disclaimer_link_text": "register it as an expense",
 		"form": {
 			"description": {
-				"label": "Description",
 				"help": "A description of the invoice and why it should be paid"
 			},
 			"invoice_number": {
@@ -295,12 +303,10 @@
 				"help": "The invoice number as stated on the invoice."
 			},
 			"invoice_date": {
-				"label": "Invoice date",
-				"help": "The date on which the invoice was issued."
+				"label": "Invoice date"
 			},
 			"due_date": {
-				"label": "Due date",
-				"help": "The date on which the invoice is due."
+				"label": "Due date"
 			},
 			"files": {
 				"label": "Image or PDF files of the invoice"
@@ -308,19 +314,11 @@
 			"invoice_parts": {
 				"label": "Invoice parts",
 				"help": "Here you specify what portion of the invoice should be paid for each budget line. The total amount of the invoice must be exactly equal to the sum of the rows.",
-				"cost_center_label": "Cost center",
-				"cost_center_placeholder": "Choose cost center",
-				"secondary_cost_center_label": "Secondary cost center",
-				"secondary_cost_center_placeholder": "Choose secondary cost center",
-				"budget_line_label": "Budget line",
-				"budget_line_placeholder": "Choose budget line",
-				"amount_label": "Amount",
 				"add_part": "Add invoice part"
 			},
 			"submit": "Save and register invoice"
 		}
 	},
-	"file": "File",
 	"date": "Date",
 	"expense_date": "Purchase date",
 	"expense_created_at": "Registered",
@@ -350,8 +348,6 @@
 		"invoice_part_unattested": "The invoice part attestation has been removed",
 		"expense_confirmed": "The expense has been confirmed",
 		"expense_unconfirmed": "The expense has been unconfirmed",
-		"invoice_confirmed": "The invoice has been confirmed",
-		"invoice_unconfirmed": "The invoice has been unconfirmed",
 		"expense_unflagged": "The expense has been unflagged",
 		"expense_delete": "The expense \"{description}\" has been deleted",
 		"invoice_delete": "The invoice \"{description}\" has been deleted",
@@ -361,10 +357,8 @@
 	"expense_verification": "Voucher number",
 	"expense_status": {
 		"unprocessed": "Unprocessed",
-		"paid": "Reimbursed",
 		"unpaid": "Not reimbursed",
-		"not_booked": "Not booked",
-		"not_attested": "Not attested"
+		"not_booked": "Not booked"
 	},
 	"total": "Total",
 	"comment_submitted": "Comment submitted",
@@ -385,9 +379,6 @@
 	},
 	"submit": "Submit",
 	"expense_parts": "Expense parts",
-	"expense_receipt": "Receipt",
-	"expense_parts_locked": "Parts can no longer be edited once any part has been attested.",
-	"alerts_already_attested": "This can't be changed anymore — a part has already been attested.",
 	"amount": "Amount",
 	"cost_centre": "Cost centre",
 	"secondary_cost_centre": "Secondary cost centre",
@@ -427,25 +418,41 @@
 		"month": "Month"
 	},
 	"stats": {
-		"title": "Statistics",
 		"yearly_title": "Yearly overview"
 	},
 	"budget": {
 		"title": "Budget",
-		"total": "Total",
 		"rest": "Rest",
 		"load_error": "Could not load budget details.",
 		"paid": "Paid",
 		"attested": "Attested",
 		"uploaded": "Registered",
-		"exceeded_filter_help": "Only show exceeded budget lines"
+		"exceeded_filter_help": "Only show exceeded budget lines",
+		"budget": "Budget",
+		"spent": "Spent",
+		"income": "Income",
+		"exceeded": "Exceeded",
+		"search": "Search cost centres",
+		"types": {
+			"committee": "Committees",
+			"partition": "Partitions",
+			"project": "Projects",
+			"other": "Other"
+		}
 	},
 	"claims": {
 		"total_cashflow": "Total Cashflowed",
 		"total_cashflows": "Number of expenses",
 		"amount_rank": "Position by amount",
 		"count_rank": "Position by count",
-		"loading": "Loading statistics...",
 		"error": "Could not load statistics"
+	},
+	"unsaved": {
+		"title": "Unsaved changes",
+		"description": "Your changes will be lost if you leave without saving.",
+		"description_incomplete": "The form isn't complete, so it can't be saved yet. Your changes will be lost if you leave.",
+		"stay": "Stay",
+		"leave": "Leave",
+		"save_and_leave": "Save and leave"
 	}
 }

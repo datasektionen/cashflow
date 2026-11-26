@@ -2,7 +2,7 @@ import factory
 from django.contrib.auth.models import User
 from factory.django import DjangoModelFactory
 
-from expenses.models import Profile
+from core.models import Profile
 
 
 class UserFactory(DjangoModelFactory):

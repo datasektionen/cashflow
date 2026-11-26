@@ -26,10 +26,19 @@ class ClaimOrdering(filters.OrderingFilter):
         kwargs.setdefault("fields", self.ordering_fields)
         super().__init__(*args, **kwargs)
 
-    def get_ordering_value(self, param):  # pyright: ignore[reportIncompatibleMethodOverride]
+    def filter(self, qs, value):
+        # Newest first by default; id breaks ties so pages never repeat or skip rows
+        ordering = [self.get_ordering_value(p) for p in value or ["-created_date"]]
+        return qs.order_by(*ordering, "-id")
+
+    def get_ordering_value(
+        self, param
+    ):  # pyright: ignore[reportIncompatibleMethodOverride]
         # Put null values last
         descending = param.startswith("-")
-        field = F(self.param_map.get(param.lstrip("-"), param.lstrip("-")))  # pyright: ignore[reportOptionalMemberAccess]
+        field = F(
+            self.param_map.get(param.lstrip("-"), param.lstrip("-"))
+        )  # pyright: ignore[reportOptionalMemberAccess]
         if descending:
             return field.desc(nulls_last=True)
         return field.asc(nulls_last=True)

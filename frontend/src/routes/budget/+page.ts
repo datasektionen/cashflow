@@ -1,35 +1,12 @@
 import type { PageLoad } from './$types';
 import { API } from '#lib/api/index.ts';
 import { API_URL } from '#lib/config.ts';
-import type { CostCentre, CostCentreFilter } from '#lib/api/types.ts';
 
 export const load: PageLoad = async ({ fetch, url }) => {
-	const api = new API(API_URL, fetch);
-
-	let page = 1;
-	let costCentres: CostCentre[] = [];
-
-	const contains_blown: boolean | null = url.searchParams.get('contains_blown')
-		? url.searchParams.get('contains_blown') === 'true'
-		: null;
-
-	const filter: CostCentreFilter = contains_blown
-		? { active: true, contains_blown }
-		: { active: true };
-
-	do {
-		const res = await api.budget.listCostCentres(page, 100, filter);
-
-		costCentres.push(...res.data);
-
-		if (page >= res.pagination.totalPages) {
-			break;
-		}
-		page++;
-	} while (true);
-
-	return {
-		costCentres,
-		title_key: 'budget.title'
-	};
+	const thisYear = new Date().getFullYear();
+	const requested = Math.trunc(Number(url.searchParams.get('year')));
+	const year = requested ? Math.min(Math.max(requested, 2000), thisYear) : thisYear;
+	// Awaited so the server renders the list; null shows the load error in the page
+	const summary = await new API(API_URL, fetch).budget.summary(year).catch(() => null);
+	return { year, summary, title_key: 'budget.title', ownHeader: true };
 };

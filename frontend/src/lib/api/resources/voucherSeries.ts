@@ -1,36 +1,18 @@
-import { ApiClient } from '#lib/api/index.ts';
+import type { ApiClient } from '#lib/api/client.ts';
 import type { PaginatedResponse, VoucherSeries } from '#lib/api/types.ts';
-import type { ListResponse } from '#lib/api/client.ts';
 
 export class VoucherSeriesAPI {
-	private apiClient: ApiClient;
+	constructor(private apiClient: ApiClient) {}
 
-	constructor(apiClient: ApiClient) {
-		this.apiClient = apiClient;
-	}
-
-	async list(
+	list(
 		page: number,
 		perPage: number,
-		includeFortnox: boolean = true
+		includeFortnox = true
 	): Promise<PaginatedResponse<VoucherSeries>> {
-		let params: { page: number; perPage: number; include_fortnox?: boolean } = {
+		return this.apiClient.list('/voucher-series/', {
 			page,
-			perPage
-		};
-		if (!includeFortnox) {
-			params = { ...params, include_fortnox: false };
-		}
-		const res = await this.apiClient.get<ListResponse<VoucherSeries>>('/voucher-series/', params);
-
-		return {
-			data: res.data,
-			pagination: {
-				total: res.pagination.total,
-				page: res.pagination.page,
-				perPage: res.pagination.per_page,
-				totalPages: res.pagination.total_pages
-			}
-		};
+			per_page: perPage,
+			include_fortnox: includeFortnox ? undefined : false
+		});
 	}
 }

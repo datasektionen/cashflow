@@ -1,11 +1,8 @@
 import { API_URL } from '#lib/config.ts';
 import type { PageLoad } from './$types';
 import { API } from '#lib/api/index.ts';
-import { isErrorResponse } from '#lib/api/errors.ts';
-import { alerts, error } from '#lib/stores/alerts.ts';
-import type { Claim, PaginatedResponse } from '#lib/api/types.ts';
-import { _, waitLocale } from 'svelte-i18n';
-import { get } from 'svelte/store';
+import { listParams, orEmptyPage, titleOrNetworkError } from '#lib/listParams.ts';
+import type { ClaimOrdering } from '#lib/api/types.ts';
 import { claimFilterFromUrl } from '#lib/api/claimFilter.ts';
 
 export const load: PageLoad = async ({ fetch, url, params }) => {
@@ -13,23 +10,19 @@ export const load: PageLoad = async ({ fetch, url, params }) => {
 
 	const viewedUser = await api.users.retrieve(params.user);
 
-	const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
-	const perPage = url.searchParams.get('per_page')
-		? parseInt(url.searchParams.get('per_page')!)
-		: 10;
+	const { page, perPage, sorting } = listParams<ClaimOrdering>(url, 15, ['-created_date']);
 
-	const claims = api.claims
-		.list(page, perPage, {
-			...claimFilterFromUrl(url),
-			user: params.user,
-			q: url.searchParams.get('q') || undefined
-		})
-		.catch(async (e): Promise<PaginatedResponse<Claim>> => {
-			if (!isErrorResponse(e)) throw e;
-			let msg = e.status === 0 ? (await waitLocale(), get(_)('errors.network')) : e.title;
-			alerts.update((a) => [...a, error(msg)]);
-			return { data: [], pagination: { total: 0, page, perPage, totalPages: 0 } };
-		});
+	const claims = orEmptyPage(
+		api.claims.list(page, perPage, { ...claimFilterFromUrl(url), user: params.user }, sorting),
+		page,
+		perPage,
+		titleOrNetworkError
+	);
 
-	return { claims, viewedUser };
+	return {
+		claims,
+		viewedUser,
+		title: `${viewedUser.first_name} ${viewedUser.last_name}`,
+		ownHeader: true
+	};
 };

@@ -1,6 +1,6 @@
 <!--
 @component
-A table that accepts either a paginated response or other data. Uses bits-ui Pagination
+A table for a paginated response, with page, page size and sorting kept in the URL.
 -->
 <script lang="ts" generics="T">
 	import type { PaginatedResponse } from '#lib/api/types.ts';
@@ -14,68 +14,62 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		ChevronUp
 	} from '@lucide/svelte';
 	import { _ } from 'svelte-i18n';
-	import Skeleton from '#lib/components/ui/Skeleton.svelte';
+	import { latest } from '#lib/latest.svelte.ts';
+	import { Button, Card, Select, Skeleton, Table } from '#lib/components/ui/index.ts';
 	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		paginatedResponse?: Promise<PaginatedResponse<T>>;
-		data?: T[];
+		paginatedResponse: Promise<PaginatedResponse<T>>;
 		columns: TableColumn<T>[];
-		onPageChange?: (page: number) => void;
-		onPerPageChange?: (perPage: number) => void;
-		loading?: boolean;
 		rowProps?: TableRowProps<T>;
 		scrollable?: boolean;
-		sorting?: string | null;
-		onSortChange?: (sort: string) => void;
-		// Allows customizable context menus
 		contextSnippet?: Snippet<[T]>;
 	}
 
 	let {
 		paginatedResponse,
-		data,
 		columns,
-		onPageChange,
-		onPerPageChange,
-		loading,
 		rowProps,
 		scrollable = false,
-		sorting = $bindable(null),
-		onSortChange,
 		contextSnippet
 	}: Props = $props();
 
-	const resolved = $derived<Promise<PaginatedResponse<T>>>(
-		paginatedResponse ??
-			Promise.resolve({
-				data: data ?? [],
-				pagination: { total: data?.length ?? 0, page: 1, perPage: data?.length ?? 0, totalPages: 1 }
-			})
-	);
+	// Written on click so the header updates before navigation finishes
+	let sorting = $derived(page.url.searchParams.get('sorting'));
 
-	let paginationData: { total: number; page: number; perPage: number } = $state({
-		total: 0,
-		page: 1,
-		perPage: 15
-	});
+	function updateUrl(update: (params: URLSearchParams) => void) {
+		const url = new URL(page.url.href);
+		update(url.searchParams);
+		goto(url, { reset: false });
+	}
 
-	$effect(() => {
-		const current = resolved;
-		let stale = false;
-		current.then((res) => {
-			if (stale) return;
-			const { total, page, perPage } = res.pagination;
-			paginationData = { total, page, perPage };
+	const changePage = (p: number) => updateUrl((params) => params.set('page', String(p)));
+	const changePerPage = (perPage: number) =>
+		updateUrl((params) => {
+			params.set('per_page', String(perPage));
+			params.set('page', '1');
 		});
-		return () => {
-			stale = true;
-		};
-	});
+	const changeSort = (sort: string) =>
+		updateUrl((params) => {
+			if (sort) params.set('sorting', sort);
+			else params.delete('sorting');
+			params.set('page', '1');
+		});
+
+	// Keeps the current rows on screen (dimmed) while the next page or filter loads
+	const current = latest(() => paginatedResponse);
+	const paginationData = $derived(current.value?.pagination ?? { total: 0, page: 1, perPage: 15 });
 
 	const perPageOptions = [15, 25, 50, 100];
+	const perPageItems = $derived(
+		[...new Set([...perPageOptions, paginationData.perPage])]
+			.filter((n) => n > 0)
+			.sort((x, y) => x - y)
+			.map((n) => ({ value: String(n), label: String(n) }))
+	);
 
 	// Row the context menu is open for, with the cursor position it opened at
 	let ctx: { row: T; x: number; y: number } | null = $state(null);
@@ -93,7 +87,6 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 		ctx = { row, x: e.clientX, y: e.clientY };
 	}
 
-	// Dismiss context table
 	$effect(() => {
 		if (!ctx) return;
 		const close = () => (ctx = null);
@@ -109,11 +102,6 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 			window.removeEventListener('keydown', onKeyDown);
 		};
 	});
-
-	function resolveRowClass(row: T): string | undefined {
-		const c = rowProps?.class;
-		return typeof c === 'function' ? c(row) : c;
-	}
 
 	function handleRowClick(e: MouseEvent, row: T) {
 		if ((e.target as HTMLElement).closest('a, button')) return;
@@ -144,20 +132,22 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 
 	const handleSortChange = (column: TableColumn<T>) => {
 		if (!column.sorting) return;
-		// Cycle through the column's sort options (desc first, then asc), then
-		// back to unsorted.
+		// Cycle through the column's sort options, then back to unsorted
 		const idx = sorting ? column.sorting.indexOf(sorting) : -1;
-		if (idx === -1) {
-			sorting = column.sorting[0];
-		} else if (idx === column.sorting.length - 1) {
-			sorting = null;
-		} else {
-			sorting = column.sorting[idx + 1];
-		}
-		onSortChange?.(sorting ?? '');
+		sorting = idx === -1 ? column.sorting[0] : (column.sorting[idx + 1] ?? null);
+		changeSort(sorting ?? '');
 	};
 
-	let expanded: number | null = $state(null);
+	// Index of the expanded row, reset when the rows change
+	let expanded = $derived.by<number | null>(() => {
+		void current.value;
+		return null;
+	});
+	const showChevron = $derived(!!rowProps?.expandedSnippet && !isExtraSmallLayout.current);
+	const columnCount = $derived(columns.length + (showChevron ? 1 : 0));
+	const interactive = $derived(
+		!!(rowProps?.href || rowProps?.onClick || rowProps?.expandedSnippet)
+	);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -173,133 +163,136 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 	</div>
 {/if}
 
-<div class="border border-base-500 p-2 dark:border-dark-base-200">
-	<div class="relative">
-		<div class="overflow-hidden">
-			<table class="w-full table-fixed text-sm">
-				<thead>
-					<tr>
-						{#each columns as column}
-							<th
+{#snippet skeletonRows()}
+	{#each { length: Number(page.url.searchParams.get('per_page')) || perPageOptions[0] } as _, i (i)}
+		<Table.Row>
+			{#each columns as column, ci (ci)}
+				<Table.Cell>
+					<Skeleton class="h-4 w-full max-w-32 {column.align === 'right' ? 'ml-auto' : ''}" />
+				</Table.Cell>
+			{/each}
+			{#if showChevron}<Table.Cell />{/if}
+		</Table.Row>
+	{/each}
+{/snippet}
+
+{#snippet cell(column: TableColumn<T>, row: T)}
+	{#if column.renderSnippet}
+		{@render column.renderSnippet(row)}
+	{:else}
+		{column.render?.(row) ?? ''}
+	{/if}
+{/snippet}
+
+<Card padded={false}>
+	<Table.Root class="table-fixed">
+		<Table.Header>
+			<Table.Row>
+				{#each columns as column}
+					<Table.Head align={column.align} class={column.width}>
+						{#if column.sorting}
+							{@const active = !!sorting && column.sorting.includes(sorting)}
+							<button
+								type="button"
+								onclick={() => handleSortChange(column)}
 								class={[
-									column.width,
-									'px-4 py-3 text-left text-xs font-medium text-base-subtle uppercase dark:text-dark-base-subtle',
-									column.sorting && 'cursor-pointer'
+									'-mx-1 inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1 px-1 py-0.5 [text-transform:inherit] transition-colors hover:text-foreground',
+									active && 'text-foreground'
 								]}
-								onclick={column.sorting ? () => handleSortChange(column) : null}
 							>
-								<span class="flex min-w-0 flex-row items-center gap-2">
-									<span class="truncate">{column.header}</span>
-									{#if column.sorting}
-										{#if !sorting || !column.sorting.includes(sorting)}
-											<ChevronsUpDown class="size-4 shrink-0" />
-										{:else if column.sorting.indexOf(sorting) === 0}
-											<ChevronDown class="size-4 shrink-0" />
-										{:else}
-											<ChevronUp class="size-4 shrink-0" />
-										{/if}
-									{/if}
-								</span>
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#if loading}
-						{#each { length: perPageOptions[0] } as _, i (i)}
-							<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-								{#each columns as column}
-									<td class="px-4">
-										<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
-									</td>
-								{/each}
-							</tr>
-						{/each}
-					{:else}
-						{#await resolved}
-							{#each { length: perPageOptions[0] } as _, i (i)}
-								<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-									{#each columns as column}
-										<td class="px-4">
-											<Skeleton class="h-4 w-full max-w-32 rounded-sm" />
-										</td>
-									{/each}
-								</tr>
-							{/each}
-						{:then response}
-							{#each response.data as row, i}
-								<tr
-									class={[
-										'h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200',
-										resolveRowClass(row)
-									]}
-									onclick={(e) => {
-										if (rowProps?.expandedSnippet) {
-											expanded = expanded === i ? null : i;
-										}
-										handleRowClick(e, row);
-									}}
-									onauxclick={(e) => handleRowAuxClick(e, row)}
-									oncontextmenu={(e) => openContextMenu(e, row)}
-								>
-									{#each columns as column, ci}
-										<td class={['overflow-hidden px-4', !column.renderSnippet && 'truncate']}>
-											{#if ci === 0 && rowProps?.href && !rowProps.onClick}
-												<a href={rowProps.href(row)}>
-													{#if column.renderSnippet}
-														{@render column.renderSnippet(row)}
-													{:else}
-														{column.render?.(row) ?? ''}
-													{/if}
-												</a>
-											{:else if column.renderSnippet}
-												{@render column.renderSnippet(row)}
-											{:else}
-												{column.render?.(row) ?? ''}
-											{/if}
-										</td>
-									{/each}
-									{#if rowProps?.expandedSnippet && !isExtraSmallLayout.current}
-										<td>
-											{#if expanded === i}
-												<ChevronUp />
-											{:else}
-												<ChevronDown />
-											{/if}
-										</td>
-									{/if}
-								</tr>
-								{#if rowProps?.expandedSnippet && expanded === i}
-									<tr
-										class="h-12 border-b border-b-base-400 hover:bg-base-200 dark:border-dark-base-150 dark:hover:bg-dark-base-200"
-									>
-										<td colspan={columns.length} class="px-4 py-2">
-											{@render rowProps.expandedSnippet(row)}
-										</td>
-									</tr>
+								<span class="truncate" title={column.header}>{column.header}</span>
+								{#if !active}
+									<ChevronsUpDown class="size-3.5 shrink-0" />
+								{:else if column.sorting.indexOf(sorting!) === 0}
+									<ChevronDown class="size-3.5 shrink-0" />
+								{:else}
+									<ChevronUp class="size-3.5 shrink-0" />
 								{/if}
-							{/each}
-							{#each { length: Math.max(0, response.pagination.perPage - response.data.length) } as _}
-								<tr class="h-12 border-b border-b-base-400 dark:border-dark-base-150">
-									{#each columns as column}
-										<td class="px-4">&nbsp;</td>
-									{/each}
-								</tr>
-							{/each}
-						{/await}
+							</button>
+						{:else}
+							<span class="block truncate">{column.header}</span>
+						{/if}
+					</Table.Head>
+				{/each}
+				{#if showChevron}
+					<Table.Head class="w-12" />
+				{/if}
+			</Table.Row>
+		</Table.Header>
+		<Table.Body class={['transition-opacity', current.loading && 'opacity-60']}>
+			{#if !current.value}
+				{@render skeletonRows()}
+			{:else}
+				{@const response = current.value}
+				{#each response.data as row, i}
+					<Table.Row
+						class={[
+							'hover:bg-muted/50',
+							interactive && 'cursor-pointer',
+							expanded === i && 'bg-muted/50',
+							typeof rowProps?.class === 'function' ? rowProps.class(row) : rowProps?.class
+						]}
+						onclick={(e) => {
+							if (rowProps?.expandedSnippet) {
+								expanded = expanded === i ? null : i;
+							}
+							handleRowClick(e, row);
+						}}
+						onauxclick={(e) => handleRowAuxClick(e, row)}
+						oncontextmenu={(e) => openContextMenu(e, row)}
+					>
+						{#each columns as column, ci}
+							<Table.Cell
+								align={column.align}
+								class={['overflow-hidden', !column.renderSnippet && 'truncate']}
+							>
+								{#if ci === 0 && rowProps?.href && !rowProps.onClick}
+									<a href={rowProps.href(row)}>{@render cell(column, row)}</a>
+								{:else}
+									{@render cell(column, row)}
+								{/if}
+							</Table.Cell>
+						{/each}
+						{#if showChevron}
+							<Table.Cell align="right" class="text-muted-foreground">
+								{#if expanded === i}
+									<ChevronUp class="ml-auto size-4" />
+								{:else}
+									<ChevronDown class="ml-auto size-4" />
+								{/if}
+							</Table.Cell>
+						{/if}
+					</Table.Row>
+					{#if rowProps?.expandedSnippet && expanded === i}
+						<Table.Row class="bg-muted/30">
+							<Table.Cell colspan={columnCount} class="h-auto py-3">
+								{@render rowProps.expandedSnippet(row)}
+							</Table.Cell>
+						</Table.Row>
 					{/if}
-				</tbody>
-			</table>
-		</div>
-	</div>
+				{/each}
+				{#if response.data.length === 0}
+					<Table.Row>
+						<Table.Cell colspan={columnCount} class="h-24 text-center text-muted-foreground">
+							{$_('no_results')}
+						</Table.Cell>
+					</Table.Row>
+				{:else if response.pagination.total > response.pagination.perPage}
+					{#each { length: response.pagination.perPage - response.data.length } as _}
+						<tr aria-hidden="true" class="h-12"><td colspan={columnCount}></td></tr>
+					{/each}
+				{/if}
+			{/if}
+		</Table.Body>
+	</Table.Root>
 
 	<div
 		class={[
-			'mt-4 flex flex-row items-center justify-center md:justify-between',
-			scrollable && 'sticky bottom-0 bg-base-200 py-2 dark:bg-dark-base-100'
+			'flex items-center justify-center gap-4 border-t border-border px-3 py-2 md:justify-between',
+			scrollable && 'bg-card lg:sticky lg:bottom-0 lg:z-10'
 		]}
 	>
-		<div class="hidden text-sm text-base-subtle md:flex dark:text-dark-base-subtle">
+		<p class="hidden text-sm text-muted-foreground md:block">
 			{$_('admin_paginatedResponse.pagination.showing', {
 				values: {
 					start: rangeStart,
@@ -307,57 +300,65 @@ A table that accepts either a paginated response or other data. Uses bits-ui Pag
 					total: paginationData.total.toLocaleString()
 				}
 			})}
-		</div>
+		</p>
 
 		<Pagination.Root
-			class="flex max-w-full flex-row items-center space-x-1 md:space-x-2"
+			class="flex max-w-full items-center gap-1"
 			count={paginationData.total}
 			perPage={paginationData.perPage}
 			page={paginationData.page}
 			siblingCount={isSmallLayout.current ? 0 : 1}
-			onPageChange={onPageChange ?? (() => {})}
+			onPageChange={changePage}
 		>
-			{#snippet children({ pages, range })}
-				<Pagination.PrevButton
-					class="group size-8 cursor-pointer items-center not-disabled:hover:bg-base-600 disabled:cursor-not-allowed disabled:text-base-subtle not-disabled:dark:hover:bg-dark-base-200 dark:disabled:text-dark-base-subtle"
-				>
-					<ChevronLeft class="m-auto size-4 group-disabled:opacity-50" />
+			{#snippet children({ pages })}
+				<Pagination.PrevButton>
+					{#snippet child({ props })}
+						<Button variant="ghost" size="icon-sm" aria-label={$_('previous')} {...props}
+							><ChevronLeft /></Button
+						>
+					{/snippet}
 				</Pagination.PrevButton>
 				{#each pages as page (page.key)}
 					{#if page.type === 'ellipsis'}
-						<div class="size-8">...</div>
+						<span class="flex size-8 items-center justify-center text-sm text-muted-foreground">
+							…
+						</span>
 					{:else}
-						<Pagination.Page
-							class="size-8 cursor-pointer items-center justify-center text-sm hover:bg-base-600 data-selected:bg-base-600 dark:hover:bg-dark-base-200 dark:data-selected:bg-dark-base-200"
-							{page}
-						>
-							{page.value}
+						<Pagination.Page {page}>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="ghost"
+									size="icon-sm"
+									class="font-normal text-muted-foreground tabular-nums data-selected:bg-muted data-selected:font-medium data-selected:text-foreground"
+								>
+									{page.value}
+								</Button>
+							{/snippet}
 						</Pagination.Page>
 					{/if}
 				{/each}
-
-				<Pagination.NextButton
-					class="group size-8 cursor-pointer items-center not-disabled:hover:bg-base-600 disabled:cursor-not-allowed disabled:text-base-subtle not-disabled:dark:hover:bg-dark-base-200 dark:disabled:text-dark-base-subtle"
-				>
-					<ChevronRight class="m-auto size-4 group-disabled:opacity-50" />
+				<Pagination.NextButton>
+					{#snippet child({ props })}
+						<Button variant="ghost" size="icon-sm" aria-label={$_('next')} {...props}
+							><ChevronRight /></Button
+						>
+					{/snippet}
 				</Pagination.NextButton>
 			{/snippet}
 		</Pagination.Root>
 
-		<div class="hidden flex-row items-center space-x-2 text-sm md:flex">
-			<label for="per-page" class="text-base-subtle dark:text-dark-base-subtle">
+		<div class="hidden items-center gap-2 text-sm md:flex">
+			<label for="per-page" class="text-muted-foreground">
 				{$_('admin_paginatedResponse.pagination.show')}
 			</label>
-			<select
+			<Select
 				id="per-page"
-				value={paginationData.perPage}
-				onchange={(e) => onPerPageChange?.(Number((e.target as HTMLSelectElement).value))}
-				class="bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] cursor-pointer appearance-none rounded border border-base-500 bg-transparent bg-position-[right_0.5rem_center] bg-no-repeat py-1 pr-7 pl-2 dark:border-dark-base-200"
-			>
-				{#each perPageOptions as option}
-					<option value={option}>{option}</option>
-				{/each}
-			</select>
+				items={perPageItems}
+				value={String(paginationData.perPage)}
+				onValueChange={(v) => changePerPage(Number(v))}
+				class="h-8 w-20"
+			/>
 		</div>
 	</div>
-</div>
+</Card>

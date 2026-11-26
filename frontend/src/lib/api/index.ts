@@ -7,12 +7,9 @@ import { ProfilePictureAPI } from '#lib/api/resources/profilePictures.ts';
 import { PaymentsAPI } from '#lib/api/resources/payments.ts';
 import { FortnoxAPI } from '#lib/api/resources/fortnox.ts';
 import { BudgetAPI } from '#lib/api/resources/budget.ts';
-import { VoucherSeriesAPI } from '#lib/api/resources/voucherSeries.js';
+import { VoucherSeriesAPI } from '#lib/api/resources/voucherSeries.ts';
 import { StatsAPI } from '#lib/api/resources/stats.ts';
 import { API_URL } from '#lib/config.ts';
-import { ApiUtil } from './util';
-
-export { ApiClient } from './client';
 
 export class API {
 	expenses: ExpensesAPI;
@@ -25,7 +22,6 @@ export class API {
 	budget: BudgetAPI;
 	voucherSeries: VoucherSeriesAPI;
 	stats: StatsAPI;
-	util: ApiUtil;
 
 	constructor(apiUrl: string, fetch: typeof globalThis.fetch) {
 		const client = new ApiClient(apiUrl.endsWith('/') ? apiUrl : apiUrl + '/', fetch);
@@ -39,7 +35,6 @@ export class API {
 		this.budget = new BudgetAPI(client);
 		this.voucherSeries = new VoucherSeriesAPI(client);
 		this.stats = new StatsAPI(client);
-		this.util = new ApiUtil();
 	}
 }
 

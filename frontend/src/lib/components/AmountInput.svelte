@@ -3,6 +3,8 @@
 The bindable value is a dinero object.
 -->
 <script lang="ts">
+	import { cn } from 'tailwind-variants';
+	import { inputShell } from './inputShell';
 	import { dineroFromDecimal, formatDineroAmount } from '#lib/money.ts';
 	import { Lock } from '@lucide/svelte';
 	import { isZero, SEK, toDecimal, type Dinero } from 'dinero.js';
@@ -10,16 +12,16 @@ The bindable value is a dinero object.
 	let {
 		value = $bindable(null),
 		name,
-		placeholder = '0,00',
+		id,
+		label,
 		suffix = '',
-		class: className = '',
 		locked = false
 	}: {
 		value?: Dinero<number, 'SEK'> | null;
 		name?: string;
-		placeholder?: string;
+		id?: string;
+		label?: string;
 		suffix?: string;
-		class?: string;
 		locked?: boolean;
 	} = $props();
 
@@ -53,6 +55,7 @@ The bindable value is a dinero object.
 		display = isEmpty(value) ? '' : toDecimal(value);
 	}
 
+	// The value follows typing (so Enter submits it); blur also tidies the display
 	function onBlur() {
 		focused = false;
 
@@ -61,27 +64,28 @@ The bindable value is a dinero object.
 	}
 </script>
 
-<div class="relative flex w-full items-center">
+<div class={cn(inputShell, 'relative', locked && 'bg-muted')}>
 	{#if name}<input type="hidden" {name} value={value != null ? toDecimal(value) : ''} />{/if}
 	<input
+		{id}
+		aria-label={label}
 		type="text"
 		inputmode="decimal"
 		bind:value={display}
+		oninput={() => (value = parse(display))}
 		onfocus={onFocus}
 		onblur={onBlur}
 		disabled={locked}
-		{placeholder}
-		class="w-full border-0 bg-transparent p-2 text-right text-sm tabular-nums outline-none placeholder:text-base-subtle disabled:cursor-not-allowed disabled:opacity-75 dark:placeholder:text-dark-base-subtle {suffix ||
-		locked
-			? 'pr-12'
-			: ''} {className}"
+		placeholder="0,00"
+		class={cn(
+			'h-full w-full min-w-0 bg-transparent px-3 py-2 text-right text-sm tabular-nums outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
+			(suffix || locked) && 'pr-12'
+		)}
 	/>
 	{#if locked}
-		<Lock class="pointer-events-none absolute right-3 size-3 text-gray-500" />
+		<Lock class="pointer-events-none absolute right-3 size-3.5 text-muted-foreground" />
 	{:else if suffix}
-		<span
-			class="pointer-events-none absolute right-3 text-sm text-base-subtle dark:text-dark-base-subtle"
-		>
+		<span class="pointer-events-none absolute right-3 text-sm text-muted-foreground">
 			{suffix}
 		</span>
 	{/if}

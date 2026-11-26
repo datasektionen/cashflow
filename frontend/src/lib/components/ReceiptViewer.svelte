@@ -1,184 +1,126 @@
-<!--
-@component
-Receipt viewer. Renders image receipts in a rotate/expand-capable grid;
-PDF receipts are handed off to @embedpdf/snippet's self-contained reader
-(own toolbar/zoom/rotate), one independent instance per file. Accepts one
-or more url sources, of either kind, mixed or not.
--->
 <script lang="ts">
-	import { RotateCcw, RotateCw, Expand, X, ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import { _ } from 'svelte-i18n';
+	import { zoomable } from '#lib/zoom.ts';
+	import {
+		ChevronLeft,
+		ChevronRight,
+		FileText,
+		Maximize2,
+		RotateCcw,
+		RotateCw,
+		X
+	} from '@lucide/svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import PdfSnippetViewer from '#lib/components/PdfSnippetViewer.svelte';
+	import { fileName, isImageName } from '#lib/files.ts';
+	import { pdfThumbnail } from '#lib/pdfThumbnail.ts';
+	import PdfSnippetViewer from './PdfSnippetViewer.svelte';
+	import FileLightbox, { type ViewerFile } from './FileLightbox.svelte';
 
-	export type ReceiptViewerProps = {
-		source: string[] | string;
-	};
+	// Shows one receipt at a time, filling its container
+	type Props = { source: (string | ViewerFile)[]; onclose?: () => void };
 
-	const { source }: ReceiptViewerProps = $props();
+	let { source, onclose }: Props = $props();
 
-	let sources: string[] = $derived(typeof source == 'string' ? [source] : source);
+	const files = $derived(
+		source.map((file) => {
+			if (typeof file !== 'string') return file;
+			const name = fileName(file);
+			return { url: file, name, image: isImageName(name) };
+		})
+	);
 
-	const IMAGE_EXTENSION = /\.(png|jpe?g|gif|webp|bmp|avif|heic|heif)$/i;
+	const rotation = new SvelteMap<string, number>();
+	let open = $state(false);
+	let index = $state(0);
+	const current = $derived(Math.min(index, files.length - 1));
+	const file = $derived(files[current]);
 
-	function isImage(url: string): boolean {
-		return IMAGE_EXTENSION.test(new URL(url).pathname);
-	}
+	const step = (by: number) => (index = (current + by + files.length) % files.length);
+	const rotate = (by: number) => rotation.set(file.url, (rotation.get(file.url) ?? 0) + by);
 
-	let images: string[] = $derived(sources.filter(isImage));
-
-	let enlarged: string | null = $state(null);
-	let rotationMap: SvelteMap<string, number> = $state(new SvelteMap<string, number>());
-
-	const handleRotation = (url: string, amount: number) => {
-		const old = rotationMap.get(url);
-		const newRotation = old ? old + amount : amount;
-		rotationMap.set(url, newRotation);
-	};
-
-	function indexOfImage(url: string): number {
-		return images.indexOf(url);
-	}
-
-	const getPrevious = (url: string): string => {
-		const i = indexOfImage(url);
-		return images[Math.max(i - 1, 0)];
-	};
-	const getNext = (url: string): string => {
-		const i = indexOfImage(url);
-		return images[Math.min(i + 1, images.length - 1)];
-	};
+	const tool =
+		'inline-flex size-8 shrink-0 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-4';
 </script>
 
-{#snippet tileToolbar(url: string)}
-	<div
-		class={[
-			'absolute top-2 right-2 z-10 flex items-center gap-1',
-			'bg-black/60 p-1 text-white shadow-lg ring-1 ring-white/10 backdrop-blur-sm',
-			'transition-opacity md:opacity-0 md:group-hover:opacity-100'
-		]}
-	>
-		<button
-			onclick={() => handleRotation(url, -90)}
-			class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-		>
-			<RotateCcw class="size-4" />
+<figure class="flex min-h-0 w-full flex-1 flex-col bg-card">
+	<figcaption class="flex h-10 shrink-0 items-center gap-0.5 border-b border-border px-1">
+		{#if files.length > 1}
+			<button type="button" class={tool} aria-label={$_('previous')} onclick={() => step(-1)}>
+				<ChevronLeft />
+			</button>
+			<span class="font-mono text-xs text-muted-foreground tabular-nums">
+				{current + 1}/{files.length}
+			</span>
+			<button type="button" class={tool} aria-label={$_('next')} onclick={() => step(1)}>
+				<ChevronRight />
+			</button>
+		{/if}
+		<span class="min-w-0 flex-1 truncate px-2 text-xs text-muted-foreground">{file.name}</span>
+		{#if file.image}
+			<button type="button" class={tool} aria-label={$_('rotate_left')} onclick={() => rotate(-90)}>
+				<RotateCcw />
+			</button>
+			<button type="button" class={tool} aria-label={$_('rotate_right')} onclick={() => rotate(90)}>
+				<RotateCw />
+			</button>
+		{/if}
+		<button type="button" class={tool} aria-label={$_('expand')} onclick={() => (open = true)}>
+			<Maximize2 />
 		</button>
-		<button
-			onclick={() => handleRotation(url, 90)}
-			class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-		>
-			<RotateCw class="size-4" />
-		</button>
-		<button
-			onclick={() => {
-				enlarged = url;
-			}}
-			class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-		>
-			<Expand class="size-4" />
-		</button>
-	</div>
-{/snippet}
-
-<div class="relative flex h-full w-full flex-col gap-4 overflow-auto border-0">
-	{#each sources as url (url)}
-		{#if isImage(url)}
-			<div
-				class="group relative flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden"
-			>
-				<div class="h-full w-full" style="transform: rotate({rotationMap.get(url) ?? 0}deg)">
-					<img src={url} alt="Receipt" class="h-full w-full object-contain" />
-				</div>
-				{@render tileToolbar(url)}
+		{#if onclose}
+			<button type="button" class={tool} aria-label={$_('close')} onclick={onclose}>
+				<X />
+			</button>
+		{/if}
+	</figcaption>
+	{#key file.url}
+		{#if file.image}
+			<div class="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted p-2">
+				<img
+					src={file.url}
+					alt={file.name}
+					class="size-full object-contain transition-[rotate]"
+					style:rotate="{rotation.get(file.url) ?? 0}deg"
+					draggable="false"
+					{@attach zoomable}
+				/>
 			</div>
 		{:else}
-			<PdfSnippetViewer {url} />
+			<PdfSnippetViewer url={file.url} class="min-h-0 flex-1" inline />
 		{/if}
-	{/each}
-</div>
-
-<!-- Expanded overlay -->
-<div
-	role="button"
-	tabindex="-1"
-	aria-label="Close preview"
-	class={[
-		enlarged ? 'flex' : 'hidden',
-		'fixed top-0 left-0 z-50 size-full bg-black/50 backdrop-blur-sm transition-all'
-	]}
-	onclick={() => {
-		enlarged = null;
-	}}
-	onkeydown={(e) => {
-		if (e.key === 'Escape' || e.key === 'Enter') enlarged = null;
-	}}
-></div>
-<div
-	class={[
-		enlarged ? 'flex flex-col' : 'hidden',
-		'fixed top-1/2 left-1/2 z-51 mx-auto max-h-screen w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-y-8 overflow-y-auto py-8'
-	]}
->
-	<div class="w-full" style="transform: rotate({rotationMap.get(enlarged ?? '') ?? 0}deg)">
-		{#if enlarged}
-			<img src={enlarged} alt="Enlarged receipt" class="w-full" />
-		{/if}
-	</div>
-</div>
-
-{#if enlarged}
-	<div
-		class={[
-			'fixed bottom-0 left-1/2 z-52 grid -translate-x-1/2 grid-cols-3 items-center gap-1 md:bottom-2',
-			'w-full md:w-120',
-			'bg-black/60 p-1 text-white shadow-lg ring-1 ring-white/10 backdrop-blur-sm'
-		]}
-	>
-		<div class="flex items-center gap-1 justify-self-start">
-			<button
-				onclick={() => handleRotation(enlarged!, -90)}
-				class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-			>
-				<RotateCcw class="size-6" />
-			</button>
-			<button
-				onclick={() => handleRotation(enlarged!, 90)}
-				class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-			>
-				<RotateCw class="size-6" />
-			</button>
+	{/key}
+	{#if files.length > 1}
+		<div class="flex shrink-0 gap-2 overflow-x-auto border-t border-border p-2">
+			<!-- Keyed by position: a claim can have the same file twice -->
+			{#each files as f, i (i)}
+				<button
+					type="button"
+					title={f.name}
+					aria-label={f.name}
+					aria-current={f === file || undefined}
+					onclick={() => (index = i)}
+					class={[
+						'flex size-14 shrink-0 cursor-pointer items-center justify-center overflow-hidden border-2 bg-muted text-muted-foreground transition',
+						f === file ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'
+					]}
+				>
+					{#if f.image}
+						<img src={f.url} alt="" class="size-full object-cover object-top" />
+					{:else}
+						{#await pdfThumbnail(f.url)}
+							<FileText class="size-6" />
+						{:then src}
+							{#if src}
+								<img {src} alt="" class="size-full bg-white object-cover object-top" />
+							{:else}
+								<FileText class="size-6" />
+							{/if}
+						{/await}
+					{/if}
+				</button>
+			{/each}
 		</div>
+	{/if}
+</figure>
 
-		<div class="flex items-center gap-1 justify-self-center">
-			<button
-				disabled={indexOfImage(enlarged!) === 0}
-				onclick={() => {
-					enlarged = getPrevious(enlarged!);
-				}}
-				class="cursor-pointer p-1.5 transition-colors hover:bg-white/20 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
-			>
-				<ChevronLeft class="size-6" />
-			</button>
-			<button
-				disabled={indexOfImage(enlarged!) === images.length - 1}
-				onclick={() => {
-					enlarged = getNext(enlarged!);
-				}}
-				class="cursor-pointer p-1.5 transition-colors hover:bg-white/20 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
-			>
-				<ChevronRight class="size-6" />
-			</button>
-		</div>
-
-		<div class="flex items-center justify-self-end">
-			<button
-				onclick={() => {
-					enlarged = null;
-				}}
-				class="cursor-pointer p-1.5 transition-colors hover:bg-white/20"
-			>
-				<X class="size-6" />
-			</button>
-		</div>
-	</div>
-{/if}
+<FileLightbox {files} bind:index={() => current, (i) => (index = i)} bind:open {rotation} />

@@ -3,9 +3,5 @@ import { hasAdminAccess } from '#lib/auth.ts';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async ({ parent }) => {
-	const data = await parent();
-	if (!hasAdminAccess(data.user)) {
-		throw redirect(303, '/');
-	}
-	return data;
+	if (!hasAdminAccess((await parent()).user)) redirect(303, '/');
 };

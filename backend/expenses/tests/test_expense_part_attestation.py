@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 from cashflow.dauth import Permission
 from core.factories import UserFactory
 from expenses.factories import ExpensePartFactory
-from expenses.models import Comment
+from core.models import Comment
 
 
 class TestExpensePartAttestation:
@@ -30,14 +30,12 @@ class TestExpensePartAttestation:
         assert expense_part.attest_date == today
         assert expense_part.attested_by == user.profile
 
-        comment = Comment.objects.filter(
-            expense=expense_part.expense, author=user.profile
-        )
+        comment = Comment.objects.filter(claim=expense_part.claim, author=user.profile)
         assert comment.exists()
 
     def test_rejects_unauthorized(self, user, client, mocker):
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
-        expense_part = ExpensePartFactory.create(expense__owner=user.profile)
+        expense_part = ExpensePartFactory.create(claim__owner=user.profile)
         response = client.post(
             f"/api/expense-parts/{expense_part.id}/attest/",
         )
@@ -51,7 +49,7 @@ class TestExpensePartAttestation:
             autospec=True,
         )
         expense_part = ExpensePartFactory.create(
-            cost_centre="A", expense__owner=user.profile
+            cost_centre="A", claim__owner=user.profile
         )
         response = client.post(
             f"/api/expense-parts/{expense_part.id}/attest/",
@@ -67,7 +65,7 @@ class TestExpensePartAttestation:
             autospec=True,
         )
         expense_part = ExpensePartFactory.create(
-            cost_centre="A", expense__is_flagged=True
+            cost_centre="A", claim__expense_data__is_flagged=True
         )
         response = client.post(
             f"/api/expense-parts/{expense_part.id}/attest/",

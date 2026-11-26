@@ -13,14 +13,14 @@ class TestRecommendedAccounts:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             return_value=[4010, 4011],
             autospec=True,
         )
         expense = ExpenseFactory(owner=user.profile)
-        ExpensePartFactory.create(expense=expense)
+        ExpensePartFactory.create(claim=expense)
 
-        response = client.get(f"/api/expenses/{expense.id}/")
+        response = client.get(f"/api/expenses/{expense.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_accounts"] == [4010, 4011]
         assert (
@@ -35,11 +35,11 @@ class TestRecommendedAccounts:
             autospec=True,
         )
         gordian = mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             autospec=True,
         )
         expense = ExpenseFactory(owner=user.profile)
-        ExpensePartFactory.create(expense=expense)
+        ExpensePartFactory.create(claim=expense)
 
         response = client.get("/api/expenses/")
         assert response.status_code == 200
@@ -55,14 +55,14 @@ class TestRecommendedAccounts:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             side_effect=ValueError("no such budget line"),
             autospec=True,
         )
         expense = ExpenseFactory(owner=user.profile)
-        ExpensePartFactory.create(expense=expense)
+        ExpensePartFactory.create(claim=expense)
 
-        response = client.get(f"/api/expenses/{expense.id}/")
+        response = client.get(f"/api/expenses/{expense.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_accounts"] == []
 
@@ -83,7 +83,7 @@ class TestRecommendedAccounts:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             return_value=[4010],
             autospec=True,
         )
@@ -92,9 +92,9 @@ class TestRecommendedAccounts:
         )
         fortnox_cc.return_value.Code = "123"
         expense = ExpenseFactory(owner=user.profile)
-        ExpensePartFactory.create(expense=expense)
+        ExpensePartFactory.create(claim=expense)
 
-        response = client.get(f"/api/expenses/{expense.id}/")
+        response = client.get(f"/api/expenses/{expense.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_cost_centre"] == "123"
 
@@ -105,13 +105,13 @@ class TestRecommendedAccounts:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             return_value=[4010],
             autospec=True,
         )
         expense = ExpenseFactory(owner=user.profile)
-        ExpensePartFactory.create(expense=expense)
+        ExpensePartFactory.create(claim=expense)
 
-        response = client.get(f"/api/expenses/{expense.id}/")
+        response = client.get(f"/api/expenses/{expense.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_cost_centre"] is None

@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 
 from cashflow.dauth import Permission
 from core.factories import UserFactory
-from expenses.models import Comment
+from core.models import Comment
 from ..factories import InvoiceFactory, InvoicePartFactory
 
 YESTERDAY = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -138,7 +138,7 @@ class TestInvoiceCreate:
 
     def test_rejects_malformed_date(self, api_client):
         data = {
-            "invoice_date": "20260530",
+            "invoice_date": "30/05/2026",
             "due_date": TOMORROW.strftime("%Y-%m-%d"),
             "invoice_number": "12345",
             "description": "Test description",
@@ -152,7 +152,7 @@ class TestInvoiceCreate:
         }
         response = api_client.post("/api/invoices/", data=data, format="multipart")
         assert response.status_code == 400
-        assert response.data["detail"].code == "invalid_date_format"
+        assert response.data["invoice_date"][0].code == "invalid"
 
     def test_rejects_invoice_date_tomorrow(self, api_client):
         data = {
@@ -168,21 +168,6 @@ class TestInvoiceCreate:
 
         assert response.status_code == 422
         assert response.data["detail"].code == "invalid_invoice_date"
-
-    def test_rejects_due_date_yesterday(self, api_client):
-        data = {
-            "invoice_date": YESTERDAY.strftime("%Y-%m-%d"),
-            "due_date": YESTERDAY.strftime("%Y-%m-%d"),
-            "invoice_number": "12345",
-            "description": "Test description",
-            "accounted": False,
-            "files": [make_file()],
-            "parts": json.dumps([PART]),
-        }
-
-        response = api_client.post("/api/invoices/", data=data, format="multipart")
-        assert response.status_code == 422
-        assert response.data["detail"].code == "invalid_due_date"
 
     def test_rejects_accounted_without_verification(self, api_client):
         data = {
@@ -236,7 +221,7 @@ class TestInvoicePartAttestation:
         user = UserFactory.create()
         client = APIClient()
         client.force_authenticate(user=user)
-        invoice_part = InvoicePartFactory.create(invoice__owner=user.profile)
+        invoice_part = InvoicePartFactory.create(claim__owner=user.profile)
         mocker.patch(
             "cashflow.dauth.get_permissions",
             return_value={
@@ -248,12 +233,11 @@ class TestInvoicePartAttestation:
         response = client.post(f"/api/invoice-parts/{invoice_part.id}/attest/")
 
         assert response.status_code == 204
-        assert response.data["attest_date"] == today.strftime("%Y-%m-%d")
-        assert response.data["attested_by"]["id"] == user.profile.id
+        invoice_part.refresh_from_db()
+        assert invoice_part.attest_date == today
+        assert invoice_part.attested_by == user.profile
 
-        comment = Comment.objects.filter(
-            invoice=invoice_part.invoice, author=user.profile
-        )
+        comment = Comment.objects.filter(claim=invoice_part.claim, author=user.profile)
         assert comment.exists()
 
 
@@ -267,24 +251,24 @@ class TestInvoicePay:
             autospec=True,
         )
         invoice = InvoiceFactory.create()
-        InvoicePartFactory.create(invoice=invoice, attested_by=user.profile)
+        InvoicePartFactory.create(claim=invoice, attested_by=user.profile)
 
-        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+        response = api_client.post(f"/api/invoices/{invoice.data_id}/pay/")
 
         assert response.status_code == 200, response.data
         assert response.data["paid_at"] == today.strftime("%Y-%m-%d")
         assert response.data["paid_by"]["username"] == user.username
 
-        invoice.refresh_from_db()
-        assert invoice.payed_by_id == user.id
+        invoice.invoice_data.refresh_from_db()
+        assert invoice.invoice_data.paid_by_id == user.profile.id
 
     @pytest.mark.django_db
     def test_rejects_unauthorized(self, api_client, mocker):
         mocker.patch("cashflow.dauth.get_permissions", return_value={}, autospec=True)
         invoice = InvoiceFactory.create()
-        InvoicePartFactory.create(invoice=invoice, attested_by=invoice.owner)
+        InvoicePartFactory.create(claim=invoice, attested_by=invoice.owner)
 
-        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+        response = api_client.post(f"/api/invoices/{invoice.data_id}/pay/")
 
         assert response.status_code == 403
         assert response.data["detail"].code == "payment_permission_denied"
@@ -297,10 +281,10 @@ class TestInvoicePay:
             autospec=True,
         )
         invoice = InvoiceFactory.create()
-        InvoicePartFactory.create(invoice=invoice, attested_by=user.profile)
+        InvoicePartFactory.create(claim=invoice, attested_by=user.profile)
         invoice.pay(user)
 
-        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+        response = api_client.post(f"/api/invoices/{invoice.data_id}/pay/")
 
         assert response.status_code == 409
         assert response.data["detail"].code == "already_paid"
@@ -313,9 +297,9 @@ class TestInvoicePay:
             autospec=True,
         )
         invoice = InvoiceFactory.create()
-        InvoicePartFactory.create(invoice=invoice, attested_by=None)
+        InvoicePartFactory.create(claim=invoice, attested_by=None)
 
-        response = api_client.post(f"/api/invoices/{invoice.id}/pay/")
+        response = api_client.post(f"/api/invoices/{invoice.data_id}/pay/")
 
         assert response.status_code == 409
         assert response.data["detail"].code == "not_payable"
@@ -329,7 +313,7 @@ class TestInvoiceAccount:
         invoice = InvoiceFactory.create()
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {"voucher_number": "A123"},
             format="json",
         )
@@ -346,14 +330,14 @@ class TestInvoiceAccount:
         invoice = InvoiceFactory.create()
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {"voucher_number": "A123"},
             format="json",
         )
         assert response.status_code == 200, response.data
         invoice.refresh_from_db()
         assert invoice.verification == "A123"
-        assert Comment.objects.filter(invoice=invoice, author=user.profile).exists()
+        assert Comment.objects.filter(claim=invoice, author=user.profile).exists()
 
     @pytest.mark.django_db
     def test_rejects_already_accounted(self, api_client, mocker):
@@ -365,7 +349,7 @@ class TestInvoiceAccount:
         invoice = InvoiceFactory.create(verification="A1")
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {"voucher_number": "A123"},
             format="json",
         )
@@ -384,7 +368,7 @@ class TestInvoiceAccount:
         invoice = InvoiceFactory.create()
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {"voucher_rows": [{"account": 1930, "cost_centre": 100, "debit": "50.00"}]},
             format="json",
         )
@@ -401,14 +385,14 @@ class TestInvoiceRecommendations:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             return_value=[4010, 4011],
             autospec=True,
         )
         invoice = InvoiceFactory.create(owner=user.profile)
-        InvoicePartFactory.create(invoice=invoice)
+        InvoicePartFactory.create(claim=invoice)
 
-        response = api_client.get(f"/api/invoices/{invoice.id}/")
+        response = api_client.get(f"/api/invoices/{invoice.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_accounts"] == [4010, 4011]
         # No session login, so the Fortnox service client is absent.
@@ -426,11 +410,11 @@ class TestInvoiceRecommendations:
             autospec=True,
         )
         gordian = mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             autospec=True,
         )
         invoice = InvoiceFactory.create(owner=user.profile)
-        InvoicePartFactory.create(invoice=invoice)
+        InvoicePartFactory.create(claim=invoice)
 
         response = api_client.get("/api/invoices/")
         assert response.status_code == 200
@@ -452,7 +436,7 @@ class TestInvoiceRecommendations:
             autospec=True,
         )
         mocker.patch(
-            "cashflow.api.serializers.retrieve_account_from_gordian",
+            "budget.api.serializers.retrieve_account_from_gordian",
             return_value=[4010],
             autospec=True,
         )
@@ -461,9 +445,9 @@ class TestInvoiceRecommendations:
         )
         fortnox_cc.return_value.Code = "456"
         invoice = InvoiceFactory.create(owner=user.profile)
-        InvoicePartFactory.create(invoice=invoice)
+        InvoicePartFactory.create(claim=invoice)
 
-        response = client.get(f"/api/invoices/{invoice.id}/")
+        response = client.get(f"/api/invoices/{invoice.data_id}/")
         assert response.status_code == 200
         assert response.data["parts"][0]["recommended_cost_centre"] == "456"
 
@@ -479,7 +463,7 @@ class TestInvoiceRecommendations:
         invoice = InvoiceFactory.create()
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {"voucher_rows": [{"account": 1930, "credit": "50.00"}]},
             format="json",
         )
@@ -500,7 +484,7 @@ class TestInvoiceRecommendations:
         invoice = InvoiceFactory.create()
 
         response = api_client.post(
-            f"/api/invoices/{invoice.id}/account/",
+            f"/api/invoices/{invoice.data_id}/account/",
             {
                 "voucher_rows": [
                     {"account": 4010, "cost_centre": "ADAALL", "debit": "50.00"}

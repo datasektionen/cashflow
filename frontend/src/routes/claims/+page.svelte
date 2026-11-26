@@ -1,15 +1,16 @@
 <script lang="ts">
+	import { claimColumns } from '#lib/components/TableCells.svelte';
 	import type { PageProps } from './$types';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import PaginatedTable from '#lib/components/PaginatedTable.svelte';
-	import type { TableColumn, TableRowProps } from '#lib/components/types.ts';
+	import type { TableRowProps } from '#lib/components/types.ts';
 	import type { Claim } from '#lib/api/types.ts';
 	import ClaimFilterBar from '#lib/components/ClaimFilterBar.svelte';
-	import ClaimStatusPills from '#lib/components/ClaimStatusPills.svelte';
 	import ProfileCard from './ProfileCard.svelte';
-	import { isExtraSmallLayout, isSmallLayout } from '#lib/stores/state.svelte.ts';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import StatCard from './StatCard.svelte';
+	import { latest } from '#lib/latest.svelte.ts';
+	import RangeControl, { rangeStart } from '../stats/RangeControl.svelte';
 	import { formatDineroAmount } from '#lib/money.ts';
 	import { api } from '#lib/api/index.ts';
 
@@ -17,215 +18,65 @@
 
 	let range = $state(0);
 
-	function rangeStart(r: number): string {
-		const now = new Date();
-		const year = now.getFullYear();
-		const month = String(now.getMonth() + 1).padStart(2, '0');
-		if (r === 1) return `${year}-01-01`;
-		if (r === 2) return `${year}-${month}-01`;
-		return '2000-01-01';
-	}
-
-	let userStats = $derived(
-		data.user //<-- data is already used???
-			? api.stats.userLeaderboard(data.user.username, rangeStart(range))
-			: Promise.resolve(null)
-	);
-
-	const viewedUser = $derived(data.user);
-	const title = $derived(viewedUser ? `${viewedUser.first_name} ${viewedUser.last_name}` : '');
-
-	function handlePageChange(p: number) {
-		const url = new URL(page.url.href);
-		url.searchParams.set('page', p.toString());
-		goto(url, { reset: false });
-	}
-
-	function handlePerPageChange(perPage: number) {
-		const url = new URL(page.url.href);
-		url.searchParams.set('per_page', perPage.toString());
-		url.searchParams.set('page', '1');
-		goto(url, { reset: false });
-	}
-
-	function onSortChange(v: string) {
-		const url = new URL(page.url.href);
-		url.searchParams.set('sorting', v);
-		if (v === '') {
-			url.searchParams.delete('sorting');
-		}
-		goto(url, { reset: false });
-	}
+	const stats = latest(() => api.stats.userLeaderboard(data.user.username, rangeStart(range)));
 
 	const rowProps: TableRowProps<Claim> = {
 		href: (claim) =>
-			data.user
-				? `/${data.user.username}/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`
-				: '',
+			`/${data.user.username}/${claim.type === 'invoice' ? 'invoices' : 'expenses'}/${claim.id}`,
 		class: 'cursor-pointer'
 	};
 
-	const columns: TableColumn<Claim>[] = $derived(
-		(
-			[
-				{
-					id: 'type',
-					header: $_('claims_type'),
-					render: (row) => $_(row.type),
-					width: 'w-24',
-					sorting: ['-type', 'type']
-				},
-				{
-					id: 'description',
-					header: $_('admin_invoices.columns.description'),
-					render: (row) => row.description,
-					width: '',
-					sorting: ['-description', 'description']
-				},
-				{
-					id: 'cost_centres',
-					header: $_('admin_expenses.columns.cost_centres'),
-					renderSnippet: costCentres,
-					width: 'w-48',
-					sorting: ['-cost_centre', 'cost_centre']
-				},
-				{
-					id: 'created_date',
-					header: $_('expense_created_at'),
-					render: (row) => row.created_date,
-					width: 'w-28',
-					sorting: ['-created_date', 'created_date']
-				},
-				{
-					id: 'total',
-					header: $_('admin_expenses.columns.total'),
-					renderSnippet: totalCell,
-					width: 'w-28',
-					sorting: ['-total', 'total']
-				},
-				{
-					id: 'status',
-					header: $_('admin_expenses.columns.status'),
-					renderSnippet: statusCell,
-					width: 'w-40'
-				}
-			] as TableColumn<Claim>[]
-		).filter((col) => {
-			if (isExtraSmallLayout.current) return ['description', 'total'].includes(col.id);
-			if (isSmallLayout.current) return ['type', 'description', 'total', 'status'].includes(col.id);
-			return true;
-		})
-	);
+	const columns = $derived(claimColumns($_));
 </script>
 
-{#snippet statusCell(c: Claim)}
-	<ClaimStatusPills claim={c} />
-{/snippet}
-
-{#snippet totalCell(c: Claim)}
-	<span class="tabular-nums">{formatDineroAmount(c.amount)} kr</span>
-{/snippet}
-
-{#snippet costCentres(c: Claim)}
-	{@const unique = [...new Set(c.parts.map((p) => p.cost_centre))]}
-	<div class="flex flex-wrap gap-1">
-		{#each unique as cc}
-			<span class="rounded bg-base-400 px-1.5 py-0.5 text-xs dark:bg-dark-base-200">{cc}</span>
-		{/each}
+<header class="flex flex-wrap items-center gap-x-6 gap-y-3 pb-6">
+	<UserAvatar username={data.user.username} class="size-12" />
+	<div class="mr-auto flex min-w-0 flex-col">
+		<h1 class="text-3xl font-bold tracking-tight wrap-break-word">
+			{data.user.first_name}
+			{data.user.last_name}
+		</h1>
+		<p class="truncate text-sm text-muted-foreground">{data.user.email}</p>
 	</div>
-{/snippet}
+	<RangeControl bind:range />
+</header>
 
-<h1 class="mb-4 text-xl font-bold dark:text-slate-100">{title}</h1>
-
-{#if data.user}
+<div class="flex flex-col gap-6">
 	<ProfileCard user={data.user} />
-{/if}
 
-<div
-	class="relative mb-4 flex w-48 shrink-0 flex-row overflow-hidden bg-base-300 dark:bg-dark-base-300"
->
-	<div
-		class={[
-			'absolute inset-y-0 w-16 bg-money-green-500 transition-all',
-			range === 0 && 'left-0',
-			range === 1 && 'left-16',
-			range === 2 && 'left-32'
-		]}
-	></div>
-	<button
-		onclick={() => (range = 0)}
-		class={[
-			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
-			range === 0 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-		]}>{$_('leaderboard.all_time')}</button
-	>
-	<button
-		onclick={() => (range = 1)}
-		class={[
-			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
-			range === 1 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-		]}>{$_('leaderboard.year')}</button
-	>
-	<button
-		onclick={() => (range = 2)}
-		class={[
-			'z-2 w-16 cursor-pointer py-1.5 text-center text-xs font-medium whitespace-nowrap uppercase transition-colors',
-			range === 2 ? 'text-white' : 'text-base-subtle dark:text-dark-base-subtle'
-		]}>{$_('leaderboard.month')}</button
-	>
+	<div class="flex flex-col gap-4">
+		{#if stats.error}
+			<p class="text-sm text-danger-text">{$_('claims.error')}</p>
+		{:else}
+			{@const s = stats.value}
+			<div
+				class={[
+					'grid grid-cols-2 gap-4 transition-opacity md:grid-cols-4',
+					stats.loading && s && 'opacity-60'
+				]}
+			>
+				<StatCard
+					label={$_('claims.total_cashflow')}
+					value={s && `${formatDineroAmount(s.expense_total)} kr`}
+				/>
+				<StatCard label={$_('claims.total_cashflows')} value={s?.expense_count} />
+				<StatCard
+					label={$_('claims.amount_rank')}
+					value={s && (s.amount_rank ? `#${s.amount_rank}` : '–')}
+				/>
+				<StatCard
+					label={$_('claims.count_rank')}
+					value={s && (s.count_rank ? `#${s.count_rank}` : '–')}
+				/>
+			</div>
+		{/if}
+	</div>
+
+	<div class="flex flex-col gap-4">
+		<ClaimFilterBar
+			includeChecks={false}
+			exclude={['voucher_series', 'verification', 'invoice_number', 'reimbursement']}
+		/>
+		<PaginatedTable paginatedResponse={data.claims} {columns} {rowProps} />
+	</div>
 </div>
-{#await userStats}
-	<p>{$_('claims.loading')}</p>
-{:then stats}
-	{#if stats}
-		<div class="mb-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
-				<p>{$_('claims.total_cashflow')}</p>
-				<p class="text-2xl font-bold">
-					{formatDineroAmount(stats.expense_total)} kr
-				</p>
-			</div>
-
-			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
-				<p>{$_('claims.total_cashflows')}</p>
-				<p class="text-2xl font-bold">
-					{stats.expense_count}
-				</p>
-			</div>
-		</div>
-		<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
-				<p>{$_('claims.amount_rank')}</p>
-				<p class="text-2xl font-bold">
-					#{stats.amount_rank}
-				</p>
-			</div>
-
-			<div class="bg-base-200 p-4 dark:bg-dark-base-200">
-				<p>{$_('claims.count_rank')}</p>
-				<p class="text-2xl font-bold">
-					#{stats.count_rank}
-				</p>
-			</div>
-		</div>
-	{:else}
-		<p>Ingen användare vald.</p>
-	{/if}
-{:catch error}
-	<p>{$_('claims.error')}</p>
-	<pre>{error?.message ?? String(error)}</pre>
-	{console.error('Failed to load user statistics:', error)}
-{/await}
-
-<ClaimFilterBar
-	includeChecks={false}
-	exclude={['voucher_series', 'verification', 'invoice_number', 'reimbursement']}
-/>
-<PaginatedTable
-	paginatedResponse={data.claims}
-	{columns}
-	onPageChange={handlePageChange}
-	onPerPageChange={handlePerPageChange}
-	{rowProps}
-	{onSortChange}
-/>
